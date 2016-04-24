@@ -8,6 +8,10 @@ component {
         '='
     ];
 
+    variables.combinators = [
+        'AND', 'OR'
+    ];
+
     variables.bindings = {
         "where" = []
     };
@@ -53,7 +57,15 @@ component {
     public Builder function where(column, operator, value, combinator) {
         var argCount = argumentCount(arguments);
 
-        arguments.combinator = IsNull(arguments.combinator) ? 'and' : arguments.combinator;
+        if (isNull(arguments.combinator)) {
+            arguments.combinator = 'AND';
+        }
+        else if (isInvalidCombinator(arguments.combinator)) {
+            throw(
+                type = 'InvalidArgumentException',
+                message = 'Illegal combinator'
+            );
+        }
 
         if (argCount == 2) {
             arguments.value = arguments.operator;
@@ -137,6 +149,10 @@ component {
 
     private boolean function isInvalidOperator(required string operator) {
         return ! arrayContains(variables.operators, arguments.operator);
+    }
+
+    private boolean function isInvalidCombinator(required string combinator) {
+        return ! arrayContainsNoCase(variables.combinators, arguments.combinator);
     }
 
     private function argumentCount(args) {

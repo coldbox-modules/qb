@@ -16,7 +16,8 @@ component extends='testbox.system.BaseSpec' {
                     expect(query.getWheres()).toBe([{
                         column = '::some column::',
                         operator = '=',
-                        value = '::some value::'
+                        value = '::some value::',
+                        combinator = 'and'
                     }]);
                 });
 
@@ -25,8 +26,28 @@ component extends='testbox.system.BaseSpec' {
                     expect(query.getWheres()).toBe([{
                         column = '::some column::',
                         operator = '=',
-                        value = '::some value::'
+                        value = '::some value::',
+                        combinator = 'and'
                     }]);
+                });
+
+                it('can be specify the boolean combinator', function() {
+                    query.where('::some column::', '=', '::some value::')
+                         .where('::another column::', '=', '::another value::', 'or');
+                    expect(query.getWheres()).toBe([
+                        {
+                            column = '::some column::',
+                            operator = '=',
+                            value = '::some value::',
+                            combinator = 'and'
+                        },
+                        {
+                            column = '::another column::',
+                            operator = '=',
+                            value = '::another value::',
+                            combinator = 'or'
+                        }
+                    ]);
                 });
 
                 describe('bindings', function() {
@@ -42,7 +63,8 @@ component extends='testbox.system.BaseSpec' {
                         expect(query.getWheres()).toBe([{
                             column = 'somecolumn',
                             operator = '=',
-                            value = '::some value::'
+                            value = '::some value::',
+                            combinator = 'and'
                         }]);
                     });
                 });

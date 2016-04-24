@@ -50,13 +50,16 @@ component {
 
     // where methods
 
-    public Builder function where() {
-        var argCount = structCount(arguments);
+    public Builder function where(column, operator, value, combinator) {
+        var argCount = argumentCount(arguments);
+
+        arguments.combinator = IsNull(arguments.combinator) ? 'and' : arguments.combinator;
+
         if (argCount == 2) {
-            arguments[3] = arguments[2];
-            arguments[2] = '=';
+            arguments.value = arguments.operator;
+            arguments.operator = '=';
         }
-        else if (isInvalidOperator(arguments[2])) {
+        else if (isInvalidOperator(arguments.operator)) {
             throw(
                 type = 'InvalidArgumentException',
                 message = 'Illegal operator'
@@ -64,12 +67,13 @@ component {
         }
 
         arrayAppend(variables.wheres, {
-            column = arguments[1],
-            operator = arguments[2],
-            value = arguments[3]
+            column = arguments.column,
+            operator = arguments.operator,
+            value = arguments.value,
+            combinator = arguments.combinator
         });
 
-        arrayAppend(variables.bindings.where, arguments[3]);
+        arrayAppend(variables.bindings.where, arguments.value);
 
         return this;
     }
@@ -129,6 +133,16 @@ component {
 
     private boolean function isInvalidOperator(required string operator) {
         return ! arrayContains(variables.operators, arguments.operator);
+    }
+
+    private function argumentCount(args) {
+        var count = 0;
+        for (var key in args) {
+            if (! isNull(args[key]) && ! isEmpty(args[key])) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public any function onMissingMethod(string missingMethodName, struct missingMethodArguments) {

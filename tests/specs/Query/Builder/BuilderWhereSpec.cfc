@@ -29,6 +29,13 @@ component extends='testbox.system.BaseSpec' {
                     }]);
                 });
 
+                describe('bindings', function() {
+                    it('adds the bindings for where statements received', function() {
+                        query.where('::some column::', '=', '::some value::');
+                        expect(query.getBindings().where).toInclude('::some value::');
+                    });
+                });
+
                 describe('dynamic where statements', function() {
                     it('translates whereColumn in to where("column"', function() {
                         query.whereSomeColumn('::some value::');

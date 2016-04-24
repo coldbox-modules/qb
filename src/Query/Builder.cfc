@@ -8,6 +8,10 @@ component {
         '='
     ];
 
+    variables.bindings = {
+        "where" = []
+    };
+
     public Builder function init(required Quick.Query.Grammars.Grammar grammar) {
         variables.grammar = arguments.grammar;
 
@@ -47,7 +51,6 @@ component {
     // where methods
 
     public Builder function where() {
-        var whereStruct = { column = '', operator = '', value = '' };
         var argCount = structCount(arguments);
         if (argCount == 2) {
             arguments[3] = arguments[2];
@@ -66,6 +69,8 @@ component {
             value = arguments[3]
         });
 
+        arrayAppend(variables.bindings.where, arguments[3]);
+
         return this;
     }
 
@@ -81,6 +86,10 @@ component {
 
     public array function getWheres() {
         return variables.wheres;
+    }
+
+    public struct function getBindings() {
+        return variables.bindings;
     }
 
     // Collaborators

@@ -33,7 +33,7 @@ component implements='Quick.Query.Grammars.Grammar' {
                 return '#where.column# #where.operator# ?';
             }
 
-            return '#where.combinator# #where.column# #where.operator# ?';
+            return '#uCase(where.combinator)# #where.column# #where.operator# ?';
         });
 
         whereStatements = ArrayFilter(whereStatements, function(statement) {

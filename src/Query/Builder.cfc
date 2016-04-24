@@ -102,6 +102,10 @@ component {
         return variables.grammar.compileSelect(this);
     }
 
+    public query function get() {
+        return queryExecute(this.toSQL(), this.getBindings().where);
+    }
+
     // Unused(?)
 
     private array function normalizeToArray() {

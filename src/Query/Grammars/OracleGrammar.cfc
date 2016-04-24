@@ -1,7 +1,7 @@
 component implements='Quick.Query.Grammars.Grammar' {
 
     variables.selectComponents = [
-        'columns', 'wheres', 'from'
+        'columns', 'from', 'wheres'
     ];
 
     public string function compileSelect(required Quick.Query.Builder query) {
@@ -24,7 +24,27 @@ component implements='Quick.Query.Grammars.Grammar' {
     }
 
     private string function compileWheres(required Quick.Query.Builder query, requierd array wheres) {
-        return '';
+        var whereStatements = ArrayMap(wheres, function(where, index) {
+            if (! isStruct(where)) {
+                return '';
+            }
+
+            if (index == 1) {
+                return '#where.column# #where.operator# ?';
+            }
+
+            return '#where.combinator# #where.column# #where.operator# ?';
+        });
+
+        whereStatements = ArrayFilter(whereStatements, function(statement) {
+            return statement != '';
+        });
+
+        if (arrayIsEmpty(whereStatements)) {
+            return '';
+        }
+
+        return "WHERE #ArrayToList(whereStatements, ' ')#";
     }
 
     private string function compileFrom(required Quick.Query.Builder query, required string from) {

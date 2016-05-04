@@ -20,7 +20,8 @@ component implements='Quick.Query.Grammars.Grammar' {
     }
 
     private string function compileColumns(required Quick.Query.Builder query, required array columns) {
-        return 'SELECT ' & ArrayToList(columns);
+        var select = query.getDistinct() ? 'SELECT DISTINCT ' : 'SELECT ';
+        return select & ArrayToList(columns);
     }
 
     private string function compileWheres(required Quick.Query.Builder query, requierd array wheres) {

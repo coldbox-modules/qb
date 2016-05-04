@@ -62,6 +62,18 @@ component extends='testbox.system.BaseSpec' {
                     });
                 });
             });
+
+            describe('distinct()', function() {
+                it('sets the distinct flag', function() {
+                    expect(query.getDistinct()).toBe(false,
+                        'Queries are not distinct by default');
+
+                    query.distinct();
+
+                    expect(query.getDistinct()).toBe(true,
+                        'Distinct should be set to true');       
+                });   
+            });
         });
     }
 }

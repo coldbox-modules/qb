@@ -3,6 +3,7 @@ component {
     property name='columns' type='array';
     property name='wheres' type='array';
     property name='from' type='string';
+    property name='distinct' type='boolean' default='false';
 
     variables.operators = [
         '='
@@ -19,8 +20,6 @@ component {
     public Builder function init(required Quick.Query.Grammars.Grammar grammar) {
         variables.grammar = arguments.grammar;
 
-        variables._ = new modules.UnderscoreCF.Underscore();
-
         setDefaultValues();
 
         return this;
@@ -31,6 +30,7 @@ component {
         variables.from = '';
         variables.columns = ['*'];
         variables.wheres = [];
+        variables.distinct = false;
     }
 
     // API
@@ -49,6 +49,12 @@ component {
 
     public Builder function addSelect(required any columns) {
         arrayAppend(variables.columns, normalizeToArray(argumentCollection = arguments), true);
+        return this;
+    }
+
+    public Builder function distinct() {
+        variables.distinct = true;
+
         return this;
     }
 
@@ -108,6 +114,10 @@ component {
         return variables.bindings;
     }
 
+    public boolean function getDistinct() {
+        return variables.distinct;
+    }
+
     // Collaborators
 
     public string function toSQL() {
@@ -134,15 +144,17 @@ component {
     }
 
     private boolean function isVariadicFunction(required struct args) {
-        return _.size(arguments.args) > 1;
+        return structCount(arguments.args) > 1;
     }
 
     private array function normalizeVariadicArgumentsToArray(required struct args) {
-        return _.toArray(arguments.args);
+        return arrayMap(structKeyArray(arguments.args), function(arg) {
+            return args[arg];
+        });
     }
 
     private array function normalizeListArgumentsToArray(required string list) {
-        return _.map(_.split(list, ','), function(column) {
+        return arrayMap(listToArray(list, ','), function(column) {
             return trim(column);
         });
     }

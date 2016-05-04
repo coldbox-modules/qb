@@ -4,18 +4,11 @@ component extends='testbox.system.BaseSpec' {
             beforeEach(function() {
                 variables.grammar = new Quick.Query.Grammars.OracleGrammar();
                 variables.mockQuery = getMockBox().createMock('Quick.Query.Builder');
-                mockQuery.$('getFrom', 'sometable');
                 mockQuery.$('getDistinct', false);
                 mockQuery.$('getColumns', ['*']);
+                mockQuery.$('getFrom', 'sometable');
+                mockQuery.$('getJoins', []);
                 mockQuery.$('getWheres', []);
-            });
-
-            describe('compiling from', function() {
-                it('correctly sets the from table', function() {
-                    mockQuery.$('getFrom', 'sometable');
-                    var sql = grammar.compileSelect(mockQuery);
-                    expect(sql).toBe('SELECT * FROM sometable');       
-                });   
             });
 
             describe('compiling distinct', function() {
@@ -43,6 +36,84 @@ component extends='testbox.system.BaseSpec' {
                     mockQuery.$('getColumns', ['somecolumn', 'anothercolumn']);
                     var sql = grammar.compileSelect(mockQuery);
                     expect(sql).toBe('SELECT somecolumn,anothercolumn FROM sometable');
+                });
+            });
+
+            describe('compiling from', function() {
+                it('correctly sets the from table', function() {
+                    mockQuery.$('getFrom', 'sometable');
+                    var sql = grammar.compileSelect(mockQuery);
+                    expect(sql).toBe('SELECT * FROM sometable');       
+                });   
+            });
+
+            describe('compiling joins', function() {
+                it('adds a single join', function() {
+                    var mockJoin = getMockBox().createMock('Quick.Query.JoinClause');
+                    mockJoin.$('getType', 'inner');
+                    mockJoin.$('getTable', 'othertable');
+                    mockJoin.$('getClauses', [{
+                        first = 'sometable.id',
+                        operator = '=',
+                        second = 'othertable.sometable_id',
+                        combinator = 'and'
+                    }]);
+                    mockQuery.$('getJoins', [ mockJoin ]);
+
+                    var sql = grammar.compileSelect(mockQuery);
+                    expect(sql)
+                        .toBe('SELECT * FROM sometable INNER JOIN othertable ON sometable.id = othertable.sometable_id');
+                });
+
+                it('adds multiple joins', function() {
+                    var mockJoinOne = getMockBox().createMock('Quick.Query.JoinClause');
+                    mockJoinOne.$('getType', 'inner');
+                    mockJoinOne.$('getTable', 'othertable');
+                    mockJoinOne.$('getClauses', [{
+                        first = 'sometable.id',
+                        operator = '=',
+                        second = 'othertable.sometable_id',
+                        combinator = 'and'
+                    }]);
+                    var mockJoinTwo = getMockBox().createMock('Quick.Query.JoinClause');
+                    mockJoinTwo.$('getType', 'left');
+                    mockJoinTwo.$('getTable', 'anothertable');
+                    mockJoinTwo.$('getClauses', [{
+                        first = 'othertable.id',
+                        operator = '<=',
+                        second = 'anothertable.othertable_id',
+                        combinator = 'and'
+                    }]);
+                    mockQuery.$('getJoins', [ mockJoinOne, mockJoinTwo ]);
+
+                    var sql = grammar.compileSelect(mockQuery);
+                    expect(sql)
+                        .toBe('SELECT * FROM sometable INNER JOIN othertable ON sometable.id = othertable.sometable_id LEFT JOIN anothertable ON othertable.id <= anothertable.othertable_id');
+                });
+
+                it('adds all the clauses in a join', function() {
+                    var mockJoin = getMockBox().createMock('Quick.Query.JoinClause');
+                    mockJoin.$('getType', 'inner');
+                    mockJoin.$('getTable', 'othertable');
+                    mockJoin.$('getClauses', [
+                        {
+                            first = 'sometable.id',
+                            operator = '=',
+                            second = 'othertable.sometable_id',
+                            combinator = 'and'
+                        },
+                        {
+                            first = 'sometable.locale',
+                            operator = '=',
+                            second = 'othertable.locale',
+                            combinator = 'and'
+                        }
+                    ]);
+                    mockQuery.$('getJoins', [ mockJoin ]);
+
+                    var sql = grammar.compileSelect(mockQuery);
+                    expect(sql)
+                        .toBe('SELECT * FROM sometable INNER JOIN othertable ON sometable.id = othertable.sometable_id AND sometable.locale = othertable.locale');
                 });
             });
 

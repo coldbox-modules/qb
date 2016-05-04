@@ -1,9 +1,10 @@
 component {
 
-    property name='columns' type='array';
-    property name='wheres' type='array';
-    property name='from' type='string';
     property name='distinct' type='boolean' default='false';
+    property name='columns' type='array';
+    property name='from' type='string';
+    property name='joins' type='array';
+    property name='wheres' type='array';
 
     variables.operators = [
         '='
@@ -25,22 +26,22 @@ component {
         return this;
     }
 
-
     private void function setDefaultValues() {
-        variables.from = '';
-        variables.columns = ['*'];
-        variables.wheres = [];
         variables.distinct = false;
+        variables.columns = ['*'];
+        variables.joins = [];
+        variables.from = '';
+        variables.wheres = [];
     }
 
     // API
+    // select methods
 
-    public Builder function from(required string from) {
-        variables.from = arguments.from;
+    public Builder function distinct() {
+        variables.distinct = true;
+
         return this;
     }
-
-    // select methods
 
     public Builder function select(required any columns) {
         variables.columns = normalizeToArray(argumentCollection = arguments);
@@ -52,8 +53,30 @@ component {
         return this;
     }
 
-    public Builder function distinct() {
-        variables.distinct = true;
+    // from methods
+
+    public Builder function from(required string from) {
+        variables.from = arguments.from;
+        return this;
+    }
+
+    // join methods
+
+    public Builder function join(
+        required string joinTable,
+        string first,
+        string operator,
+        string second,
+        string type = 'inner',
+        any callback
+    ) {
+        var join = new JoinClause(type = arguments.type, table = arguments.joinTable);
+        arrayAppend(variables.joins, join.on(
+            first = arguments.first,
+            operator = arguments.operator,
+            second = arguments.second,
+            combinator = 'and'
+        ));
 
         return this;
     }
@@ -98,12 +121,20 @@ component {
 
     // Accessors
 
-    public string function getFrom() {
-        return variables.from;
+    public boolean function getDistinct() {
+        return variables.distinct;
     }
 
     public array function getColumns() {
         return variables.columns;
+    }
+
+    public string function getFrom() {
+        return variables.from;
+    }
+
+    public array function getJoins() {
+        return variables.joins;
     }
 
     public array function getWheres() {
@@ -114,9 +145,6 @@ component {
         return variables.bindings;
     }
 
-    public boolean function getDistinct() {
-        return variables.distinct;
-    }
 
     // Collaborators
 

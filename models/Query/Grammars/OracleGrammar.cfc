@@ -1,7 +1,7 @@
 component implements='Quick.Query.Grammars.Grammar' {
 
     variables.selectComponents = [
-        'columns', 'from', 'wheres'
+        'columns', 'from', 'wheres', 'joins'
     ];
 
     public string function compileSelect(required Quick.Query.Builder query) {
@@ -22,6 +22,23 @@ component implements='Quick.Query.Grammars.Grammar' {
     private string function compileColumns(required Quick.Query.Builder query, required array columns) {
         var select = query.getDistinct() ? 'SELECT DISTINCT ' : 'SELECT ';
         return select & ArrayToList(columns);
+    }
+
+    private string function compileFrom(required Quick.Query.Builder query, required string from) {
+        return 'FROM ' & from;
+    }
+
+    private string function compileJoins(required Quick.Query.Builder query, required array joins) {
+        return arrayToList(arrayMap(arguments.joins, function(join) {
+            var clauses = arrayToList(arrayMap(join.getClauses(), function(clause, index) {
+                if (index == 1) {
+                    return '#clause.first# #clause.operator# #clause.second#';
+                } 
+
+                return '#UCase(clause.combinator)# #clause.first# #clause.operator# #clause.second#';
+            }), ' ');
+            return '#UCase(join.getType())# JOIN #join.getTable()# ON #clauses#';
+        }), ' ');
     }
 
     private string function compileWheres(required Quick.Query.Builder query, requierd array wheres) {
@@ -46,10 +63,6 @@ component implements='Quick.Query.Grammars.Grammar' {
         }
 
         return "WHERE #ArrayToList(whereStatements, ' ')#";
-    }
-
-    private string function compileFrom(required Quick.Query.Builder query, required string from) {
-        return 'FROM ' & from;
     }
 
     private string function concatenate(required array sql) {

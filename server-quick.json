@@ -1,0 +1,11 @@
+{
+    "web":{
+        "http":{
+            "port":"7777"
+        }
+    },
+    "name":"quick",
+    "app":{
+        "cfengine":"lucee@4.5"
+    }
+}

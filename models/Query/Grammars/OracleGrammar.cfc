@@ -1,4 +1,4 @@
-component implements='Quick.Query.Grammars.Grammar' {
+component displayname='OracleGrammar' implements='Quick.Query.Grammars.Grammar' {
 
     variables.selectComponents = [
         'columns', 'from', 'wheres', 'joins'

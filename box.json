@@ -1,44 +1,42 @@
 {
-    "name":"quick",
-    "version":"0.0.1",
-    "author":"Eric Peterson",
-    "homepage":"https://github.com/elpete/quick",
-    "documentation":"https://github.com/elpete/quick",
-    "repository":{
-        "type":"git",
-        "URL":"https://github.com/elpete/quick"
+    "name": "quick",
+    "version": "1.0.0",
+    "author": "Eric Peterson",
+    "homepage": "https://github.com/elpete/quick",
+    "documentation": "https://github.com/elpete/quick",
+    "location": "https://github.com/elpete/quick/archive/master.zip",
+    "repository": {
+        "type": "git",
+        "URL": "https://github.com/elpete/quick"
     },
-    "bugs":"https://github.com/elpete/quick/issues",
-    "slug":"quick",
-    "shortDescription":"A query builder for the rest of us.",
-    "type":"modules",
-    "keywords":[
+    "bugs": "https://github.com/elpete/quick/issues",
+    "slug": "quick",
+    "shortDescription": "A query builder for the rest of us.",
+    "type": "modules",
+    "keywords": [
         "ORM",
         "query",
         "SQL"
     ],
-    "private":false,
-    "projectURL":"https://github.com/elpete/quick",
-    "license":[
+    "private": false,
+    "projectURL": "https://github.com/elpete/quick",
+    "license": [
         {
-            "type":"MIT",
-            "URL":"https://github.com/elpete/quick/LICENSE"
+            "type": "MIT",
+            "URL": "https://github.com/elpete/quick/LICENSE"
         }
     ],
-    "dependencies":{
-        "underscorecf":"github:russplaysguitar/UnderscoreCF"
+    "devDependencies": {
+        "testbox": "2.3.0+00044"
     },
-    "devDependencies":{
-        "testbox":"2.3.0+00044"
+    "installPaths": {
+        "testbox": "testbox"
     },
-    "installPaths":{
-        "testbox":"testbox",
-        "underscorecf":"modules/underscorecf"
-    },
-    "ignore":[
+    "ignore": [
         "**/.*",
         "test",
-        "tests"
+        "tests",
+        "node_modules"
     ],
     "testbox": {
         "runner": "http://localhost:7777/tests/runner.cfm" 

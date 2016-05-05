@@ -1,4 +1,4 @@
-component {
+component displayname='Builder' {
 
     property name='distinct' type='boolean' default='false';
     property name='columns' type='array';
@@ -7,7 +7,12 @@ component {
     property name='wheres' type='array';
 
     variables.operators = [
-        '='
+        '=', '<', '>', '<=', '>=', '<>', '!=',
+        'like', 'like binary', 'not like', 'between', 'ilike',
+        '&', '|', '^', '<<', '>>',
+        'rlike', 'regexp', 'not regexp',
+        '~', '~*', '!~', '!~*', 'similar to',
+        'not similar to',
     ];
 
     variables.combinators = [
@@ -63,22 +68,52 @@ component {
     // join methods
 
     public Builder function join(
-        required string joinTable,
+        required string table,
         string first,
         string operator,
         string second,
         string type = 'inner',
-        any callback
+        any conditions
     ) {
-        var join = new JoinClause(type = arguments.type, table = arguments.joinTable);
-        arrayAppend(variables.joins, join.on(
-            first = arguments.first,
-            operator = arguments.operator,
-            second = arguments.second,
-            combinator = 'and'
-        ));
+        var join = new JoinClause(type = arguments.type, table = arguments.table);
+
+        if (structKeyExists(arguments, 'conditions') && isClosure(arguments.conditions)) {
+            conditions(join);
+        }
+        else {
+            join.on(
+                first = arguments.first,
+                operator = arguments.operator,
+                second = arguments.second,
+                combinator = 'and'
+            );
+        }
+
+        arrayAppend(variables.joins, join);
 
         return this;
+    }
+
+    public Builder function leftJoin(
+        required string table,
+        string first,
+        string operator,
+        string second,
+        any conditions
+    ) {
+        arguments.type = 'left';
+        return join(argumentCollection = arguments);
+    }
+
+    public Builder function rightJoin(
+        required string table,
+        string first,
+        string operator,
+        string second,
+        any conditions
+    ) {
+        arguments.type = 'right';
+        return join(argumentCollection = arguments);
     }
 
     // where methods
@@ -114,7 +149,7 @@ component {
             combinator = arguments.combinator
         });
 
-        arrayAppend(variables.bindings.where, arguments.value);
+        arrayAppend(bindings.where, arguments.value);
 
         return this;
     }
@@ -122,34 +157,34 @@ component {
     // Accessors
 
     public boolean function getDistinct() {
-        return variables.distinct;
+        return distinct;
     }
 
     public array function getColumns() {
-        return variables.columns;
+        return columns;
     }
 
     public string function getFrom() {
-        return variables.from;
+        return from;
     }
 
     public array function getJoins() {
-        return variables.joins;
+        return joins;
     }
 
     public array function getWheres() {
-        return variables.wheres;
+        return wheres;
     }
 
     public struct function getBindings() {
-        return variables.bindings;
+        return bindings;
     }
 
 
     // Collaborators
 
     public string function toSQL() {
-        return variables.grammar.compileSelect(this);
+        return grammar.compileSelect(this);
     }
 
     public query function get() {
@@ -172,11 +207,11 @@ component {
     }
 
     private boolean function isVariadicFunction(required struct args) {
-        return structCount(arguments.args) > 1;
+        return structCount(args) > 1;
     }
 
     private array function normalizeVariadicArgumentsToArray(required struct args) {
-        return arrayMap(structKeyArray(arguments.args), function(arg) {
+        return arrayMap(structKeyArray(args), function(arg) {
             return args[arg];
         });
     }
@@ -188,11 +223,11 @@ component {
     }
 
     private boolean function isInvalidOperator(required string operator) {
-        return ! arrayContains(variables.operators, arguments.operator);
+        return ! arrayContains(operators, operator);
     }
 
     private boolean function isInvalidCombinator(required string combinator) {
-        return ! arrayContainsNoCase(variables.combinators, arguments.combinator);
+        return ! arrayContainsNoCase(combinators, combinator);
     }
 
     private function argumentCount(args) {
@@ -212,6 +247,9 @@ component {
                 args[key + 1] = missingMethodArguments[key];
             }
             where(argumentCollection = args);
+            return;
         }
+
+        throw("Method does not exist [#missingMethodName#]");
     }
 }

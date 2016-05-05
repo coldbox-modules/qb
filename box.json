@@ -1,10 +1,14 @@
 {
     "name":"quick",
-    "version":"0.1.1",
+    "version":"0.1.0",
     "author":"Eric Peterson",
     "homepage":"https://github.com/elpete/quick",
     "documentation":"https://github.com/elpete/quick",
-    "location":"https://github.com/elpete/quick/archive/master.zip",
+    "location":"elpete/quick",
+    "scripts":{
+        "postVersion":"package set location='elpete/quick'",
+        "postPublish":"!git push"
+    },
     "repository":{
         "type":"git",
         "URL":"https://github.com/elpete/quick"

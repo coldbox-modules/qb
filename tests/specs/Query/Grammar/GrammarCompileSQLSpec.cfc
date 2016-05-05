@@ -2,8 +2,8 @@ component extends='testbox.system.BaseSpec' {
     function run() {
         describe('compileSelect', function() {
             beforeEach(function() {
-                variables.grammar = new Quick.Query.Grammars.OracleGrammar();
-                variables.mockQuery = getMockBox().createMock('Quick.Query.Builder');
+                variables.grammar = new Quick.models.Query.Grammars.OracleGrammar();
+                variables.mockQuery = getMockBox().createMock('Quick.models.Query.Builder');
                 mockQuery.$('getDistinct', false);
                 mockQuery.$('getColumns', ['*']);
                 mockQuery.$('getFrom', 'sometable');
@@ -49,7 +49,7 @@ component extends='testbox.system.BaseSpec' {
 
             describe('compiling joins', function() {
                 it('adds a single join', function() {
-                    var mockJoin = getMockBox().createMock('Quick.Query.JoinClause');
+                    var mockJoin = getMockBox().createMock('Quick.models.Query.JoinClause');
                     mockJoin.$('getType', 'inner');
                     mockJoin.$('getTable', 'othertable');
                     mockJoin.$('getClauses', [{
@@ -66,7 +66,7 @@ component extends='testbox.system.BaseSpec' {
                 });
 
                 it('adds multiple joins', function() {
-                    var mockJoinOne = getMockBox().createMock('Quick.Query.JoinClause');
+                    var mockJoinOne = getMockBox().createMock('Quick.models.Query.JoinClause');
                     mockJoinOne.$('getType', 'inner');
                     mockJoinOne.$('getTable', 'othertable');
                     mockJoinOne.$('getClauses', [{
@@ -75,7 +75,7 @@ component extends='testbox.system.BaseSpec' {
                         second = 'othertable.sometable_id',
                         combinator = 'and'
                     }]);
-                    var mockJoinTwo = getMockBox().createMock('Quick.Query.JoinClause');
+                    var mockJoinTwo = getMockBox().createMock('Quick.models.Query.JoinClause');
                     mockJoinTwo.$('getType', 'left');
                     mockJoinTwo.$('getTable', 'anothertable');
                     mockJoinTwo.$('getClauses', [{
@@ -92,7 +92,7 @@ component extends='testbox.system.BaseSpec' {
                 });
 
                 it('adds all the clauses in a join', function() {
-                    var mockJoin = getMockBox().createMock('Quick.Query.JoinClause');
+                    var mockJoin = getMockBox().createMock('Quick.models.Query.JoinClause');
                     mockJoin.$('getType', 'inner');
                     mockJoin.$('getTable', 'othertable');
                     mockJoin.$('getClauses', [

@@ -1,10 +1,10 @@
-component displayname='OracleGrammar' implements='Quick.Query.Grammars.Grammar' {
+component displayname='OracleGrammar' implements='Quick.models.Query.Grammars.GrammarInterface' {
 
     variables.selectComponents = [
         'columns', 'from', 'wheres', 'joins'
     ];
 
-    public string function compileSelect(required Quick.Query.Builder query) {
+    public string function compileSelect(required Quick.models.Query.Builder query) {
 
         var sql = [];
 
@@ -19,16 +19,16 @@ component displayname='OracleGrammar' implements='Quick.Query.Grammars.Grammar' 
         return concatenate(sql);
     }
 
-    private string function compileColumns(required Quick.Query.Builder query, required array columns) {
+    private string function compileColumns(required Quick.models.Query.Builder query, required array columns) {
         var select = query.getDistinct() ? 'SELECT DISTINCT ' : 'SELECT ';
         return select & ArrayToList(columns);
     }
 
-    private string function compileFrom(required Quick.Query.Builder query, required string from) {
+    private string function compileFrom(required Quick.models.Query.Builder query, required string from) {
         return 'FROM ' & from;
     }
 
-    private string function compileJoins(required Quick.Query.Builder query, required array joins) {
+    private string function compileJoins(required Quick.models.Query.Builder query, required array joins) {
         return arrayToList(arrayMap(arguments.joins, function(join) {
             var clauses = arrayToList(arrayMap(join.getClauses(), function(clause, index) {
                 if (index == 1) {
@@ -41,7 +41,7 @@ component displayname='OracleGrammar' implements='Quick.Query.Grammars.Grammar' 
         }), ' ');
     }
 
-    private string function compileWheres(required Quick.Query.Builder query, requierd array wheres) {
+    private string function compileWheres(required Quick.models.Query.Builder query, requierd array wheres) {
         var whereStatements = ArrayMap(wheres, function(where, index) {
             if (! isStruct(where)) {
                 return '';

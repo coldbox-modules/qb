@@ -1,5 +1,7 @@
 component displayname='Builder' {
 
+    property name='grammar' inject='Grammar@Quick';
+
     property name='distinct' type='boolean' default='false';
     property name='columns' type='array';
     property name='from' type='string';
@@ -23,9 +25,7 @@ component displayname='Builder' {
         "where" = []
     };
 
-    public Builder function init(required Quick.Query.Grammars.Grammar grammar) {
-        variables.grammar = arguments.grammar;
-
+    public Builder function init() {
         setDefaultValues();
 
         return this;

@@ -2,8 +2,8 @@ component extends='testbox.system.BaseSpec' {
     function run() {
         describe('where methods', function() {
             beforeEach(function() {
-                variables.mockGrammar = getMockBox().createStub(implements = 'Quick.Query.Grammars.Grammar');
-                variables.query = new Quick.Query.Builder(variables.mockGrammar);
+                variables.mockGrammar = getMockBox().createStub(implements = 'Quick.models.Query.Grammars.GrammarInterface');
+                variables.query = new Quick.models.Query.Builder(variables.mockGrammar);
             });
 
             it('defaults to empty', function() {

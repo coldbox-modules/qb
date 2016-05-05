@@ -2,22 +2,22 @@ component extends='testbox.system.BaseSpec' {
     function run() {
         describe('initialization', function() {
             it('requires a type and a table', function() {
-                expect(function() { new Quick.Query.JoinClause(); }).toThrow();
-                expect(function() { new Quick.Query.JoinClause('inner'); }).toThrow();
-                expect(function() { new Quick.Query.JoinClause('inner', 'sometable'); }).notToThrow();
+                expect(function() { new Quick.models.Query.JoinClause(); }).toThrow();
+                expect(function() { new Quick.models.Query.JoinClause('inner'); }).toThrow();
+                expect(function() { new Quick.models.Query.JoinClause('inner', 'sometable'); }).notToThrow();
             });
 
             it('validates the type is a valid sql join type', function() {
-                expect(function() { new Quick.Query.JoinClause('gibberish', 'sometable') }).toThrow();
-                expect(function() { new Quick.Query.JoinClause('left typo', 'sometable') }).toThrow();
-                expect(function() { new Quick.Query.JoinClause('left', 'sometable') }).notToThrow();
-                expect(function() { new Quick.Query.JoinClause('left outer', 'sometable') }).notToThrow();
+                expect(function() { new Quick.models.Query.JoinClause('gibberish', 'sometable') }).toThrow();
+                expect(function() { new Quick.models.Query.JoinClause('left typo', 'sometable') }).toThrow();
+                expect(function() { new Quick.models.Query.JoinClause('left', 'sometable') }).notToThrow();
+                expect(function() { new Quick.models.Query.JoinClause('left outer', 'sometable') }).notToThrow();
             });
         });
 
         describe('adding join conditions', function() {
             beforeEach(function() {
-                variables.join = new Quick.Query.JoinClause('inner', 'second');
+                variables.join = new Quick.models.Query.JoinClause('inner', 'second');
             });
 
             afterEach(function() {

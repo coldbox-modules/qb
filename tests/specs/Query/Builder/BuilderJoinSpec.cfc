@@ -110,7 +110,37 @@ component extends='testbox.system.BaseSpec' {
             });
 
             it('can pass the callback as the second parameter when using positional parameters', function() {
-                
+                query.join('second', function(join) {
+                    join.on('first.id', '=', 'second.first_id')
+                        .on('first.locale', '=', 'second.locale');
+                });
+
+                var joins = query.getJoins();
+                expect(arrayLen(joins)).toBe(1, 'Only one join should exist');
+
+                var join = joins[1];
+                expect(join).toBeInstanceOf('Quick.Query.JoinClause');
+                expect(join.getType()).toBe('inner');
+                expect(join.getTable()).toBe('second');
+
+                var clauses = join.getClauses();
+                expect(arrayLen(clauses)).toBe(2, 'Two join clauses should exist');
+
+                var clauseOne = clauses[1];
+                expect(clauseOne).toBeStruct();
+                expect(clauseOne.first).toBe('first.id', 'First column should be [first.id]');
+                expect(clauseOne.operator).toBe('=', 'Operator should be [=]');
+                expect(clauseOne.second).toBe('second.first_id', 'First column should be [second.first_id]');
+                expect(clauseOne.combinator).toBe('and');
+                expect(clauseOne.where).toBe(false);
+
+                var clauseTwo = clauses[2];
+                expect(clauseTwo).toBeStruct();
+                expect(clauseTwo.first).toBe('first.locale', 'First column should be [first.locale]');
+                expect(clauseTwo.operator).toBe('=', 'Operator should be [=]');
+                expect(clauseTwo.second).toBe('second.locale', 'First column should be [second.locale]');
+                expect(clauseTwo.combinator).toBe('and');
+                expect(clauseTwo.where).toBe(false);
             });
         });
     }

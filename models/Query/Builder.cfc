@@ -69,13 +69,17 @@ component displayname='Builder' {
 
     public Builder function join(
         required string table,
-        string first,
+        any first,
         string operator,
         string second,
         string type = 'inner',
         any conditions
     ) {
         var join = new JoinClause(type = arguments.type, table = arguments.table);
+
+        if (structKeyExists(arguments, 'first') && isClosure(arguments.first)) {
+            arguments.conditions = arguments.first;
+        }
 
         if (structKeyExists(arguments, 'conditions') && isClosure(arguments.conditions)) {
             conditions(join);

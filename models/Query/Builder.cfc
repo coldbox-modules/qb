@@ -1,6 +1,7 @@
 component displayname='Builder' {
 
     property name='grammar' inject='Grammar@Quick';
+    property name='utils' inject='QueryUtils@Quick';
 
     property name='distinct' type='boolean' default='false';
     property name='columns' type='array';
@@ -76,7 +77,7 @@ component displayname='Builder' {
         string type = 'inner',
         any conditions
     ) {
-        var join = new JoinClause(type = arguments.type, table = arguments.table);
+        var join = new JoinClause(arguments.type, arguments.table, utils);
 
         if (structKeyExists(arguments, 'first') && isClosure(arguments.first)) {
             arguments.conditions = arguments.first;
@@ -148,6 +149,8 @@ component displayname='Builder' {
             );
         }
 
+        var binding = utils.extractBinding(arguments.value);
+
         arrayAppend(variables.wheres, {
             column = arguments.column,
             operator = arguments.operator,
@@ -155,7 +158,7 @@ component displayname='Builder' {
             combinator = arguments.combinator
         });
 
-        arrayAppend(bindings.where, { value = arguments.value });
+        arrayAppend(bindings.where, binding);
 
         return this;
     }

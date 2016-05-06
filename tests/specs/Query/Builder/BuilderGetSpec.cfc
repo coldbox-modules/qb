@@ -3,6 +3,9 @@ component extends='testbox.system.BaseSpec' {
         describe('get methods', function() {
             beforeEach(function() {
                 variables.query = new Quick.models.Query.Builder();
+                getMockBox().prepareMock(query);
+                var utils = new Quick.models.Query.QueryUtils()
+                query.$property(propertyName = 'utils', mock = utils);
             });
 
             it('retreives bindings in a flat array', function() {

@@ -1,5 +1,7 @@
 component displayname='JoinClause' {
 
+    property name='utils';
+
     property name='type' type='string';
     property name='table' type='string';
     property name='clauses' type='array';
@@ -19,7 +21,11 @@ component displayname='JoinClause' {
         'left', 'left outer', 'right', 'right outer'
     ];
 
-    public JoinClause function init(required string type, required string table) {
+    public JoinClause function init(
+        required string type,
+        required string table,
+        QueryUtils utils = wirebox.getInstance('QueryUtils@Quick')
+    ) {
         if (! arrayContainsNoCase(types, arguments.type)) {
             throw('[#type#] is not a valid sql join type');
         }
@@ -29,6 +35,8 @@ component displayname='JoinClause' {
 
         clauses = [];
         bindings = [];
+
+        variables.utils = arguments.utils;
 
         return this;
     }
@@ -45,7 +53,8 @@ component displayname='JoinClause' {
         }
 
         if (arguments.where) {
-            arrayAppend(bindings, { value = arguments.second });
+            var binding = utils.extractBinding(arguments.second);
+            arrayAppend(bindings, binding);
             arguments.second = '?';
         }
 
@@ -84,5 +93,20 @@ component displayname='JoinClause' {
 
     public array function getBindings() {
         return bindings;
+    }
+
+    private struct function extractBindings(required any value) {
+        var binding = {};
+
+        if (isStruct(arguments.value)) {
+            binding = arguments.value;
+            arguments.value = arguments.value.value;
+        }
+
+        if (! structKeyExists(binding, 'value')) {
+            binding.value = arguments.value;
+        }
+
+        return binding;
     }
 }

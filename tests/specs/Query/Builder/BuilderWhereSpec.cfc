@@ -53,7 +53,7 @@ component extends='testbox.system.BaseSpec' {
                 describe('bindings', function() {
                     it('adds the bindings for where statements received', function() {
                         query.where('::some column::', '=', '::some value::');
-                        expect(query.getRawBindings().where).toInclude('::some value::');
+                        expect(query.getRawBindings().where).toBe([{ value = '::some value::' }]);
                     });
                 });
 

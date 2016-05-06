@@ -45,7 +45,7 @@ component displayname='JoinClause' {
         }
 
         if (arguments.where) {
-            arrayAppend(bindings, arguments.second);
+            arrayAppend(bindings, { value = arguments.second });
             arguments.second = '?';
         }
 

@@ -148,7 +148,7 @@ component extends='testbox.system.BaseSpec' {
                     join.where('second.locale', '=', 'en-US');
                 });
 
-                expect(query.getRawBindings().join).toBe(['en-US']);
+                expect(query.getRawBindings().join).toBe([{ value = 'en-US' }]);
             });
         });
     }

@@ -10,7 +10,7 @@ component extends='testbox.system.BaseSpec' {
                     join.where('second.locale', '=', 'en-US');
                 }).where('first.quantity', '>=', '10');
 
-                expect(query.getBindings()).toBe(['en-US', '10']);
+                expect(query.getBindings()).toBe([{ value = 'en-US' }, { value = '10' }]);
             });
 
             it('retreives a map of bindings', function() {

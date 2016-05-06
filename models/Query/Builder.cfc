@@ -155,7 +155,7 @@ component displayname='Builder' {
             combinator = arguments.combinator
         });
 
-        arrayAppend(bindings.where, arguments.value);
+        arrayAppend(bindings.where, { value = arguments.value });
 
         return this;
     }
@@ -206,8 +206,8 @@ component displayname='Builder' {
         return grammar.compileSelect(this);
     }
 
-    public query function get() {
-        return queryExecute(this.toSQL(), this.getBindings());
+    public query function get(struct options = {}) {
+        return queryExecute(this.toSQL(), this.getBindings(), options);
     }
 
     // Unused(?)

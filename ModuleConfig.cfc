@@ -8,10 +8,30 @@ component {
     this.autoMapModels = true;
     this.cfmapping     = 'Quick';
 
+    variables.defaultSettings = {
+        defaultGrammar = 'OracleGrammar'
+    };
+
     function configure() {
+        var settings = controller.getConfigSettings();
+
+        parseParentSettings(settings);
+
         binder.map('Grammar@Quick')
-            // make this default grammar a setting
-            .to('#moduleMapping#.models.Query.Grammars.OracleGrammar');
+            .to('#moduleMapping#.models.Query.Grammars.#settings.quick.defaultGrammar#');
+    }
+
+    private void function parseParentSettings(required struct settings) {
+        if (! structKeyExists(settings, 'quick')) {
+            settings.quick = {};
+        }
+
+        var userSettings = controller.getSetting('ColdBoxConfig')
+            .getPropertyMixin('quick', 'variables', structNew());
+
+        structAppend(settings.quick, variables.defaultSettings);
+
+        structAppend(settings.quick, userSettings, true);
     }
 
 }

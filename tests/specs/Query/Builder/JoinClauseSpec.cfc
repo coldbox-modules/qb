@@ -117,6 +117,20 @@ component extends='testbox.system.BaseSpec' {
                     expect(clause.where).toBe(true, 'The where flag should be true');
                 });
 
+                it('can use the shortcut where statement when the operator is equals (=)', function() {
+                    join.where('second.locale', 'en-US');
+
+                    var clauses = join.getClauses();
+                    expect(arrayLen(clauses)).toBe(1, 'Only one clause should exist in the join statement');
+
+                    var clause = clauses[1];
+                    expect(clause.first).toBe('second.locale', 'First column should be [second.locale]');
+                    expect(clause.operator).toBe('=', 'Operator should be [>=]');
+                    expect(clause.second).toBe('?', 'First column should be a binding placeholder [?]');
+                    expect(clause.combinator).toBe('and');
+                    expect(clause.where).toBe(true, 'The where flag should be true');
+                });
+
                 it('adds the where value to the bindings', function() {
                     join.where('second.locale', '=', 'en-US');
 

@@ -59,8 +59,15 @@ component displayname='JoinClause' {
         return on(argumentCollection = arguments);
     }
 
-    public JoinClause function where(first, operator, second, combinator = 'and') {
+    public JoinClause function where(first, operator, second, combinator) {
         arguments.where = true;
+
+        // If we only receive the first two arguments, this is the shortcut where statement
+        if (! structKeyExists(arguments, 'second')) {
+            arguments.second = arguments.operator;
+            arguments.operator = '=';
+        }
+
         return on(argumentCollection = arguments);
     }
 

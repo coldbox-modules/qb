@@ -13,7 +13,7 @@ component extends='testbox.system.BaseSpec' {
                 expect(arrayLen(joins)).toBe(1, 'Only one join should exist');
 
                 var join = joins[1];
-                expect(join).toBeInstanceOf('Quick.Query.JoinClause');
+                expect(join).toBeInstanceOf('Quick.models.Query.JoinClause');
                 expect(join.getType()).toBe('inner');
                 expect(join.getTable()).toBe('second');
 
@@ -36,7 +36,7 @@ component extends='testbox.system.BaseSpec' {
                 expect(arrayLen(joins)).toBe(1, 'Only one join should exist');
 
                 var join = joins[1];
-                expect(join).toBeInstanceOf('Quick.Query.JoinClause');
+                expect(join).toBeInstanceOf('Quick.models.Query.JoinClause');
                 expect(join.getType()).toBe('left');
                 expect(join.getTable()).toBe('second');
 
@@ -59,7 +59,7 @@ component extends='testbox.system.BaseSpec' {
                 expect(arrayLen(joins)).toBe(1, 'Only one join should exist');
 
                 var join = joins[1];
-                expect(join).toBeInstanceOf('Quick.Query.JoinClause');
+                expect(join).toBeInstanceOf('Quick.models.Query.JoinClause');
                 expect(join.getType()).toBe('right');
                 expect(join.getTable()).toBe('second');
 
@@ -85,7 +85,7 @@ component extends='testbox.system.BaseSpec' {
                 expect(arrayLen(joins)).toBe(1, 'Only one join should exist');
 
                 var join = joins[1];
-                expect(join).toBeInstanceOf('Quick.Query.JoinClause');
+                expect(join).toBeInstanceOf('Quick.models.Query.JoinClause');
                 expect(join.getType()).toBe('inner');
                 expect(join.getTable()).toBe('second');
 
@@ -119,7 +119,7 @@ component extends='testbox.system.BaseSpec' {
                 expect(arrayLen(joins)).toBe(1, 'Only one join should exist');
 
                 var join = joins[1];
-                expect(join).toBeInstanceOf('Quick.Query.JoinClause');
+                expect(join).toBeInstanceOf('Quick.models.Query.JoinClause');
                 expect(join.getType()).toBe('inner');
                 expect(join.getTable()).toBe('second');
 

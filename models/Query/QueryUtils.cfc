@@ -11,6 +11,22 @@ component displayname='QueryUtils' {
             binding.value = arguments.value;
         }
 
+        if (! structKeyExists(binding, 'cfsqltype')) {
+            binding.cfsqltype = inferSqlType(binding.value);
+        }
+
         return binding;
+    }
+
+    public string function inferSqlType(required any value) {
+        if (isNumeric(value)) {
+            return 'CF_SQL_NUMERIC';
+        }
+
+        if (isDate(value)) {
+            return 'CF_SQL_TIMESTAMP';
+        }
+
+        return 'CF_SQL_VARCHAR';
     }
 }

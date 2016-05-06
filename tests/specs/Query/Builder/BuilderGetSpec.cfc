@@ -13,7 +13,7 @@ component extends='testbox.system.BaseSpec' {
                     join.where('second.locale', '=', 'en-US');
                 }).where('first.quantity', '>=', '10');
 
-                expect(query.getBindings()).toBe([{ value = 'en-US' }, { value = '10' }]);
+                expect(query.getBindings()).toBe([{ value = 'en-US', cfsqltype = 'cf_sql_varchar' }, { value = 10, cfsqltype = 'cf_sql_numeric' }]);
             });
 
             it('retreives a map of bindings', function() {

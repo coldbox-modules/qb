@@ -34,6 +34,12 @@ component displayname='JoinClause' {
     }
 
     public JoinClause function on(first, operator, second, combinator = 'and', where = false) {
+        // If we only receive the first two arguments, this is the shortcut where statement
+        if (! structKeyExists(arguments, 'second')) {
+            arguments.second = arguments.operator;
+            arguments.operator = '=';
+        }
+
         if (! arrayContainsNoCase(operators, arguments.operator)) {
             throw('[#operator#] is not a valid sql operator type');
         }
@@ -61,13 +67,6 @@ component displayname='JoinClause' {
 
     public JoinClause function where(first, operator, second, combinator) {
         arguments.where = true;
-
-        // If we only receive the first two arguments, this is the shortcut where statement
-        if (! structKeyExists(arguments, 'second')) {
-            arguments.second = arguments.operator;
-            arguments.operator = '=';
-        }
-
         return on(argumentCollection = arguments);
     }
 

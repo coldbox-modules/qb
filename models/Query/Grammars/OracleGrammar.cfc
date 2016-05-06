@@ -1,7 +1,7 @@
 component displayname='OracleGrammar' implements='Quick.models.Query.Grammars.GrammarInterface' {
 
     variables.selectComponents = [
-        'columns', 'from', 'wheres', 'joins'
+        'columns', 'from', 'joins', 'wheres'
     ];
 
     public string function compileSelect(required Quick.models.Query.Builder query) {

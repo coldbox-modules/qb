@@ -1,8 +1,9 @@
 component displayname='JoinClause' {
 
-    property name="type" type="string";
-    property name="table" type="string";
-    property name="clauses" type="array";
+    property name='type' type='string';
+    property name='table' type='string';
+    property name='clauses' type='array';
+    property name='bindings' type='array';
 
     variables.operators = [
         '=', '<', '>', '<=', '>=', '<>', '!=',
@@ -27,6 +28,7 @@ component displayname='JoinClause' {
         variables.table = arguments.table;
 
         clauses = [];
+        bindings = [];
 
         return this;
     }
@@ -34,6 +36,11 @@ component displayname='JoinClause' {
     public JoinClause function on(first, operator, second, combinator = 'and', where = false) {
         if (! arrayContainsNoCase(operators, arguments.operator)) {
             throw('[#operator#] is not a valid sql operator type');
+        }
+
+        if (arguments.where) {
+            arrayAppend(bindings, arguments.second);
+            arguments.second = '?';
         }
 
         arrayAppend(clauses, {
@@ -47,8 +54,13 @@ component displayname='JoinClause' {
         return this;
     }
 
-    public JoinClause function orOn(first, operator, second) {
+    public JoinClause function orOn(first, operator, second, where = false) {
         arguments.combinator = 'or';
+        return on(argumentCollection = arguments);
+    }
+
+    public JoinClause function where(first, operator, second, combinator = 'and') {
+        arguments.where = true;
         return on(argumentCollection = arguments);
     }
 
@@ -62,5 +74,9 @@ component displayname='JoinClause' {
 
     public array function getClauses() {
         return clauses;
+    }
+
+    public array function getBindings() {
+        return bindings;
     }
 }

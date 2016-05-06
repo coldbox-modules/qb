@@ -142,6 +142,14 @@ component extends='testbox.system.BaseSpec' {
                 expect(clauseTwo.combinator).toBe('and');
                 expect(clauseTwo.where).toBe(false);
             });
+
+            it('adds the join bindings to the builder bindings', function() {
+                query.join('second', function(join) {
+                    join.where('second.locale', '=', 'en-US');
+                });
+
+                expect(query.getRawBindings().join).toBe(['en-US']);
+            });
         });
     }
 }

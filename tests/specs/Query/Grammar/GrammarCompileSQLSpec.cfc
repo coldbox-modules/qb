@@ -91,6 +91,24 @@ component extends='testbox.system.BaseSpec' {
                         .toBe('SELECT * FROM sometable INNER JOIN othertable ON sometable.id = othertable.sometable_id LEFT JOIN anothertable ON othertable.id <= anothertable.othertable_id');
                 });
 
+                it('compiles where statements in joins', function() {
+                    var mockJoin = getMockBox().createMock('Quick.models.Query.JoinClause');
+                    mockJoin.$('getType', 'inner');
+                    mockJoin.$('getTable', 'othertable');
+                    mockJoin.$('getClauses', [{
+                        first = 'othertable.locale',
+                        operator = '=',
+                        second = '?',
+                        combinator = 'and'
+                    }]);
+                    mockQuery.$('getJoins', [ mockJoin ]);
+
+                    var sql = grammar.compileSelect(mockQuery);
+
+                    expect(sql)
+                        .toBe('SELECT * FROM sometable INNER JOIN othertable ON othertable.locale = ?');
+                });
+
                 it('adds all the clauses in a join', function() {
                     var mockJoin = getMockBox().createMock('Quick.models.Query.JoinClause');
                     mockJoin.$('getType', 'inner');

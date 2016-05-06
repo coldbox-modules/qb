@@ -22,7 +22,8 @@ component displayname='Builder' {
     ];
 
     variables.bindings = {
-        "where" = []
+        'join' = [],
+        'where' = []
     };
 
     public Builder function init() {
@@ -94,6 +95,7 @@ component displayname='Builder' {
         }
 
         arrayAppend(variables.joins, join);
+        arrayAppend(bindings.join, join.getBindings(), true);
 
         return this;
     }
@@ -180,7 +182,20 @@ component displayname='Builder' {
         return wheres;
     }
 
-    public struct function getBindings() {
+    public array function getBindings() {
+        var bindingOrder = ['join', 'where'];
+
+        var flatBindings = [];
+        for (var key in bindingOrder) {
+            if (structKeyExists(bindings, key)) {
+                arrayAppend(flatBindings, bindings[key], true);
+            }
+        }
+
+        return flatBindings;
+    }
+
+    public struct function getRawBindings() {
         return bindings;
     }
 
@@ -192,7 +207,7 @@ component displayname='Builder' {
     }
 
     public query function get() {
-        return queryExecute(this.toSQL(), this.getBindings().where);
+        return queryExecute(this.toSQL(), this.getBindings());
     }
 
     // Unused(?)

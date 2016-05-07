@@ -4,10 +4,34 @@ component extends='testbox.system.BaseSpec' {
             beforeEach(function() {
                 variables.query = new Quick.models.Query.Builder();
                 getMockBox().prepareMock(query);
-                query.$property(propertyName = 'utils', mock = new Quick.models.Query.QueryUtils());
+                variables.utils = new Quick.models.Query.QueryUtils();
+                query.$property(propertyName = 'utils', mock = utils);
+                variables.mockWirebox = getMockBox().createStub();
+                var mockJoinClause = getMockBox()
+                    .prepareMock(new Quick.models.Query.JoinClause('inner', 'second'));
+                mockJoinClause.$property(propertyName = 'utils', mock = utils);
+                mockWirebox
+                    .$('getInstance')
+                    .$args(name = 'JoinClause@Quick', initArguments = {
+                        type = 'inner',
+                        table = 'second'
+                    })
+                    .$results(mockJoinClause);
+                query.$property(propertyName = 'wirebox', mock = mockWirebox);
             });
 
             it('does a simple inner join', function() {
+                var mockJoinClause = getMockBox()
+                    .prepareMock(new Quick.models.Query.JoinClause('inner', 'second'));
+                mockJoinClause.$property(propertyName = 'utils', mock = utils);
+                mockWirebox
+                    .$('getInstance')
+                    .$args(name = 'JoinClause@Quick', initArguments = {
+                        type = 'inner',
+                        table = 'second'
+                    })
+                    .$results(mockJoinClause);
+
                 query.join('second', 'first.id', '=', 'second.first_id');
 
                 var joins = query.getJoins();
@@ -31,6 +55,17 @@ component extends='testbox.system.BaseSpec' {
             });
 
             it('does a left join', function() {
+                var mockJoinClause = getMockBox()
+                    .prepareMock(new Quick.models.Query.JoinClause('left', 'second'));
+                mockJoinClause.$property(propertyName = 'utils', mock = utils);
+                mockWirebox
+                    .$('getInstance')
+                    .$args(name = 'JoinClause@Quick', initArguments = {
+                        type = 'left',
+                        table = 'second'
+                    })
+                    .$results(mockJoinClause);
+
                 query.leftJoin('second', 'first.id', '=', 'second.first_id');
 
                 var joins = query.getJoins();
@@ -54,6 +89,17 @@ component extends='testbox.system.BaseSpec' {
             });
 
             it('does a right join', function() {
+                var mockJoinClause = getMockBox()
+                    .prepareMock(new Quick.models.Query.JoinClause('right', 'second'));
+                mockJoinClause.$property(propertyName = 'utils', mock = utils);
+                mockWirebox
+                    .$('getInstance')
+                    .$args(name = 'JoinClause@Quick', initArguments = {
+                        type = 'right',
+                        table = 'second'
+                    })
+                    .$results(mockJoinClause);
+
                 query.rightJoin('second', 'first.id', '=', 'second.first_id');
 
                 var joins = query.getJoins();

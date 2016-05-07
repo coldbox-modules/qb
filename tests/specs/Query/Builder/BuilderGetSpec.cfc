@@ -4,8 +4,22 @@ component extends='testbox.system.BaseSpec' {
             beforeEach(function() {
                 variables.query = new Quick.models.Query.Builder();
                 getMockBox().prepareMock(query);
+
                 var utils = new Quick.models.Query.QueryUtils()
                 query.$property(propertyName = 'utils', mock = utils);
+
+                var mockWirebox = getMockBox().createStub();
+                var mockJoinClause = getMockBox()
+                    .prepareMock(new Quick.models.Query.JoinClause('inner', 'second'));
+                mockJoinClause.$property(propertyName = 'utils', mock = utils);
+                mockWirebox
+                    .$('getInstance')
+                    .$args(name = 'JoinClause@Quick', initArguments = {
+                        type = 'inner',
+                        table = 'second'
+                    })
+                    .$results(mockJoinClause);
+                query.$property(propertyName = 'wirebox', mock = mockWirebox);
             });
 
             it('retreives bindings in a flat array', function() {

@@ -1,6 +1,6 @@
 component displayname='JoinClause' {
 
-    property name='utils';
+    property name='utils' inject='QueryUtils@Quick';
 
     property name='type' type='string';
     property name='table' type='string';
@@ -23,8 +23,7 @@ component displayname='JoinClause' {
 
     public JoinClause function init(
         required string type,
-        required string table,
-        QueryUtils utils = wirebox.getInstance('QueryUtils@Quick')
+        required string table
     ) {
         if (! arrayContainsNoCase(types, arguments.type)) {
             throw('[#type#] is not a valid sql join type');
@@ -33,10 +32,8 @@ component displayname='JoinClause' {
         variables.type = arguments.type;
         variables.table = arguments.table;
 
-        clauses = [];
-        bindings = [];
-
-        variables.utils = arguments.utils;
+        variables.clauses = [];
+        variables.bindings = [];
 
         return this;
     }

@@ -2,6 +2,7 @@ component displayname='Builder' {
 
     property name='grammar' inject='Grammar@Quick';
     property name='utils' inject='QueryUtils@Quick';
+    property name='wirebox' inject='wirebox';
 
     property name='distinct' type='boolean' default='false';
     property name='columns' type='array';
@@ -77,17 +78,20 @@ component displayname='Builder' {
         string type = 'inner',
         any conditions
     ) {
-        var join = new JoinClause(arguments.type, arguments.table, utils);
+        var joinClause = wirebox.getInstance(name = 'JoinClause@Quick', initArguments = {
+            type = arguments.type,
+            table = arguments.table
+        });
 
         if (structKeyExists(arguments, 'first') && isClosure(arguments.first)) {
             arguments.conditions = arguments.first;
         }
 
         if (structKeyExists(arguments, 'conditions') && isClosure(arguments.conditions)) {
-            conditions(join);
+            conditions(joinClause);
         }
         else {
-            join.on(
+            joinClause.on(
                 first = arguments.first,
                 operator = arguments.operator,
                 second = arguments.second,
@@ -95,8 +99,8 @@ component displayname='Builder' {
             );
         }
 
-        arrayAppend(variables.joins, join);
-        arrayAppend(bindings.join, join.getBindings(), true);
+        arrayAppend(variables.joins, joinClause);
+        arrayAppend(bindings.join, joinClause.getBindings(), true);
 
         return this;
     }

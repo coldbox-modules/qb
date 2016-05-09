@@ -163,6 +163,16 @@ component displayname='Builder' {
         return this;
     }
 
+    public Builder function whereIn(column, value, combinator) {
+        arguments.operator = 'in';
+        return where(argumentCollection = arguments);
+    }
+
+    public Builder function whereNotIn(column, value, combinator) {
+        arguments.operator = 'not in';
+        return where(argumentCollection = arguments);
+    }
+
     // Accessors
 
     public boolean function getDistinct() {

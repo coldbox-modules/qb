@@ -51,6 +51,34 @@ component extends='testbox.system.BaseSpec' {
                     ]);
                 });
 
+                describe('specialized where methods', function() {
+                    it('has a whereIn shortcut', function() {
+                        query.whereIn('::some column::', ['::value one::', '::value two::']);
+
+                        var wheres = query.getWheres();
+                        expect(wheres).toBeArray();
+                        expect(arrayLen(wheres)).toBe(1, '1 where clause should exist');
+                        var where = wheres[1];
+                        expect(where.column).toBe('::some column::');
+                        expect(where.operator).toBe('in');
+                        expect(where.value).toBe(['::value one::', '::value two::']);
+                        expect(where.combinator).toBe('and');
+                    });
+
+                    it('has a whereNotIn shortcut', function() {
+                        query.whereNotIn('::some column::', ['::value one::', '::value two::']);
+
+                        var wheres = query.getWheres();
+                        expect(wheres).toBeArray();
+                        expect(arrayLen(wheres)).toBe(1, '1 where clause should exist');
+                        var where = wheres[1];
+                        expect(where.column).toBe('::some column::');
+                        expect(where.operator).toBe('not in');
+                        expect(where.value).toBe(['::value one::', '::value two::']);
+                        expect(where.combinator).toBe('and');
+                    });
+                });
+
                 describe('bindings', function() {
                     it('adds the bindings for where statements received', function() {
                         query.where('::some column::', '=', '::some value::');

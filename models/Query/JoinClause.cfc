@@ -26,7 +26,7 @@ component displayname='JoinClause' {
         required string table
     ) {
         if (! arrayContainsNoCase(types, arguments.type)) {
-            throw('[#type#] is not a valid sql join type');
+            throw(type = 'InvalidSQLType', message = '[#type#] is not a valid sql join type');
         }
 
         variables.type = arguments.type;
@@ -46,7 +46,7 @@ component displayname='JoinClause' {
         }
 
         if (! arrayContainsNoCase(operators, arguments.operator)) {
-            throw('[#operator#] is not a valid sql operator type');
+            throw(type = 'InvalidSQLType', message = '[#operator#] is not a valid sql operator type');
         }
 
         if (arguments.where) {

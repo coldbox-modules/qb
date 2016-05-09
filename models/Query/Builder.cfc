@@ -137,7 +137,7 @@ component displayname='Builder' {
         }
         else if (isInvalidCombinator(arguments.combinator)) {
             throw(
-                type = 'InvalidArgumentException',
+                type = 'InvalidSQLType',
                 message = 'Illegal combinator'
             );
         }
@@ -148,7 +148,7 @@ component displayname='Builder' {
         }
         else if (isInvalidOperator(arguments.operator)) {
             throw(
-                type = 'InvalidArgumentException',
+                type = 'InvalidSQLType',
                 message = 'Illegal operator'
             );
         }

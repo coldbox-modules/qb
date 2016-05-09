@@ -268,8 +268,7 @@ component displayname='Builder' {
             for (var key in missingMethodArguments) {
                 args[key + 1] = missingMethodArguments[key];
             }
-            where(argumentCollection = args);
-            return;
+            return where(argumentCollection = args);
         }
 
         throw("Method does not exist [#missingMethodName#]");

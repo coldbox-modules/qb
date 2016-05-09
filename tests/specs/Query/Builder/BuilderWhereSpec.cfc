@@ -67,12 +67,18 @@ component extends='testbox.system.BaseSpec' {
                 describe('dynamic where statements', function() {
                     it('translates whereColumn in to where("column"', function() {
                         query.whereSomeColumn('::some value::');
+                        
                         expect(query.getWheres()).toBe([{
                             column = 'somecolumn',
                             operator = '=',
                             value = '::some value::',
                             combinator = 'and'
                         }]);
+                    });
+
+                    it('returns the query instance to continue chaining', function() {
+                        var q = query.whereSomeColumn('::some value::');
+                        expect(q).toBeInstanceOf('Quick.models.Query.Builder');
                     });
                 });
 

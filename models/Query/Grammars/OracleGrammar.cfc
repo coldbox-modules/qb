@@ -32,10 +32,10 @@ component displayname='OracleGrammar' implements='Quick.models.Query.Grammars.Gr
         return arrayToList(arrayMap(arguments.joins, function(join) {
             var clauses = arrayToList(arrayMap(join.getClauses(), function(clause, index) {
                 if (index == 1) {
-                    return '#clause.first# #clause.operator# #clause.second#';
+                    return '#clause.first# #UCase(clause.operator)# #clause.second#';
                 } 
 
-                return '#UCase(clause.combinator)# #clause.first# #clause.operator# #clause.second#';
+                return '#UCase(clause.combinator)# #clause.first# #UCase(clause.operator)# #clause.second#';
             }), ' ');
             return '#UCase(join.getType())# JOIN #join.getTable()# ON #clauses#';
         }), ' ');
@@ -48,10 +48,10 @@ component displayname='OracleGrammar' implements='Quick.models.Query.Grammars.Gr
             }
 
             if (index == 1) {
-                return '#where.column# #where.operator# ?';
+                return '#where.column# #UCase(where.operator)# ?';
             }
 
-            return '#uCase(where.combinator)# #where.column# #where.operator# ?';
+            return '#uCase(where.combinator)# #where.column# #UCase(where.operator)# ?';
         });
 
         whereStatements = ArrayFilter(whereStatements, function(statement) {

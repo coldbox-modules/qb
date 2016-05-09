@@ -4,6 +4,7 @@
             "port":"7777"
         }
     },
+    "openbrowser":false,
     "name":"quick",
     "app":{
         "cfengine":"lucee@4.5"

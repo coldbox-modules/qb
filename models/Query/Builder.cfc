@@ -138,7 +138,7 @@ component displayname='Builder' {
             );
         }
 
-        if (argCount == 2) {
+        if (! structKeyExists(arguments, 'value')) {
             arguments.value = arguments.operator;
             arguments.operator = '=';
         }
@@ -161,6 +161,11 @@ component displayname='Builder' {
         arrayAppend(bindings.where, binding);
 
         return this;
+    }
+
+    public Builder function orWhere(column, operator, value) {
+        arguments.combinator = 'or';
+        return where(argumentCollection = arguments);
     }
 
     public Builder function whereIn(column, value, combinator) {
@@ -279,6 +284,15 @@ component displayname='Builder' {
                 args[key + 1] = missingMethodArguments[key];
             }
             return where(argumentCollection = args);
+        }
+
+        if (! arrayIsEmpty(REMatchNoCase('^orWhere(.+)', missingMethodName))) {
+            var args = { '1' = mid(missingMethodName, 8) };
+            for (var key in missingMethodArguments) {
+                args[key + 1] = missingMethodArguments[key];
+            }
+
+            return orWhere(argumentCollection = args);
         }
 
         throw("Method does not exist [#missingMethodName#]");

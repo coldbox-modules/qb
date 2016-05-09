@@ -77,6 +77,19 @@ component extends='testbox.system.BaseSpec' {
                         expect(where.value).toBe(['::value one::', '::value two::']);
                         expect(where.combinator).toBe('and');
                     });
+
+                    it('has a orWhere shortcut', function() {
+                        query.orWhere('::some column::', '<>', '::some value::');
+
+                        var wheres = query.getWheres();
+                        expect(wheres).toBeArray();
+                        expect(arrayLen(wheres)).toBe(1, '1 where clause should exist');
+                        var where = wheres[1];
+                        expect(where.column).toBe('::some column::');
+                        expect(where.operator).toBe('<>');
+                        expect(where.value).toBe('::some value::');
+                        expect(where.combinator).toBe('or');
+                    });
                 });
 
                 describe('bindings', function() {
@@ -101,6 +114,17 @@ component extends='testbox.system.BaseSpec' {
                             operator = '=',
                             value = '::some value::',
                             combinator = 'and'
+                        }]);
+                    });
+
+                    it('also translates orWhereColumn in to orWhere("column"', function() {
+                        query.orWhereSomeColumn('::some value::');
+                        
+                        expect(query.getWheres()).toBe([{
+                            column = 'somecolumn',
+                            operator = '=',
+                            value = '::some value::',
+                            combinator = 'or'
                         }]);
                     });
 

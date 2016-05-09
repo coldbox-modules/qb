@@ -195,7 +195,12 @@ component extends='testbox.system.BaseSpec' {
                     join.where('second.locale', '=', 'en-US');
                 });
 
-                expect(query.getRawBindings().join).toBe([{ value = 'en-US', cfsqltype = 'cf_sql_varchar' }]);
+                var bindings = query.getRawBindings().join;
+                expect(bindings).toBeArray();
+                expect(arrayLen(bindings)).toBe(1, '1 binding should exist');
+                var binding = bindings[1];
+                expect(binding.value).toBe('en-US');
+                expect(binding.cfsqltype).toBe('cf_sql_varchar');
             });
         });
     }

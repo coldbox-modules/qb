@@ -27,7 +27,15 @@ component extends='testbox.system.BaseSpec' {
                     join.where('second.locale', '=', 'en-US');
                 }).where('first.quantity', '>=', '10');
 
-                expect(query.getBindings()).toBe([{ value = 'en-US', cfsqltype = 'cf_sql_varchar' }, { value = 10, cfsqltype = 'cf_sql_numeric' }]);
+                var bindings = query.getBindings();
+                expect(bindings).toBeArray();
+                expect(arrayLen(bindings)).toBe(2, '2 bindings should exist');
+                var binding = bindings[1];
+                expect(binding.value).toBe('en-US');
+                expect(binding.cfsqltype).toBe('cf_sql_varchar');
+                var binding = bindings[2];
+                expect(binding.value).toBe(10);
+                expect(binding.cfsqltype).toBe('cf_sql_numeric');
             });
 
             it('retreives a map of bindings', function() {

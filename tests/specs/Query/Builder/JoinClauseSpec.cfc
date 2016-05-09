@@ -138,7 +138,10 @@ component extends='testbox.system.BaseSpec' {
 
                     var bindings = join.getBindings();
                     expect(arrayLen(bindings)).toBe(1, 'Only one clause should exist in the join statement');
-                    expect(bindings[1]).toBe({ value = 'en-US', cfsqltype = 'cf_sql_varchar' });
+
+                    var binding = bindings[1];
+                    expect(binding.value).toBe('en-US');
+                    expect(binding.cfsqltype).toBe('cf_sql_varchar');
                 });
             });
         });

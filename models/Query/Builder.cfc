@@ -12,11 +12,7 @@ component displayname='Builder' {
 
     variables.operators = [
         '=', '<', '>', '<=', '>=', '<>', '!=',
-        'like', 'like binary', 'not like', 'between', 'ilike',
-        '&', '|', '^', '<<', '>>',
-        'rlike', 'regexp', 'not regexp',
-        '~', '~*', '!~', '!~*', 'similar to',
-        'not similar to',
+        'like', 'not like', 'between', 'in', 'not in'
     ];
 
     variables.combinators = [

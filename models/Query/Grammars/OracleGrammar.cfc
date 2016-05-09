@@ -47,11 +47,16 @@ component displayname='OracleGrammar' implements='Quick.models.Query.Grammars.Gr
                 return '';
             }
 
-            if (index == 1) {
-                return '#where.column# #UCase(where.operator)# ?';
+            var placeholder = '?';
+            if (where.operator == 'in' || where.operator == 'not in') {
+                placeholder = '(#placeholder#)';
             }
 
-            return '#uCase(where.combinator)# #where.column# #UCase(where.operator)# ?';
+            if (index == 1) {
+                return '#where.column# #UCase(where.operator)# #placeholder#';
+            }
+
+            return '#uCase(where.combinator)# #where.column# #UCase(where.operator)# #placeholder#';
         });
 
         whereStatements = ArrayFilter(whereStatements, function(statement) {

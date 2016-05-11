@@ -1,4 +1,6 @@
 #!/bin/bash
+sleep 10
+
 curl http://127.0.0.1:7777/tests/runner.cfm\?propertiesSummary\=true\&reporter\=text
 
 if ! grep 'test.passed=true' tests/results/TEST.properties

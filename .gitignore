@@ -1,3 +1,4 @@
 testbox
 modules
 node_modules
+tests/results/TEST.properties

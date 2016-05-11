@@ -12,8 +12,14 @@ component displayname='QueryUtils' {
     }
 
     public string function inferSqlType(required any value) {
-        if (isList(value)) {
-            return inferSqlType(listToArray(value)[1]);
+        if (isList(arguments.value)) {
+            arguments.value = listToArray(arguments.value);
+        }
+
+        if (isArray(value)) {
+            return arraySame(value, function(val) {
+                return inferSqlType(val);
+            }, 'CF_SQL_VARCHAR');
         }
 
         if (isNumeric(value)) {
@@ -42,5 +48,19 @@ component displayname='QueryUtils' {
         
         var listAsArray = listToArray(arguments.value);
         return arrayLen(listAsArray) > 1;
+    }
+
+    private any function arraySame(required array args, required any closure, any default = '') {
+        if (arrayLen(arguments.args) == 0) {
+            return arguments.default;
+        }
+
+        var initial = closure(arguments.args[1]);
+
+        var same = arrayEvery(arguments.args, function(arg) {
+            return initial == closure(arg);
+        });
+
+        return same ? initial : default;
     }
 }

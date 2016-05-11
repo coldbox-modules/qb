@@ -1,5 +1,7 @@
 # Quick
 
+[![Build Status](https://travis-ci.org/elpete/quick.svg?branch=master)](https://travis-ci.org/elpete/quick)
+
 ## Introduction
 
 Quick is a fluent query builder for ColdBox.  Using Quick, you can:

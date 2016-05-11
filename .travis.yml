@@ -5,7 +5,7 @@ jdk:
 env:
   matrix:
     - PLATFORM=lucee@4.5
-    - PLATFORM=lucee@5
+    - PLATFORM=lucee@5-SNAPSHOT
     - PLATFORM=adobe@2016
     - PLATFORM=adobe@11
     - PLATFORM=adobe@10

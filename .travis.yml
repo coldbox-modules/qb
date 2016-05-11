@@ -18,8 +18,10 @@ install:
 - /tmp/bin/box install
 before_script:
 - box server start cfengine=$PLATFORM
-- chmod +x test.sh
-script:
-- "./test.sh"
+script: >
+  sleep 10
+  testResults="$(box testbox run runner='http://127.0.0.1:7777/tests/runner.cfm' )";
+  echo "$testResults";
+  if grep -i "\[(Failures|Errors): [1-9][0-9]\?[0-9]\?\]\|\[Errors: [1-9][0-9]\?[0-9]\?\]\|<t[^>]*>\|<b[^>]*>" <<< $testResults;  then exit 1; fi
 notifications:
     email: false

@@ -62,6 +62,11 @@ Quick enables you to explore new ways of organizing your code by letting you pas
 Here's a gist with an example of the powerful models you can create with this!
 https://gist.github.com/elpete/80d641b98025f16059f6476561d88202
 
+## Requirements
+
++ Adobe ColdFusion 10, 11, or 2016
++ Lucee 4.5 or 5
+
 ## Installation
 
 Installation is easy through [CommandBox](https://www.ortussolutions.com/products/commandbox) and [ForgeBox](https://www.coldbox.org/forgebox).  Simply type `box install quick` to get started.

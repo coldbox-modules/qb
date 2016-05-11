@@ -50,17 +50,19 @@ component displayname='QueryUtils' {
         return arrayLen(listAsArray) > 1;
     }
 
-    private any function arraySame(required array args, required any closure, any default = '') {
+    private any function arraySame(required array args, required any closure, any defaultValue = '') {
         if (arrayLen(arguments.args) == 0) {
-            return arguments.default;
+            return arguments.defaultValue;
         }
 
         var initial = closure(arguments.args[1]);
 
-        var same = arrayEvery(arguments.args, function(arg) {
-            return initial == closure(arg);
-        });
+        for (var arg in arguments.args) {
+            if (closure(arg) != initial) {
+                return defaultValue;
+            }
+        }
 
-        return same ? initial : default;
+        return initial;
     }
 }

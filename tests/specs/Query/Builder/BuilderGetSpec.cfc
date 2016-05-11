@@ -5,7 +5,7 @@ component extends='testbox.system.BaseSpec' {
                 variables.query = new Quick.models.Query.Builder();
                 getMockBox().prepareMock(query);
 
-                var utils = new Quick.models.Query.QueryUtils()
+                var utils = new Quick.models.Query.QueryUtils();
                 query.$property(propertyName = 'utils', mock = utils);
 
                 var mockWirebox = getMockBox().createStub();

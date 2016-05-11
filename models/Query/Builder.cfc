@@ -48,12 +48,24 @@ component displayname='Builder' {
     }
 
     public Builder function select(required any columns) {
-        variables.columns = normalizeToArray(argumentCollection = arguments);
+        var args = {};
+        var count = structCount(arguments);
+        for (var arg in arguments) {
+            args[count] = arguments[arg];
+            count--;
+        }
+        variables.columns = normalizeToArray(argumentCollection = args);
         return this;
     }
 
     public Builder function addSelect(required any columns) {
-        arrayAppend(variables.columns, normalizeToArray(argumentCollection = arguments), true);
+        var args = {};
+        var count = structCount(arguments);
+        for (var arg in arguments) {
+            args[count] = arguments[arg];
+            count--;
+        }
+        arrayAppend(variables.columns, normalizeToArray(argumentCollection = args), true);
         return this;
     }
 
@@ -248,15 +260,20 @@ component displayname='Builder' {
     }
 
     private array function normalizeVariadicArgumentsToArray(required struct args) {
-        return arrayMap(structKeyArray(args), function(arg) {
-            return args[arg];
-        });
+        var normalizedArgs = [];
+        for (var arg in arguments.args) {
+            arrayAppend(normalizedArgs, arguments.args[arg]);
+        }
+        return normalizedArgs;
     }
 
     private array function normalizeListArgumentsToArray(required string list) {
-        return arrayMap(listToArray(list, ','), function(column) {
-            return trim(column);
-        });
+        var listAsArray = listToArray(arguments.list);
+        var items = [];
+        for (var item in listAsArray) {
+            arrayAppend(items, trim(item));
+        }
+        return items;
     }
 
     private boolean function isInvalidOperator(required string operator) {
@@ -264,13 +281,18 @@ component displayname='Builder' {
     }
 
     private boolean function isInvalidCombinator(required string combinator) {
-        return ! arrayContainsNoCase(combinators, combinator);
+        for (var validCombinator in variables.combinators) {
+            if (validCombinator == arguments.combinator) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private function argumentCount(args) {
         var count = 0;
         for (var key in args) {
-            if (! isNull(args[key]) && ! isEmpty(args[key])) {
+            if (! isNull(args[key])) {
                 count++;
             }
         }
@@ -279,7 +301,7 @@ component displayname='Builder' {
 
     public any function onMissingMethod(string missingMethodName, struct missingMethodArguments) {
         if (! arrayIsEmpty(REMatchNoCase('^where(.+)', missingMethodName))) {
-            var args = { '1' = mid(missingMethodName, 6) };
+            var args = { '1' = mid(missingMethodName, 6, len(missingMethodName) - 5) };
             for (var key in missingMethodArguments) {
                 args[key + 1] = missingMethodArguments[key];
             }
@@ -287,7 +309,7 @@ component displayname='Builder' {
         }
 
         if (! arrayIsEmpty(REMatchNoCase('^orWhere(.+)', missingMethodName))) {
-            var args = { '1' = mid(missingMethodName, 8) };
+            var args = { '1' = mid(missingMethodName, 8, len(missingMethodName) - 7) };
             for (var key in missingMethodArguments) {
                 args[key + 1] = missingMethodArguments[key];
             }

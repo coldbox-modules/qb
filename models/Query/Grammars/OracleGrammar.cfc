@@ -10,10 +10,12 @@ component displayname='OracleGrammar' implements='Quick.models.Query.Grammars.Gr
 
         for (var component in selectComponents) {
             var componentResult = invoke(query, 'get' & component);
-            arrayAppend(sql, invoke(this, 'compile' & component, {
+            var func = variables['compile#component#'];
+            var args = {
                 'query' = query,
                 '#component#' = componentResult
-            }));
+            };
+            arrayAppend(sql, func(argumentCollection = args));
         }
 
         return concatenate(sql);
@@ -29,22 +31,38 @@ component displayname='OracleGrammar' implements='Quick.models.Query.Grammars.Gr
     }
 
     private string function compileJoins(required Quick.models.Query.Builder query, required array joins) {
-        return arrayToList(arrayMap(arguments.joins, function(join) {
-            var clauses = arrayToList(arrayMap(join.getClauses(), function(clause, index) {
-                if (index == 1) {
-                    return '#clause.first# #UCase(clause.operator)# #clause.second#';
-                } 
+        var joinsArray = [];
+        for (var join in arguments.joins) {
+            var firstOne = true;
+            var clausesArray = [];
+            for (var clause in join.getClauses()) {
+                if (firstOne) {
+                    firstOne = false;
+                    arrayAppend(
+                        clausesArray,
+                        '#clause.first# #UCase(clause.operator)# #clause.second#'
+                    );
+                }
+                else {
+                    arrayAppend(
+                        clausesArray,
+                        '#UCase(clause.combinator)# #clause.first# #UCase(clause.operator)# #clause.second#'
+                    );
+                }
+            }
+            var clauses = arrayToList(clausesArray, ' ');
+            arrayAppend(joinsArray, '#UCase(join.getType())# JOIN #join.getTable()# ON #clauses#');
+        }
 
-                return '#UCase(clause.combinator)# #clause.first# #UCase(clause.operator)# #clause.second#';
-            }), ' ');
-            return '#UCase(join.getType())# JOIN #join.getTable()# ON #clauses#';
-        }), ' ');
+        return arrayToList(joinsArray, ' ');
     }
 
     private string function compileWheres(required Quick.models.Query.Builder query, requierd array wheres) {
-        var whereStatements = ArrayMap(wheres, function(where, index) {
+        var wheresArray = [];
+        var firstOne = true;
+        for (var where in arguments.wheres) {
             if (! isStruct(where)) {
-                return '';
+                continue;
             }
 
             var placeholder = '?';
@@ -52,22 +70,26 @@ component displayname='OracleGrammar' implements='Quick.models.Query.Grammars.Gr
                 placeholder = '(#placeholder#)';
             }
 
-            if (index == 1) {
-                return '#where.column# #UCase(where.operator)# #placeholder#';
+            if (firstOne) {
+                firstOne = false;
+                arrayAppend(
+                    wheresArray,
+                    '#where.column# #UCase(where.operator)# #placeholder#'
+                );
             }
+            else {
+                arrayAppend(
+                    wheresArray,
+                    '#uCase(where.combinator)# #where.column# #UCase(where.operator)# #placeholder#'
+                );
+            }
+        }
 
-            return '#uCase(where.combinator)# #where.column# #UCase(where.operator)# #placeholder#';
-        });
-
-        whereStatements = ArrayFilter(whereStatements, function(statement) {
-            return statement != '';
-        });
-
-        if (arrayIsEmpty(whereStatements)) {
+        if (arrayIsEmpty(wheresArray)) {
             return '';
         }
 
-        return "WHERE #ArrayToList(whereStatements, ' ')#";
+        return "WHERE #ArrayToList(wheresArray, ' ')#";
     }
 
     private string function concatenate(required array sql) {

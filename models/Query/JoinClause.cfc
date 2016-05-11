@@ -13,7 +13,7 @@ component displayname='JoinClause' {
         '&', '|', '^', '<<', '>>',
         'rlike', 'regexp', 'not regexp',
         '~', '~*', '!~', '!~*', 'similar to',
-        'not similar to',
+        'not similar to'
     ];
 
     variables.types = [
@@ -25,7 +25,13 @@ component displayname='JoinClause' {
         required string type,
         required string table
     ) {
-        if (! arrayContainsNoCase(types, arguments.type)) {
+        var typeIsValid = false;
+        for (var validType in variables.types) {
+            if (validType == arguments.type) {
+                typeIsValid = true;
+            }
+        }
+        if (! typeIsValid) {
             throw(type = 'InvalidSQLType', message = '[#type#] is not a valid sql join type');
         }
 
@@ -45,7 +51,13 @@ component displayname='JoinClause' {
             arguments.operator = '=';
         }
 
-        if (! arrayContainsNoCase(operators, arguments.operator)) {
+        var operatorIsValid = false;
+        for (var validOperator in variables.operators) {
+            if (validOperator == arguments.operator) {
+                operatorIsValid = true;
+            }
+        }
+        if (! operatorIsValid) {
             throw(type = 'InvalidSQLType', message = '[#operator#] is not a valid sql operator type');
         }
 

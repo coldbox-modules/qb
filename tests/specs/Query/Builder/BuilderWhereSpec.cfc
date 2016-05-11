@@ -137,7 +137,7 @@ component extends='testbox.system.BaseSpec' {
                 describe('operators', function() {
                     it('throws an exception on illegal operators', function() {
                         expect(function() {
-                            query.where('::some column::', '::invalid operator::', '::some value::')
+                            query.where('::some column::', '::invalid operator::', '::some value::');
                         }).toThrow(
                             type = 'InvalidArgumentException',
                             regex = 'Illegal operator'

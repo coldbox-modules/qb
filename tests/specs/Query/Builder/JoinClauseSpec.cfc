@@ -8,10 +8,10 @@ component extends='testbox.system.BaseSpec' {
             });
 
             it('validates the type is a valid sql join type', function() {
-                expect(function() { new Quick.models.Query.JoinClause('gibberish', 'sometable') }).toThrow();
-                expect(function() { new Quick.models.Query.JoinClause('left typo', 'sometable') }).toThrow();
-                expect(function() { new Quick.models.Query.JoinClause('left', 'sometable') }).notToThrow();
-                expect(function() { new Quick.models.Query.JoinClause('left outer', 'sometable') }).notToThrow();
+                expect(function() { new Quick.models.Query.JoinClause('gibberish', 'sometable'); }).toThrow();
+                expect(function() { new Quick.models.Query.JoinClause('left typo', 'sometable'); }).toThrow();
+                expect(function() { new Quick.models.Query.JoinClause('left', 'sometable'); }).notToThrow();
+                expect(function() { new Quick.models.Query.JoinClause('left outer', 'sometable'); }).notToThrow();
             });
         });
 

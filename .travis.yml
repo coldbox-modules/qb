@@ -4,11 +4,11 @@ jdk:
 - oraclejdk8
 env:
   matrix:
-    - PLATFORM=lucee@4.5
-    - PLATFORM=lucee@5-SNAPSHOT
-    - PLATFORM=adobe@2016
-    - PLATFORM=adobe@11
-    - PLATFORM=adobe@10
+    - ENGINE=lucee@4.5
+    - ENGINE=lucee@5-SNAPSHOT
+    - ENGINE=adobe@2016
+    - ENGINE=adobe@11
+    - ENGINE=adobe@10
 before_install:
 - mkdir /tmp/bin
 - export PATH=$PATH:/tmp/bin
@@ -17,7 +17,7 @@ install:
 - unzip /tmp/box.zip -d /tmp/bin
 - /tmp/bin/box install
 before_script:
-- box server start cfengine=$PLATFORM
+- box server start cfengine=$ENGINE
 script: >
   testResults="$(box testbox run runner='http://127.0.0.1:7777/tests/runner.cfm' )";
   echo "$testResults";

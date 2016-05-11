@@ -1,0 +1,25 @@
+language: java
+sudo: false
+jdk:
+- oraclejdk8
+env:
+  matrix:
+    - PLATFORM=lucee@4.5
+    - PLATFORM=lucee@5
+    - PLATFORM=adobe@2016
+    - PLATFORM=adobe@11
+    - PLATFORM=adobe@10
+before_install:
+- mkdir /tmp/bin
+- export PATH=$PATH:/tmp/bin
+install:
+- curl --location 'https://www.ortussolutions.com/parent/download/commandbox/type/bin' -o /tmp/box.zip
+- unzip /tmp/box.zip -d /tmp/bin
+- /tmp/bin/box install
+before_script:
+- box server start cfengine=$PLATFORM
+- chmod +x test.sh
+script:
+- "./test.sh"
+notifications:
+    email: false

@@ -48,23 +48,31 @@ component displayname='Builder' {
     }
 
     public Builder function select(required any columns) {
+        // This block is necessary for ACF 10.
+        // It can't be extracted to a function because
+        // the arguments struct doesn't get passed correctly.
         var args = {};
         var count = structCount(arguments);
         for (var arg in arguments) {
             args[count] = arguments[arg];
             count--;
         }
+
         variables.columns = normalizeToArray(argumentCollection = args);
         return this;
     }
 
     public Builder function addSelect(required any columns) {
+        // This block is necessary for ACF 10.
+        // It can't be extracted to a function because
+        // the arguments struct doesn't get passed correctly.
         var args = {};
         var count = structCount(arguments);
         for (var arg in arguments) {
             args[count] = arguments[arg];
             count--;
         }
+        
         arrayAppend(variables.columns, normalizeToArray(argumentCollection = args), true);
         return this;
     }

@@ -1,25 +1,25 @@
 language: java
-sudo: false
+sudo: required
 jdk:
 - oraclejdk8
 env:
   matrix:
     - ENGINE=lucee@4.5
-    - ENGINE=lucee@5-SNAPSHOT
+    - ENGINE=lucee@5
     - ENGINE=adobe@2016
     - ENGINE=adobe@11
     - ENGINE=adobe@10
 before_install:
-- mkdir /tmp/bin
-- export PATH=$PATH:/tmp/bin
+- sudo apt-key adv --keyserver keys.gnupg.net --recv 6DA70622
+- sudo echo "deb http://downloads.ortussolutions.com/debs/noarch /" | sudo tee -a
+  /etc/apt/sources.list.d/commandbox.list
 install:
-- curl --location 'http://integration.stg.ortussolutions.com/artifacts/ortussolutions/commandbox/3.1.0/commandbox-bin-3.1.0.zip' -o /tmp/box.zip
-- unzip /tmp/box.zip -d /tmp/bin
-- /tmp/bin/box install
+- sudo apt-get update && sudo apt-get --assume-yes install commandbox
+- box install
 before_script:
 - box server start cfengine=$ENGINE
 script: >
-  testResults="$(box testbox run runner='http://127.0.0.1:7777/tests/runner.cfm' )";
+  testResults="$(box testbox run runner='http://127.0.0.1:12121/tests/runner.cfm' )";
   echo "$testResults";
   if grep -i "\[(Failures|Errors): [1-9][0-9]\?[0-9]\?\]\|\[Errors: [1-9][0-9]\?[0-9]\?\]\|<t[^>]*>\|<b[^>]*>" <<< $testResults;  then exit 1; fi
 notifications:

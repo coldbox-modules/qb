@@ -1,27 +1,27 @@
 component displayname='Builder' {
 
-    property name='grammar' inject='Grammar@Quick';
-    property name='utils' inject='QueryUtils@Quick';
-    property name='wirebox' inject='wirebox';
+    property name="grammar" inject="Grammar@Quick";
+    property name="utils" inject="QueryUtils@Quick";
+    property name="wirebox" inject="wirebox";
 
-    property name='distinct' type='boolean' default='false';
-    property name='columns' type='array';
-    property name='from' type='string';
-    property name='joins' type='array';
-    property name='wheres' type='array';
+    property name="isDistinct" type="boolean" default="false";
+    property name="columns" type="array";
+    property name="from" type="string";
+    property name="joins" type="array";
+    property name="wheres" type="array";
 
     variables.operators = [
-        '=', '<', '>', '<=', '>=', '<>', '!=',
-        'like', 'not like', 'between', 'in', 'not in'
+        "=", "<", ">", "<=", ">=", "<>", "!=",
+        "like", "not like", "between", "in", "not in"
     ];
 
     variables.combinators = [
-        'AND', 'OR'
+        "AND", "OR"
     ];
 
     variables.bindings = {
-        'join' = [],
-        'where' = []
+        "join" = [],
+        "where" = []
     };
 
     public Builder function init() {
@@ -31,10 +31,10 @@ component displayname='Builder' {
     }
 
     private void function setDefaultValues() {
-        variables.distinct = false;
-        variables.columns = ['*'];
+        variables.isDistinct = false;
+        variables.columns = ["*"];
         variables.joins = [];
-        variables.from = '';
+        variables.from = "";
         variables.wheres = [];
     }
 
@@ -42,7 +42,7 @@ component displayname='Builder' {
     // select methods
 
     public Builder function distinct() {
-        variables.distinct = true;
+        variables.isDistinct = true;
 
         return this;
     }
@@ -201,7 +201,7 @@ component displayname='Builder' {
     // Accessors
 
     public boolean function getDistinct() {
-        return distinct;
+        return variables.isDistinct;
     }
 
     public array function getColumns() {

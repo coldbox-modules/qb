@@ -9,6 +9,24 @@ component extends="testbox.system.BaseSpec" {
                     expect( builder.toSql() ).toBe( 'SELECT * FROM "users"' );
                 } );
 
+                it( "can specify the column to select", function() {
+                    var builder = getBuilder();
+                    builder.select( "name" ).from( "users" );
+                    expect( builder.toSql() ).toBe( 'SELECT "name" FROM "users"' );
+                } );
+
+                it( "can select multiple columns using variadic parameters", function() {
+                    var builder = getBuilder();
+                    builder.select( "id", "name" ).from( "users" );
+                    expect( builder.toSql() ).toBe( 'SELECT "id", "name" FROM "users"' );
+                } );
+
+                it( "can select multiple columns using an array", function() {
+                    var builder = getBuilder();
+                    builder.select( [ "name", builder.raw( "COUNT(*)" ) ] ).from( "users" );
+                    expect( builder.toSql() ).toBe( 'SELECT "name", COUNT(*) FROM "users"' );
+                } );
+
                 it( "can add selects to a query", function() {
                     var builder = getBuilder();
                     builder.select( "foo" )
@@ -116,6 +134,81 @@ component extends="testbox.system.BaseSpec" {
                         );
                         expect( builder.getBindings() ).toBe( [] );
                     } );
+
+                    it( "can add nested where statements", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).where( "email", "foo" )
+                            .orWhere( function( query ) {
+                                query.where( "name", "bar" ).where( "age", ">=", "21" );
+                            } );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "users" WHERE "email" = ? OR ("name" = ? AND "age" >= ?)'
+                        );
+                        expect( builder.getBindings() ).toBe( [ "foo", "bar", 21 ] );
+                    } );
+
+                    it( "can have full sub-selects in where statements", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).where( "email", "foo" )
+                            .orWhere( "id", "=", function( query ) {
+                                query.select( query.raw( "MAX(id)" ) ).from( "users" )
+                                    .where( "email", "bar" );
+                            } );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "users" WHERE "email" = ? OR id = (SELECT MAX(id) FROM "users" WHERE "email" = ?)'
+                        );
+                        expect( builder.getBindings() ).toBe( [ "foo", "bar" ] );
+                    } );
+                } );
+
+                describe( "where exists", function() {
+                    it( "can add a where exists clause", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "can add a where not exists clause", function() {
+                        fail( "test not implemented yet" );
+                    } );
+                } );
+
+                describe( "where null", function() {
+                    it( "can add where null statements", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).whereNull( "id" );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "users" WHERE "id" IS NULL'
+                        );
+                        expect( builder.getBindings() ).toBe( [] );
+                    } );
+
+                    it( "can add or where null statements", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" )
+                            .where( "id", 1 ).orWhereNull( "id" );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "users" WHERE "id" = ? OR "id" IS NULL'
+                        );
+                        expect( builder.getBindings() ).toBe( [ 1 ] );
+                    } );
+
+                    it( "can add where not null statements", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).whereNull( "id" );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "users" WHERE "id" IS NOT NULL'
+                        );
+                        expect( builder.getBindings() ).toBe( [] );
+                    } );
+
+                    it( "can add or where not null statements", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" )
+                            .where( "id", 1 ).orWhereNotNull( "id" );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "users" WHERE "id" = ? OR "id" IS NOT NULL'
+                        );
+                        expect( builder.getBindings() ).toBe( [ 1 ] );
+                    } );
                 } );
 
                 describe( "where between", function() {
@@ -188,6 +281,17 @@ component extends="testbox.system.BaseSpec" {
                             'SELECT * FROM "users" WHERE 1 = 1'
                         );
                         expect( builder.getBindings() ).toBe( [] );
+                    } );
+
+                    it( "handles sub selects in 'in' statements", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).whereIn( "id", function( query ) {
+                            builder.select( "id" ).from( "users" ).where( "age", ">", 25 );
+                        } );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "users" WHERE "id" IN (SELECT "id" FROM "users" WHERE "age" > ?)'
+                        );
+                        expect( builder.getBindings() ).toBe( [ 25 ] );
                     } );
                 } );
             } );
@@ -263,6 +367,85 @@ component extends="testbox.system.BaseSpec" {
                         'SELECT * FROM "users" WHERE "id" = ? AND "email" = ?'
                     );
                     expect( builder.getBindings() ).toBe( [ 1, "foo" ] );
+                } );
+            } );
+
+            describe( "group bys", function() {
+                it( "can add a simple group by", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" ).groupBy( "email" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" GROUP BY "email"'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can group by multiple fields using variadic parameters", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" ).groupBy( "id", "email" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" GROUP BY "id", "email"'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can group by multiple fields using an array", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" ).groupBy( [ "id", "email" ] );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" GROUP BY "id", "email"'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can group by multiple fields using raw sql", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .groupBy( builder.raw( "DATE(created_at)" ) );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" GROUP BY DATE(created_at)'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+            } );
+
+            describe( "order bys", function() {
+                it( "can add a simple order by", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" ).orderBy( "email" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" ORDER BY "email" ASC'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can order in descending order", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" ).orderBy( "email", "desc" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" ORDER BY "email" DESC'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "combines all order by calls", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .orderBy( "id" ).orderBy( "email", "desc" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" ORDER BY "id" ASC, "email" DESC'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can order by multiple fields using variadic parameters", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .groupBy( builder.raw( "DATE(created_at)" ) );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" ORDER BY(created_at)'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
                 } );
             } );
         } );

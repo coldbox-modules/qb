@@ -23,11 +23,11 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
 
     private string function compileColumns( required Quick.models.Query.Builder query, required array columns ) {
         var select = query.getDistinct() ? "SELECT DISTINCT " : "SELECT ";
-        return select & arrayToList( columns );
+        return select & columns.map( wrapColumn ).toList( ", " );
     }
 
     private string function compileFrom( required Quick.models.Query.Builder query, required string from ) {
-        return "FROM " & from;
+        return "FROM " & wrapTable( from );
     }
 
     private string function compileJoins( required Quick.models.Query.Builder query, required array joins ) {
@@ -96,5 +96,29 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
         return arrayToList( arrayFilter( sql, function( item ) {
             return item != "";
         } ), " " );
+    }
+
+    private string function wrapTable( required any table ) {
+        return table.listToArray( "." ).map( wrapValue ).toList( "." );
+    }
+
+    private string function wrapColumn( required any column ) {
+        if ( isInstanceOf( column, "quick.models.Query.Expression" ) ) {
+            return column.getSQL();
+        }
+        var alias = "";
+        if ( column.find( "as" ) ) {
+            alias = column.listToArray( " as ", false, true )[ 2 ];
+            column = column.listToArray( " as ", false, true )[ 1 ];
+        }
+        column = column.listToArray( "." ).map( wrapValue ).toList( "." );
+        return alias == "" ? column : column & " AS " & wrapValue( alias ); 
+    }
+
+    private string function wrapValue( required any value ) {
+        if ( value == "*" ) {
+            return value;
+        }
+        return """#value#""";
     }
 }

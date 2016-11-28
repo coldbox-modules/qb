@@ -198,6 +198,10 @@ component displayname="Builder" {
         return where( argumentCollection = arguments );
     }
 
+    public Expression function raw( required string sql ) {
+        return new quick.models.Query.Expression( sql );
+    }
+
     // Accessors
 
     public boolean function getDistinct() {

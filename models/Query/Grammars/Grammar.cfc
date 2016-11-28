@@ -12,7 +12,6 @@ component displayname="Grammar" accessors="true" {
     }
 
     public string function compileSelect( required Quick.models.Query.Builder query ) {
-
         var sql = [];
 
         for ( var component in selectComponents ) {
@@ -84,37 +83,49 @@ component displayname="Grammar" accessors="true" {
         return "WHERE #arrayToList( wheresArray, " " )#";
     }
 
-    private function whereBasic( requried struct where, required Builder query ) {
+    private string function whereBasic( requried struct where, required Builder query ) {
         if ( ! isStruct( where ) ) {
             return;
         }
 
-        where.column = wrapValue( where.column );
+        where.column = wrapColumn( where.column );
 
         var placeholder = "?";
         if ( where.operator == "in" || where.operator == "not in" ) {
             placeholder = "(#placeholder#)";
         }
 
+        if ( isInstanceOf( where.value, "Quick.models.Query.Expression" ) ) {
+            placeholder = where.value.getSql();
+        }
+
         return "#where.column# #uCase( where.operator )# #placeholder#";
     }
 
-    private function whereRaw( required struct where, required Builder query ) {
+    private string function whereRaw( required struct where, required Builder query ) {
         return where.sql;
     }
 
-    private function whereColumn( required struct where, required Builder query ) {
+    private string function whereColumn( required struct where, required Builder query ) {
         return "#wrapColumn( where.first )# #where.operator# #wrapColumn( where.second )#";
     }
 
-    private function whereNested( required struct where, required Builder query ) {
+    private string function whereNested( required struct where, required Builder query ) {
         var sql = compileWheres( arguments.where.query, arguments.where.query.getWheres() );
         // cut off the first 7 characters to account for the extra "WHERE"
         return "(#mid( sql, 7 )#)";
     }
 
-    private function whereSub( required struct where, required Builder query ) {
+    private string function whereSub( required struct where, required Builder query ) {
         return "#wrapIdentifier( where.column )# #where.operator# (#compileSelect( where.query )#)";
+    }
+
+    private string function whereExists( required struct where, required Builder query ) {
+        return "EXISTS (#compileSelect( where.query )#)";
+    }
+
+    private string function whereNotExists( required struct where, required Builder query ) {
+        return "NOT EXISTS (#compileSelect( where.query )#)";
     }
 
     private string function concatenate( required array sql ) {
@@ -130,13 +141,13 @@ component displayname="Grammar" accessors="true" {
     private string function wrapTable( required any table ) {
         var alias = "";
         if ( table.find( " as " ) ) {
-            alias = table.listToArray( " as ", false, true )[ 2 ];
+            alias = wrapTable( table.listToArray( " as ", false, true )[ 2 ] );
             table = table.listToArray( " as ", false, true )[ 1 ];
         }
         table = table.listToArray( "." ).map( function( tablePart, index ) {
             return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
         } ).toList( "." );
-        return alias == "" ? table : table & " AS " & wrapTable( alias );
+        return alias == "" ? table : table & " AS " & alias;
     }
 
     private string function wrapColumn( required any column ) {

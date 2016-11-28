@@ -188,8 +188,10 @@ component displayname="Builder" accessors="true" {
             type = "basic"
         } );
 
-        var binding = utils.extractBinding( arguments.value );
-        arrayAppend( bindings.where, binding );
+        if ( ! isInstanceOf( arguments.value, "Quick.models.Query.Expression" ) ) {
+            var binding = utils.extractBinding( arguments.value );
+            arrayAppend( bindings.where, binding );
+        }
 
         return this;
     }
@@ -248,6 +250,40 @@ component displayname="Builder" accessors="true" {
     public Builder function orWhereColumn( required first, operator, second ) {
         arguments.combinator = "or";
         return whereColumn( argumentCollection = arguments );
+    }
+
+    public Builder function whereExists( callback, combinator = "and", negate = false ) {
+        var query = newQuery();
+        callback( query );
+        return addWhereExistsQuery( query, combinator, negate );
+    }
+
+    private Builder function addWhereExistsQuery( query, combinator, negate ) {
+        var type = negate ? "notExists" : "exists";
+        variables.wheres.append( {
+            type = type,
+            query = arguments.query,
+            combinator = arguments.combinator
+        } );
+        query.getBindings().each( function( binding ) {
+            variables.bindings.where.append( binding );
+        } );
+        return this;
+    }
+
+    public Builder function orWhereExists( callback, negate = false ) {
+        arguments.combinator = "or";
+        return whereExists( argumentCollection = arguments );
+    }
+
+    public Builder function whereNotExists( callback, combinator = "and" ) {
+        arguments.negate = true;
+        return whereExists( argumentCollection = arguments );
+    }
+    public Builder function orWhereNotExists( callback ) {
+        arguments.combinator = "or";
+        arguments.negate = true;
+        return whereExists( argumentCollection = arguments );
     }
 
     private Builder function whereNested( required callback, combinator = "and" ) {

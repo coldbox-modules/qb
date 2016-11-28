@@ -1,4 +1,4 @@
-component displayname='Builder' {
+component displayname="Builder" {
 
     property name="grammar" inject="Grammar@Quick";
     property name="utils" inject="QueryUtils@Quick";
@@ -32,7 +32,7 @@ component displayname='Builder' {
 
     private void function setDefaultValues() {
         variables.isDistinct = false;
-        variables.columns = ["*"];
+        variables.columns = [ "*" ];
         variables.joins = [];
         variables.from = "";
         variables.wheres = [];
@@ -47,39 +47,39 @@ component displayname='Builder' {
         return this;
     }
 
-    public Builder function select(required any columns) {
+    public Builder function select( required any columns ) {
         // This block is necessary for ACF 10.
         // It can't be extracted to a function because
         // the arguments struct doesn't get passed correctly.
         var args = {};
-        var count = structCount(arguments);
-        for (var arg in arguments) {
-            args[count] = arguments[arg];
+        var count = structCount( arguments );
+        for ( var arg in arguments ) {
+            args[ count ] = arguments[ arg ];
             count--;
         }
 
-        variables.columns = normalizeToArray(argumentCollection = args);
+        variables.columns = normalizeToArray( argumentCollection = args );
         return this;
     }
 
-    public Builder function addSelect(required any columns) {
+    public Builder function addSelect( required any columns ) {
         // This block is necessary for ACF 10.
         // It can't be extracted to a function because
         // the arguments struct doesn't get passed correctly.
         var args = {};
-        var count = structCount(arguments);
-        for (var arg in arguments) {
-            args[count] = arguments[arg];
+        var count = structCount( arguments );
+        for ( var arg in arguments ) {
+            args[ count ] = arguments[ arg ];
             count--;
         }
         
-        arrayAppend(variables.columns, normalizeToArray(argumentCollection = args), true);
+        arrayAppend( variables.columns, normalizeToArray( argumentCollection = args ), true );
         return this;
     }
 
     // from methods
 
-    public Builder function from(required string from) {
+    public Builder function from( required string from ) {
         variables.from = arguments.from;
         return this;
     }
@@ -91,32 +91,32 @@ component displayname='Builder' {
         any first,
         string operator,
         string second,
-        string type = 'inner',
+        string type = "inner",
         any conditions
     ) {
-        var joinClause = wirebox.getInstance(name = 'JoinClause@Quick', initArguments = {
+        var joinClause = wirebox.getInstance( name = "JoinClause@Quick", initArguments = {
             type = arguments.type,
             table = arguments.table
-        });
+        } );
 
-        if (structKeyExists(arguments, 'first') && isClosure(arguments.first)) {
+        if ( structKeyExists( arguments, "first" ) && isClosure( arguments.first ) ) {
             arguments.conditions = arguments.first;
         }
 
-        if (structKeyExists(arguments, 'conditions') && isClosure(arguments.conditions)) {
-            conditions(joinClause);
+        if ( structKeyExists( arguments, "conditions" ) && isClosure( arguments.conditions ) ) {
+            conditions( joinClause );
         }
         else {
             joinClause.on(
                 first = arguments.first,
                 operator = arguments.operator,
                 second = arguments.second,
-                combinator = 'and'
+                combinator = "and"
             );
         }
 
-        arrayAppend(variables.joins, joinClause);
-        arrayAppend(bindings.join, joinClause.getBindings(), true);
+        arrayAppend( variables.joins, joinClause );
+        arrayAppend( bindings.join, joinClause.getBindings(), true );
 
         return this;
     }
@@ -128,8 +128,8 @@ component displayname='Builder' {
         string second,
         any conditions
     ) {
-        arguments.type = 'left';
-        return join(argumentCollection = arguments);
+        arguments.type = "left";
+        return join( argumentCollection = arguments );
     }
 
     public Builder function rightJoin(
@@ -139,63 +139,63 @@ component displayname='Builder' {
         string second,
         any conditions
     ) {
-        arguments.type = 'right';
-        return join(argumentCollection = arguments);
+        arguments.type = "right";
+        return join( argumentCollection = arguments );
     }
 
     // where methods
 
-    public Builder function where(column, operator, value, combinator) {
-        var argCount = argumentCount(arguments);
+    public Builder function where( column, operator, value, combinator ) {
+        var argCount = argumentCount( arguments );
 
-        if (isNull(arguments.combinator)) {
-            arguments.combinator = 'AND';
+        if ( isNull( arguments.combinator ) ) {
+            arguments.combinator = "AND";
         }
-        else if (isInvalidCombinator(arguments.combinator)) {
+        else if ( isInvalidCombinator( arguments.combinator ) ) {
             throw(
-                type = 'InvalidSQLType',
-                message = 'Illegal combinator'
+                type = "InvalidSQLType",
+                message = "Illegal combinator"
             );
         }
 
-        if (! structKeyExists(arguments, 'value')) {
+        if ( ! structKeyExists( arguments, "value" ) ) {
             arguments.value = arguments.operator;
-            arguments.operator = '=';
+            arguments.operator = "=";
         }
-        else if (isInvalidOperator(arguments.operator)) {
+        else if ( isInvalidOperator( arguments.operator ) ) {
             throw(
-                type = 'InvalidSQLType',
-                message = 'Illegal operator'
+                type = "InvalidSQLType",
+                message = "Illegal operator"
             );
         }
 
-        var binding = utils.extractBinding(arguments.value);
+        var binding = utils.extractBinding( arguments.value );
 
-        arrayAppend(variables.wheres, {
+        arrayAppend( variables.wheres, {
             column = arguments.column,
             operator = arguments.operator,
             value = arguments.value,
             combinator = arguments.combinator
-        });
+        } );
 
-        arrayAppend(bindings.where, binding);
+        arrayAppend( bindings.where, binding );
 
         return this;
     }
 
-    public Builder function orWhere(column, operator, value) {
-        arguments.combinator = 'or';
-        return where(argumentCollection = arguments);
+    public Builder function orWhere( column, operator, value ) {
+        arguments.combinator = "or";
+        return where( argumentCollection = arguments );
     }
 
-    public Builder function whereIn(column, value, combinator) {
-        arguments.operator = 'in';
-        return where(argumentCollection = arguments);
+    public Builder function whereIn( column, value, combinator ) {
+        arguments.operator = "in";
+        return where( argumentCollection = arguments );
     }
 
-    public Builder function whereNotIn(column, value, combinator) {
-        arguments.operator = 'not in';
-        return where(argumentCollection = arguments);
+    public Builder function whereNotIn( column, value, combinator ) {
+        arguments.operator = "not in";
+        return where( argumentCollection = arguments );
     }
 
     // Accessors
@@ -221,12 +221,12 @@ component displayname='Builder' {
     }
 
     public array function getBindings() {
-        var bindingOrder = ['join', 'where'];
+        var bindingOrder = [ "join", "where" ];
 
         var flatBindings = [];
-        for (var key in bindingOrder) {
-            if (structKeyExists(bindings, key)) {
-                arrayAppend(flatBindings, bindings[key], true);
+        for ( var key in bindingOrder ) {
+            if ( structKeyExists( bindings, key ) ) {
+                arrayAppend( flatBindings, bindings[ key ], true );
             }
         }
 
@@ -241,90 +241,90 @@ component displayname='Builder' {
     // Collaborators
 
     public string function toSQL() {
-        return grammar.compileSelect(this);
+        return grammar.compileSelect( this );
     }
 
-    public query function get(struct options = {}) {
-        return queryExecute(this.toSQL(), this.getBindings(), options);
+    public query function get( struct options = {} ) {
+        return queryExecute( this.toSQL(), this.getBindings(), options );
     }
 
     // Unused(?)
 
     private array function normalizeToArray() {
-        if (isVariadicFunction(args = arguments)) {
-            return normalizeVariadicArgumentsToArray(args = arguments);
+        if ( isVariadicFunction( args = arguments ) ) {
+            return normalizeVariadicArgumentsToArray( args = arguments );
         }
 
-        var arg = arguments[1];
-        if (! isArray(arg)) {
-            return normalizeListArgumentsToArray(arg);
+        var arg = arguments[ 1 ];
+        if ( ! isArray( arg ) ) {
+            return normalizeListArgumentsToArray( arg );
         }
 
         return arg;
     }
 
-    private boolean function isVariadicFunction(required struct args) {
-        return structCount(args) > 1;
+    private boolean function isVariadicFunction( required struct args ) {
+        return structCount( args ) > 1;
     }
 
-    private array function normalizeVariadicArgumentsToArray(required struct args) {
+    private array function normalizeVariadicArgumentsToArray( required struct args ) {
         var normalizedArgs = [];
-        for (var arg in arguments.args) {
-            arrayAppend(normalizedArgs, arguments.args[arg]);
+        for ( var arg in arguments.args ) {
+            arrayAppend( normalizedArgs, arguments.args[ arg ] );
         }
         return normalizedArgs;
     }
 
-    private array function normalizeListArgumentsToArray(required string list) {
-        var listAsArray = listToArray(arguments.list);
+    private array function normalizeListArgumentsToArray( required string list ) {
+        var listAsArray = listToArray( arguments.list );
         var items = [];
-        for (var item in listAsArray) {
-            arrayAppend(items, trim(item));
+        for ( var item in listAsArray ) {
+            arrayAppend( items, trim( item ) );
         }
         return items;
     }
 
-    private boolean function isInvalidOperator(required string operator) {
-        return ! arrayContains(operators, operator);
+    private boolean function isInvalidOperator( required string operator ) {
+        return ! arrayContains( operators, operator );
     }
 
-    private boolean function isInvalidCombinator(required string combinator) {
-        for (var validCombinator in variables.combinators) {
-            if (validCombinator == arguments.combinator) {
+    private boolean function isInvalidCombinator( required string combinator ) {
+        for ( var validCombinator in variables.combinators ) {
+            if ( validCombinator == arguments.combinator ) {
                 return false;
             }
         }
         return true;
     }
 
-    private function argumentCount(args) {
+    private function argumentCount( args ) {
         var count = 0;
-        for (var key in args) {
-            if (! isNull(args[key])) {
+        for ( var key in args ) {
+            if ( ! isNull( args[ key ] ) ) {
                 count++;
             }
         }
         return count;
     }
 
-    public any function onMissingMethod(string missingMethodName, struct missingMethodArguments) {
-        if (! arrayIsEmpty(REMatchNoCase('^where(.+)', missingMethodName))) {
-            var args = { '1' = mid(missingMethodName, 6, len(missingMethodName) - 5) };
-            for (var key in missingMethodArguments) {
-                args[key + 1] = missingMethodArguments[key];
+    public any function onMissingMethod( string missingMethodName, struct missingMethodArguments ) {
+        if ( ! arrayIsEmpty( REMatchNoCase( "^where(.+)", missingMethodName ) ) ) {
+            var args = { "1" = mid( missingMethodName, 6, len( missingMethodName ) - 5 ) };
+            for ( var key in missingMethodArguments ) {
+                args[ key + 1 ] = missingMethodArguments[ key ];
             }
-            return where(argumentCollection = args);
+            return where( argumentCollection = args );
         }
 
-        if (! arrayIsEmpty(REMatchNoCase('^orWhere(.+)', missingMethodName))) {
-            var args = { '1' = mid(missingMethodName, 8, len(missingMethodName) - 7) };
-            for (var key in missingMethodArguments) {
-                args[key + 1] = missingMethodArguments[key];
+        if ( ! arrayIsEmpty( REMatchNoCase( "^orWhere(.+)", missingMethodName ) ) ) {
+            var args = { "1" = mid( missingMethodName, 8, len( missingMethodName ) - 7 ) };
+            for ( var key in missingMethodArguments ) {
+                args[ key + 1 ] = missingMethodArguments[ key ];
             }
 
-            return orWhere(argumentCollection = args);
+            return orWhere( argumentCollection = args );
         }
 
-        throw("Method does not exist [#missingMethodName#]");
+        throw( "Method does not exist [#missingMethodName#]" );
     }
 }

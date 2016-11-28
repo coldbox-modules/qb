@@ -1,74 +1,74 @@
-component displayname='QueryUtilsSpec' extends='testbox.system.BaseSpec' {
+component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
     function beforeAll() {
         variables.utils = new Quick.models.Query.QueryUtils();
     }
 
     function run() {
-        describe('inferSqlType()', function() {
-            it('strings', function() {
-                expect(utils.inferSqlType('a string')).toBe('CF_SQL_VARCHAR');
-            });
+        describe( "inferSqlType()", function() {
+            it( "strings", function() {
+                expect( utils.inferSqlType( "a string" ) ).toBe( "CF_SQL_VARCHAR" );
+            } );
 
-            it('numbers', function() {
-                expect(utils.inferSqlType(100)).toBe('CF_SQL_NUMERIC');
-            });
+            it( "numbers", function() {
+                expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
+            } );
 
-            it('dates', function() {
-                expect(utils.inferSqlType(Now())).toBe('CF_SQL_TIMESTAMP');
-            });
+            it( "dates", function() {
+                expect( utils.inferSqlType( now() ) ).toBe( "CF_SQL_TIMESTAMP" );
+            } );
 
 
-            describe('it infers the sql type from the members of a list', function() {
-                it('if all the members of the list are the same', function() {
-                    expect(utils.inferSqlType('1,2')).toBe('CF_SQL_NUMERIC');
-                });
+            describe( "it infers the sql type from the members of a list", function() {
+                it( "if all the members of the list are the same", function() {
+                    expect( utils.inferSqlType( "1,2" ) ).toBe( "CF_SQL_NUMERIC" );
+                } );
 
-                it('but defaults to CF_SQL_VARCHAR if they are different', function() {
-                    expect(utils.inferSqlType('1,2,3,test')).toBe('CF_SQL_VARCHAR');
-                });
-            });
+                it( "but defaults to CF_SQL_VARCHAR if they are different", function() {
+                    expect( utils.inferSqlType( "1,2,3,test" ) ).toBe( "CF_SQL_VARCHAR" );
+                } );
+            } );
 
-            describe('it infers the sql type from the members of an array', function() {
-                it('if all the members of the array are the same', function() {
-                    expect(utils.inferSqlType([1, 2])).toBe('CF_SQL_NUMERIC');
-                });
+            describe( "it infers the sql type from the members of an array", function() {
+                it( "if all the members of the array are the same", function() {
+                    expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_NUMERIC" );
+                } );
 
-                it('but defaults to CF_SQL_VARCHAR if they are different', function() {
-                    expect(utils.inferSqlType([1, 2, 3, DateFormat('05/01/2016', 'MM/DD/YYYY')])).toBe('CF_SQL_VARCHAR');
-                });
-            });
-        });
+                it( "but defaults to CF_SQL_VARCHAR if they are different", function() {
+                    expect( utils.inferSqlType( [ 1, 2, 3, dateFormat( "05/01/2016", "MM/DD/YYYY" ) ] ) ).toBe( "CF_SQL_VARCHAR" );
+                } );
+            } );
+        } );
 
-        describe('extractBinding()', function() {
-            it('includes sensible defaults', function() {
-                var binding = utils.extractBinding('05/10/2016');
+        describe( "extractBinding()", function() {
+            it( "includes sensible defaults", function() {
+                var binding = utils.extractBinding( "05/10/2016" );
 
-                expect(binding).toBeStruct();
-                expect(binding.value).toBe('05/10/2016');
-                expect(binding.cfsqltype).toBe('CF_SQL_TIMESTAMP');
-                expect(binding.list).toBe(false);
-                expect(binding.null).toBe(false);
-            });
+                expect( binding ).toBeStruct();
+                expect( binding.value ).toBe( "05/10/2016" );
+                expect( binding.cfsqltype ).toBe( "CF_SQL_TIMESTAMP" );
+                expect( binding.list ).toBe( false );
+                expect( binding.null ).toBe( false );
+            } );
 
-            it('detects arrays and converts them in to lists', function() {
-                var binding = utils.extractBinding(['one', 'two']);
+            it( "detects arrays and converts them in to lists", function() {
+                var binding = utils.extractBinding( [ "one", "two" ] );
 
-                expect(binding).toBeStruct();
-                expect(binding.value).toBe('one,two');
-                expect(binding.cfsqltype).toBe('CF_SQL_VARCHAR');
-                expect(binding.list).toBe(true);
-                expect(binding.null).toBe(false);
-            });
+                expect( binding ).toBeStruct();
+                expect( binding.value ).toBe( "one,two" );
+                expect( binding.cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+                expect( binding.list ).toBe( true );
+                expect( binding.null ).toBe( false );
+            } );
 
-            it('detects lists and sets the list property to true', function() {
-                var binding = utils.extractBinding('yes,no');
+            it( "detects lists and sets the list property to true", function() {
+                var binding = utils.extractBinding( "yes,no" );
 
-                expect(binding).toBeStruct();
-                expect(binding.value).toBe('yes,no');
-                expect(binding.cfsqltype).toBe('CF_SQL_VARCHAR');
-                expect(binding.list).toBe(true);
-                expect(binding.null).toBe(false);
-            });
-        });
+                expect( binding ).toBeStruct();
+                expect( binding.value ).toBe( "yes,no" );
+                expect( binding.cfsqltype ).toBe( "CF_SQL_VARCHAR" );
+                expect( binding.list ).toBe( true );
+                expect( binding.null ).toBe( false );
+            } );
+        } );
     }
 }

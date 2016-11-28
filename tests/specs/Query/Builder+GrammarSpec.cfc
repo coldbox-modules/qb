@@ -138,8 +138,8 @@ component extends="testbox.system.BaseSpec" {
                     it( "can add nested where statements", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).where( "email", "foo" )
-                            .orWhere( function( query ) {
-                                query.where( "name", "bar" ).where( "age", ">=", "21" );
+                            .orWhere( function( q ) {
+                                q.where( "name", "bar" ).where( "age", ">=", "21" );
                             } );
                         expect( builder.toSql() ).toBe(
                             'SELECT * FROM "users" WHERE "email" = ? OR ("name" = ? AND "age" >= ?)'
@@ -150,8 +150,8 @@ component extends="testbox.system.BaseSpec" {
                     it( "can have full sub-selects in where statements", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).where( "email", "foo" )
-                            .orWhere( "id", "=", function( query ) {
-                                query.select( query.raw( "MAX(id)" ) ).from( "users" )
+                            .orWhere( "id", "=", function( q ) {
+                                q.select( q.raw( "MAX(id)" ) ).from( "users" )
                                     .where( "email", "bar" );
                             } );
                         expect( builder.toSql() ).toBe(
@@ -163,11 +163,57 @@ component extends="testbox.system.BaseSpec" {
 
                 describe( "where exists", function() {
                     it( "can add a where exists clause", function() {
-                        fail( "test not implemented yet" );
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "orders" )
+                            .whereExists( function( q ) {
+                                q.select( q.raw( 1 ) ).from( "products" )
+                                    .where( "products.id", "=", q.raw( '"orders"."id"' ) );
+                            } );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "orders" WHERE EXISTS (SELECT 1 FROM "products" WHERE "products"."id" = "orders"."id")'
+                        );
+                        expect( builder.getBindings() ).toBe( [] );
+                    } );
+
+                    it( "can add an or where exists clause", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "orders" )
+                            .where( "id", 1 )
+                            .orWhereExists( function( q ) {
+                                q.select( q.raw( 1 ) ).from( "products" )
+                                    .where( "products.id", "=", q.raw( '"orders"."id"' ) );
+                            } );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "orders" WHERE "id" = ? OR EXISTS (SELECT 1 FROM "products" WHERE "products"."id" = "orders"."id")'
+                        );
+                        expect( builder.getBindings() ).toBe( [ 1 ] );
                     } );
 
                     it( "can add a where not exists clause", function() {
-                        fail( "test not implemented yet" );
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "orders" )
+                            .whereNotExists( function( q ) {
+                                q.select( q.raw( 1 ) ).from( "products" )
+                                    .where( "products.id", "=", q.raw( '"orders"."id"' ) );
+                            } );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "orders" WHERE NOT EXISTS (SELECT 1 FROM "products" WHERE "products"."id" = "orders"."id")'
+                        );
+                        expect( builder.getBindings() ).toBe( [] );
+                    } );
+
+                    it( "can add an or where not exists clause", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "orders" )
+                            .where( "id", 1 )
+                            .orWhereNotExists( function( q ) {
+                                q.select( q.raw( 1 ) ).from( "products" )
+                                    .where( "products.id", "=", q.raw( '"orders"."id"' ) );
+                            } );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "orders" WHERE "id" = ? OR NOT EXISTS (SELECT 1 FROM "products" WHERE "products"."id" = "orders"."id")'
+                        );
+                        expect( builder.getBindings() ).toBe( [ 1 ] );
                     } );
                 } );
 
@@ -246,7 +292,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .where( "email", "foo" )
-                            .whereIn( "id", [ 1, 2, 3 ] );
+                            .orWhereIn( "id", [ 1, 2, 3 ] );
                         expect( builder.toSql() ).toBe(
                             'SELECT * FROM "users" WHERE "email" = ? OR "id" IN (?, ?, ?)'
                         );
@@ -285,14 +331,210 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "handles sub selects in 'in' statements", function() {
                         var builder = getBuilder();
-                        builder.select( "*" ).from( "users" ).whereIn( "id", function( query ) {
-                            builder.select( "id" ).from( "users" ).where( "age", ">", 25 );
+                        builder.select( "*" ).from( "users" ).whereIn( "id", function( q ) {
+                            q.select( "id" ).from( "users" ).where( "age", ">", 25 );
                         } );
                         expect( builder.toSql() ).toBe(
                             'SELECT * FROM "users" WHERE "id" IN (SELECT "id" FROM "users" WHERE "age" > ?)'
                         );
                         expect( builder.getBindings() ).toBe( [ 25 ] );
                     } );
+                } );
+            } );
+
+            describe( "joins", function() {
+                it( "can inner join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", "users.id", "=", "contacts.id" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id"'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can inner join using the shorthand", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", "users.id", "contacts.id" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id"'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can specify multiple joins", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", "users.id", "contacts.id" )
+                        .join( "addresses as a", "a.contact_id", "contacts.id" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" INNER JOIN "addresses" AS "a" ON "a"."contact_id" = "contacts"."id"'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can join with where bindings instead of columns", function() {
+                    it( "can specify multiple joins", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" )
+                            .joinWhere( "contacts", "contacts.balance", "<", 100 );
+                        expect( builder.toSql() ).toBe(
+                            'SELECT * FROM "users" INNER JOIN "contacts" ON "contacts"."balance" < ?'
+                        );
+                        expect( builder.getBindings() ).toBe( [ 100 ] );
+                    } );
+                } );
+
+                it( "can left join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .leftJoin( "orders", "users.id", "orders.user_id" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" LEFT JOIN "orders" ON "users"."id" = "orders"."user_id"'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can right join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "orders" )
+                        .rightJoin( "users", "orders.user_id", "users.id" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "orders" LEFT JOIN "users" ON "orders"."user_id" = "users"."id"'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can cross join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "sizes" ).crossJoin( "colors" );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "sizes" CROSS JOIN "colors"'
+                    );
+                } );
+
+                it( "can accept a callback for complex joins", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .orOn( "users.name" = "contacts.name" )
+                                .orWhere( "users.admin", 1 );
+                        } );
+
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" OR "users"."name" = "contacts"."name" OR "users"."admin" = ?'
+                    );
+                    expect( builder.getBindings() ).toBe( [ 1 ] );
+                } );
+
+                it( "can specify where null in a join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .whereNull( "contacts.deleted_date" );
+                        } );
+
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" AND "contacts"."deleted_date" IS NULL'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can specify or where null in a join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .orWhereNull( "contacts.deleted_date" );
+                        } );
+
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" OR "contacts"."deleted_date" IS NULL'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can specify where not null in a join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .whereNotNull( "contacts.deleted_date" );
+                        } );
+
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" AND "contacts"."deleted_date" IS NOT NULL'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can specify or where not null in a join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .orWhereNotNull( "contacts.deleted_date" );
+                        } );
+
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" OR "contacts"."deleted_date" IS NOT NULL'
+                    );
+                    expect( builder.getBindings() ).toBe( [] );
+                } );
+
+                it( "can specify where in inside a join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .whereIn( "contacts.id", [ 1, 2, 3 ] );
+                        } );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" AND "contacts"."id" IN (?, ?, ?)'
+                    );
+                    expect( builder.getBindings() ).toBe( [ 1, 2, 3 ] );
+                } );
+
+                it( "can specify or where in inside a join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .orWhereIn( "contacts.id", [ 1, 2, 3 ] );
+                        } );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" OR "contacts"."id" IN (?, ?, ?)'
+                    );
+                    expect( builder.getBindings() ).toBe( [ 1, 2, 3 ] );
+                } );
+
+                it( "can specify where not in inside a join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .whereNotIn( "contacts.id", [ 1, 2, 3 ] );
+                        } );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" AND "contacts"."id" NOT IN (?, ?, ?)'
+                    );
+                    expect( builder.getBindings() ).toBe( [ 1, 2, 3 ] );
+                } );
+
+                it( "can specify or where not in inside a join", function() {
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .join( "contacts", function( j ) {
+                            j.on( "users.id", "=", "contacts.id" )
+                                .orWhereNotIn( "contacts.id", [ 1, 2, 3 ] );
+                        } );
+                    expect( builder.toSql() ).toBe(
+                        'SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" OR "contacts"."id" NOT IN (?, ?, ?)'
+                    );
+                    expect( builder.getBindings() ).toBe( [ 1, 2, 3 ] );
                 } );
             } );
 

@@ -1,8 +1,15 @@
-component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarInterface" {
+component displayname="Grammar" accessors="true" {
+
+    property name="tablePrefix" type="string" default="";
 
     variables.selectComponents = [
         "columns", "from", "joins", "wheres"
     ];
+
+    public Grammar function init() {
+        variables.tablePrefix = "";
+        return this;
+    }
 
     public string function compileSelect( required Quick.models.Query.Builder query ) {
 
@@ -64,7 +71,7 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
         var wheresArray = [];
         var firstOne = true;
         for ( var where in arguments.wheres ) {
-            var sql = invoke( this, "compileWhere#where.type#", { where = where, query = query } );
+            var sql = invoke( this, "where#where.type#", { where = where, query = query } );
             sql = firstOne ? sql : "#uCase( where.combinator )# #sql#";
             wheresArray.append( sql );
             firstOne = false;
@@ -77,7 +84,7 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
         return "WHERE #arrayToList( wheresArray, " " )#";
     }
 
-    private function compileWhereBasic( requried struct where, required Builder query ) {
+    private function whereBasic( requried struct where, required Builder query ) {
         if ( ! isStruct( where ) ) {
             return;
         }
@@ -92,21 +99,21 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
         return "#where.column# #uCase( where.operator )# #placeholder#";
     }
 
-    private function compileWhereRaw( required struct where, required Builder query ) {
+    private function whereRaw( required struct where, required Builder query ) {
         return where.sql;
     }
 
-    private function compileWhereColumn( where, query ) {
+    private function whereColumn( required struct where, required Builder query ) {
         return "#wrapColumn( where.first )# #where.operator# #wrapColumn( where.second )#";
     }
 
-    private function compileWhereNested( where, query ) {
+    private function whereNested( required struct where, required Builder query ) {
         var sql = compileWheres( arguments.where.query, arguments.where.query.getWheres() );
         // cut off the first 7 characters to account for the extra "WHERE"
         return "(#mid( sql, 7 )#)";
     }
 
-    private function compileWhereSub( where, query ) {
+    private function whereSub( required struct where, required Builder query ) {
         return "#wrapIdentifier( where.column )# #where.operator# (#compileSelect( where.query )#)";
     }
 
@@ -121,7 +128,15 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
     }
 
     private string function wrapTable( required any table ) {
-        return table.listToArray( "." ).map( wrapValue ).toList( "." );
+        var alias = "";
+        if ( table.find( " as " ) ) {
+            alias = table.listToArray( " as ", false, true )[ 2 ];
+            table = table.listToArray( " as ", false, true )[ 1 ];
+        }
+        table = table.listToArray( "." ).map( function( tablePart, index ) {
+            return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
+        } ).toList( "." );
+        return alias == "" ? table : table & " AS " & wrapTable( alias );
     }
 
     private string function wrapColumn( required any column ) {

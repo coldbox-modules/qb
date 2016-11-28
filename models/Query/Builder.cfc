@@ -1,4 +1,4 @@
-component displayname="Builder" {
+component displayname="Builder" accessors="true" {
 
     property name="grammar" inject="Grammar@Quick";
     property name="utils" inject="QueryUtils@Quick";
@@ -24,7 +24,13 @@ component displayname="Builder" {
         "where" = []
     };
 
-    public Builder function init() {
+    public Builder function init(
+        Grammar grammar = new Quick.models.Query.Grammars.Grammar( ),
+        QueryUtils utils = new Quick.models.Query.QueryUtils()
+    ) {
+        variables.grammar = arguments.grammar;
+        variables.utils = arguments.utils;
+
         setDefaultValues();
 
         return this;
@@ -145,20 +151,17 @@ component displayname="Builder" {
 
     // where methods
 
-    public Builder function where( column, operator, value, combinator ) {
+    public Builder function where( column, operator, value, string combinator = "and" ) {
         var argCount = argumentCount( arguments );
 
-        if ( isNull( arguments.combinator ) ) {
-            arguments.combinator = "AND";
-        }
-        else if ( isInvalidCombinator( arguments.combinator ) ) {
+        if ( isInvalidCombinator( arguments.combinator ) ) {
             throw(
                 type = "InvalidSQLType",
                 message = "Illegal combinator"
             );
         }
 
-        if ( ! structKeyExists( arguments, "value" ) ) {
+        if ( isNull( arguments.value ) ) {
             arguments.value = arguments.operator;
             arguments.operator = "=";
         }
@@ -169,15 +172,23 @@ component displayname="Builder" {
             );
         }
 
-        var binding = utils.extractBinding( arguments.value );
+        if ( isClosure( column ) ) {
+            return whereNested( column, combinator );
+        }
+
+        if ( isClosure( value ) ) {
+            return whereSub( column, operator, value, combinator );
+        }
 
         arrayAppend( variables.wheres, {
             column = arguments.column,
             operator = arguments.operator,
             value = arguments.value,
-            combinator = arguments.combinator
+            combinator = arguments.combinator,
+            type = "basic"
         } );
 
+        var binding = utils.extractBinding( arguments.value );
         arrayAppend( bindings.where, binding );
 
         return this;
@@ -198,8 +209,94 @@ component displayname="Builder" {
         return where( argumentCollection = arguments );
     }
 
+    public Builder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {
+        whereBindings.map( function( binding ) {
+            return utils.extractBinding( binding );
+        } ).each( function( binding ) {
+            variables.bindings.where.append( binding );
+        } );
+        variables.wheres.append( {
+            type = "raw",
+            sql = sql,
+            combinator = arguments.combinator,
+        } );
+        return this;
+    }
+
+    public Builder function orWhereRaw( required string sql, array whereBindings = [] ) {
+        arguments.combinator = "or";
+        return whereRaw( argumentCollection = arguments );
+    }
+
+    public Builder function whereColumn( required first, operator, second, string combinator = "and" ) {
+        if ( isNull( arguments.second ) ) {
+            arguments.second = arguments.operator;
+            arguments.operator = "=";
+        }
+
+        variables.wheres.append( {
+            type = "column",
+            first = arguments.first,
+            operator = arguments.operator,
+            second = arguments.second,
+            combinator = arguments.combinator
+        } );
+
+        return this;
+    }
+
+    public Builder function orWhereColumn( required first, operator, second ) {
+        arguments.combinator = "or";
+        return whereColumn( argumentCollection = arguments );
+    }
+
+    private Builder function whereNested( required callback, combinator = "and" ) {
+        var query = forNestedWhere();
+        callback( query );
+        return addNestedWhereQuery( query, combinator );
+    }
+
+    private Builder function addNestedWhereQuery( required Builder query, string combinator = "and" ) {
+        if ( ! query.getWheres().isEmpty() ) {
+            variables.wheres.append( {
+                type = "nested",
+                query = arguments.query,
+                combinator = arguments.combinator
+            } );
+            query.getBindings().each( function( binding ) {
+                variables.bindings.where.append( binding );
+            } );
+        }
+        return this;
+    }
+
+    private Builder function forNestedWhere() {
+        var query = newQuery();
+        return query.from( getFrom() );
+    }
+
+    private Builder function whereSub( column, operator, callback, combinator ) {
+        var query = newQuery();
+        callback( query );
+        variables.wheres.append( {
+            type = "sub",
+            column = arguments.column,
+            operator = arguments.operator,
+            query = query,
+            combinator = arguments.combinator
+        } );
+        query.getBindings().each( function( binding ) {
+            variables.bindings.where.append( binding );
+        } );
+        return this;
+    }
+
     public Expression function raw( required string sql ) {
         return new quick.models.Query.Expression( sql );
+    }
+
+    private Builder function newQuery() {
+        return new Quick.models.Query.Builder( grammar = getGrammar() );
     }
 
     // Accessors
@@ -260,6 +357,10 @@ component displayname="Builder" {
         }
 
         var arg = arguments[ 1 ];
+        if ( isInstanceOf( arg, "Quick.models.Query.Expression" ) ) {
+            return [ arg ];
+        }
+
         if ( ! isArray( arg ) ) {
             return normalizeListArgumentsToArray( arg );
         }

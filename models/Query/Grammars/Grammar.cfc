@@ -57,32 +57,17 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
         return arrayToList( joinsArray, " " );
     }
 
-    private string function compileWheres( required Quick.models.Query.Builder query, requierd array wheres ) {
+    private string function compileWheres(
+        required Quick.models.Query.Builder query,
+        required array wheres
+    ) {
         var wheresArray = [];
         var firstOne = true;
         for ( var where in arguments.wheres ) {
-            if ( ! isStruct( where ) ) {
-                continue;
-            }
-
-            var placeholder = "?";
-            if ( where.operator == "in" || where.operator == "not in" ) {
-                placeholder = "(#placeholder#)";
-            }
-
-            if ( firstOne ) {
-                firstOne = false;
-                arrayAppend(
-                    wheresArray,
-                    "#where.column# #uCase( where.operator )# #placeholder#"
-                );
-            }
-            else {
-                arrayAppend(
-                    wheresArray,
-                    "#uCase( where.combinator )# #where.column# #uCase( where.operator )# #placeholder#"
-                );
-            }
+            var sql = invoke( this, "compileWhere#where.type#", { where = where, query = query } );
+            sql = firstOne ? sql : "#uCase( where.combinator )# #sql#";
+            wheresArray.append( sql );
+            firstOne = false;
         }
 
         if ( arrayIsEmpty( wheresArray ) ) {
@@ -92,10 +77,47 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
         return "WHERE #arrayToList( wheresArray, " " )#";
     }
 
+    private function compileWhereBasic( requried struct where, required Builder query ) {
+        if ( ! isStruct( where ) ) {
+            return;
+        }
+
+        where.column = wrapValue( where.column );
+
+        var placeholder = "?";
+        if ( where.operator == "in" || where.operator == "not in" ) {
+            placeholder = "(#placeholder#)";
+        }
+
+        return "#where.column# #uCase( where.operator )# #placeholder#";
+    }
+
+    private function compileWhereRaw( required struct where, required Builder query ) {
+        return where.sql;
+    }
+
+    private function compileWhereColumn( where, query ) {
+        return "#wrapColumn( where.first )# #where.operator# #wrapColumn( where.second )#";
+    }
+
+    private function compileWhereNested( where, query ) {
+        var sql = compileWheres( arguments.where.query, arguments.where.query.getWheres() );
+        // cut off the first 7 characters to account for the extra "WHERE"
+        return "(#mid( sql, 7 )#)";
+    }
+
+    private function compileWhereSub( where, query ) {
+        return "#wrapIdentifier( where.column )# #where.operator# (#compileSelect( where.query )#)";
+    }
+
     private string function concatenate( required array sql ) {
         return arrayToList( arrayFilter( sql, function( item ) {
             return item != "";
         } ), " " );
+    }
+
+    private string function wrapIdentifier( required any identifier ) {
+        return wrapValue( identifier );
     }
 
     private string function wrapTable( required any table ) {
@@ -107,7 +129,7 @@ component displayname="Grammar" implements="Quick.models.Query.Grammars.GrammarI
             return column.getSQL();
         }
         var alias = "";
-        if ( column.find( "as" ) ) {
+        if ( column.find( " as " ) ) {
             alias = column.listToArray( " as ", false, true )[ 2 ];
             column = column.listToArray( " as ", false, true )[ 1 ];
         }

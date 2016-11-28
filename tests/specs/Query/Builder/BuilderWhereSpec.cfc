@@ -18,7 +18,8 @@ component extends="testbox.system.BaseSpec" {
                         column = "::some column::",
                         operator = "=",
                         value = "::some value::",
-                        combinator = "and"
+                        combinator = "and",
+                        type = "basic"
                     } ] );
                 } );
 
@@ -28,7 +29,8 @@ component extends="testbox.system.BaseSpec" {
                         column = "::some column::",
                         operator = "=",
                         value = "::some value::",
-                        combinator = "and"
+                        combinator = "and",
+                        type = "basic"
                     } ] );
                 } );
 
@@ -40,13 +42,15 @@ component extends="testbox.system.BaseSpec" {
                             column = "::some column::",
                             operator = "=",
                             value = "::some value::",
-                            combinator = "and"
+                            combinator = "and",
+                            type = "basic"
                         },
                         {
                             column = "::another column::",
                             operator = "=",
                             value = "::another value::",
-                            combinator = "or"
+                            combinator = "or",
+                            type = "basic"
                         }
                     ] );
                 } );
@@ -63,6 +67,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( where.operator ).toBe( "in" );
                         expect( where.value ).toBe( [ "::value one::", "::value two::" ] );
                         expect( where.combinator ).toBe( "and" );
+                        expect( where.type ).toBe( "basic" );
                     } );
 
                     it( "has a whereNotIn shortcut", function() {
@@ -76,6 +81,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( where.operator ).toBe( "not in" );
                         expect( where.value ).toBe( [ "::value one::", "::value two::" ] );
                         expect( where.combinator ).toBe( "and" );
+                        expect( where.type ).toBe( "basic" );
                     } );
 
                     it( "has a orWhere shortcut", function() {
@@ -89,6 +95,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( where.operator ).toBe( "<>" );
                         expect( where.value ).toBe( "::some value::" );
                         expect( where.combinator ).toBe( "or" );
+                        expect( where.type ).toBe( "basic" );
                     } );
                 } );
 
@@ -113,7 +120,8 @@ component extends="testbox.system.BaseSpec" {
                             column = "somecolumn",
                             operator = "=",
                             value = "::some value::",
-                            combinator = "and"
+                            combinator = "and",
+                            type = "basic"
                         } ] );
                     } );
 
@@ -124,7 +132,8 @@ component extends="testbox.system.BaseSpec" {
                             column = "somecolumn",
                             operator = "=",
                             value = "::some value::",
-                            combinator = "or"
+                            combinator = "or",
+                            type = "basic"
                         } ] );
                     } );
 

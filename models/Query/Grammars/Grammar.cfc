@@ -88,9 +88,6 @@ component displayname="Grammar" accessors="true" {
         where.column = wrapColumn( where.column );
 
         var placeholder = "?";
-        if ( where.operator == "in" || where.operator == "not in" ) {
-            placeholder = "(#placeholder#)";
-        }
 
         if ( isInstanceOf( where.value, "Quick.models.Query.Expression" ) ) {
             placeholder = where.value.getSql();
@@ -139,6 +136,34 @@ component displayname="Grammar" accessors="true" {
 
     private string function whereNotBetween( required struct where, required Builder query ) {
         return "#wrapColumn( where.column )# NOT BETWEEN ? AND ?";
+    }
+
+    private string function whereIn( required struct where, required Builder query ) {
+        var placeholderString = where.values.map( function( value ) {
+            return isInstanceOf( value, "Quick.models.Query.Expression" ) ? value.getSql() : "?";
+        } ).toList( ", " );
+        if ( placeholderString == "" ) {
+            return "0 = 1";
+        }
+        return "#wrapColumn( where.column )# IN (#placeholderString#)";
+    }
+
+    private string function whereNotIn( required struct where, required Builder query ) {
+        var placeholderString = where.values.map( function( value ) {
+            return isInstanceOf( value, "Quick.models.Query.Expression" ) ? value.getSql() : "?";
+        } ).toList( ", " );
+        if ( placeholderString == "" ) {
+            return "1 = 1";
+        }
+        return "#wrapColumn( where.column )# NOT IN (#placeholderString#)";
+    }
+
+    private string function whereInSub( required struct where, required Builder query ) {
+        return "#wrapColumn( where.column )# IN (#compileSelect( where.query )#)";
+    }
+
+    private string function whereNotInSub( required struct where, required Builder query ) {
+        return "#wrapColumn( where.column )# NOT IN (#compileSelect( where.query )#)";
     }
 
     private string function concatenate( required array sql ) {

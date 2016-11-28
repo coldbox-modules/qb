@@ -200,14 +200,61 @@ component displayname="Builder" accessors="true" {
         return where( argumentCollection = arguments );
     }
 
-    public Builder function whereIn( column, value, combinator ) {
-        arguments.operator = "in";
-        return where( argumentCollection = arguments );
+    public Builder function whereIn( column, values, combinator = "and", negate = false ) {
+        if ( isClosure( values ) ) {
+            arguments.callback = arguments.values;
+            return whereInSub( argumentCollection = arguments );
+        }
+
+        var type = negate ? "notIn" : "in";
+        variables.wheres.append( {
+            type = type,
+            column = arguments.column,
+            values = arguments.values,
+            combinator = arguments.combinator
+        } );
+
+        values.filter( function( value ) {
+            return ! isInstanceOf( value, "Quick.models.Query.Expression" );
+        } ).each( function( value ) {
+            var binding = utils.extractBinding( value );
+            variables.bindings.where.append( binding );
+        } );
+        return this;
     }
 
-    public Builder function whereNotIn( column, value, combinator ) {
-        arguments.operator = "not in";
-        return where( argumentCollection = arguments );
+    private Builder function whereInSub( column, callback, combinator = "and", negate = false ) {
+        var query = newQuery();
+        callback( query );
+
+        var type = negate ? "notInSub" : "inSub";
+        variables.wheres.append( {
+            type = type,
+            column = arguments.column,
+            query = query,
+            combinator = arguments.combinator
+        } );
+        query.getBindings().each( function( binding ) {
+            variables.bindings.where.append( binding );
+        } );
+
+        return this;
+    }
+
+    public Builder function orWhereIn( column, values, negate = false ) {
+        arguments.combinator = "or";
+        return whereIn( argumentCollection = arguments );
+    }
+
+    public Builder function whereNotIn( column, values, combinator = "and" ) {
+        arguments.negate = true
+        return whereIn( argumentCollection = arguments );
+    }
+
+    public Builder function orWhereNotIn( column, values ) {
+        arguments.combinator = "or";
+        arguments.negate = true
+        return whereIn( argumentCollection = arguments );
     }
 
     public Builder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {

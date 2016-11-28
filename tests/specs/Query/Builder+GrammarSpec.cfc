@@ -249,7 +249,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can add where not null statements", function() {
                         var builder = getBuilder();
-                        builder.select( "*" ).from( "users" ).whereNull( "id" );
+                        builder.select( "*" ).from( "users" ).whereNotNull( "id" );
                         expect( builder.toSql() ).toBe(
                             "SELECT * FROM ""users"" WHERE ""id"" IS NOT NULL"
                         );

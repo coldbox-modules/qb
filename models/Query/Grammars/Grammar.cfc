@@ -11,7 +11,7 @@ component displayname="Grammar" accessors="true" {
         return this;
     }
 
-    public string function compileSelect( required Quick.models.Query.Builder query ) {
+    public string function compileSelect( required Builder query ) {
         var sql = [];
 
         for ( var component in selectComponents ) {
@@ -27,16 +27,16 @@ component displayname="Grammar" accessors="true" {
         return concatenate( sql );
     }
 
-    private string function compileColumns( required Quick.models.Query.Builder query, required array columns ) {
+    private string function compileColumns( required Builder query, required array columns ) {
         var select = query.getDistinct() ? "SELECT DISTINCT " : "SELECT ";
         return select & columns.map( wrapColumn ).toList( ", " );
     }
 
-    private string function compileFrom( required Quick.models.Query.Builder query, required string from ) {
+    private string function compileFrom( required Builder query, required string from ) {
         return "FROM " & wrapTable( from );
     }
 
-    private string function compileJoins( required Quick.models.Query.Builder query, required array joins ) {
+    private string function compileJoins( required Builder query, required array joins ) {
         var joinsArray = [];
         for ( var join in arguments.joins ) {
             var firstOne = true;
@@ -63,10 +63,7 @@ component displayname="Grammar" accessors="true" {
         return arrayToList( joinsArray, " " );
     }
 
-    private string function compileWheres(
-        required Quick.models.Query.Builder query,
-        required array wheres
-    ) {
+    private string function compileWheres( required Builder query, required array wheres ) {
         var wheresArray = [];
         var firstOne = true;
         for ( var where in arguments.wheres ) {
@@ -126,6 +123,14 @@ component displayname="Grammar" accessors="true" {
 
     private string function whereNotExists( required struct where, required Builder query ) {
         return "NOT EXISTS (#compileSelect( where.query )#)";
+    }
+
+    private string function whereNull( required struct where, required Builder query ) {
+        return "#wrapColumn( where.column )# IS NULL";
+    }
+
+    private string function whereNotNull( required struct where, required Builder query ) {
+        return "#wrapColumn( where.column )# IS NOT NULL";
     }
 
     private string function concatenate( required array sql ) {

@@ -326,6 +326,31 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    public Builder function whereNull( column, combinator = "and", negate = false ) {
+        var type = negate ? "notNull" : "null";
+        variables.wheres.append( {
+            type = type,
+            column = arguments.column,
+            combinator = arguments.combinator
+        } );
+        return this;
+    }
+
+    public Builder function orWhereNull( column, negate = false ) {
+        arguments.combinator = "or";
+        return whereNull( argumentCollection = arguments );
+    }
+
+    public Builder function whereNotNull( column, combinator = "and" ) {
+        arguments.negate = true;
+        return whereNull( argumentCollection = arguments );
+    }
+    public Builder function orWhereNotNull( column ) {
+        arguments.combinator = "or";
+        arguments.negate = true;
+        return whereNull( argumentCollection = arguments );
+    }
+
     public Expression function raw( required string sql ) {
         return new quick.models.Query.Expression( sql );
     }

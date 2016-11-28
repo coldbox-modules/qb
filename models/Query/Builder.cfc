@@ -2,9 +2,8 @@ component displayname="Builder" accessors="true" {
 
     property name="grammar" inject="Grammar@Quick";
     property name="utils" inject="QueryUtils@Quick";
-    property name="wirebox" inject="wirebox";
 
-    property name="isDistinct" type="boolean" default="false";
+    property name="distinct" type="boolean" default="false";
     property name="columns" type="array";
     property name="from" type="string";
     property name="joins" type="array";
@@ -37,7 +36,7 @@ component displayname="Builder" accessors="true" {
     }
 
     private void function setDefaultValues() {
-        variables.isDistinct = false;
+        variables.distinct = false;
         variables.columns = [ "*" ];
         variables.joins = [];
         variables.from = "";
@@ -48,7 +47,7 @@ component displayname="Builder" accessors="true" {
     // select methods
 
     public Builder function distinct() {
-        variables.isDistinct = true;
+        setDistinct( true );
 
         return this;
     }
@@ -100,10 +99,10 @@ component displayname="Builder" accessors="true" {
         string type = "inner",
         any conditions
     ) {
-        var joinClause = wirebox.getInstance( name = "JoinClause@Quick", initArguments = {
+        var joinClause = new Quick.models.Query.JoinClause(
             type = arguments.type,
             table = arguments.table
-        } );
+        );
 
         if ( structKeyExists( arguments, "first" ) && isClosure( arguments.first ) ) {
             arguments.conditions = arguments.first;
@@ -333,28 +332,6 @@ component displayname="Builder" accessors="true" {
 
     private Builder function newQuery() {
         return new Quick.models.Query.Builder( grammar = getGrammar() );
-    }
-
-    // Accessors
-
-    public boolean function getDistinct() {
-        return variables.isDistinct;
-    }
-
-    public array function getColumns() {
-        return columns;
-    }
-
-    public string function getFrom() {
-        return from;
-    }
-
-    public array function getJoins() {
-        return joins;
-    }
-
-    public array function getWheres() {
-        return wheres;
     }
 
     public array function getBindings() {

@@ -270,7 +270,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( "where between", function() {
                     it( "can add where between statements", function() {
                         var builder = getBuilder();
-                        builder.select( "*" ).from( "users" ).whereBetween( "id", [ 1, 2 ] );
+                        builder.select( "*" ).from( "users" ).whereBetween( "id", 1, 2 );
                         expect( builder.toSql() ).toBe(
                             "SELECT * FROM ""users"" WHERE ""id"" BETWEEN ? AND ?"
                         );
@@ -279,7 +279,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can add where not between statements", function() {
                         var builder = getBuilder();
-                        builder.select( "*" ).from( "users" ).whereNotBetween( "id", [ 1, 2 ] );
+                        builder.select( "*" ).from( "users" ).whereNotBetween( "id", 1, 2 );
                         expect( builder.toSql() ).toBe(
                             "SELECT * FROM ""users"" WHERE ""id"" NOT BETWEEN ? AND ?"
                         );

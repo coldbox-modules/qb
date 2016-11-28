@@ -345,10 +345,46 @@ component displayname="Builder" accessors="true" {
         arguments.negate = true;
         return whereNull( argumentCollection = arguments );
     }
+
     public Builder function orWhereNotNull( column ) {
         arguments.combinator = "or";
         arguments.negate = true;
         return whereNull( argumentCollection = arguments );
+    }
+
+    public Builder function whereBetween( column, start, end, combinator = "and", negate = false ) {
+        var type = negate ? "notBetween" : "between";
+
+        variables.wheres.append( {
+            type = type,
+            column = arguments.column,
+            start = arguments.start,
+            end = arguments.end,
+            combinator = arguments.combinator
+        } );
+
+        var startBinding = utils.extractBinding( arguments.start );
+        arrayAppend( bindings.where, startBinding );
+        var endBinding = utils.extractBinding( arguments.end );
+        arrayAppend( bindings.where, endBinding );
+
+        return this;
+    }
+
+    public Builder function orWhereBetween( column, start, end, negate = false ) {
+        arguments.combinator = "or";
+        return whereBetween( argumentCollection = arguments );
+    }
+
+    public Builder function whereNotBetween( column, start, end, combinator ) {
+        arguments.negate = true;
+        return whereBetween( argumentCollection = arguments );
+    }
+
+    public Builder function whereNotBetween( column, start, end, combinator ) {
+        arguments.combinator = "or";
+        arguments.negate = true;
+        return whereBetween( argumentCollection = arguments );
     }
 
     public Expression function raw( required string sql ) {

@@ -133,6 +133,14 @@ component displayname="Grammar" accessors="true" {
         return "#wrapColumn( where.column )# IS NOT NULL";
     }
 
+    private string function whereBetween( required struct where, required Builder query ) {
+        return "#wrapColumn( where.column )# BETWEEN ? AND ?";
+    }
+
+    private string function whereNotBetween( required struct where, required Builder query ) {
+        return "#wrapColumn( where.column )# NOT BETWEEN ? AND ?";
+    }
+
     private string function concatenate( required array sql ) {
         return arrayToList( arrayFilter( sql, function( item ) {
             return item != "";

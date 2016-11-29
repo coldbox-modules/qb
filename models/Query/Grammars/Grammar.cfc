@@ -181,6 +181,29 @@ component displayname="Grammar" accessors="true" {
         return "ORDER BY #orderBys.toList( ", " )#";
     }
 
+    public string function compileInsert( required Builder query, required array columns, required array values ) {
+        var columnsString = columns.map( wrapColumn ).toList( ", " );
+
+        var placeholderString = values.map( function( valueArray ) {
+            return "(" & valueArray.map( function() {
+                return "?"
+            } ).toList( ", " ) & ")";
+        } ).toList( ", ");
+        return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES #placeholderString#" );
+    }
+
+    public string function compileUpdate( required Builder query, required array columns ) {
+        var updateList = columns.map( function( column ) {
+            return "#wrapColumn( column )# = ?";
+        } ).toList( ", " );
+
+        return trim( "UPDATE #wrapTable( query.getFrom() )# SET #updateList# #compileWheres( query, query.getWheres() )#" );
+    }
+
+    public string function compileDelete( required Builder query ) {
+        return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )#" );
+    }
+
     private string function concatenate( required array sql ) {
         return arrayToList( arrayFilter( sql, function( item ) {
             return item != "";

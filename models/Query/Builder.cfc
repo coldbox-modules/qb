@@ -26,7 +26,9 @@ component displayname="Builder" accessors="true" {
 
     variables.bindings = {
         "join" = [],
-        "where" = []
+        "where" = [],
+        "insert" = [],
+        "update" = []
     };
 
     public Builder function init(
@@ -513,12 +515,81 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    // insert
+
+    public any function insert( required any values, boolean toSql = false ) {
+        if ( values.isEmpty() ) {
+            return;
+        }
+
+        if ( ! isArray( values ) ) {
+            if ( ! isStruct( values ) ) {
+                throw(
+                    type = "InvalidSQLType",
+                    message = "Please pass a struct or an array of structs mapping columns to values"
+                );
+            }
+            values = [ values ];
+        }
+
+        var columns = values[ 1 ].keyArray();
+        columns.sort( "textnocase" );
+        var bindings = values.map( function( valueArray ) {
+            return columns.map( function( column ) {
+                return getUtils().extractBinding( valueArray[ column ] );
+            } )
+        } )
+        addBindings( bindings.reduce( function( allBindings, bindingsArray ) {
+            allBindings.append( bindingsArray, true /* merge */ );
+            return allBindings;
+        }, [] ), "insert" );
+
+        var sql = getGrammar().compileInsert( this, columns, bindings );
+
+        if ( toSql ) {
+            return sql;
+        }
+
+        return runQuery( sql );
+    }
+
+    public any function update( required any values, boolean toSql = false ) {
+        var updateArray = values.keyArray();
+        updateArray.sort( "textnocase" );
+
+        addBindings( updateArray.map( function( column ) {
+            return getUtils().extractBinding( values[ column ] );
+        } ), "update" );
+
+        var sql = getGrammar().compileUpdate( this, updateArray );
+
+        if ( toSql ) {
+            return sql;
+        }
+
+        return runQuery( sql );
+    }
+
+    public any function delete( any id, boolean toSql = false ) {
+        if ( ! isNull( arguments.id ) ) {
+            where( "id", "=", arguments.id );
+        }
+
+        var sql = getGrammar().compileDelete( this );
+
+        if ( toSql ) {
+            return sql;
+        }
+        
+        return runQuery( sql );
+    }
+
     public Builder function newQuery() {
         return new Quick.models.Query.Builder( grammar = getGrammar() );
     }
 
     public array function getBindings() {
-        var bindingOrder = [ "join", "where" ];
+        var bindingOrder = [ "update", "insert", "join", "where" ];
 
         var flatBindings = [];
         for ( var key in bindingOrder ) {
@@ -532,6 +603,14 @@ component displayname="Builder" accessors="true" {
 
     public struct function getRawBindings() {
         return bindings;
+    }
+
+    private Builder function clearBindings() {
+        variables.join = [];
+        variables.where = [];
+        variables.insert = [];
+        variables.update = [];
+        return this;
     }
 
     private Builder function addBindings( required any newBindings, string type = "where" ) {
@@ -558,7 +637,14 @@ component displayname="Builder" accessors="true" {
     }
 
     public query function get( struct options = {} ) {
-        return queryExecute( this.toSQL(), this.getBindings(), options );
+        arguments.sql = toSql();
+        return runQuery( argumentCollection = arguments );
+    }
+
+    private query function runQuery( required string sql, struct options = {} ) {
+        var result = queryExecute( sql, getBindings(), options );
+        clearBindings();
+        return result;
     }
 
     // Unused(?)

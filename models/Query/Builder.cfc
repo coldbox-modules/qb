@@ -93,35 +93,36 @@ component displayname="Builder" accessors="true" {
 
     public Builder function join(
         required string table,
-        any first,
+        required any first,
         string operator,
         string second,
         string type = "inner",
-        any conditions
+        boolean where = false
     ) {
-        var joinClause = new Quick.models.Query.JoinClause(
+        var join = new Quick.models.Query.JoinClause(
+            parentQuery = this,
             type = arguments.type,
             table = arguments.table
         );
 
-        if ( structKeyExists( arguments, "first" ) && isClosure( arguments.first ) ) {
-            arguments.conditions = arguments.first;
-        }
-
-        if ( structKeyExists( arguments, "conditions" ) && isClosure( arguments.conditions ) ) {
-            conditions( joinClause );
+        if ( isClosure( arguments.first ) ) {
+            first( join );
+            variables.joins.append( join );
+            join.getBindings().each( function( binding ) {
+                variables.bindings.join.append( binding );
+            } );
         }
         else {
-            joinClause.on(
-                first = arguments.first,
-                operator = arguments.operator,
-                second = arguments.second,
-                combinator = "and"
+            var method = where ? "where" : "on";
+            arguments.column = arguments.first;
+            arguments.value = arguments.second;
+            variables.joins.append(
+                invoke( join, method, arguments )
             );
+            join.getBindings().each( function( binding ) {
+                variables.bindings.join.append( binding );
+            } );
         }
-
-        arrayAppend( variables.joins, joinClause );
-        arrayAppend( bindings.join, joinClause.getBindings(), true );
 
         return this;
     }
@@ -145,6 +146,35 @@ component displayname="Builder" accessors="true" {
         any conditions
     ) {
         arguments.type = "right";
+        return join( argumentCollection = arguments );
+    }
+
+    public Builder function crossJoin(
+        required string table,
+        any first,
+        string operator,
+        any second
+    ) {
+        if ( ! isNull( arguments.first ) ) {
+            arguments.type = "cross";
+            return join( argumentCollection = arguments );
+        }
+
+        variables.joins.append(
+            new Quick.models.Query.JoinClause( this, "cross", table )
+        );
+
+        return this;
+    }
+
+    public Builder function joinWhere(
+        required string table,
+        required any first,
+        string operator,
+        string second,
+        string type = "inner"
+    ) {
+        arguments.where = true;
         return join( argumentCollection = arguments );
     }
 
@@ -438,7 +468,7 @@ component displayname="Builder" accessors="true" {
         return new quick.models.Query.Expression( sql );
     }
 
-    private Builder function newQuery() {
+    public Builder function newQuery() {
         return new Quick.models.Query.Builder( grammar = getGrammar() );
     }
 

@@ -385,15 +385,13 @@ component extends="testbox.system.BaseSpec" {
                 } );
 
                 it( "can join with where bindings instead of columns", function() {
-                    it( "can specify multiple joins", function() {
-                        var builder = getBuilder();
-                        builder.select( "*" ).from( "users" )
-                            .joinWhere( "contacts", "contacts.balance", "<", 100 );
-                        expect( builder.toSql() ).toBe(
-                            "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""contacts"".""balance"" < ?"
-                        );
-                        expect( getTestBindings( builder ) ).toBe( [ 100 ] );
-                    } );
+                    var builder = getBuilder();
+                    builder.select( "*" ).from( "users" )
+                        .joinWhere( "contacts", "contacts.balance", "<", 100 );
+                    expect( builder.toSql() ).toBe(
+                        "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""contacts"".""balance"" < ?"
+                    );
+                    expect( getTestBindings( builder ) ).toBe( [ 100 ] );
                 } );
 
                 it( "can left join", function() {
@@ -411,7 +409,7 @@ component extends="testbox.system.BaseSpec" {
                     builder.select( "*" ).from( "orders" )
                         .rightJoin( "users", "orders.user_id", "users.id" );
                     expect( builder.toSql() ).toBe(
-                        "SELECT * FROM ""orders"" LEFT JOIN ""users"" ON ""orders"".""user_id"" = ""users"".""id"""
+                        "SELECT * FROM ""orders"" RIGHT JOIN ""users"" ON ""orders"".""user_id"" = ""users"".""id"""
                     );
                     expect( getTestBindings( builder ) ).toBe( [] );
                 } );
@@ -429,7 +427,7 @@ component extends="testbox.system.BaseSpec" {
                     builder.select( "*" ).from( "users" )
                         .join( "contacts", function( j ) {
                             j.on( "users.id", "=", "contacts.id" )
-                                .orOn( "users.name" = "contacts.name" )
+                                .orOn( "users.name", "=", "contacts.name" )
                                 .orWhere( "users.admin", 1 );
                         } );
 

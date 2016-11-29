@@ -1,11 +1,8 @@
-component displayname="JoinClause" {
+component displayname="JoinClause" extends="Quick.models.Query.Builder" accessors="true" {
 
-    property name="utils" inject="QueryUtils@Quick";
-
+    property name="parentQuery" type="Quick.models.Query.Builder";
     property name="type" type="string";
     property name="table" type="string";
-    property name="clauses" type="array";
-    property name="bindings" type="array";
 
     variables.operators = [
         "=", "<", ">", "<=", ">=", "<>", "!=",
@@ -22,6 +19,7 @@ component displayname="JoinClause" {
     ];
 
     public JoinClause function init(
+        required Builder parentQuery,
         required string type,
         required string table
     ) {
@@ -35,87 +33,34 @@ component displayname="JoinClause" {
             throw( type = "InvalidSQLType", message = "[#type#] is not a valid sql join type" );
         }
 
+        variables.parentQuery = arguments.parentQuery;
         variables.type = arguments.type;
         variables.table = arguments.table;
 
-        variables.clauses = [];
-        variables.bindings = [];
+        super.init( parentQuery.getGrammar(), parentQuery.getUtils() );
 
         return this;
     }
 
-    public JoinClause function on( first, operator, second, combinator = "and", where = false ) {
-        // If we only receive the first two arguments, this is the shortcut where statement
-        if ( ! structKeyExists( arguments, "second" ) ) {
-            arguments.second = arguments.operator;
-            arguments.operator = "=";
+    public JoinClause function on( required first, operator, second, combinator = "and" ) {
+        if ( isClosure( first ) ) {
+            return whereNested( first, combinator );
         }
 
-        var operatorIsValid = false;
-        for ( var validOperator in variables.operators ) {
-            if ( validOperator == arguments.operator ) {
-                operatorIsValid = true;
-            }
-        }
-        if ( ! operatorIsValid ) {
-            throw( type = "InvalidSQLType", message = "[#operator#] is not a valid sql operator type" );
-        }
-
-        if ( arguments.where ) {
-            var binding = utils.extractBinding( arguments.second );
-            arrayAppend( bindings, binding );
-            arguments.second = "?";
-        }
-
-        arrayAppend( clauses, {
-            first = arguments.first,
-            operator = arguments.operator,
-            second = arguments.second,
-            combinator = arguments.combinator,
-            where = arguments.where
-        } );
-
-        return this;
+        return whereColumn( argumentCollection = arguments );
     }
 
-    public JoinClause function orOn( first, operator, second, where = false ) {
+    public JoinClause function orOn( required first, operator, second ) {
         arguments.combinator = "or";
         return on( argumentCollection = arguments );
     }
 
-    public JoinClause function where( first, operator, second, combinator ) {
-        arguments.where = true;
-        return on( argumentCollection = arguments );
+    public Builder function newQuery() {
+        return new Quick.models.Query.JoinClause(
+            parentQuery = getParentQuery(),
+            type = getType(),
+            table = getTable()
+        );
     }
 
-    public string function getType() {
-        return type;
-    }
-
-    public string function getTable() {
-        return table;
-    }
-
-    public array function getClauses() {
-        return clauses;
-    }
-
-    public array function getBindings() {
-        return bindings;
-    }
-
-    private struct function extractBindings( required any value ) {
-        var binding = {};
-
-        if ( isStruct( arguments.value ) ) {
-            binding = arguments.value;
-            arguments.value = arguments.value.value;
-        }
-
-        if ( ! structKeyExists( binding, "value" ) ) {
-            binding.value = arguments.value;
-        }
-
-        return binding;
-    }
 }

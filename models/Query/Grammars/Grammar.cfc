@@ -24,7 +24,7 @@ component displayname="Grammar" accessors="true" {
             arrayAppend( sql, func( argumentCollection = args ) );
         }
 
-        return concatenate( sql );
+        return trim( concatenate( sql ) );
     }
 
     private string function compileColumns( required Builder query, required array columns ) {
@@ -39,45 +39,38 @@ component displayname="Grammar" accessors="true" {
     private string function compileJoins( required Builder query, required array joins ) {
         var joinsArray = [];
         for ( var join in arguments.joins ) {
-            var firstOne = true;
-            var clausesArray = [];
-            for ( var clause in join.getClauses() ) {
-                if ( firstOne ) {
-                    firstOne = false;
-                    arrayAppend(
-                        clausesArray,
-                        "#clause.first# #uCase( clause.operator )# #clause.second#"
-                    );
-                }
-                else {
-                    arrayAppend(
-                        clausesArray,
-                        "#uCase( clause.combinator )# #clause.first# #uCase( clause.operator )# #clause.second#"
-                    );
-                }
-            }
-            var clauses = arrayToList( clausesArray, " " );
-            arrayAppend( joinsArray, "#uCase( join.getType() )# JOIN #join.getTable()# ON #clauses#" );
+            var conditions = compileWheres( join, join.getWheres() );
+            var table = wrapTable( join.getTable() );
+            joinsArray.append( "#uCase( join.getType() )# JOIN #table# #conditions#" );
         }
 
         return arrayToList( joinsArray, " " );
     }
 
-    private string function compileWheres( required Builder query, required array wheres ) {
+    private string function compileWheres( required Builder query, array wheres = [] ) {
         var wheresArray = [];
-        var firstOne = true;
-        for ( var where in arguments.wheres ) {
-            var sql = invoke( this, "where#where.type#", { where = where, query = query } );
-            sql = firstOne ? sql : "#uCase( where.combinator )# #sql#";
-            wheresArray.append( sql );
-            firstOne = false;
-        }
-
-        if ( arrayIsEmpty( wheresArray ) ) {
+        
+        if ( arguments.wheres.isEmpty() ) {
             return "";
         }
 
-        return "WHERE #arrayToList( wheresArray, " " )#";
+        for ( var where in arguments.wheres ) {
+            var sql = uCase( where.combinator ) & " " &
+                invoke( this, "where#where.type#", {
+                    where = where, query = query
+                } );
+            wheresArray.append( sql );
+        }
+
+        if ( wheresArray.isEmpty() ) {
+            return "";
+        }
+
+        var whereList = wheresArray.toList( " " );
+        var conjunction = isInstanceOf( query, "Quick.models.Query.JoinClause" ) ?
+            "ON" : "WHERE";
+
+        return "#conjunction# #removeLeadingCombinator( whereList )#";
     }
 
     private string function whereBasic( requried struct where, required Builder query ) {
@@ -170,6 +163,10 @@ component displayname="Grammar" accessors="true" {
         return arrayToList( arrayFilter( sql, function( item ) {
             return item != "";
         } ), " " );
+    }
+
+    private string function removeLeadingCombinator( required string whereList ) {
+        return REReplaceNoCase( whereList, "and\s|or\s", "", "one" );
     }
 
     private string function wrapIdentifier( required any identifier ) {

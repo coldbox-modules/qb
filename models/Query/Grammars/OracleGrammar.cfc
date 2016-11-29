@@ -1,4 +1,4 @@
-component displayname="OracleGrammar" implements="Quick.models.Query.Grammars.GrammarInterface" {
+component displayname="OracleGrammar" extends="Quick.models.Query.Grammars.Grammar" {
 
     variables.selectComponents = [
         "columns", "from", "joins", "wheres"

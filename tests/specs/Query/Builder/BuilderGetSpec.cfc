@@ -10,11 +10,12 @@ component extends="testbox.system.BaseSpec" {
 
                 var mockWirebox = getMockBox().createStub();
                 var mockJoinClause = getMockBox()
-                    .prepareMock( new Quick.models.Query.JoinClause( "inner", "second" ) );
+                    .prepareMock( new Quick.models.Query.JoinClause( query, "inner", "second" ) );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
                 mockWirebox
                     .$( "getInstance" )
                     .$args( name = "JoinClause@Quick", initArguments = {
+                        parentQuery = query,
                         type = "inner",
                         table = "second"
                     } )

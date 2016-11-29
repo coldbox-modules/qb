@@ -688,12 +688,12 @@ component extends="testbox.system.BaseSpec" {
                     expect( getTestBindings( builder ) ).toBe( [] );
                 } );
 
-                it( "can order by multiple fields using variadic parameters", function() {
+                it( "can order by a raw expression", function() {
                     var builder = getBuilder();
                     builder.select( "*" ).from( "users" )
-                        .groupBy( builder.raw( "DATE(created_at)" ) );
+                        .orderBy( builder.raw( "DATE(created_at)" ) );
                     expect( builder.toSql() ).toBe(
-                        "SELECT * FROM ""users"" ORDER BY(created_at)"
+                        "SELECT * FROM ""users"" ORDER BY DATE(created_at)"
                     );
                     expect( getTestBindings( builder ) ).toBe( [] );
                 } );

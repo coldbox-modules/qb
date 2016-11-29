@@ -64,10 +64,9 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( wheres ) ).toBe( 1, "1 where clause should exist" );
                         var where = wheres[ 1 ];
                         expect( where.column ).toBe( "::some column::" );
-                        expect( where.operator ).toBe( "in" );
-                        expect( where.value ).toBe( [ "::value one::", "::value two::" ] );
+                        expect( where.values ).toBe( [ "::value one::", "::value two::" ] );
                         expect( where.combinator ).toBe( "and" );
-                        expect( where.type ).toBe( "basic" );
+                        expect( where.type ).toBe( "in" );
                     } );
 
                     it( "has a whereNotIn shortcut", function() {
@@ -78,10 +77,9 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( wheres ) ).toBe( 1, "1 where clause should exist" );
                         var where = wheres[ 1 ];
                         expect( where.column ).toBe( "::some column::" );
-                        expect( where.operator ).toBe( "not in" );
-                        expect( where.value ).toBe( [ "::value one::", "::value two::" ] );
+                        expect( where.values ).toBe( [ "::value one::", "::value two::" ] );
                         expect( where.combinator ).toBe( "and" );
-                        expect( where.type ).toBe( "basic" );
+                        expect( where.type ).toBe( "notIn" );
                     } );
 
                     it( "has a orWhere shortcut", function() {

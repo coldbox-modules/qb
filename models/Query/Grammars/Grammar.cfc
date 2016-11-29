@@ -3,7 +3,7 @@ component displayname="Grammar" accessors="true" {
     property name="tablePrefix" type="string" default="";
 
     variables.selectComponents = [
-        "columns", "from", "joins", "wheres", "groups"
+        "columns", "from", "joins", "wheres", "groups", "orders"
     ];
 
     public Grammar function init() {
@@ -165,6 +165,20 @@ component displayname="Grammar" accessors="true" {
         }
 
         return "GROUP BY #groups.map( wrapColumn ).toList( ", " )#";
+    }
+
+    private string function compileOrders( required Builder query, required array orders ) {
+        if ( orders.isEmpty() ) {
+            return "";
+        }
+
+        var orderBys = orders.map( function( orderBy ) {
+            return orderBy.direction == "raw" ?
+                orderBy.column.getSql() :
+                "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
+        } );
+
+        return "ORDER BY #orderBys.toList( ", " )#";
     }
 
     private string function concatenate( required array sql ) {

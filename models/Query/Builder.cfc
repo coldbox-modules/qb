@@ -9,10 +9,15 @@ component displayname="Builder" accessors="true" {
     property name="joins" type="array";
     property name="wheres" type="array";
     property name="groups" type="array";
+    property name="orders" type="array";
 
     variables.operators = [
         "=", "<", ">", "<=", ">=", "<>", "!=",
-        "like", "not like", "between", "in", "not in"
+        "like", "like binary", "not like", "between", "ilike",
+        "&", "|", "^", "<<", ">>",
+        "rlike", "regexp", "not regexp",
+        "~", "~*", "!~", "!~*", "similar to",
+        "not similar to"
     ];
 
     variables.combinators = [
@@ -43,6 +48,7 @@ component displayname="Builder" accessors="true" {
         variables.from = "";
         variables.wheres = [];
         variables.groups = [];
+        variables.orders = [];
     }
 
     // API
@@ -313,6 +319,13 @@ component displayname="Builder" accessors="true" {
             arguments.operator = "=";
         }
 
+        if ( isInvalidOperator( operator ) ) {
+            throw(
+                type = "InvalidSQLType",
+                message = "Illegal operator"
+            );
+        }
+
         variables.wheres.append( {
             type = "column",
             first = arguments.first,
@@ -483,6 +496,19 @@ component displayname="Builder" accessors="true" {
         var groupBys = normalizeToArray( argumentCollection = args );
         groupBys.each( function( groupBy ) {
             variables.groups.append( groupBy );
+        } );
+        return this;
+    }
+
+    // order by
+
+    public Builder function orderBy( required any column, string direction = "asc" ) {
+        if ( getUtils().isExpression( column ) ) {
+            direction = "raw";
+        }
+        variables.orders.append( {
+            direction = direction,
+            column = column
         } );
         return this;
     }

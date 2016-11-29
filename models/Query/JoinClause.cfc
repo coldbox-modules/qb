@@ -4,15 +4,6 @@ component displayname="JoinClause" extends="Quick.models.Query.Builder" accessor
     property name="type" type="string";
     property name="table" type="string";
 
-    variables.operators = [
-        "=", "<", ">", "<=", ">=", "<>", "!=",
-        "like", "like binary", "not like", "between", "ilike",
-        "&", "|", "^", "<<", ">>",
-        "rlike", "regexp", "not regexp",
-        "~", "~*", "!~", "!~*", "similar to",
-        "not similar to"
-    ];
-
     variables.types = [
         "inner", "full", "cross",
         "left", "left outer", "right", "right outer"

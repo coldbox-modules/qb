@@ -3,7 +3,7 @@ component displayname="Grammar" accessors="true" {
     property name="tablePrefix" type="string" default="";
 
     variables.selectComponents = [
-        "columns", "from", "joins", "wheres"
+        "columns", "from", "joins", "wheres", "groups"
     ];
 
     public Grammar function init() {
@@ -157,6 +157,14 @@ component displayname="Grammar" accessors="true" {
 
     private string function whereNotInSub( required struct where, required Builder query ) {
         return "#wrapColumn( where.column )# NOT IN (#compileSelect( where.query )#)";
+    }
+
+    private string function compileGroups( required Builder query, required array groups ) {
+        if ( groups.isEmpty() ) {
+            return "";
+        }
+
+        return "GROUP BY #groups.map( wrapColumn ).toList( ", " )#";
     }
 
     private string function concatenate( required array sql ) {

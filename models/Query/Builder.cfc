@@ -8,6 +8,7 @@ component displayname="Builder" accessors="true" {
     property name="from" type="string";
     property name="joins" type="array";
     property name="wheres" type="array";
+    property name="groups" type="array";
 
     variables.operators = [
         "=", "<", ">", "<=", ">=", "<>", "!=",
@@ -41,6 +42,7 @@ component displayname="Builder" accessors="true" {
         variables.joins = [];
         variables.from = "";
         variables.wheres = [];
+        variables.groups = [];
     }
 
     // API
@@ -463,6 +465,26 @@ component displayname="Builder" accessors="true" {
         onFalse = function( q ) { return q; }
     ) {
         return condition ? onTrue( this ) : onFalse( this );
+    }
+
+    // group by
+
+    public Builder function groupBy() {
+        // This block is necessary for ACF 10.
+        // It can't be extracted to a function because
+        // the arguments struct doesn't get passed correctly.
+        var args = {};
+        var count = structCount( arguments );
+        for ( var arg in arguments ) {
+            args[ count ] = arguments[ arg ];
+            count--;
+        }
+
+        var groupBys = normalizeToArray( argumentCollection = args );
+        groupBys.each( function( groupBy ) {
+            variables.groups.append( groupBy );
+        } );
+        return this;
     }
 
     public Builder function newQuery() {

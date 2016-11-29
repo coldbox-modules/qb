@@ -479,7 +479,12 @@ component displayname="Builder" accessors="true" {
         onTrue,
         onFalse = function( q ) { return q; }
     ) {
-        return condition ? onTrue( this ) : onFalse( this );
+        if ( condition ) {
+            onTrue( this );
+        } else {
+            onFalse( this );
+        }
+        return this;
     }
 
     // group by

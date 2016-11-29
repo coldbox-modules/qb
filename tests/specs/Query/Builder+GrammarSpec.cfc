@@ -550,7 +550,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( """when"" callbacks", function() {
                     it( "executes the callback when the condition is true", function() {
                         var callback = function( query ) {
-                            return query.where( "id", "=", 1 );
+                            query.where( "id", "=", 1 );
                         };
 
                         var builder = getBuilder();
@@ -566,7 +566,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "does not execute the callback when the condition is false", function() {
                         var callback = function( query ) {
-                            return query.where( "id", "=", 1 );
+                            query.where( "id", "=", 1 );
                         };
 
                         var builder = getBuilder();
@@ -582,11 +582,11 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "executes the default callback when the condition is false", function() {
                         var callback = function( query ) {
-                            return query.where( "id", "=", 1 );
+                            query.where( "id", "=", 1 );
                         };
 
                         var default = function( query ) {
-                            return query.where( "id", "=", 2 );
+                            query.where( "id", "=", 2 );
                         };
 
                         var builder = getBuilder();
@@ -602,11 +602,11 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "does not execute the default callback when the condition is true", function() {
                         var callback = function( query ) {
-                            return query.where( "id", "=", 1 );
+                            query.where( "id", "=", 1 );
                         };
 
                         var default = function( query ) {
-                            return query.where( "id", "=", 2 );
+                            query.where( "id", "=", 2 );
                         };
 
                         var builder = getBuilder();

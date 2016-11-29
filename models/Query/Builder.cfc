@@ -108,9 +108,7 @@ component displayname="Builder" accessors="true" {
         if ( isClosure( arguments.first ) ) {
             first( join );
             variables.joins.append( join );
-            join.getBindings().each( function( binding ) {
-                variables.bindings.join.append( binding );
-            } );
+            addBindings( join.getBindings(), "join" );
         }
         else {
             var method = where ? "where" : "on";
@@ -119,9 +117,7 @@ component displayname="Builder" accessors="true" {
             variables.joins.append(
                 invoke( join, method, arguments )
             );
-            join.getBindings().each( function( binding ) {
-                variables.bindings.join.append( binding );
-            } );
+            addBindings( join.getBindings(), "join" );
         }
 
         return this;
@@ -218,8 +214,7 @@ component displayname="Builder" accessors="true" {
         } );
 
         if ( ! isInstanceOf( arguments.value, "Quick.models.Query.Expression" ) ) {
-            var binding = utils.extractBinding( arguments.value );
-            arrayAppend( bindings.where, binding );
+            addBindings( utils.extractBinding( arguments.value ), "where" );
         }
 
         return this;
@@ -244,12 +239,20 @@ component displayname="Builder" accessors="true" {
             combinator = arguments.combinator
         } );
 
-        values.filter( function( value ) {
-            return ! isInstanceOf( value, "Quick.models.Query.Expression" );
-        } ).each( function( value ) {
-            var binding = utils.extractBinding( value );
-            variables.bindings.where.append( binding );
-        } );
+        // values.filter( function( value ) {
+        //     return ! isInstanceOf( value, "Quick.models.Query.Expression" );
+        // } ).each( function( value ) {
+        //     var binding = utils.extractBinding( value );
+        //     variables.bindings.where.append( binding );
+        // } );
+
+        var bindings = values
+            .filter( utils.isNotExpression )
+            .map( function( value ) {
+                return utils.extractBinding( value );
+            } );
+        addBindings( bindings, "where" );
+
         return this;
     }
 
@@ -264,9 +267,7 @@ component displayname="Builder" accessors="true" {
             query = query,
             combinator = arguments.combinator
         } );
-        query.getBindings().each( function( binding ) {
-            variables.bindings.where.append( binding );
-        } );
+        addBindings( query.getBindings(), "where" );
 
         return this;
     }
@@ -288,11 +289,9 @@ component displayname="Builder" accessors="true" {
     }
 
     public Builder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {
-        whereBindings.map( function( binding ) {
+        addBindings( whereBindings.map( function( binding ) {
             return utils.extractBinding( binding );
-        } ).each( function( binding ) {
-            variables.bindings.where.append( binding );
-        } );
+        } ), "where" );
         variables.wheres.append( {
             type = "raw",
             sql = sql,
@@ -341,9 +340,7 @@ component displayname="Builder" accessors="true" {
             query = arguments.query,
             combinator = arguments.combinator
         } );
-        query.getBindings().each( function( binding ) {
-            variables.bindings.where.append( binding );
-        } );
+        addBindings( query.getBindings(), "where" );
         return this;
     }
 
@@ -375,9 +372,7 @@ component displayname="Builder" accessors="true" {
                 query = arguments.query,
                 combinator = arguments.combinator
             } );
-            query.getBindings().each( function( binding ) {
-                variables.bindings.where.append( binding );
-            } );
+            addBindings( query.getBindings(), "where" );
         }
         return this;
     }
@@ -397,9 +392,7 @@ component displayname="Builder" accessors="true" {
             query = query,
             combinator = arguments.combinator
         } );
-        query.getBindings().each( function( binding ) {
-            variables.bindings.where.append( binding );
-        } );
+        addBindings( query.getBindings(), "where" );
         return this;
     }
 
@@ -440,10 +433,8 @@ component displayname="Builder" accessors="true" {
             combinator = arguments.combinator
         } );
 
-        var startBinding = utils.extractBinding( arguments.start );
-        arrayAppend( bindings.where, startBinding );
-        var endBinding = utils.extractBinding( arguments.end );
-        arrayAppend( bindings.where, endBinding );
+        addBindings( utils.extractBinding( arguments.start ), "where" );
+        addBindings( utils.extractBinding( arguments.end ), "where" );
 
         return this;
     }
@@ -487,6 +478,18 @@ component displayname="Builder" accessors="true" {
 
     public struct function getRawBindings() {
         return bindings;
+    }
+
+    private Builder function addBindings( required any newBindings, string type = "where" ) {
+        if ( ! isArray( newBindings ) ) {
+            newBindings = [ newBindings ];
+        }
+
+        newBindings.each( function( binding ) {
+            variables.bindings[ type ].append( binding );
+        } );
+
+        return this;
     }
 
 

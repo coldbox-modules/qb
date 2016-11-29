@@ -33,6 +33,14 @@ component displayname="QueryUtils" {
         return "CF_SQL_VARCHAR";
     }
 
+    public boolean function isExpression( required any value ) {
+        return isInstanceOf( arguments.value, "Quick.models.Query.Expression" );
+    }
+
+    public boolean function isNotExpression( required any value ) {
+        return ! isInstanceOf( arguments.value, "Quick.models.Query.Expression" );
+    }
+
     private string function normalizeSqlValue( required any value ) {
         if ( isArray( arguments.value ) ) {
             return arrayToList( arguments.value );

@@ -455,8 +455,14 @@ component displayname="Builder" accessors="true" {
         return whereBetween( argumentCollection = arguments );
     }
 
-    public Expression function raw( required string sql ) {
-        return new quick.models.Query.Expression( sql );
+    // when
+
+    public Builder function when(
+        required boolean condition,
+        onTrue,
+        onFalse = function( q ) { return q; }
+    ) {
+        return condition ? onTrue( this ) : onFalse( this );
     }
 
     public Builder function newQuery() {
@@ -494,6 +500,10 @@ component displayname="Builder" accessors="true" {
 
 
     // Collaborators
+
+    public Expression function raw( required string sql ) {
+        return new quick.models.Query.Expression( sql );
+    }
 
     public string function toSQL() {
         return grammar.compileSelect( this );

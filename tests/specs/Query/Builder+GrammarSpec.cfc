@@ -799,6 +799,50 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            describe( "updateOrInsert statements", function() {
+                it( "inserts a new record when the where clause does not bring back any records", function() {
+                    var builder = getBuilder();
+                    builder.$( "exists", false );
+                    var sql = builder.from( "users" )
+                        .where( "email", "foo" )
+                        .updateOrInsert(
+                            values = { "name" = "baz" },
+                            toSql = true
+                        );
+                    expect( sql ).toBe( "INSERT INTO ""users"" (""name"") VALUES (?)" );
+
+                    var bindings = builder.getRawBindings();
+                    expect( bindings.insert ).toBeArray();
+                    expect( bindings.insert ).toHaveLength( 1 );
+                    expect( bindings.insert[ 1 ].value ).toBe( "baz" );
+
+                    expect( bindings.where ).toBeArray();
+                    expect( bindings.where ).toHaveLength( 1 );
+                    expect( bindings.where[ 1 ].value ).toBe( "foo" );
+                } );
+
+                it( "updates an existing record when the where clause brings back at least one record", function() {
+                    var builder = getBuilder();
+                    builder.$( "exists", true );
+                    var sql = builder.from( "users" )
+                        .where( "email", "foo" )
+                        .updateOrInsert(
+                            values = { "name" = "baz" },
+                            toSql = true
+                        );
+                    expect( sql ).toBe( "UPDATE ""users"" SET ""name"" = ? WHERE ""email"" = ? LIMIT 1" );
+
+                    var bindings = builder.getRawBindings();
+                    expect( bindings.update ).toBeArray();
+                    expect( bindings.update ).toHaveLength( 1 );
+                    expect( bindings.update[ 1 ].value ).toBe( "baz" );
+
+                    expect( bindings.where ).toBeArray();
+                    expect( bindings.where ).toHaveLength( 1 );
+                    expect( bindings.where[ 1 ].value ).toBe( "foo" );
+                } );
+            } );
+
             describe( "delete statements", function() {
                 it( "can delete an entire table", function() {
                     var builder = getBuilder();

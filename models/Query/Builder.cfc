@@ -594,6 +594,14 @@ component displayname="Builder" accessors="true" {
         return runQuery( sql );
     }
 
+    public function updateOrInsert( required any values, boolean toSql = false ) {
+        if ( exists() ) {
+            return this.limit( 1 ).update( argumentCollection = arguments ); 
+        }
+
+        return this.insert( argumentCollection = arguments );
+    }
+
     public any function delete( any id, boolean toSql = false ) {
         if ( ! isNull( arguments.id ) ) {
             where( "id", "=", arguments.id );

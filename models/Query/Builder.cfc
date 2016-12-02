@@ -665,6 +665,10 @@ component displayname="Builder" accessors="true" {
         return runQuery( argumentCollection = arguments );
     }
 
+    public boolean function exists( struct options = {} ) {
+        return get( argumentCollection = arguments ).RECORDCOUNT > 0;
+    }
+
     private query function runQuery( required string sql, struct options = {} ) {
         var result = queryExecute( sql, getBindings(), options );
         clearBindings();

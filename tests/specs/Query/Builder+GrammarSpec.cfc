@@ -730,6 +730,22 @@ component extends="testbox.system.BaseSpec" {
                         expect( getTestBindings( builder ) ).toBe( [] );
                     } );
                 } );
+
+                describe( "exists", function() {
+                    it( "returns true if any records come back from the query", function() {
+                        var builder = getBuilder();
+                        builder.$( "get", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [
+                            { name = "foo", email = "bar" }
+                        ] ) );
+                        expect( builder.select( "*" ).from( "users" ).exists() ).toBe( true );
+                    } );
+
+                    it( "returns false if no records come back from the query", function() {
+                        var builder = getBuilder();
+                        builder.$( "get", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [] ) );
+                        expect( builder.select( "*" ).from( "users" ).exists() ).toBe( false );
+                    } );
+                } );
             } );
 
             describe( "insert statements", function() {

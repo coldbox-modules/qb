@@ -32,8 +32,8 @@ component displayname="Builder" accessors="true" {
     };
 
     public Builder function init(
-        Grammar grammar = new Quick.models.Query.Grammars.Grammar( ),
-        QueryUtils utils = new Quick.models.Query.QueryUtils()
+        Grammar grammar = new qb.models.Query.Grammars.Grammar( ),
+        QueryUtils utils = new qb.models.Query.QueryUtils()
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
@@ -109,7 +109,7 @@ component displayname="Builder" accessors="true" {
         string type = "inner",
         boolean where = false
     ) {
-        var join = new Quick.models.Query.JoinClause(
+        var join = new qb.models.Query.JoinClause(
             parentQuery = this,
             type = arguments.type,
             table = arguments.table
@@ -167,7 +167,7 @@ component displayname="Builder" accessors="true" {
         }
 
         variables.joins.append(
-            new Quick.models.Query.JoinClause( this, "cross", table )
+            new qb.models.Query.JoinClause( this, "cross", table )
         );
 
         return this;
@@ -223,7 +223,7 @@ component displayname="Builder" accessors="true" {
             type = "basic"
         } );
 
-        if ( ! isInstanceOf( arguments.value, "Quick.models.Query.Expression" ) ) {
+        if ( ! isInstanceOf( arguments.value, "qb.models.Query.Expression" ) ) {
             addBindings( utils.extractBinding( arguments.value ), "where" );
         }
 
@@ -250,7 +250,7 @@ component displayname="Builder" accessors="true" {
         } );
 
         // values.filter( function( value ) {
-        //     return ! isInstanceOf( value, "Quick.models.Query.Expression" );
+        //     return ! isInstanceOf( value, "qb.models.Query.Expression" );
         // } ).each( function( value ) {
         //     var binding = utils.extractBinding( value );
         //     variables.bindings.where.append( binding );
@@ -590,7 +590,7 @@ component displayname="Builder" accessors="true" {
     }
 
     public Builder function newQuery() {
-        return new Quick.models.Query.Builder( grammar = getGrammar() );
+        return new qb.models.Query.Builder( grammar = getGrammar() );
     }
 
     public array function getBindings() {
@@ -634,7 +634,7 @@ component displayname="Builder" accessors="true" {
     // Collaborators
 
     public Expression function raw( required string sql ) {
-        return new quick.models.Query.Expression( sql );
+        return new qb.models.Query.Expression( sql );
     }
 
     public string function toSQL() {
@@ -660,7 +660,7 @@ component displayname="Builder" accessors="true" {
         }
 
         var arg = arguments[ 1 ];
-        if ( isInstanceOf( arg, "Quick.models.Query.Expression" ) ) {
+        if ( isInstanceOf( arg, "qb.models.Query.Expression" ) ) {
             return [ arg ];
         }
 

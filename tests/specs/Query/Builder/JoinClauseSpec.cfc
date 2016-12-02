@@ -2,28 +2,28 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "join clause", function() {
             beforeEach( function() {
-                variables.query = getMockBox().createMock( "Quick.models.Query.Builder" );
+                variables.query = getMockBox().createMock( "qb.models.Query.Builder" );
             } );
             describe( "initialization", function() {
                 it( "requires a parentQuery, type, and a table", function() {
-                    expect( function() { new Quick.models.Query.JoinClause(); } ).toThrow();
-                    expect( function() { new Quick.models.Query.JoinClause( "inner" ); } ).toThrow();
-                    expect( function() { new Quick.models.Query.JoinClause( "inner", "sometable" ); } ).toThrow();
+                    expect( function() { new qb.models.Query.JoinClause(); } ).toThrow();
+                    expect( function() { new qb.models.Query.JoinClause( "inner" ); } ).toThrow();
+                    expect( function() { new qb.models.Query.JoinClause( "inner", "sometable" ); } ).toThrow();
                 } );
 
                 it( "validates the type is a valid sql join type", function() {
-                    expect( function() { new Quick.models.Query.JoinClause( query, "gibberish", "sometable" ); } ).toThrow();
-                    expect( function() { new Quick.models.Query.JoinClause( query, "left typo", "sometable" ); } ).toThrow();
-                    expect( function() { new Quick.models.Query.JoinClause( query, "left", "sometable" ); } ).notToThrow();
-                    expect( function() { new Quick.models.Query.JoinClause( query, "left outer", "sometable" ); } ).notToThrow();
+                    expect( function() { new qb.models.Query.JoinClause( query, "gibberish", "sometable" ); } ).toThrow();
+                    expect( function() { new qb.models.Query.JoinClause( query, "left typo", "sometable" ); } ).toThrow();
+                    expect( function() { new qb.models.Query.JoinClause( query, "left", "sometable" ); } ).notToThrow();
+                    expect( function() { new qb.models.Query.JoinClause( query, "left outer", "sometable" ); } ).notToThrow();
                 } );
             } );
 
             describe( "adding join conditions", function() {
                 beforeEach( function() {
-                    variables.join = new Quick.models.Query.JoinClause( query, "inner", "second" );
+                    variables.join = new qb.models.Query.JoinClause( query, "inner", "second" );
                     getMockBox().prepareMock( join );
-                    join.$property( propertyName = "utils", mock = new Quick.models.Query.QueryUtils() );
+                    join.$property( propertyName = "utils", mock = new qb.models.Query.QueryUtils() );
                 } );
 
                 afterEach( function() {

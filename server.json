@@ -1,8 +1,8 @@
 {
+    "name": "qb",
     "web":{
         "http":{
             "port":"7777"
         }
-    },
-    "openbrowser":false
+    }
 }

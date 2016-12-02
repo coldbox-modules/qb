@@ -781,11 +781,11 @@ component extends="testbox.system.BaseSpec" {
 
     private Builder function getBuilder() {
         var builder = getMockBox()
-            .createMock( "Quick.models.Query.Builder" ).init();
+            .createMock( "qb.models.Query.Builder" ).init();
         var grammar = getMockBox()
-            .createMock( "Quick.models.Query.Grammars.Grammar" );
+            .createMock( "qb.models.Query.Grammars.Grammar" );
         var queryUtils = getMockBox()
-            .createMock( "Quick.models.Query.QueryUtils" );
+            .createMock( "qb.models.Query.QueryUtils" );
         builder.$property( propertyName = "grammar", mock = grammar );
         builder.$property( propertyName = "utils", mock = queryUtils );
         return builder;

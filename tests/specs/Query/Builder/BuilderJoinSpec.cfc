@@ -2,18 +2,18 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "join methods", function() {
             beforeEach( function() {
-                variables.query = new Quick.models.Query.Builder();
+                variables.query = new qb.models.Query.Builder();
                 getMockBox().prepareMock( query );
-                variables.utils = new Quick.models.Query.QueryUtils();
+                variables.utils = new qb.models.Query.QueryUtils();
                 query.$property( propertyName = "utils", mock = utils );
                 var mockJoinClause = getMockBox()
-                    .prepareMock( new Quick.models.Query.JoinClause( query, "inner", "second" ) );
+                    .prepareMock( new qb.models.Query.JoinClause( query, "inner", "second" ) );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
             } );
 
             it( "does a simple inner join", function() {
                 var mockJoinClause = getMockBox()
-                    .prepareMock( new Quick.models.Query.JoinClause( query, "inner", "second" ) );
+                    .prepareMock( new qb.models.Query.JoinClause( query, "inner", "second" ) );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
 
                 query.join( "second", "first.id", "=", "second.first_id" );
@@ -22,7 +22,7 @@ component extends="testbox.system.BaseSpec" {
                 expect( arrayLen( joins ) ).toBe( 1, "Only one join should exist" );
 
                 var join = joins[ 1 ];
-                expect( join ).toBeInstanceOf( "Quick.models.Query.JoinClause" );
+                expect( join ).toBeInstanceOf( "qb.models.Query.JoinClause" );
                 expect( join.getType() ).toBe( "inner" );
                 expect( join.getTable() ).toBe( "second" );
 
@@ -39,7 +39,7 @@ component extends="testbox.system.BaseSpec" {
 
             it( "does a left join", function() {
                 var mockJoinClause = getMockBox()
-                    .prepareMock( new Quick.models.Query.JoinClause( query, "left", "second" ) );
+                    .prepareMock( new qb.models.Query.JoinClause( query, "left", "second" ) );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
 
                 query.leftJoin( "second", "first.id", "=", "second.first_id" );
@@ -48,7 +48,7 @@ component extends="testbox.system.BaseSpec" {
                 expect( arrayLen( joins ) ).toBe( 1, "Only one join should exist" );
 
                 var join = joins[ 1 ];
-                expect( join ).toBeInstanceOf( "Quick.models.Query.JoinClause" );
+                expect( join ).toBeInstanceOf( "qb.models.Query.JoinClause" );
                 expect( join.getType() ).toBe( "left" );
                 expect( join.getTable() ).toBe( "second" );
 
@@ -65,7 +65,7 @@ component extends="testbox.system.BaseSpec" {
 
             it( "does a right join", function() {
                 var mockJoinClause = getMockBox()
-                    .prepareMock( new Quick.models.Query.JoinClause( query, "right", "second" ) );
+                    .prepareMock( new qb.models.Query.JoinClause( query, "right", "second" ) );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
 
                 query.rightJoin( "second", "first.id", "=", "second.first_id" );
@@ -74,7 +74,7 @@ component extends="testbox.system.BaseSpec" {
                 expect( arrayLen( joins ) ).toBe( 1, "Only one join should exist" );
 
                 var join = joins[ 1 ];
-                expect( join ).toBeInstanceOf( "Quick.models.Query.JoinClause" );
+                expect( join ).toBeInstanceOf( "qb.models.Query.JoinClause" );
                 expect( join.getType() ).toBe( "right" );
                 expect( join.getTable() ).toBe( "second" );
 
@@ -99,7 +99,7 @@ component extends="testbox.system.BaseSpec" {
                 expect( arrayLen( joins ) ).toBe( 1, "Only one join should exist" );
 
                 var join = joins[ 1 ];
-                expect( join ).toBeInstanceOf( "Quick.models.Query.JoinClause" );
+                expect( join ).toBeInstanceOf( "qb.models.Query.JoinClause" );
                 expect( join.getType() ).toBe( "inner" );
                 expect( join.getTable() ).toBe( "second" );
 
@@ -131,7 +131,7 @@ component extends="testbox.system.BaseSpec" {
                 expect( arrayLen( joins ) ).toBe( 1, "Only one join should exist" );
 
                 var join = joins[ 1 ];
-                expect( join ).toBeInstanceOf( "Quick.models.Query.JoinClause" );
+                expect( join ).toBeInstanceOf( "qb.models.Query.JoinClause" );
                 expect( join.getType() ).toBe( "inner" );
                 expect( join.getTable() ).toBe( "second" );
 

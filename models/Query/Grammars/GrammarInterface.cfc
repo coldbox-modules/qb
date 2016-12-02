@@ -1,3 +1,3 @@
 interface displayname="GrammarInterface" {
-    public string function compileSelect( required Quick.models.Query.Builder query );    
+    public string function compileSelect( required qb.models.Query.Builder query );    
 }

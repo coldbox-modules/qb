@@ -2,15 +2,15 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "get methods", function() {
             beforeEach( function() {
-                variables.query = new Quick.models.Query.Builder();
+                variables.query = new qb.models.Query.Builder();
                 getMockBox().prepareMock( query );
 
-                var utils = new Quick.models.Query.QueryUtils();
+                var utils = new qb.models.Query.QueryUtils();
                 query.$property( propertyName = "utils", mock = utils );
 
                 var mockWirebox = getMockBox().createStub();
                 var mockJoinClause = getMockBox()
-                    .prepareMock( new Quick.models.Query.JoinClause( query, "inner", "second" ) );
+                    .prepareMock( new qb.models.Query.JoinClause( query, "inner", "second" ) );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
                 mockWirebox
                     .$( "getInstance" )

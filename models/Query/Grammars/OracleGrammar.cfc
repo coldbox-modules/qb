@@ -1,10 +1,10 @@
-component displayname="OracleGrammar" extends="Quick.models.Query.Grammars.Grammar" {
+component displayname="OracleGrammar" extends="qb.models.Query.Grammars.Grammar" {
 
     variables.selectComponents = [
         "columns", "from", "joins", "wheres"
     ];
 
-    public string function compileSelect( required Quick.models.Query.Builder query ) {
+    public string function compileSelect( required qb.models.Query.Builder query ) {
 
         var sql = [];
 
@@ -21,16 +21,16 @@ component displayname="OracleGrammar" extends="Quick.models.Query.Grammars.Gramm
         return concatenate( sql );
     }
 
-    private string function compileColumns( required Quick.models.Query.Builder query, required array columns ) {
+    private string function compileColumns( required qb.models.Query.Builder query, required array columns ) {
         var select = query.getDistinct() ? "SELECT DISTINCT " : "SELECT ";
         return select & arrayToList( columns );
     }
 
-    private string function compileFrom( required Quick.models.Query.Builder query, required string from ) {
+    private string function compileFrom( required qb.models.Query.Builder query, required string from ) {
         return "FROM " & from;
     }
 
-    private string function compileJoins( required Quick.models.Query.Builder query, required array joins ) {
+    private string function compileJoins( required qb.models.Query.Builder query, required array joins ) {
         var joinsArray = [];
         for ( var join in arguments.joins ) {
             var firstOne = true;
@@ -57,7 +57,7 @@ component displayname="OracleGrammar" extends="Quick.models.Query.Grammars.Gramm
         return arrayToList( joinsArray, " " );
     }
 
-    private string function compileWheres( required Quick.models.Query.Builder query, requierd array wheres ) {
+    private string function compileWheres( required qb.models.Query.Builder query, requierd array wheres ) {
         var wheresArray = [];
         var firstOne = true;
         for ( var where in arguments.wheres ) {

@@ -1,6 +1,6 @@
 component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
     function beforeAll() {
-        variables.utils = new Quick.models.Query.QueryUtils();
+        variables.utils = new qb.models.Query.QueryUtils();
     }
 
     function run() {

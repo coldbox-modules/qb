@@ -34,11 +34,11 @@ component displayname="QueryUtils" {
     }
 
     public boolean function isExpression( required any value ) {
-        return isInstanceOf( arguments.value, "Quick.models.Query.Expression" );
+        return isInstanceOf( arguments.value, "qb.models.Query.Expression" );
     }
 
     public boolean function isNotExpression( required any value ) {
-        return ! isInstanceOf( arguments.value, "Quick.models.Query.Expression" );
+        return ! isInstanceOf( arguments.value, "qb.models.Query.Expression" );
     }
 
     private string function normalizeSqlValue( required any value ) {

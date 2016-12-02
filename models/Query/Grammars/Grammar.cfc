@@ -67,7 +67,7 @@ component displayname="Grammar" accessors="true" {
         }
 
         var whereList = wheresArray.toList( " " );
-        var conjunction = isInstanceOf( query, "Quick.models.Query.JoinClause" ) ?
+        var conjunction = isInstanceOf( query, "qb.models.Query.JoinClause" ) ?
             "ON" : "WHERE";
 
         return "#conjunction# #removeLeadingCombinator( whereList )#";
@@ -82,7 +82,7 @@ component displayname="Grammar" accessors="true" {
 
         var placeholder = "?";
 
-        if ( isInstanceOf( where.value, "Quick.models.Query.Expression" ) ) {
+        if ( isInstanceOf( where.value, "qb.models.Query.Expression" ) ) {
             placeholder = where.value.getSql();
         }
 
@@ -133,7 +133,7 @@ component displayname="Grammar" accessors="true" {
 
     private string function whereIn( required struct where, required Builder query ) {
         var placeholderString = where.values.map( function( value ) {
-            return isInstanceOf( value, "Quick.models.Query.Expression" ) ? value.getSql() : "?";
+            return isInstanceOf( value, "qb.models.Query.Expression" ) ? value.getSql() : "?";
         } ).toList( ", " );
         if ( placeholderString == "" ) {
             return "0 = 1";
@@ -143,7 +143,7 @@ component displayname="Grammar" accessors="true" {
 
     private string function whereNotIn( required struct where, required Builder query ) {
         var placeholderString = where.values.map( function( value ) {
-            return isInstanceOf( value, "Quick.models.Query.Expression" ) ? value.getSql() : "?";
+            return isInstanceOf( value, "qb.models.Query.Expression" ) ? value.getSql() : "?";
         } ).toList( ", " );
         if ( placeholderString == "" ) {
             return "1 = 1";
@@ -231,7 +231,7 @@ component displayname="Grammar" accessors="true" {
     }
 
     private string function wrapColumn( required any column ) {
-        if ( isInstanceOf( column, "quick.models.Query.Expression" ) ) {
+        if ( isInstanceOf( column, "qb.models.Query.Expression" ) ) {
             return column.getSQL();
         }
         var alias = "";

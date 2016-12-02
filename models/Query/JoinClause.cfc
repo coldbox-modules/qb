@@ -1,6 +1,6 @@
-component displayname="JoinClause" extends="Quick.models.Query.Builder" accessors="true" {
+component displayname="JoinClause" extends="qb.models.Query.Builder" accessors="true" {
 
-    property name="parentQuery" type="Quick.models.Query.Builder";
+    property name="parentQuery" type="qb.models.Query.Builder";
     property name="type" type="string";
     property name="table" type="string";
 
@@ -47,7 +47,7 @@ component displayname="JoinClause" extends="Quick.models.Query.Builder" accessor
     }
 
     public Builder function newQuery() {
-        return new Quick.models.Query.JoinClause(
+        return new qb.models.Query.JoinClause(
             parentQuery = getParentQuery(),
             type = getType(),
             table = getTable()

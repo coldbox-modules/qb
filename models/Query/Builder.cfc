@@ -125,7 +125,7 @@ component displayname="Builder" accessors="true" {
         else {
             var method = where ? "where" : "on";
             arguments.column = arguments.first;
-            arguments.value = arguments.second;
+            arguments.value = isNull( arguments.second ) ? javacast( "null", "" ) : arguments.second;
             variables.joins.append(
                 invoke( join, method, arguments )
             );
@@ -189,6 +189,10 @@ component displayname="Builder" accessors="true" {
     // where methods
 
     public Builder function where( column, operator, value, string combinator = "and" ) {
+        if ( isClosure( column ) ) {
+            return whereNested( column, combinator );
+        }
+
         var argCount = argumentCount( arguments );
 
         if ( isInvalidCombinator( arguments.combinator ) ) {
@@ -207,10 +211,6 @@ component displayname="Builder" accessors="true" {
                 type = "InvalidSQLType",
                 message = "Illegal operator"
             );
-        }
-
-        if ( isClosure( column ) ) {
-            return whereNested( column, combinator );
         }
 
         if ( isClosure( value ) ) {
@@ -290,13 +290,13 @@ component displayname="Builder" accessors="true" {
     }
 
     public Builder function whereNotIn( column, values, combinator = "and" ) {
-        arguments.negate = true
+        arguments.negate = true;
         return whereIn( argumentCollection = arguments );
     }
 
     public Builder function orWhereNotIn( column, values ) {
         arguments.combinator = "or";
-        arguments.negate = true
+        arguments.negate = true;
         return whereIn( argumentCollection = arguments );
     }
 
@@ -307,7 +307,7 @@ component displayname="Builder" accessors="true" {
         variables.wheres.append( {
             type = "raw",
             sql = sql,
-            combinator = arguments.combinator,
+            combinator = arguments.combinator
         } );
         return this;
     }
@@ -468,7 +468,7 @@ component displayname="Builder" accessors="true" {
         return whereBetween( argumentCollection = arguments );
     }
 
-    public Builder function whereNotBetween( column, start, end, combinator ) {
+    public Builder function orWhereNotBetween( column, start, end, combinator ) {
         arguments.combinator = "or";
         arguments.negate = true;
         return whereBetween( argumentCollection = arguments );
@@ -479,8 +479,12 @@ component displayname="Builder" accessors="true" {
     public Builder function when(
         required boolean condition,
         onTrue,
-        onFalse = function( q ) { return q; }
+        onFalse
     ) {
+        var defaultCallback = function( q ) {
+            return q;
+        };
+        onFalse = isNull( onFalse ) ? defaultCallback : onFalse;
         if ( condition ) {
             onTrue( this );
         } else {
@@ -496,10 +500,10 @@ component displayname="Builder" accessors="true" {
         // It can't be extracted to a function because
         // the arguments struct doesn't get passed correctly.
         var args = {};
-        var count = structCount( arguments );
+        var count = 1;
         for ( var arg in arguments ) {
             args[ count ] = arguments[ arg ];
-            count--;
+            count++;
         }
 
         var groupBys = normalizeToArray( argumentCollection = args );
@@ -561,8 +565,8 @@ component displayname="Builder" accessors="true" {
         var bindings = values.map( function( valueArray ) {
             return columns.map( function( column ) {
                 return getUtils().extractBinding( valueArray[ column ] );
-            } )
-        } )
+            } );
+        } );
         addBindings( bindings.reduce( function( allBindings, bindingsArray ) {
             allBindings.append( bindingsArray, true /* merge */ );
             return allBindings;

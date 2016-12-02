@@ -55,10 +55,8 @@ component displayname="Grammar" accessors="true" {
         }
 
         for ( var where in arguments.wheres ) {
-            var sql = uCase( where.combinator ) & " " &
-                invoke( this, "where#where.type#", {
-                    where = where, query = query
-                } );
+            var whereFunc = variables[ "where#where.type#" ];
+            var sql = uCase( where.combinator ) & " " & whereFunc( where = where, query = query );
             wheresArray.append( sql );
         }
 
@@ -70,7 +68,7 @@ component displayname="Grammar" accessors="true" {
         var conjunction = isInstanceOf( query, "qb.models.Query.JoinClause" ) ?
             "ON" : "WHERE";
 
-        return "#conjunction# #removeLeadingCombinator( whereList )#";
+        return trim( "#conjunction# #removeLeadingCombinator( whereList )#" );
     }
 
     private string function whereBasic( requried struct where, required Builder query ) {
@@ -86,7 +84,7 @@ component displayname="Grammar" accessors="true" {
             placeholder = where.value.getSql();
         }
 
-        return "#where.column# #uCase( where.operator )# #placeholder#";
+        return trim( "#where.column# #uCase( where.operator )# #placeholder#" );
     }
 
     private string function whereRaw( required struct where, required Builder query ) {
@@ -94,13 +92,13 @@ component displayname="Grammar" accessors="true" {
     }
 
     private string function whereColumn( required struct where, required Builder query ) {
-        return "#wrapColumn( where.first )# #where.operator# #wrapColumn( where.second )#";
+        return trim( "#wrapColumn( where.first )# #where.operator# #wrapColumn( where.second )#" );
     }
 
     private string function whereNested( required struct where, required Builder query ) {
         var sql = compileWheres( arguments.where.query, arguments.where.query.getWheres() );
         // cut off the first 7 characters to account for the extra "WHERE"
-        return "(#mid( sql, 7 )#)";
+        return trim( "(#mid( sql, 7, len( sql ) - 6 )#)" );
     }
 
     private string function whereSub( required struct where, required Builder query ) {
@@ -200,7 +198,7 @@ component displayname="Grammar" accessors="true" {
 
         var placeholderString = values.map( function( valueArray ) {
             return "(" & valueArray.map( function() {
-                return "?"
+                return "?";
             } ).toList( ", " ) & ")";
         } ).toList( ", ");
         return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES #placeholderString#" );
@@ -263,4 +261,5 @@ component displayname="Grammar" accessors="true" {
         }
         return """#value#""";
     }
+
 }

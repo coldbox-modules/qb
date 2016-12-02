@@ -1,3 +1,5 @@
+import qb.models.Query.Builder;
+
 component extends="testbox.system.BaseSpec" {
 
     function run() {

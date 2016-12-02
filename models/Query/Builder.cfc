@@ -1,3 +1,6 @@
+import qb.models.Query.Builder;
+import qb.models.Query.Grammars.Grammar;
+
 component displayname="Builder" accessors="true" {
 
     property name="grammar" inject="Grammar@Quick";
@@ -34,7 +37,7 @@ component displayname="Builder" accessors="true" {
     };
 
     public Builder function init(
-        Grammar grammar = new qb.models.Query.Grammars.Grammar( ),
+        Grammar grammar = new qb.models.Query.Grammars.Grammar(),
         QueryUtils utils = new qb.models.Query.QueryUtils()
     ) {
         variables.grammar = arguments.grammar;

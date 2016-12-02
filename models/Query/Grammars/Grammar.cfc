@@ -1,3 +1,5 @@
+import qb.models.Query.Builder;
+
 component displayname="Grammar" accessors="true" {
 
     property name="tablePrefix" type="string" default="";

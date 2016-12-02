@@ -10,6 +10,8 @@ component displayname="Builder" accessors="true" {
     property name="wheres" type="array";
     property name="groups" type="array";
     property name="orders" type="array";
+    property name="limitValue" type="numeric";
+    property name="offsetValue" type="numeric";
 
     variables.operators = [
         "=", "<", ">", "<=", ">=", "<>", "!=",
@@ -517,6 +519,23 @@ component displayname="Builder" accessors="true" {
             direction = direction,
             column = column
         } );
+        return this;
+    }
+
+    // limit
+
+    public Builder function limit( required numeric value ) {
+        variables.limitValue = value;
+        return this;
+    }
+
+    public Builder function take( required numeric value ) {
+        return limit( argumentCollection = arguments );
+    }
+
+    // offset
+    public Builder function offset( required numeric value ) {
+        variables.offsetValue = value;
         return this;
     }
 

@@ -699,6 +699,37 @@ component extends="testbox.system.BaseSpec" {
                         expect( getTestBindings( builder ) ).toBe( [] );
                     } );
                 } );
+
+                describe( "limits", function() {
+                    it( "can limit the record set returned", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).limit( 3 );
+                        expect( builder.toSql() ).toBe(
+                            "SELECT * FROM ""users"" LIMIT 3"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [] );
+                    } );
+
+                    it( "has an alias of ""take""", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).take( 1 );
+                        expect( builder.toSql() ).toBe(
+                            "SELECT * FROM ""users"" LIMIT 1"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [] );
+                    } );
+                } );
+
+                describe( "offsets", function() {
+                    it( "can offset the record set returned", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).offset( 3 );
+                        expect( builder.toSql() ).toBe(
+                            "SELECT * FROM ""users"" OFFSET 3"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [] );
+                    } );
+                } );
             } );
 
             describe( "insert statements", function() {

@@ -3,7 +3,8 @@ component displayname="Grammar" accessors="true" {
     property name="tablePrefix" type="string" default="";
 
     variables.selectComponents = [
-        "columns", "from", "joins", "wheres", "groups", "orders"
+        "columns", "from", "joins", "wheres",
+        "groups", "orders", "limitValue", "offsetValue"
     ];
 
     public Grammar function init() {
@@ -15,11 +16,10 @@ component displayname="Grammar" accessors="true" {
         var sql = [];
 
         for ( var component in selectComponents ) {
-            var componentResult = invoke( query, "get" & component );
             var func = variables[ "compile#component#" ];
             var args = {
                 "query" = query,
-                "#component#" = componentResult
+                "#component#" = invoke( query, "get" & component )
             };
             arrayAppend( sql, func( argumentCollection = args ) );
         }
@@ -181,6 +181,20 @@ component displayname="Grammar" accessors="true" {
         return "ORDER BY #orderBys.toList( ", " )#";
     }
 
+    private string function compileLimitValue( required Builder query, limitValue ) {
+        if ( isNull( arguments.limitValue ) ) {
+            return "";
+        }
+        return "LIMIT #limitValue#";
+    }
+
+    private string function compileOffsetValue( required Builder query, offsetValue ) {
+        if ( isNull( arguments.offsetValue ) ) {
+            return "";
+        }
+        return "OFFSET #offsetValue#";
+    }
+
     public string function compileInsert( required Builder query, required array columns, required array values ) {
         var columnsString = columns.map( wrapColumn ).toList( ", " );
 
@@ -197,7 +211,7 @@ component displayname="Grammar" accessors="true" {
             return "#wrapColumn( column )# = ?";
         } ).toList( ", " );
 
-        return trim( "UPDATE #wrapTable( query.getFrom() )# SET #updateList# #compileWheres( query, query.getWheres() )#" );
+        return trim( "UPDATE #wrapTable( query.getFrom() )# SET #updateList# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#" );
     }
 
     public string function compileDelete( required Builder query ) {

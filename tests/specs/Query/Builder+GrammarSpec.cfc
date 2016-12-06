@@ -749,22 +749,6 @@ component extends="testbox.system.BaseSpec" {
                         expect( getTestBindings( builder ) ).toBe( [] );
                     } );
                 } );
-
-                describe( "exists", function() {
-                    it( "returns true if any records come back from the query", function() {
-                        var builder = getBuilder();
-                        builder.$( "get", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [
-                            { name = "foo", email = "bar" }
-                        ] ) );
-                        expect( builder.select( "*" ).from( "users" ).exists() ).toBe( true );
-                    } );
-
-                    it( "returns false if no records come back from the query", function() {
-                        var builder = getBuilder();
-                        builder.$( "get", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [] ) );
-                        expect( builder.select( "*" ).from( "users" ).exists() ).toBe( false );
-                    } );
-                } );
             } );
 
             describe( "insert statements", function() {
@@ -899,6 +883,14 @@ component extends="testbox.system.BaseSpec" {
                     var results = builder.select( "id" ).from( "users" ).get();
 
                     expect( results ).toBe( expectedQuery );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""id"" FROM ""users""",
+                        options = {}
+                    } );
                 } );
 
                 it( "retrieves the first record when calling `first`", function() {
@@ -913,6 +905,14 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( results ).toBe( expectedQuery );
                     expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
+                        options = {}
+                    } );
                 } );
 
                 it( "returns the first result by id when calling `find`", function() {
@@ -927,6 +927,185 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( results ).toBe( expectedQuery );
                     expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
+                        options = {}
+                    } );
+                } );
+            } );
+
+            describe( "aggregate functions", function() {
+                describe( "count", function() {
+                    it( "can count all the records on a table", function() {
+                        var builder = getBuilder();
+                        var expectedCount = 1;
+                        var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedCount } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).count();
+
+                        expect( results ).toBe( expectedCount );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        } );
+                    } );
+
+                    it( "can count a specific column", function() {
+                        var builder = getBuilder();
+                        var expectedCount = 1;
+                        var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedCount } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).count( "name" );
+
+                        expect( results ).toBe( expectedCount );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        } );
+                    } );
+
+                    it( "should maintain selected columns after an aggregate has been executed", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = 1 } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        builder.select( [ "id", "name" ] ).from( "users" );
+                        builder.from( "users" ).count();
+
+                        expect( builder.getColumns() ).toBe( [ "id", "name" ] );
+                    } );
+
+                    it( "should clear out the aggregate properties after an aggregate has been executed", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = 1 } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        builder.from( "users" ).count();
+
+                        expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                    } );    
+                } );
+                
+                describe( "max", function() {
+                    it( "can return the max record of a table", function() {
+                        var builder = getBuilder();
+                        var expectedMax = 54;
+                        var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedMax } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT MAX(""age"") AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).max( "age" );
+
+                        expect( results ).toBe( expectedMax );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT MAX(""age"") AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        } );
+
+                        expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                    } );    
+                } );
+
+                describe( "min", function() {
+                    it( "can return the min record of a table", function() {
+                        var builder = getBuilder();
+                        var expectedMin = 3;
+                        var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedMin } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT MIN(""age"") AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).min( "age" );
+
+                        expect( results ).toBe( expectedMin );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT MIN(""age"") AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        } );
+
+                        expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                    } );
+                } );
+
+                describe( "sum", function() {
+                    it( "can return the sum of a column in a table", function() {
+                        var builder = getBuilder();
+                        var expectedSum = 42;
+                        var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedSum } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT SUM(""answers"") AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).sum( "answers" );
+
+                        expect( results ).toBe( expectedSum );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT SUM(""answers"") AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        } );
+
+                        expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                    } );
+                } );
+
+                describe( "exists", function() {
+                    it( "returns true if any records come back from the query", function() {
+                        var builder = getBuilder();
+                        builder.$( "get", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [
+                            { name = "foo", email = "bar" }
+                        ] ) );
+                        expect( builder.select( "*" ).from( "users" ).exists() ).toBe( true );
+
+                        expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                    } );
+
+                    it( "returns false if no records come back from the query", function() {
+                        var builder = getBuilder();
+                        builder.$( "get", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [] ) );
+                        expect( builder.select( "*" ).from( "users" ).exists() ).toBe( false );
+                    } );
                 } );
             } );
         } );

@@ -7,6 +7,7 @@ component displayname="Builder" accessors="true" {
     property name="utils";
 
     property name="distinct" type="boolean" default="false";
+    property name="aggregate" type="struct";
     property name="columns" type="array";
     property name="from" type="string";
     property name="joins" type="array";
@@ -50,6 +51,7 @@ component displayname="Builder" accessors="true" {
 
     private void function setDefaultValues() {
         variables.distinct = false;
+        variables.aggregate = {};
         variables.columns = [ "*" ];
         variables.joins = [];
         variables.from = "";
@@ -664,6 +666,41 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    // Aggregates
+
+    public numeric function count( string column = "*", struct options = {} ) {
+        arguments.type = "count";
+        return aggregateQuery( argumentCollection = arguments );
+    }
+
+    public any function max( required string column, struct options = {} ) {
+        arguments.type = "max";
+        return aggregateQuery( argumentCollection = arguments );
+    }
+
+    public any function min( required string column, struct options = {} ) {
+        arguments.type = "min";
+        return aggregateQuery( argumentCollection = arguments );
+    }
+
+    public any function sum( required string column, struct options = {} ) {
+        arguments.type = "sum";
+        return aggregateQuery( argumentCollection = arguments );
+    }
+
+    private any function aggregateQuery(
+        required string type,
+        required string column = "*",
+        struct options = {}
+    ) {
+        setAggregate( { type = arguments.type, column = arguments.column } );
+        var originalColumns = getColumns();
+        select();
+        var result = get( options = arguments.options ).aggregate;
+        select( originalColumns );
+        setAggregate( {} );
+        return result;
+    }
 
     // Collaborators
 

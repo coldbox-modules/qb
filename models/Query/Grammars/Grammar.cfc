@@ -5,7 +5,7 @@ component displayname="Grammar" accessors="true" {
     property name="tablePrefix" type="string" default="";
 
     variables.selectComponents = [
-        "columns", "from", "joins", "wheres",
+        "aggregate", "columns", "from", "joins", "wheres",
         "groups", "orders", "limitValue", "offsetValue"
     ];
 
@@ -30,6 +30,9 @@ component displayname="Grammar" accessors="true" {
     }
 
     private string function compileColumns( required Builder query, required array columns ) {
+        if ( ! query.getAggregate().isEmpty() ) {
+            return "";
+        }
         var select = query.getDistinct() ? "SELECT DISTINCT " : "SELECT ";
         return select & columns.map( wrapColumn ).toList( ", " );
     }
@@ -216,6 +219,13 @@ component displayname="Grammar" accessors="true" {
 
     public string function compileDelete( required Builder query ) {
         return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )#" );
+    }
+
+    private string function compileAggregate( required Builder query, required struct aggregate ) {
+        if ( aggregate.isEmpty() ) {
+            return "";
+        }
+        return "SELECT #uCase( aggregate.type )#(#wrapColumn( aggregate.column )#) AS ""aggregate""";
     }
 
     private string function concatenate( required array sql ) {

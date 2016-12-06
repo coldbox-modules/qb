@@ -676,8 +676,17 @@ component displayname="Builder" accessors="true" {
     }
 
     public query function get( struct options = {} ) {
-        arguments.sql = toSql();
-        return runQuery( argumentCollection = arguments );
+        return runQuery( sql = toSql(), options = arguments.options );
+    }
+
+    public query function first( struct options = {} ) {
+        take( 1 );
+        return get( options = arguments.options );
+    }
+
+    public query function find( required any id, struct options = {} ) {
+        where( "id", "=", arguments.id );
+        return first( options = arguments.options );
     }
 
     public boolean function exists( struct options = {} ) {

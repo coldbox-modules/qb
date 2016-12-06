@@ -886,6 +886,49 @@ component extends="testbox.system.BaseSpec" {
                     expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
                 } );
             } );
+
+            describe( "retrieval shortcuts", function() {
+                it( "executes the query when calling `get`", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "id", "integer", [ { id = 1 } ] );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""id"" FROM ""users""",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.select( "id" ).from( "users" ).get();
+
+                    expect( results ).toBe( expectedQuery );
+                } );
+
+                it( "retrieves the first record when calling `first`", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.from( "users" ).whereName( "foo" ).first();
+
+                    expect( results ).toBe( expectedQuery );
+                    expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
+                } );
+
+                it( "returns the first result by id when calling `find`", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.from( "users" ).find( 1 );
+
+                    expect( results ).toBe( expectedQuery );
+                    expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+                } );
+            } );
         } );
     }
 

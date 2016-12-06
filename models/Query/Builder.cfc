@@ -3,8 +3,8 @@ import qb.models.Query.Grammars.Grammar;
 
 component displayname="Builder" accessors="true" {
 
-    property name="grammar" inject="Grammar@Quick";
-    property name="utils" inject="QueryUtils@Quick";
+    property name="grammar";
+    property name="utils";
 
     property name="distinct" type="boolean" default="false";
     property name="columns" type="array";

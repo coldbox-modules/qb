@@ -1,4 +1,5 @@
 component displayname="QueryUtils" {
+    
     public struct function extractBinding( required any value ) {
         var binding = isStruct( value ) ? value : { value = normalizeSqlValue( value ) };
 
@@ -73,4 +74,5 @@ component displayname="QueryUtils" {
 
         return initial;
     }
+
 }

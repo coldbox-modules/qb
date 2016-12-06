@@ -53,7 +53,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "foo as bar" ).from( "users" );
                         expect( builder.toSql() ).toBe(
-                            "SELECT ""foo"" AS ""bar"" from ""users"""
+                            "SELECT ""foo"" AS ""bar"" FROM ""users"""
                         );
                     } );
 
@@ -61,7 +61,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "x.y as foo.bar" ).from( "public.users" );
                         expect( builder.toSql() ).toBe(
-                            "SELECT ""x"".""y"" AS ""foo.bar"" from ""public"".""users"""
+                            "SELECT ""x"".""y"" AS ""foo.bar"" FROM ""public"".""users"""
                         );
                     } );
                 } );

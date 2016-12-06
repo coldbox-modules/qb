@@ -67,7 +67,7 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    public Builder function select( required any columns ) {
+    public Builder function select( any columns = "*" ) {
         // This block is necessary for ACF 10.
         // It can't be extracted to a function because
         // the arguments struct doesn't get passed correctly.

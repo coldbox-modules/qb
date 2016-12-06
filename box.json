@@ -1,20 +1,20 @@
 {
-    "name":"quick",
-    "version":"0.1.0",
+    "name":"qb",
+    "version":"1.0.0",
     "author":"Eric Peterson",
-    "homepage":"https://github.com/elpete/quick",
-    "documentation":"https://github.com/elpete/quick",
-    "location":"elpete/quick",
+    "homepage":"https://github.com/elpete/qb",
+    "documentation":"https://github.com/elpete/qb",
+    "location":"elpete/qb",
     "scripts":{
-        "postVersion":"package set location='elpete/quick'",
+        "postVersion":"package set location='elpete/qb'",
         "postPublish":"!git push"
     },
     "repository":{
         "type":"git",
-        "URL":"https://github.com/elpete/quick"
+        "URL":"https://github.com/elpete/qb"
     },
-    "bugs":"https://github.com/elpete/quick/issues",
-    "slug":"quick",
+    "bugs":"https://github.com/elpete/qb/issues",
+    "slug":"qb",
     "shortDescription":"A query builder for the rest of us.",
     "type":"modules",
     "keywords":[
@@ -23,11 +23,11 @@
         "SQL"
     ],
     "private":false,
-    "projectURL":"https://github.com/elpete/quick",
+    "projectURL":"https://github.com/elpete/qb",
     "license":[
         {
             "type":"MIT",
-            "URL":"https://github.com/elpete/quick/LICENSE"
+            "URL":"https://github.com/elpete/qb/LICENSE"
         }
     ],
     "devDependencies":{

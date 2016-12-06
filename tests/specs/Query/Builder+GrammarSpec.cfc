@@ -64,6 +64,14 @@ component extends="testbox.system.BaseSpec" {
                             "SELECT ""x"".""y"" AS ""foo.bar"" FROM ""public"".""users"""
                         );
                     } );
+
+                    it( "selects raw values correctly", function() {
+                        var builder = getBuilder();
+                        builder.select( builder.raw( "substr( foo, 6 )" ) ).from( "users" );
+                        expect( builder.toSql() ).toBe(
+                            "SELECT substr( foo, 6 ) FROM ""users"""
+                        );
+                    } );
                 } );
 
                 describe( "using table prefixes", function() {

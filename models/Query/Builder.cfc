@@ -702,6 +702,10 @@ component displayname="Builder" accessors="true" {
         return result;
     }
 
+    public boolean function exists( struct options = {} ) {
+        return get( argumentCollection = arguments ).RECORDCOUNT > 0;
+    }
+
     // Collaborators
 
     public Expression function raw( required string sql ) {
@@ -726,8 +730,19 @@ component displayname="Builder" accessors="true" {
         return first( options = arguments.options );
     }
 
-    public boolean function exists( struct options = {} ) {
-        return get( argumentCollection = arguments ).RECORDCOUNT > 0;
+    public any function value( required string column, struct options = {} ) {
+        select( column );
+        return first( options = arguments.options )[ column ];
+    }
+
+    public any function implode( required string column, string glue = "", struct options = {} ) {
+        select( column );
+        var result = get( options = arguments.options );
+        var results = [];
+        for ( var row in result ) {
+            results.append( row[ column ] );
+        }
+        return results.toList( glue );
     }
 
     private query function runQuery( required string sql, struct options = {} ) {

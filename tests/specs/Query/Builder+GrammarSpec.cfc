@@ -872,68 +872,149 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "retrieval shortcuts", function() {
-                it( "executes the query when calling `get`", function() {
-                    var builder = getBuilder();
-                    var expectedQuery = queryNew( "id", "integer", [ { id = 1 } ] );
-                    builder.$( "runQuery" ).$args(
-                        sql = "SELECT ""id"" FROM ""users""",
-                        options = {}
-                    ).$results( expectedQuery );
+                describe( "get", function() {
+                    it( "executes the query when calling `get`", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "id", "integer", [ { id = 1 } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT ""id"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
 
-                    var results = builder.select( "id" ).from( "users" ).get();
+                        var results = builder.select( "id" ).from( "users" ).get();
 
-                    expect( results ).toBe( expectedQuery );
+                        expect( results ).toBe( expectedQuery );
 
-                    var runQueryLog = builder.$callLog().runQuery;
-                    expect( runQueryLog ).toBeArray();
-                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( {
-                        sql = "SELECT ""id"" FROM ""users""",
-                        options = {}
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT ""id"" FROM ""users""",
+                            options = {}
+                        } );
                     } );
                 } );
 
-                it( "retrieves the first record when calling `first`", function() {
-                    var builder = getBuilder();
-                    var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
-                    builder.$( "runQuery" ).$args(
-                        sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
-                        options = {}
-                    ).$results( expectedQuery );
+                describe( "first", function() {
+                    it( "retrieves the first record when calling `first`", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
+                            options = {}
+                        ).$results( expectedQuery );
 
-                    var results = builder.from( "users" ).whereName( "foo" ).first();
+                        var results = builder.from( "users" ).whereName( "foo" ).first();
 
-                    expect( results ).toBe( expectedQuery );
-                    expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
+                        expect( results ).toBe( expectedQuery );
+                        expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
 
-                    var runQueryLog = builder.$callLog().runQuery;
-                    expect( runQueryLog ).toBeArray();
-                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( {
-                        sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
-                        options = {}
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
+                            options = {}
+                        } );
                     } );
                 } );
 
-                it( "returns the first result by id when calling `find`", function() {
-                    var builder = getBuilder();
-                    var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
-                    builder.$( "runQuery" ).$args(
-                        sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
-                        options = {}
-                    ).$results( expectedQuery );
+                describe( "find", function() {
+                    it( "returns the first result by id when calling `find`", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
+                            options = {}
+                        ).$results( expectedQuery );
 
-                    var results = builder.from( "users" ).find( 1 );
+                        var results = builder.from( "users" ).find( 1 );
 
-                    expect( results ).toBe( expectedQuery );
-                    expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+                        expect( results ).toBe( expectedQuery );
+                        expect( getTestBindings( builder ) ).toBe( [ 1 ] );
 
-                    var runQueryLog = builder.$callLog().runQuery;
-                    expect( runQueryLog ).toBeArray();
-                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( {
-                        sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
-                        options = {}
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
+                            options = {}
+                        } );
+                    } );
+                } );
+
+                describe( "value", function() {
+                    it( "returns the first value when calling value", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).value( "name" );
+
+                        expect( results ).toBe( "foo" );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
+                            options = {}
+                        } );
+                    } );
+                } );
+
+                describe( "implode", function() {
+                    it( "can join the values of all columns together in to a single value", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "name", "varchar", [
+                            { name = "foo" },
+                            { name = "bar" },
+                            { name = "baz" }
+                        ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).implode( "name" );
+
+                        expect( results ).toBe( "foobarbaz" );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        } );
+                    } );
+
+                    it( "can specify a custom glue string when imploding", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "name", "varchar", [
+                            { name = "foo" },
+                            { name = "bar" },
+                            { name = "baz" }
+                        ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).implode( "name", "-" );
+
+                        expect( results ).toBe( "foo-bar-baz" );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        } );
                     } );
                 } );
             } );

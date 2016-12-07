@@ -600,6 +600,12 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    public Builder function forPage( required numeric page, required numeric limitValue ) {
+        offset( arguments.page * arguments.limitValue - arguments.limitValue );
+        limit( arguments.limitValue );
+        return this;
+    }
+
     // insert
 
     public any function insert( required any values, boolean toSql = false ) {

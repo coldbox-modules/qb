@@ -795,6 +795,17 @@ component extends="testbox.system.BaseSpec" {
                         expect( getTestBindings( builder ) ).toBe( [] );
                     } );
                 } );
+
+                describe( "forPage", function() {
+                    it( "combines limits and offsets for easy pagination", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).forPage( 3, 15 );
+                        expect( builder.toSql() ).toBe(
+                            "SELECT * FROM ""users"" LIMIT 15 OFFSET 30"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [] );
+                    } );
+                } );
             } );
 
             describe( "insert statements", function() {

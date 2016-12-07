@@ -601,6 +601,7 @@ component displayname="Builder" accessors="true" {
     }
 
     public Builder function forPage( required numeric page, required numeric limitValue ) {
+        arguments.limitValue = arguments.limitValue > 0 ? arguments.limitValue : 0;
         offset( arguments.page * arguments.limitValue - arguments.limitValue );
         limit( arguments.limitValue );
         return this;

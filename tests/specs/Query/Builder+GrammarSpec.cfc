@@ -805,6 +805,15 @@ component extends="testbox.system.BaseSpec" {
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
                     } );
+
+                    it( "returns zeros values less than zero", function() {
+                        var builder = getBuilder();
+                        builder.select( "*" ).from( "users" ).forPage( 0, -2 );
+                        expect( builder.toSql() ).toBe(
+                            "SELECT * FROM ""users"" LIMIT 0 OFFSET 0"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [] );
+                    } );
                 } );
             } );
 

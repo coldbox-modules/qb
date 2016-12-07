@@ -9,7 +9,24 @@ component {
     this.cfmapping     = 'qb';
 
     function configure() {
-        //
+        settings = {
+            defaultGrammar = "BaseGrammar"
+        };
+
+        binder.map( "BaseGrammar@qb" )
+            .to( "qb.models.Query.Grammars.Grammar" )
+            .asSingleton();
+
+        binder.map( "QueryUtils@qb" )
+            .to( "qb.models.Query.QueryUtils" )
+            .asSingleton();
+    }
+
+    function onLoad() {
+        binder.map( "builder@qb" )
+            .to( "qb.models.Query.Builder" )
+            .initArg( name = "grammar", ref = "#settings.defaultGrammar#@qb" )
+            .initArg( name = "utils", ref = "QueryUtils@qb" );
     }
 
 }

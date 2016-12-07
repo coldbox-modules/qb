@@ -4,10 +4,11 @@
     "author":"Eric Peterson",
     "homepage":"https://github.com/elpete/qb",
     "documentation":"https://github.com/elpete/qb",
-    "location":"elpete/qb",
+    "location":"elpete/qb#v1.0.0",
     "scripts":{
-        "postVersion":"package set location='elpete/qb'",
-        "postPublish":"!git push"
+        "postVersion":"package set location='elpete/qb#v`package version`'",
+        "onRelease":"publish",
+        "postPublish":"!git push && !git push --tags"
     },
     "repository":{
         "type":"git",

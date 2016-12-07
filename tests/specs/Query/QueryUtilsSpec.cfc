@@ -86,7 +86,7 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
                 expect( result ).toBeArray();
                 expect( result ).toHaveLength( 3 );
-                expect( result ).toBe( data )
+                expect( result ).toBe( data );
             } );
         } );
     }

@@ -759,7 +759,7 @@ component displayname="Builder" accessors="true" {
     private any function run( required string sql, struct options = {} ) {
         var q = runQuery( argumentCollection = arguments );
 
-        if ( variables.returningArrays ) {
+        if ( getReturningArrays() ) {
             return getUtils().queryToArrayOfStructs( q );
         }
 

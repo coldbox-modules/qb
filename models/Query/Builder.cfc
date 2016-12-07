@@ -586,7 +586,7 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
 
-        return runQuery( sql );
+        return run( sql );
     }
 
     public any function update( required any values, boolean toSql = false ) {
@@ -603,7 +603,7 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
 
-        return runQuery( sql );
+        return run( sql );
     }
 
     public function updateOrInsert( required any values, boolean toSql = false ) {
@@ -625,7 +625,7 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
         
-        return runQuery( sql );
+        return run( sql );
     }
 
     public Builder function newQuery() {
@@ -724,7 +724,7 @@ component displayname="Builder" accessors="true" {
         if ( ! isNull( arguments.columns ) ) {
             select( arguments.columns );
         }
-        var result = runQuery( sql = toSql(), options = arguments.options );
+        var result = run( sql = toSql(), options = arguments.options );
         select( originalColumns );
         return result;
     }
@@ -752,6 +752,10 @@ component displayname="Builder" accessors="true" {
             results.append( row[ column ] );
         }
         return results.toList( glue );
+    }
+
+    private query function run( required string sql, struct options = {} ) {
+        return runQuery( argumentCollection = arguments );
     }
 
     private query function runQuery( required string sql, struct options = {} ) {

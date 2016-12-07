@@ -893,6 +893,70 @@ component extends="testbox.system.BaseSpec" {
                             options = {}
                         } );
                     } );
+
+                    it( "can pass in an array of columns to retrieve for the single query execution", function() {
+                        var builder = getBuilder();
+                        var expectedGetQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
+                        var expectedNormalQuery = queryNew( "id,name,age", "integer,varchar,integer", [ { id = 1, name = "foo", age = 24 } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT ""id"", ""name"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedGetQuery );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT * FROM ""users""",
+                            options = {}
+                        ).$results( expectedNormalQuery );
+
+                        expect( builder.from( "users" ).get( [ "id", "name" ] ) )
+                            .toBe( expectedGetQuery );
+                        expect( builder.from( "users" ).get() )
+                            .toBe( expectedNormalQuery );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 2, "runQuery should have been called twice" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT ""id"", ""name"" FROM ""users""",
+                            options = {}
+                        } );
+                        expect( runQueryLog[ 2 ] ).toBe( {
+                            sql = "SELECT * FROM ""users""",
+                            options = {}
+                        } );
+                    } );
+
+                    it( "can get a single column for a single query execution", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        expect( builder.from( "users" ).get( "name" ) )
+                            .toBe( expectedQuery );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        } );
+                    } );
+
+                    it( "preserves original columns after executing a get with columns", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        builder.select( "id" ).from( "users" );
+                        builder.get( "name" );
+                        expect( builder.getColumns() ).toBe( [ "id" ] );
+                    } );
                 } );
 
                 describe( "first", function() {

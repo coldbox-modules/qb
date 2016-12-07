@@ -81,6 +81,9 @@ component displayname="Builder" accessors="true" {
         }
 
         variables.columns = normalizeToArray( argumentCollection = args );
+        if ( variables.columns.isEmpty() ) {
+            variables.columns = [ "*" ];
+        }
         return this;
     }
 
@@ -716,8 +719,14 @@ component displayname="Builder" accessors="true" {
         return grammar.compileSelect( this );
     }
 
-    public query function get( struct options = {} ) {
-        return runQuery( sql = toSql(), options = arguments.options );
+    public query function get( any columns, struct options = {} ) {
+        var originalColumns = getColumns();
+        if ( ! isNull( arguments.columns ) ) {
+            select( arguments.columns );
+        }
+        var result = runQuery( sql = toSql(), options = arguments.options );
+        select( originalColumns );
+        return result;
     }
 
     public query function first( struct options = {} ) {

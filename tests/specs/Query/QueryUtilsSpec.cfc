@@ -70,5 +70,24 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( binding.null ).toBe( false );
             } );
         } );
+
+        describe( "queryToArrayOfStructs()", function() {
+            it( "converts a query to an array of structs", function() {
+                var data = [
+                    { id = 1, name = "foo", age = 24 },
+                    { id = 2, name = "bar", age = 32 },
+                    { id = 3, name = "baz", age = 41 }
+                ];
+                var q = queryNew( "id,name,age", "integer,varchar,integer", data );
+                expect( q ).toBeQuery();
+                expect( q.recordCount ).toBe( 3 );
+
+                var result = utils.queryToArrayOfStructs( q );
+
+                expect( result ).toBeArray();
+                expect( result ).toHaveLength( 3 );
+                expect( result ).toBe( data )
+            } );
+        } );
     }
 }

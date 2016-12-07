@@ -42,6 +42,14 @@ component displayname="QueryUtils" {
         return ! isInstanceOf( arguments.value, "qb.models.Query.Expression" );
     }
 
+    public array function queryToArrayOfStructs( required any q ) {
+        var results = [];
+        for ( var row in arguments.q ) {
+            results.append( row );
+        }
+        return results;
+    }
+
     private string function normalizeSqlValue( required any value ) {
         if ( isArray( arguments.value ) ) {
             return arrayToList( arguments.value );

@@ -6,6 +6,8 @@ component displayname="Builder" accessors="true" {
     property name="grammar";
     property name="utils";
 
+    property name="returningArrays" type="boolean" default="true";
+
     property name="distinct" type="boolean" default="false";
     property name="aggregate" type="struct";
     property name="columns" type="array";
@@ -719,7 +721,7 @@ component displayname="Builder" accessors="true" {
         return grammar.compileSelect( this );
     }
 
-    public query function get( any columns, struct options = {} ) {
+    public any function get( any columns, struct options = {} ) {
         var originalColumns = getColumns();
         if ( ! isNull( arguments.columns ) ) {
             select( arguments.columns );
@@ -754,8 +756,14 @@ component displayname="Builder" accessors="true" {
         return results.toList( glue );
     }
 
-    private query function run( required string sql, struct options = {} ) {
-        return runQuery( argumentCollection = arguments );
+    private any function run( required string sql, struct options = {} ) {
+        var q = runQuery( argumentCollection = arguments );
+
+        if ( variables.returningArrays ) {
+            return getUtils().queryToArrayOfStructs( q );
+        }
+
+        return q;
     }
 
     private query function runQuery( required string sql, struct options = {} ) {

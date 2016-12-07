@@ -679,6 +679,52 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
+                describe( "havings", function() {
+                    it( "can add a basic having clause", function() {
+                        var builder = getBuilder();
+
+                        builder.from( "users" )
+                            .having( "email", ">", 1 );
+
+                        expect( builder.toSQL() ).toBe(
+                            "SELECT * FROM ""users"" HAVING ""email"" > ?"
+                        );
+
+                        expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+                    } );
+
+                    it( "can add a having clause with a raw column", function() {
+                        var builder = getBuilder();
+
+                        builder.from( "users" )
+                            .groupBy( "email" )
+                            .having( builder.raw( "COUNT(email)" ), ">", 1 );
+
+                        expect( builder.toSQL() ).toBe(
+                            "SELECT * FROM ""users"" GROUP BY ""email"" HAVING COUNT(email) > ?"
+                        );
+
+                        expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+                    } );
+
+                    it( "can add a having clause with a raw value", function() {
+                        var builder = getBuilder();
+
+                        builder
+                            .select( builder.raw( "COUNT(*) AS ""total""" ) )
+                            .from( "items" )
+                            .where( "department", "=", "popular" )
+                            .groupBy( "category" )
+                            .having( "total", ">", builder.raw( 3 ) );
+
+                        expect( builder.toSQL() ).toBe(
+                            "SELECT COUNT(*) AS ""total"" FROM ""items"" WHERE ""department"" = ? GROUP BY ""category"" HAVING ""total"" > 3"
+                        );
+
+                        expect( getTestBindings( builder ) ).toBe( [ "popular" ] );
+                    } );
+                } );
+
                 describe( "order bys", function() {
                     it( "can add a simple order by", function() {
                         var builder = getBuilder();

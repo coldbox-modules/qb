@@ -15,6 +15,7 @@ component displayname="Builder" accessors="true" {
     property name="joins" type="array";
     property name="wheres" type="array";
     property name="groups" type="array";
+    property name="havings" type="array";
     property name="orders" type="array";
     property name="limitValue" type="numeric";
     property name="offsetValue" type="numeric";
@@ -59,6 +60,7 @@ component displayname="Builder" accessors="true" {
         variables.from = "";
         variables.wheres = [];
         variables.groups = [];
+        variables.havings = [];
         variables.orders = [];
     }
 
@@ -520,6 +522,51 @@ component displayname="Builder" accessors="true" {
         groupBys.each( function( groupBy ) {
             variables.groups.append( groupBy );
         } );
+        return this;
+    }
+
+    // having
+
+    public Builder function having( column, operator, value, string combinator = "and" ) {
+        if ( isClosure( column ) ) {
+            return whereNested( column, combinator );
+        }
+
+        var argCount = argumentCount( arguments );
+
+        if ( isInvalidCombinator( arguments.combinator ) ) {
+            throw(
+                type = "InvalidSQLType",
+                message = "Illegal combinator"
+            );
+        }
+
+        if ( isNull( arguments.value ) ) {
+            arguments.value = arguments.operator;
+            arguments.operator = "=";
+        }
+        else if ( isInvalidOperator( arguments.operator ) ) {
+            throw(
+                type = "InvalidSQLType",
+                message = "Illegal operator"
+            );
+        }
+
+        if ( isClosure( value ) ) {
+            return whereSub( column, operator, value, combinator );
+        }
+
+        arrayAppend( variables.havings, {
+            column = arguments.column,
+            operator = arguments.operator,
+            value = arguments.value,
+            combinator = arguments.combinator
+        } );
+
+        if ( ! isInstanceOf( arguments.value, "qb.models.Query.Expression" ) ) {
+            addBindings( utils.extractBinding( arguments.value ), "where" );
+        }
+
         return this;
     }
 

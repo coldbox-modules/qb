@@ -6,7 +6,7 @@ component displayname="Grammar" accessors="true" {
 
     variables.selectComponents = [
         "aggregate", "columns", "from", "joins", "wheres",
-        "groups", "orders", "limitValue", "offsetValue"
+        "groups", "havings", "orders", "limitValue", "offsetValue"
     ];
 
     public Grammar function init() {
@@ -167,7 +167,21 @@ component displayname="Grammar" accessors="true" {
             return "";
         }
 
-        return "GROUP BY #groups.map( wrapColumn ).toList( ", " )#";
+        return trim( "GROUP BY #groups.map( wrapColumn ).toList( ", " )#" );
+    }
+
+    private string function compileHavings( required Builder query, required array havings ) {
+        if ( arguments.havings.isEmpty() ) {
+            return "";
+        }
+        var sql = arguments.havings.map( compileHaving );
+        return trim( "HAVING #removeLeadingCombinator( sql.toList( " " ) )#" );
+    }
+
+    private string function compileHaving( required struct having ) {
+        var placeholder = isInstanceOf( having.value, "qb.models.Query.Expression" ) ?
+            having.value.getSQL() : "?";
+        return trim( "#having.combinator# #wrapColumn( having.column )# #having.operator# #placeholder#" );
     }
 
     private string function compileOrders( required Builder query, required array orders ) {

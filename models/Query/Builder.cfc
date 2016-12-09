@@ -785,12 +785,12 @@ component displayname="Builder" accessors="true" {
         return result;
     }
 
-    public query function first( struct options = {} ) {
+    public any function first( struct options = {} ) {
         take( 1 );
         return get( options = arguments.options );
     }
 
-    public query function find( required any id, struct options = {} ) {
+    public any function find( required any id, struct options = {} ) {
         where( "id", "=", arguments.id );
         return first( options = arguments.options );
     }

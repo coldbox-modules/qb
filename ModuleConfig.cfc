@@ -21,6 +21,10 @@ component {
             .to( "qb.models.Query.Grammars.MySQLGrammar" )
             .asSingleton();
 
+        binder.map( "OracleGrammar@qb" )
+            .to( "qb.models.Query.Grammars.OracleGrammar" )
+            .asSingleton();
+
         binder.map( "QueryUtils@qb" )
             .to( "qb.models.Query.QueryUtils" )
             .asSingleton();

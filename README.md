@@ -67,8 +67,8 @@ https://gist.github.com/elpete/80d641b98025f16059f6476561d88202
 
 ## Requirements
 
-+ Adobe ColdFusion 10, 11, or 2016
-+ Lucee 4.5 or 5
++ Adobe ColdFusion 11+
++ Lucee 4.5+
 
 ## Installation
 
@@ -78,6 +78,23 @@ Installation is easy through [CommandBox](https://www.ortussolutions.com/product
 
 To start a new query, instantiate a new Builder: `wirebox.getInstance('Builder@qb')`.
 
+By default, qb uses a generic Grammar.  You can specify your specific grammar in ColdBox by setting the `defaultGrammar` in your `moduleSettings`.
+
+```
+moduleSettings = {
+    qb = {
+        defaultGrammar = "MySQLGrammar"
+    }
+};
+```
+
+If you are not using WireBox, just make sure to wire up the `Builder` object with the correct grammar:
+
+```
+var grammar = new qb.models.Query.Grammars.MySQLGrammar();
+var builder = new qb.models.Query.Builder( grammar );
+```
+
 ## Docs
 
-[See our wiki!](https://github.com/elpete/quick/wiki)
+Coming soon!

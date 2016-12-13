@@ -1,6 +1,7 @@
 # qb
 
-[![Build Status](https://travis-ci.org/elpete/qb.svg?branch=master)](https://travis-ci.org/elpete/quick)
+[![Master Branch Build Status](https://img.shields.io/travis/elpete/qb/master.svg?style=flat-square&label=master)](https://travis-ci.org/elpete/qb)
+[![Development Branch Build Status](https://img.shields.io/travis/elpete/qb/development.svg?style=flat-square&label=development)](https://travis-ci.org/elpete/qb)
 
 ## Introduction
 

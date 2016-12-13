@@ -1367,30 +1367,11 @@ component extends="testbox.system.BaseSpec" {
             } );
         } );
 
-        describe( "MySQL Grammar", function() {
-            it( "correctly wraps values for MySQL", function() {
-                var builder = getMySQLBuilder();
-                builder.select( "name" ).from( "users" );
-                expect( builder.toSql() ).toBe( "SELECT `name` FROM `users`" );
-            } );
-        } );
-
     }
 
     private Builder function getBuilder( returningArrays = false ) {
         var grammar = getMockBox()
             .createMock( "qb.models.Query.Grammars.Grammar" );
-        var queryUtils = getMockBox()
-            .createMock( "qb.models.Query.QueryUtils" );
-        var builder = getMockBox().createMock( "qb.models.Query.Builder" )
-            .init( grammar, queryUtils );
-        builder.setReturningArrays( returningArrays );
-        return builder;
-    }
-
-    private Builder function getMySQLBuilder( returningArrays = false ) {
-        var grammar = getMockBox()
-            .createMock( "qb.models.Query.Grammars.MySQLGrammar" );
         var queryUtils = getMockBox()
             .createMock( "qb.models.Query.QueryUtils" );
         var builder = getMockBox().createMock( "qb.models.Query.Builder" )

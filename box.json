@@ -1,10 +1,10 @@
 {
     "name":"qb",
-    "version":"1.2.0",
+    "version":"1.2.1",
     "author":"Eric Peterson",
     "homepage":"https://github.com/elpete/qb",
     "documentation":"https://github.com/elpete/qb",
-    "location":"elpete/qb#v1.2.0",
+    "location":"elpete/qb#v1.2.1",
     "scripts":{
         "postVersion":"package set location='elpete/qb#v`package version`'",
         "onRelease":"publish",

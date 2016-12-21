@@ -7,8 +7,8 @@ component extends="testbox.system.BaseSpec" {
             it( "can limit the record set returned", function() {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).limit( 3 );
-                expect( builder.toSql() ).toBe(
-                    "SELECT * FROM (SELECT * FROM ""users"") WHERE ROWNUM <= 3"
+                expect( builder.toSql() ).toBeWithCase(
+                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM <= 3"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -16,8 +16,8 @@ component extends="testbox.system.BaseSpec" {
             it( "has an alias of ""take""", function() {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).take( 1 );
-                expect( builder.toSql() ).toBe(
-                    "SELECT * FROM (SELECT * FROM ""users"") WHERE ROWNUM <= 1"
+                expect( builder.toSql() ).toBeWithCase(
+                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM <= 1"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -27,8 +27,8 @@ component extends="testbox.system.BaseSpec" {
             it( "can offset the record set returned", function() {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).offset( 3 );
-                expect( builder.toSql() ).toBe(
-                    "SELECT * FROM (SELECT * FROM ""users"") WHERE ROWNUM > 3"
+                expect( builder.toSql() ).toBeWithCase(
+                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM > 3"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -38,8 +38,8 @@ component extends="testbox.system.BaseSpec" {
             it( "combines limits and offsets for easy pagination", function() {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).forPage( 3, 15 );
-                expect( builder.toSql() ).toBe(
-                    "SELECT * FROM (SELECT * FROM ""users"") WHERE ROWNUM > 30 AND ROWNUM <= 45"
+                expect( builder.toSql() ).toBeWithCase(
+                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM > 30 AND ROWNUM <= 45"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -47,8 +47,19 @@ component extends="testbox.system.BaseSpec" {
             it( "returns zeros values less than zero", function() {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).forPage( 0, -2 );
-                expect( builder.toSql() ).toBe(
-                    "SELECT * FROM (SELECT * FROM ""users"") WHERE ROWNUM > 0 AND ROWNUM <= 0"
+                expect( builder.toSql() ).toBeWithCase(
+                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM > 0 AND ROWNUM <= 0"
+                );
+                expect( getTestBindings( builder ) ).toBe( [] );
+            } );
+        } );
+
+        describe( "wrapping values", function() {
+            it( "it converts values to uppercase when wrapping them", function() {
+                var builder = getBuilder();
+                builder.select( "*" ).from( "users" ).forPage( 0, -2 );
+                expect( builder.toSql() ).toBeWithCase(
+                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM > 0 AND ROWNUM <= 0"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );

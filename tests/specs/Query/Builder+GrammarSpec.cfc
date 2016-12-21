@@ -9,25 +9,25 @@ component extends="testbox.system.BaseSpec" {
                     it( "can select all columns from a table", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" );
-                        expect( builder.toSql() ).toBe( "SELECT * FROM ""users""" );
+                        expect( builder.toSql() ).toBeWithCase( "SELECT * FROM ""users""" );
                     } );
 
                     it( "can specify the column to select", function() {
                         var builder = getBuilder();
                         builder.select( "name" ).from( "users" );
-                        expect( builder.toSql() ).toBe( "SELECT ""name"" FROM ""users""" );
+                        expect( builder.toSql() ).toBeWithCase( "SELECT ""name"" FROM ""users""" );
                     } );
 
                     it( "can select multiple columns using variadic parameters", function() {
                         var builder = getBuilder();
                         builder.select( "id", "name" ).from( "users" );
-                        expect( builder.toSql() ).toBe( "SELECT ""id"", ""name"" FROM ""users""" );
+                        expect( builder.toSql() ).toBeWithCase( "SELECT ""id"", ""name"" FROM ""users""" );
                     } );
 
                     it( "can select multiple columns using an array", function() {
                         var builder = getBuilder();
                         builder.select( [ "name", builder.raw( "COUNT(*)" ) ] ).from( "users" );
-                        expect( builder.toSql() ).toBe( "SELECT ""name"", COUNT(*) FROM ""users""" );
+                        expect( builder.toSql() ).toBeWithCase( "SELECT ""name"", COUNT(*) FROM ""users""" );
                     } );
 
                     it( "can add selects to a query", function() {
@@ -36,7 +36,7 @@ component extends="testbox.system.BaseSpec" {
                             .addSelect( "bar" )
                             .addSelect( [ "baz", "boom" ] )
                             .from( "users" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT ""foo"", ""bar"", ""baz"", ""boom"" FROM ""users"""
                         );
                     } );
@@ -44,7 +44,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can select distinct records", function() {
                         var builder = getBuilder();
                         builder.distinct().select( "foo", "bar" ).from( "users" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT DISTINCT ""foo"", ""bar"" FROM ""users"""
                         );
                     } );
@@ -52,7 +52,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can parse column aliases", function() {
                         var builder = getBuilder();
                         builder.select( "foo as bar" ).from( "users" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT ""foo"" AS ""bar"" FROM ""users"""
                         );
                     } );
@@ -60,7 +60,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "wraps columns and aliases correctly", function() {
                         var builder = getBuilder();
                         builder.select( "x.y as foo.bar" ).from( "public.users" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT ""x"".""y"" AS ""foo.bar"" FROM ""public"".""users"""
                         );
                     } );
@@ -68,7 +68,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "selects raw values correctly", function() {
                         var builder = getBuilder();
                         builder.select( builder.raw( "substr( foo, 6 )" ) ).from( "users" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT substr( foo, 6 ) FROM ""users"""
                         );
                     } );
@@ -79,7 +79,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.getGrammar().setTablePrefix( "prefix_" );
                         builder.select( "*" ).from( "users" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""prefix_users"""
                         );
                     } );
@@ -88,7 +88,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.getGrammar().setTablePrefix( "prefix_" );
                         builder.select( "*" ).from( "users as people" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""prefix_users"" AS ""prefix_people"""
                         );
                     } );
@@ -99,7 +99,7 @@ component extends="testbox.system.BaseSpec" {
                         it( "can add a where statement", function() {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" ).where( "id", "=", 1 );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" = ?"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1 ] );
@@ -109,7 +109,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .where( "id", "=", 1 ).orWhere( "email", "foo" );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" = ? OR ""email"" = ?"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
@@ -117,8 +117,8 @@ component extends="testbox.system.BaseSpec" {
 
                         it( "can add raw where statements", function() {
                             var builder = getBuilder();
-                            builder.select( "*" ).from( "users" ).whereRaw( "id = ? or email = ?", [ 1, "foo" ] );
-                            expect( builder.toSql() ).toBe(
+                            builder.select( "*" ).from( "users" ).whereRaw( "id = ? OR email = ?", [ 1, "foo" ] );
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE id = ? OR email = ?"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
@@ -128,7 +128,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .where( "id", "=", 1 ).orWhereRaw( "email = ?", [ "foo" ] );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" = ? OR email = ?"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
@@ -138,7 +138,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .whereColumn( "first_name", "last_name" );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""first_name"" = ""last_name"""
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -149,7 +149,7 @@ component extends="testbox.system.BaseSpec" {
                             builder.select( "*" ).from( "users" )
                                 .whereColumn( "first_name", "last_name" )
                                 .orWhereColumn( "updated_date", ">", "created_date" );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""first_name"" = ""last_name"" OR ""updated_date"" > ""created_date"""
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -161,7 +161,7 @@ component extends="testbox.system.BaseSpec" {
                                 .orWhere( function( q ) {
                                     q.where( "name", "bar" ).where( "age", ">=", "21" );
                                 } );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""email"" = ? OR (""name"" = ? AND ""age"" >= ?)"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ "foo", "bar", 21 ] );
@@ -174,7 +174,7 @@ component extends="testbox.system.BaseSpec" {
                                     q.select( q.raw( "MAX(id)" ) ).from( "users" )
                                         .where( "email", "bar" );
                                 } );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" = (SELECT MAX(id) FROM ""users"" WHERE ""email"" = ?)"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ "foo", "bar" ] );
@@ -189,7 +189,7 @@ component extends="testbox.system.BaseSpec" {
                                     q.select( q.raw( 1 ) ).from( "products" )
                                         .where( "products.id", "=", q.raw( """orders"".""id""" ) );
                                 } );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""orders"" WHERE EXISTS (SELECT 1 FROM ""products"" WHERE ""products"".""id"" = ""orders"".""id"")"
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -203,7 +203,7 @@ component extends="testbox.system.BaseSpec" {
                                     q.select( q.raw( 1 ) ).from( "products" )
                                         .where( "products.id", "=", q.raw( """orders"".""id""" ) );
                                 } );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""orders"" WHERE ""id"" = ? OR EXISTS (SELECT 1 FROM ""products"" WHERE ""products"".""id"" = ""orders"".""id"")"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1 ] );
@@ -216,7 +216,7 @@ component extends="testbox.system.BaseSpec" {
                                     q.select( q.raw( 1 ) ).from( "products" )
                                         .where( "products.id", "=", q.raw( """orders"".""id""" ) );
                                 } );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""orders"" WHERE NOT EXISTS (SELECT 1 FROM ""products"" WHERE ""products"".""id"" = ""orders"".""id"")"
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -230,7 +230,7 @@ component extends="testbox.system.BaseSpec" {
                                     q.select( q.raw( 1 ) ).from( "products" )
                                         .where( "products.id", "=", q.raw( """orders"".""id""" ) );
                                 } );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""orders"" WHERE ""id"" = ? OR NOT EXISTS (SELECT 1 FROM ""products"" WHERE ""products"".""id"" = ""orders"".""id"")"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1 ] );
@@ -241,7 +241,7 @@ component extends="testbox.system.BaseSpec" {
                         it( "can add where null statements", function() {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" ).whereNull( "id" );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" IS NULL"
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -251,7 +251,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .where( "id", 1 ).orWhereNull( "id" );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" = ? OR ""id"" IS NULL"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1 ] );
@@ -260,7 +260,7 @@ component extends="testbox.system.BaseSpec" {
                         it( "can add where not null statements", function() {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" ).whereNotNull( "id" );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" IS NOT NULL"
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -270,7 +270,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .where( "id", 1 ).orWhereNotNull( "id" );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" = ? OR ""id"" IS NOT NULL"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1 ] );
@@ -281,7 +281,7 @@ component extends="testbox.system.BaseSpec" {
                         it( "can add where between statements", function() {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" ).whereBetween( "id", 1, 2 );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" BETWEEN ? AND ?"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1, 2 ] );
@@ -290,7 +290,7 @@ component extends="testbox.system.BaseSpec" {
                         it( "can add where not between statements", function() {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" ).whereNotBetween( "id", 1, 2 );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" NOT BETWEEN ? AND ?"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1, 2 ] );
@@ -302,7 +302,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .whereIn( "id", [ 1, 2, 3 ] );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" IN (?, ?, ?)"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3 ] );
@@ -313,7 +313,7 @@ component extends="testbox.system.BaseSpec" {
                             builder.select( "*" ).from( "users" )
                                 .where( "email", "foo" )
                                 .orWhereIn( "id", [ 1, 2, 3 ] );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" IN (?, ?, ?)"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ "foo", 1, 2, 3 ] );
@@ -323,7 +323,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .whereIn( "id", [ builder.raw( 1 ) ] );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" IN (1)"
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -333,7 +333,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .whereIn( "id", [] );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE 0 = 1"
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -343,7 +343,7 @@ component extends="testbox.system.BaseSpec" {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .whereNotIn( "id", [] );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE 1 = 1"
                             );
                             expect( getTestBindings( builder ) ).toBe( [] );
@@ -354,7 +354,7 @@ component extends="testbox.system.BaseSpec" {
                             builder.select( "*" ).from( "users" ).whereIn( "id", function( q ) {
                                 q.select( "id" ).from( "users" ).where( "age", ">", 25 );
                             } );
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT ""id"" FROM ""users"" WHERE ""age"" > ?)"
                             );
                             expect( getTestBindings( builder ) ).toBe( [ 25 ] );
@@ -367,7 +367,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .join( "contacts", "users.id", "=", "contacts.id" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"""
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -377,7 +377,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .join( "contacts", "users.id", "contacts.id" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"""
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -387,8 +387,8 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .join( "contacts", "users.id", "contacts.id" )
-                            .join( "addresses as a", "a.contact_id", "contacts.id" );
-                        expect( builder.toSql() ).toBe(
+                            .join( "addresses AS a", "a.contact_id", "contacts.id" );
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" INNER JOIN ""addresses"" AS ""a"" ON ""a"".""contact_id"" = ""contacts"".""id"""
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -398,7 +398,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .joinWhere( "contacts", "contacts.balance", "<", 100 );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""contacts"".""balance"" < ?"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 100 ] );
@@ -408,7 +408,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .leftJoin( "orders", "users.id", "orders.user_id" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" LEFT JOIN ""orders"" ON ""users"".""id"" = ""orders"".""user_id"""
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -418,7 +418,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "orders" )
                             .rightJoin( "users", "orders.user_id", "users.id" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""orders"" RIGHT JOIN ""users"" ON ""orders"".""user_id"" = ""users"".""id"""
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -427,7 +427,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can cross join", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "sizes" ).crossJoin( "colors" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""sizes"" CROSS JOIN ""colors"""
                         );
                     } );
@@ -441,7 +441,7 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhere( "users.admin", 1 );
                             } );
 
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" OR ""users"".""name"" = ""contacts"".""name"" OR ""users"".""admin"" = ?"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 1 ] );
@@ -455,7 +455,7 @@ component extends="testbox.system.BaseSpec" {
                                     .whereNull( "contacts.deleted_date" );
                             } );
 
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" AND ""contacts"".""deleted_date"" IS NULL"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -469,7 +469,7 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhereNull( "contacts.deleted_date" );
                             } );
 
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" OR ""contacts"".""deleted_date"" IS NULL"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -483,7 +483,7 @@ component extends="testbox.system.BaseSpec" {
                                     .whereNotNull( "contacts.deleted_date" );
                             } );
 
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" AND ""contacts"".""deleted_date"" IS NOT NULL"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -497,7 +497,7 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhereNotNull( "contacts.deleted_date" );
                             } );
 
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" OR ""contacts"".""deleted_date"" IS NOT NULL"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -510,7 +510,7 @@ component extends="testbox.system.BaseSpec" {
                                 j.on( "users.id", "=", "contacts.id" )
                                     .whereIn( "contacts.id", [ 1, 2, 3 ] );
                             } );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" AND ""contacts"".""id"" IN (?, ?, ?)"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3 ] );
@@ -523,7 +523,7 @@ component extends="testbox.system.BaseSpec" {
                                 j.on( "users.id", "=", "contacts.id" )
                                     .orWhereIn( "contacts.id", [ 1, 2, 3 ] );
                             } );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" OR ""contacts"".""id"" IN (?, ?, ?)"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3 ] );
@@ -536,7 +536,7 @@ component extends="testbox.system.BaseSpec" {
                                 j.on( "users.id", "=", "contacts.id" )
                                     .whereNotIn( "contacts.id", [ 1, 2, 3 ] );
                             } );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" AND ""contacts"".""id"" NOT IN (?, ?, ?)"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3 ] );
@@ -549,7 +549,7 @@ component extends="testbox.system.BaseSpec" {
                                 j.on( "users.id", "=", "contacts.id" )
                                     .orWhereNotIn( "contacts.id", [ 1, 2, 3 ] );
                             } );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" OR ""contacts"".""id"" NOT IN (?, ?, ?)"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3 ] );
@@ -567,7 +567,7 @@ component extends="testbox.system.BaseSpec" {
                             .from( "users" )
                             .when( true, callback )
                             .where( "email", "foo" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
@@ -583,7 +583,7 @@ component extends="testbox.system.BaseSpec" {
                             .from( "users" )
                             .when( false, callback )
                             .where( "email", "foo" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" WHERE ""email"" = ?"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
@@ -603,7 +603,7 @@ component extends="testbox.system.BaseSpec" {
                             .from( "users" )
                             .when( false, callback, defaultCallback )
                             .where( "email", "foo" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 2, "foo" ] );
@@ -623,7 +623,7 @@ component extends="testbox.system.BaseSpec" {
                             .from( "users" )
                             .when( true, callback, defaultCallback )
                             .where( "email", "foo" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
                         );
                         expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
@@ -634,7 +634,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can add a simple group by", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).groupBy( "email" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" GROUP BY ""email"""
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -646,12 +646,12 @@ component extends="testbox.system.BaseSpec" {
 
                         // Variadic parameters are not consistent between engines, so test for both options
                         try {
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" GROUP BY ""email"", ""id"""
                             );
                         }
                         catch ( any e ) {
-                            expect( builder.toSql() ).toBe(
+                            expect( builder.toSql() ).toBeWithCase(
                                 "SELECT * FROM ""users"" GROUP BY ""id"", ""email"""
                             );
                         }
@@ -662,7 +662,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can group by multiple fields using an array", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).groupBy( [ "id", "email" ] );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" GROUP BY ""id"", ""email"""
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -672,7 +672,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .groupBy( builder.raw( "DATE(created_at)" ) );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" GROUP BY DATE(created_at)"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -686,7 +686,7 @@ component extends="testbox.system.BaseSpec" {
                         builder.from( "users" )
                             .having( "email", ">", 1 );
 
-                        expect( builder.toSQL() ).toBe(
+                        expect( builder.toSQL() ).toBeWithCase(
                             "SELECT * FROM ""users"" HAVING ""email"" > ?"
                         );
 
@@ -700,7 +700,7 @@ component extends="testbox.system.BaseSpec" {
                             .groupBy( "email" )
                             .having( builder.raw( "COUNT(email)" ), ">", 1 );
 
-                        expect( builder.toSQL() ).toBe(
+                        expect( builder.toSQL() ).toBeWithCase(
                             "SELECT * FROM ""users"" GROUP BY ""email"" HAVING COUNT(email) > ?"
                         );
 
@@ -717,7 +717,7 @@ component extends="testbox.system.BaseSpec" {
                             .groupBy( "category" )
                             .having( "total", ">", builder.raw( 3 ) );
 
-                        expect( builder.toSQL() ).toBe(
+                        expect( builder.toSQL() ).toBeWithCase(
                             "SELECT COUNT(*) AS ""total"" FROM ""items"" WHERE ""department"" = ? GROUP BY ""category"" HAVING ""total"" > 3"
                         );
 
@@ -729,7 +729,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can add a simple order by", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).orderBy( "email" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" ORDER BY ""email"" ASC"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -738,7 +738,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can order in descending order", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).orderBy( "email", "desc" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" ORDER BY ""email"" DESC"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -748,7 +748,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .orderBy( "id" ).orderBy( "email", "desc" );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" ORDER BY ""id"" ASC, ""email"" DESC"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -758,7 +758,7 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" )
                             .orderBy( builder.raw( "DATE(created_at)" ) );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" ORDER BY DATE(created_at)"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -769,7 +769,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can limit the record set returned", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).limit( 3 );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" LIMIT 3"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -778,7 +778,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "has an alias of ""take""", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).take( 1 );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" LIMIT 1"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -789,7 +789,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can offset the record set returned", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).offset( 3 );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" OFFSET 3"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -800,7 +800,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "combines limits and offsets for easy pagination", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).forPage( 3, 15 );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" LIMIT 15 OFFSET 30"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
@@ -809,7 +809,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "returns zeros values less than zero", function() {
                         var builder = getBuilder();
                         builder.select( "*" ).from( "users" ).forPage( 0, -2 );
-                        expect( builder.toSql() ).toBe(
+                        expect( builder.toSql() ).toBeWithCase(
                             "SELECT * FROM ""users"" LIMIT 0 OFFSET 0"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );

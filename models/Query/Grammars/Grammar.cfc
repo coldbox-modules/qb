@@ -268,7 +268,7 @@ component displayname="Grammar" accessors="true" {
         table = table.listToArray( "." ).map( function( tablePart, index ) {
             return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
         } ).toList( "." );
-        return alias == "" ? table : table & " AS " & alias;
+        return alias == "" ? table : table & " AS " & wrapValue( getTablePrefix() & alias );
     }
 
     private string function wrapColumn( required any column ) {

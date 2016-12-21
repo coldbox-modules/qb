@@ -34,5 +34,23 @@ component extends="qb.models.Query.Grammars.Grammar" {
         return "";
     }
 
+    private string function wrapTable( required any table ) {
+        var alias = "";
+        if ( table.findNoCase( " as " ) > 0 ) {
+            var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );
+            if ( matches.pos.len() >= 3 ) {
+                alias = mid( table, matches.pos[3], matches.len[3] );
+                table = mid( table, matches.pos[2], matches.len[2] );
+            }
+        }
+        table = table.listToArray( "." ).map( function( tablePart, index ) {
+            return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
+        } ).toList( "." );
+        return alias == "" ? table : table & " " & wrapValue( alias );
+    }
+
+    private string function wrapValue( required any value ) {
+        return super.wrapValue( uCase( arguments.value ) );
+    }
 
 }

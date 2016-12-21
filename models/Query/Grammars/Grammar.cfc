@@ -258,9 +258,12 @@ component displayname="Grammar" accessors="true" {
 
     private string function wrapTable( required any table ) {
         var alias = "";
-        if ( table.find( " as " ) ) {
-            alias = wrapTable( table.listToArray( " as ", false, true )[ 2 ] );
-            table = table.listToArray( " as ", false, true )[ 1 ];
+        if ( table.findNoCase( " as " ) > 0 ) {
+            var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );
+            if ( matches.pos.len() >= 3 ) {
+                alias = mid( table, matches.pos[3], matches.len[3] );
+                table = mid( table, matches.pos[2], matches.len[2] );
+            }
         }
         table = table.listToArray( "." ).map( function( tablePart, index ) {
             return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
@@ -273,9 +276,12 @@ component displayname="Grammar" accessors="true" {
             return column.getSQL();
         }
         var alias = "";
-        if ( column.find( " as " ) ) {
-            alias = column.listToArray( " as ", false, true )[ 2 ];
-            column = column.listToArray( " as ", false, true )[ 1 ];
+        if ( column.findNoCase( " as " ) > 0 ) {
+            var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", column, 1, true );
+            if ( matches.pos.len() >= 3 ) {
+                alias = mid( column, matches.pos[3], matches.len[3] );
+                column = mid( column, matches.pos[2], matches.len[2] );
+            }
         }
         column = column.listToArray( "." ).map( wrapValue ).toList( "." );
         return alias == "" ? column : column & " AS " & wrapValue( alias ); 

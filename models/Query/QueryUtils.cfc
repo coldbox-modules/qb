@@ -50,6 +50,33 @@ component displayname="QueryUtils" {
         return results;
     }
 
+    /**
+    * Remove a list of columns from a specified query.
+    *
+    * @param theQuery     The query to manipulate. (Required)
+    * @param columnsToRemove      A list of columns to remove. (Required)
+    * @return Returns a query. 
+    * @author Giampaolo Bellavite (giampaolo@bellavite.com) 
+    * @version 1, April 14, 2005 
+    */
+    public query function queryRemoveColumns(
+        required query q,
+        required string columns
+    ) {
+        var columnList = q.columnList;
+        for ( var c in arguments.columns.listToArray() ) {
+            var columnPosition = listFindNoCase( columnList, c );
+            if ( columnPosition != 0 ) {
+                columnList = ListDeleteAt( columnList, columnPosition );
+            }
+        }
+        var newQuery = new Query();
+        newQuery.setDBType( "query" );
+        newQuery.setAttributes( q = arguments.q );
+        newQuery.setSQL( "SELECT #columnList# FROM q" );
+        return newQuery.execute().getResult();
+    }
+
     private string function normalizeSqlValue( required any value ) {
         if ( isArray( arguments.value ) ) {
             return arrayToList( arguments.value );

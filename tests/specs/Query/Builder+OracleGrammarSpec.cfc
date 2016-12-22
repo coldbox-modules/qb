@@ -8,7 +8,7 @@ component extends="testbox.system.BaseSpec" {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).limit( 3 );
                 expect( builder.toSql() ).toBeWithCase(
-                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM <= 3"
+                    "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" <= 3"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -17,7 +17,7 @@ component extends="testbox.system.BaseSpec" {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).take( 1 );
                 expect( builder.toSql() ).toBeWithCase(
-                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM <= 1"
+                    "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" <= 1"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -28,7 +28,7 @@ component extends="testbox.system.BaseSpec" {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).offset( 3 );
                 expect( builder.toSql() ).toBeWithCase(
-                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM > 3"
+                    "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" > 3"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -39,7 +39,7 @@ component extends="testbox.system.BaseSpec" {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).forPage( 3, 15 );
                 expect( builder.toSql() ).toBeWithCase(
-                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM > 30 AND ROWNUM <= 45"
+                    "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" > 30 AND ""QB_RN"" <= 45"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -48,7 +48,7 @@ component extends="testbox.system.BaseSpec" {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).forPage( 0, -2 );
                 expect( builder.toSql() ).toBeWithCase(
-                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM > 0 AND ROWNUM <= 0"
+                    "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" > 0 AND ""QB_RN"" <= 0"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -59,7 +59,7 @@ component extends="testbox.system.BaseSpec" {
                 var builder = getBuilder();
                 builder.select( "*" ).from( "users" ).forPage( 0, -2 );
                 expect( builder.toSql() ).toBeWithCase(
-                    "SELECT * FROM (SELECT * FROM ""USERS"") WHERE ROWNUM > 0 AND ROWNUM <= 0"
+                    "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" > 0 AND ""QB_RN"" <= 0"
                 );
                 expect( getTestBindings( builder ) ).toBe( [] );
             } );
@@ -68,7 +68,7 @@ component extends="testbox.system.BaseSpec" {
 
 
     private Builder function getBuilder( returningArrays = false ) {
-        var grammar = getMockBox()
+        variables.grammar = getMockBox()
             .createMock( "qb.models.Query.Grammars.OracleGrammar" );
         var queryUtils = getMockBox()
             .createMock( "qb.models.Query.QueryUtils" );

@@ -1,6 +1,12 @@
 import qb.models.Query.Builder;
+import qb.models.Query.QueryUtils;
 
 component displayname="Grammar" accessors="true" {
+
+    /**
+    * Query utilities shared across multiple models.
+    */
+    property name="utils";
 
     property name="tablePrefix" type="string" default="";
 
@@ -9,9 +15,16 @@ component displayname="Grammar" accessors="true" {
         "groups", "havings", "orders", "limitValue", "offsetValue"
     ];
 
-    public Grammar function init() {
+    public Grammar function init(
+        QueryUtils utils = new qb.models.Query.QueryUtils()
+    ) {
+        variables.utils = arguments.utils;
         variables.tablePrefix = "";
         return this;
+    }
+
+    public any function runQuery( sql, bindings, options ) {
+        return queryExecute( sql, bindings, options );
     }
 
     public string function compileSelect( required Builder query ) {

@@ -1,25 +1,98 @@
 import qb.models.Query.Builder;
 import qb.models.Query.Grammars.Grammar;
 
+/**
+* Query Builder for fluently creating SQL queries.
+*/
 component displayname="Builder" accessors="true" {
 
+    /**
+    * The specific grammar that will compile the builder statements.
+    * e.g. MySQLGrammar, OracleGrammar, etc.
+    */
     property name="grammar";
+
+    /**
+    * Query utilities shared across multiple models.
+    */
     property name="utils";
 
-    property name="returningArrays" type="boolean" default="true";
+    /**
+    * Flag specifying to return array of structs over queries.
+    * @default true
+    */
+    property name="returningArrays" type="boolean";
 
-    property name="distinct" type="boolean" default="false";
+    /******************** Query Properties ********************/
+
+    /**
+    * Flag to bring back only distinct values.
+    * @default false
+    */
+    property name="distinct" type="boolean";
+
+    /**
+    * The aggregate option and column to execute.
+    * e.g. { type = "count", column = "*" }
+    * @default {}
+    */
     property name="aggregate" type="struct";
+
+    /**
+    * An array of columns to select.
+    * @default [ "*" ]
+    */
     property name="columns" type="array";
+
+    /**
+    * The base table of the query.
+    * @default null
+    */
     property name="from" type="string";
+
+    /**
+    * An array of JOIN statements.
+    * @default []
+    */
     property name="joins" type="array";
+
+    /**
+    * An array of WHERE statements.
+    * @default []
+    */
     property name="wheres" type="array";
+
+    /**
+    * An array of GROUP BY statements.
+    * @default []
+    */
     property name="groups" type="array";
+
+    /**
+    * An array of HAVING statements.
+    * @default []
+    */
     property name="havings" type="array";
+
+    /**
+    * An array of ORDER BY statements.
+    * @default []
+    */
     property name="orders" type="array";
+
+    /**
+    * The LIMIT value, if any.
+    */
     property name="limitValue" type="numeric";
+
+    /**
+    * The OFFSET value, if any.
+    */
     property name="offsetValue" type="numeric";
 
+    /**
+    * The list of allowed operators in join and where statements.
+    */
     variables.operators = [
         "=", "<", ">", "<=", ">=", "<>", "!=",
         "like", "like binary", "not like", "between", "ilike",
@@ -29,10 +102,18 @@ component displayname="Builder" accessors="true" {
         "not similar to"
     ];
 
+    /**
+    * The list of allowed combinators between statements.
+    */
     variables.combinators = [
         "AND", "OR"
     ];
 
+    /**
+    * Object holding all of the different bindings.
+    * Bindings are separated by the different clauses
+    * so we can serialize them in the correct order.
+    */
     variables.bindings = {
         "join" = [],
         "where" = [],
@@ -40,6 +121,14 @@ component displayname="Builder" accessors="true" {
         "update" = []
     };
 
+    /**
+    * Creates an empty query builder.
+    *
+    * @grammar The grammar to use when compiling queries. Default: qb.models.Query.Grammars.Grammar
+    * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function init(
         Grammar grammar = new qb.models.Query.Grammars.Grammar(),
         QueryUtils utils = new qb.models.Query.QueryUtils()
@@ -47,32 +136,56 @@ component displayname="Builder" accessors="true" {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
+        variables.returningArrays = true;
+
         setDefaultValues();
 
         return this;
     }
 
+    /**
+    * Sets up the default values for a new builder instance.
+    *
+    * @return void
+    */
     private void function setDefaultValues() {
         variables.distinct = false;
         variables.aggregate = {};
         variables.columns = [ "*" ];
         variables.joins = [];
-        variables.from = "";
         variables.wheres = [];
         variables.groups = [];
         variables.havings = [];
         variables.orders = [];
     }
 
-    // API
-    // select methods
+    /**********************************************************************************************\
+    |                                    SELECT clause functions                                   |
+    \**********************************************************************************************/
 
+    /**
+    * Sets the DISTINCT flag for the query.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function distinct() {
         setDistinct( true );
 
         return this;
     }
 
+    /**
+    * Sets a selection of columns to select from the query.
+    *
+    * @columns A single column, a list or columns (comma-separated), or an array of columns. Default: "*".
+    *
+    * Individual columns can contain fully-qualified names (i.e. "some_table.some_column"),
+    * fully-qualified names with table aliases (i.e. "alias.some_column"),
+    * and even set column aliases themselves (i.e. "some_column AS c")
+    * Each value will be wrapped correctly, according to the database grammar being used.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function select( any columns = "*" ) {
         // This block is necessary for ACF 10.
         // It can't be extracted to a function because
@@ -91,6 +204,18 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds a selection of columns to the already selected columns.
+    *
+    * @columns A single column, a list or columns (comma-separated), or an array of columns.
+    *
+    * Individual columns can contain fully-qualified names (i.e. "some_table.some_column"),
+    * fully-qualified names with table aliases (i.e. "alias.some_column"),
+    * and even set column aliases themselves (i.e. "some_column AS c")
+    * Each value will be wrapped correctly, according to the database grammar being used.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function addSelect( required any columns ) {
         // This block is necessary for ACF 10.
         // It can't be extracted to a function because
@@ -106,14 +231,25 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    // from methods
+    /**********************************************************************************************\
+    |                                    FROM clause functions                                   |
+    \**********************************************************************************************/
 
+    /**
+    * Sets the FROM table of the query.
+    *
+    * @from The name of the table to from which the query is based.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function from( required string from ) {
         variables.from = arguments.from;
         return this;
     }
 
-    // join methods
+    /**********************************************************************************************\
+    |                                    JOIN clause functions                                   |
+    \**********************************************************************************************/
 
     public Builder function join(
         required string table,
@@ -821,7 +957,7 @@ component displayname="Builder" accessors="true" {
     }
 
     private query function runQuery( required string sql, struct options = {} ) {
-        var result = queryExecute( sql, getBindings(), options );
+        var result = grammar.runQuery( sql, getBindings(), options );
         clearBindings();
         return result;
     }

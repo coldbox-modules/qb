@@ -75,6 +75,7 @@ component extends="testbox.system.BaseSpec" {
         var builder = getMockBox().createMock( "qb.models.Query.Builder" )
             .init( grammar, queryUtils );
         builder.setReturningArrays( returningArrays );
+        builder.setReturnFormat( "" );
         return builder;
     }
 

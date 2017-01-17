@@ -4,7 +4,10 @@ component extends="qb.models.Query.Grammars.Grammar" {
 
     public any function runQuery( sql, bindings, options ) {
         var result = super.runQuery( argumentCollection = arguments );
-        return utils.queryRemoveColumns( result, "QB_RN" );
+        if ( ! isNull( result ) ) {
+            return utils.queryRemoveColumns( result, "QB_RN" );
+        }
+        return;
     }
 
     public string function compileSelect( required Builder query ) {

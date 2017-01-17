@@ -956,20 +956,28 @@ component displayname="Builder" accessors="true" {
     private any function run( required string sql, struct options = {} ) {
         var q = runQuery( argumentCollection = arguments );
 
+        if ( isNull( q ) ) {
+            return;
+        }
+
         if ( isClosure( returnFormat ) ) {
             return returnFormat( q );
         }
-        else if ( getReturningArrays() ) {
+
+        if ( getReturningArrays() ) {
             return getUtils().queryToArrayOfStructs( q );
         }
 
         return q;
     }
 
-    private query function runQuery( required string sql, struct options = {} ) {
+    private any function runQuery( required string sql, struct options = {} ) {
         var result = grammar.runQuery( sql, getBindings(), options );
         clearBindings();
-        return result;
+        if ( ! isNull( result ) ) {
+            return result;
+        }
+        return;
     }
 
     // Unused(?)

@@ -72,8 +72,8 @@ component displayname="QueryUtils" {
         }
         var newQuery = new Query();
         newQuery.setDBType( "query" );
-        newQuery.setAttributes( q = arguments.q );
-        newQuery.setSQL( "SELECT #columnList# FROM q" );
+        newQuery.setAttributes( qbOriginalQuery = arguments.q );
+        newQuery.setSQL( "SELECT #columnList# FROM qbOriginalQuery" );
         return newQuery.execute().getResult();
     }
 

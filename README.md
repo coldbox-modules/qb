@@ -13,6 +13,15 @@ Using qb, you can:
 + Make complex, out-of-order queries possible
 + Abstract away differences between database engines
 
+## Requirements
+
++ Adobe ColdFusion 11+
++ Lucee 4.5+
+
+## Installation
+
+Installation is easy through [CommandBox](https://www.ortussolutions.com/products/commandbox) and [ForgeBox](https://www.coldbox.org/forgebox).  Simply type `box install qb` to get started.
+
 ## Code Samples
 
 Compare these two examples:
@@ -67,15 +76,6 @@ qb enables you to explore new ways of organizing your code by letting you pass a
 Here's a gist with an example of the powerful models you can create with this!
 https://gist.github.com/elpete/80d641b98025f16059f6476561d88202
 
-## Requirements
-
-+ Adobe ColdFusion 11+
-+ Lucee 4.5+
-
-## Installation
-
-Installation is easy through [CommandBox](https://www.ortussolutions.com/products/commandbox) and [ForgeBox](https://www.coldbox.org/forgebox).  Simply type `box install qb` to get started.
-
 ## Usage
 
 To start a new query, instantiate a new Builder: `wirebox.getInstance('Builder@qb')`.
@@ -95,6 +95,35 @@ If you are not using WireBox, just make sure to wire up the `Builder` object wit
 ```
 var grammar = new qb.models.Query.Grammars.MySQLGrammar();
 var builder = new qb.models.Query.Builder( grammar );
+```
+
+### Return Format
+
+You can influence the return format of the result in two ways.
+
+By default, qb returns an array of structs as the result of your query.  You can turn this behavior off by setting `builder.setReturningArrays( false )` for one-offs or setting `returningArrays = false` in your ColdBox config.
+
+```
+moduleSettings = {
+    qb = {
+        returningArrays = false
+    }
+};
+```
+
+If you want complete control over your return result, you can provide a closure as a `returnFormat`.  The results of the closure will be returned as the results of the builder.
+
+```
+moduleSettings = {
+    qb = {
+        returnFormat = function( q ) {
+            return application.wirebox.getInstance(
+                name = "Collection",
+                initArguments = { collection = q }
+            );
+        }
+    }
+};
 ```
 
 ## Docs

@@ -21,7 +21,14 @@ component displayname="Builder" accessors="true" {
     * Flag specifying to return array of structs over queries.
     * @default true
     */
-    property name="returningArrays" type="boolean";
+    property name="returningArrays" inject="coldbox:setting:returningArrays@qb";
+
+    /**
+    * Injected returnFormat callback, if any.
+    * If provided, the result of the callback is returned as the result of builder.
+    * @default ""
+    */
+    property name="returnFormat" inject="coldbox:setting:returnFormat@qb";
 
     /******************** Query Properties ********************/
 
@@ -949,7 +956,10 @@ component displayname="Builder" accessors="true" {
     private any function run( required string sql, struct options = {} ) {
         var q = runQuery( argumentCollection = arguments );
 
-        if ( getReturningArrays() ) {
+        if ( isClosure( returnFormat ) ) {
+            return returnFormat( q );
+        }
+        else if ( getReturningArrays() ) {
             return getUtils().queryToArrayOfStructs( q );
         }
 

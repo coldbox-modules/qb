@@ -10,7 +10,9 @@ component {
 
     function configure() {
         settings = {
-            defaultGrammar = "BaseGrammar"
+            defaultGrammar = "BaseGrammar",
+            returningArrays = true,
+            returnFormat = ""
         };
 
         binder.map( "BaseGrammar@qb" )

@@ -16,6 +16,17 @@ component extends="qb.models.Query.Grammars.Grammar" {
         return compileOracleLimitAndOffset( query, sql );
     }
 
+    public string function compileInsert( required Builder query, required array columns, required array values ) {
+        var columnsString = columns.map( wrapColumn ).toList( ", " );
+
+        var placeholderString = values.map( function( valueArray ) {
+            return "INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES (" & valueArray.map( function() {
+                return "?";
+            } ).toList( ", " ) & ")";
+        } ).toList( " ");
+        return trim( "INSERT ALL #placeholderString# SELECT 1 FROM dual" );
+    }
+
     private string function compileOracleLimitAndOffset( required Builder query, required string sql ) {
         var limitAndOffset = [];
         if ( ! isNull( query.getOffsetValue() ) ) {

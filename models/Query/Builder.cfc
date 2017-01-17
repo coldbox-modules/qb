@@ -752,7 +752,7 @@ component displayname="Builder" accessors="true" {
 
     // insert
 
-    public any function insert( required any values, boolean toSql = false ) {
+    public any function insert( required any values, struct options = {}, boolean toSql = false ) {
         if ( values.isEmpty() ) {
             return;
         }
@@ -785,10 +785,10 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
 
-        return run( sql );
+        return run( sql, options );
     }
 
-    public any function update( required any values, boolean toSql = false ) {
+    public any function update( required any values, struct options = {}, boolean toSql = false ) {
         var updateArray = values.keyArray();
         updateArray.sort( "textnocase" );
 
@@ -802,10 +802,10 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
 
-        return run( sql );
+        return run( sql, options );
     }
 
-    public function updateOrInsert( required any values, boolean toSql = false ) {
+    public function updateOrInsert( required any values, struct options = {}, boolean toSql = false ) {
         if ( exists() ) {
             return this.limit( 1 ).update( argumentCollection = arguments ); 
         }
@@ -813,7 +813,7 @@ component displayname="Builder" accessors="true" {
         return this.insert( argumentCollection = arguments );
     }
 
-    public any function delete( any id, boolean toSql = false ) {
+    public any function delete( any id, struct options = {}, boolean toSql = false ) {
         if ( ! isNull( arguments.id ) ) {
             where( "id", "=", arguments.id );
         }
@@ -824,7 +824,7 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
         
-        return run( sql );
+        return run( sql, options );
     }
 
     public Builder function newQuery() {

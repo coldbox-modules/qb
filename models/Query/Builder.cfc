@@ -261,7 +261,7 @@ component displayname="Builder" accessors="true" {
     public Builder function join(
         required string table,
         required any first,
-        string operator,
+        string operator = "=",
         string second,
         string type = "inner",
         boolean where = false

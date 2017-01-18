@@ -278,6 +278,11 @@ component displayname="Grammar" accessors="true" {
                 table = mid( table, matches.pos[2], matches.len[2] );
             }
         }
+        else if ( table.findNoCase( " " ) > 0 ) {
+            alias = listGetAt( table, 2, " " );
+            table = listGetAt( table, 1, " " );
+        }
+
         table = table.listToArray( "." ).map( function( tablePart, index ) {
             return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
         } ).toList( "." );
@@ -295,6 +300,10 @@ component displayname="Grammar" accessors="true" {
                 alias = mid( column, matches.pos[3], matches.len[3] );
                 column = mid( column, matches.pos[2], matches.len[2] );
             }
+        }
+        else if ( column.findNoCase( " " ) > 0 ) {
+            alias = listGetAt( column, 2, " " );
+            column = listGetAt( column, 1, " " );
         }
         column = column.listToArray( "." ).map( wrapValue ).toList( "." );
         return alias == "" ? column : column & " AS " & wrapValue( alias ); 

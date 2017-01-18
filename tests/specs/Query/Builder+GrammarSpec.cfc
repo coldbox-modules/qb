@@ -94,6 +94,43 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
+                describe( "aliases", function() {
+                    describe( "column aliases", function() {
+                        it( "can parse column aliases with AS in them", function() {
+                            var builder = getBuilder();
+                            builder.select( "id AS user_id" ).from( "users" );
+                            expect( builder.toSql() ).toBeWithCase(
+                                "SELECT ""id"" AS ""user_id"" FROM ""users"""
+                            );
+                        } );
+
+                        it( "can parse column aliases without AS in them", function() {
+                            var builder = getBuilder();
+                            builder.select( "id user_id" ).from( "users" );
+                            expect( builder.toSql() ).toBeWithCase(
+                                "SELECT ""id"" AS ""user_id"" FROM ""users"""
+                            );
+                        } );
+                    } );
+                    describe( "table aliases", function() {
+                        it( "can parse table aliases with AS in them", function() {
+                            var builder = getBuilder();
+                            builder.select( "*" ).from( "users as people" );
+                            expect( builder.toSql() ).toBeWithCase(
+                                "SELECT * FROM ""users"" AS ""people"""
+                            );
+                        } );
+
+                        it( "can parse table aliases without AS in them", function() {
+                            var builder = getBuilder();
+                            builder.select( "*" ).from( "users people" );
+                            expect( builder.toSql() ).toBeWithCase(
+                                "SELECT * FROM ""users"" AS ""people"""
+                            );
+                        } );
+                    } );
+                } );
+
                 describe( "wheres", function() {
                     describe( "basic wheres", function() {
                         it( "can add a where statement", function() {

@@ -5,7 +5,7 @@ component extends="qb.models.Query.Grammars.Grammar" {
         "groups", "havings", "orders", "offsetValue", "limitValue"
     ];
 
-    private string function compileOffsetValue( required Builder query, offsetValue ) {
+    private string function compileOffsetValue( required qb.models.Query.Builder query, offsetValue ) {
         if ( isNull( query.getOffsetValue() ) && isNull( query.getLimitValue() ) ) {
             return "";
         }
@@ -17,7 +17,7 @@ component extends="qb.models.Query.Grammars.Grammar" {
         return "OFFSET #offsetValue# ROWS";
     }
 
-    private string function compileLimitValue( required Builder query, limitValue ) {
+    private string function compileLimitValue( required qb.models.Query.Builder query, limitValue ) {
         if ( isNull( arguments.limitValue ) ) {
             return "";
         }

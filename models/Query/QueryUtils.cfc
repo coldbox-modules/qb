@@ -1,5 +1,5 @@
 component displayname="QueryUtils" {
-    
+
     public struct function extractBinding( required any value ) {
         var binding = isStruct( value ) ? value : { value = normalizeSqlValue( value ) };
 
@@ -55,9 +55,9 @@ component displayname="QueryUtils" {
     *
     * @param theQuery     The query to manipulate. (Required)
     * @param columnsToRemove      A list of columns to remove. (Required)
-    * @return Returns a query. 
-    * @author Giampaolo Bellavite (giampaolo@bellavite.com) 
-    * @version 1, April 14, 2005 
+    * @return Returns a query.
+    * @author Giampaolo Bellavite (giampaolo@bellavite.com)
+    * @version 1, April 14, 2005
     */
     public query function queryRemoveColumns(
         required query q,
@@ -70,11 +70,11 @@ component displayname="QueryUtils" {
                 columnList = ListDeleteAt( columnList, columnPosition );
             }
         }
-        var newQuery = new Query();
-        newQuery.setDBType( "query" );
-        newQuery.setAttributes( qbOriginalQuery = arguments.q );
-        newQuery.setSQL( "SELECT #columnList# FROM qbOriginalQuery" );
-        return newQuery.execute().getResult();
+        return queryExecute(
+          "SELECT #columnList# FROM arguments.q",
+          {},
+          {dbtype="query"}
+        );
     }
 
     private string function normalizeSqlValue( required any value ) {
@@ -89,7 +89,7 @@ component displayname="QueryUtils" {
         if ( isStruct( value ) || isArray( value ) ) {
             return false;
         }
-        
+
         var listAsArray = listToArray( arguments.value );
         return arrayLen( listAsArray ) > 1;
     }

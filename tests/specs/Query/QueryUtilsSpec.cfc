@@ -89,5 +89,21 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( result ).toBe( data );
             } );
         } );
+
+        describe( "queryRemoveColumns()", function() {
+            it( "returns the query with specified columns removed", function() {
+                var data = [
+                    { id = 1, name = "foo", age = 24 },
+                    { id = 2, name = "bar", age = 32 },
+                    { id = 3, name = "baz", age = 41 }
+                ];
+                var q = queryNew( "id,name,age", "integer,varchar,integer", data );
+                var result = utils.queryRemoveColumns( q, "age,name" );
+
+                expect( result ).toBeQuery();
+                expect( result.recordCount ).toBe( 3 );
+                expect( result.columnList ).toBe( "id" );
+            } );
+        } );
     }
 }

@@ -71,9 +71,9 @@ component displayname="QueryUtils" {
             }
         }
         return queryExecute(
-          "SELECT #columnList# FROM arguments.q",
-          {},
-          {dbtype="query"}
+            "SELECT #columnList# FROM arguments.q",
+            {},
+            { dbtype = "query" }
         );
     }
 

@@ -7,12 +7,13 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "testbox-runner --runner http://localhost:7777/tests/runner.cfm --directory tests.specs --recurse --errorsOnly"
   },
   "keywords": [],
   "author": "Eric Peterson <=>",
   "license": "ISC",
   "devDependencies": {
-    "coldbox-elixir": "^1.0.0"
+    "coldbox-elixir": "^1.0.0",
+    "testbox-runner": "^0.3.0"
   }
 }

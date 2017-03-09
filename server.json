@@ -1,5 +1,5 @@
 {
-    "name": "qb",
+    "name":"qb",
     "web":{
         "http":{
             "port":"7777"

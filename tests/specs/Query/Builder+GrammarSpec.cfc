@@ -41,6 +41,14 @@ component extends="testbox.system.BaseSpec" {
                         );
                     } );
 
+                    it( "adding a select to a * query gets rid of the star", function() {
+                        var builder = getBuilder();
+                        builder.addSelect( "foo" ).from( "users" );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT ""foo"" FROM ""users"""
+                        );
+                    } );
+
                     it( "can select distinct records", function() {
                         var builder = getBuilder();
                         builder.distinct().select( "foo", "bar" ).from( "users" );
@@ -72,6 +80,14 @@ component extends="testbox.system.BaseSpec" {
                             "SELECT substr( foo, 6 ) FROM ""users"""
                         );
                     } );
+
+                    it( "can easily select raw values with `selectRaw`", function() {
+                        var builder = getBuilder();
+                        builder.selectRaw( "substr( foo, 6 )" ).from( "users" );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT substr( foo, 6 ) FROM ""users"""
+                        );
+                    } );
                 } );
 
                 describe( "from", function() {
@@ -92,7 +108,7 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                xdescribe( "using table prefixes", function() {
+                describe( "using table prefixes", function() {
                     it( "can perform a basic select with a table prefix", function() {
                         var builder = getBuilder();
                         builder.getGrammar().setTablePrefix( "prefix_" );

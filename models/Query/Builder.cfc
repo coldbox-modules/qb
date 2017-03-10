@@ -234,8 +234,17 @@ component displayname="Builder" accessors="true" {
             count--;
         }
         
+        if ( variables.columns.isEmpty() ||
+            ( variables.columns.len() == 1 && variables.columns[ 1 ] == "*" ) ) {
+            variables.columns = [];
+        }
         arrayAppend( variables.columns, normalizeToArray( argumentCollection = args ), true );
         return this;
+    }
+
+    public Builder function selectRaw( required any expression ) {
+        addSelect( raw( expression ) );
+        return this;        
     }
 
     /**********************************************************************************************\
@@ -251,6 +260,19 @@ component displayname="Builder" accessors="true" {
     */
     public Builder function from( required string from ) {
         variables.from = arguments.from;
+        return this;
+    }
+
+    /**
+    * Sets the FROM table of the query.
+    * Alias for `from`
+    *
+    * @table The name of the table to from which the query is based.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function table( required string table ) {
+        variables.from = arguments.table;
         return this;
     }
 

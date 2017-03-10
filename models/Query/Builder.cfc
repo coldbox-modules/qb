@@ -293,7 +293,18 @@ component displayname="Builder" accessors="true" {
     \*******************************************************************************/
 
     /**
-    * Adds a JOIN to another table
+    * Adds an INNER JOIN to another table.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The table to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @type The type of the join. Default: "inner".  Passing this as an argument is discouraged for readability.  Use the dedicated methods like `leftJoin` and `rightJoin` where possible.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
     *
     * @return qb.models.Query.Builder
     */
@@ -329,28 +340,72 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds a LEFT JOIN to another table.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The table to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function leftJoin(
         required string table,
         string first,
         string operator,
         string second,
-        any conditions
+        boolean where
     ) {
         arguments.type = "left";
         return join( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a RIGHT JOIN to another table.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The table to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function rightJoin(
         required string table,
         string first,
         string operator,
         string second,
-        any conditions
+        boolean where
     ) {
         arguments.type = "right";
         return join( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a CROSS JOIN to another table.
+    *
+    * For simple joins, this joins one table to another in a cross join.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The table to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function crossJoin(
         required string table,
         any first,
@@ -369,6 +424,24 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds a JOIN to another table based on a `WHERE` clause instead of an `ON` clause.
+    *
+    * `where` clauses introduce parameters and parameter bindings
+    * whereas `on` clauses join between columns and don't need parameter bindings.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The table to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @type The type of the join. Default: "inner".  Passing this as an argument is discouraged for readability.  Use the dedicated methods like `leftJoin` and `rightJoin` where possible.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function joinWhere(
         required string table,
         required any first,
@@ -380,8 +453,17 @@ component displayname="Builder" accessors="true" {
         return join( argumentCollection = arguments );
     }
 
-    // where methods
+    /*******************************************************************************\
+    |                            WHERE clause functions                             |
+    \*******************************************************************************/
 
+    /**
+    * Adds a WHERE clause to the query.
+    *
+    * A closure can be passed instead of a column name to add nested where statements.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function where( column, operator, value, string combinator = "and" ) {
         if ( isClosure( column ) ) {
             return whereNested( column, combinator );

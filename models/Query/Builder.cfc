@@ -18,12 +18,6 @@ component displayname="Builder" accessors="true" {
     property name="utils";
 
     /**
-    * Flag specifying to return array of structs over queries.
-    * @default true
-    */
-    property name="returningArrays" inject="coldbox:setting:returningArrays@qb";
-
-    /**
     * Injected returnFormat callback, if any.
     * If provided, the result of the callback is returned as the result of builder.
     * @default ""
@@ -143,7 +137,7 @@ component displayname="Builder" accessors="true" {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
-        variables.returningArrays = true;
+        setReturnFormat( "array" );
 
         setDefaultValues();
 
@@ -919,9 +913,12 @@ component displayname="Builder" accessors="true" {
     ) {
         setAggregate( { type = arguments.type, column = arguments.column } );
         var originalColumns = getColumns();
+        var originalReturnFormat = getReturnFormat();
+        setReturnFormat( "query" );
         select();
         var result = get( options = arguments.options ).aggregate;
         select( originalColumns );
+        setReturnFormat( originalReturnFormat)
         setAggregate( {} );
         return result;
     }
@@ -962,7 +959,11 @@ component displayname="Builder" accessors="true" {
 
     public any function value( required string column, struct options = {} ) {
         select( column );
-        return first( options = arguments.options )[ column ];
+        var originalReturnFormat = getReturnFormat();
+        setReturnFormat( "query" );
+        var result = first( options = arguments.options )[ column ];
+        setReturnFormat( originalReturnFormat );
+        return result;
     }
 
     public any function implode( required string column, string glue = "", struct options = {} ) {
@@ -975,6 +976,28 @@ component displayname="Builder" accessors="true" {
         return results.toList( glue );
     }
 
+    public Builder function setReturnFormat( required any format ) {
+        if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
+            variables.returnFormat = format;
+        }
+        else if ( arguments.format == "array" ) {
+            variables.returnFormat = function( q ) {
+                return getUtils().queryToArrayOfStructs( q );
+            }
+        }
+        else if ( arguments.format == "query" ) {
+            variables.returnFormat = function( q ) {
+                return q;
+            }
+        }
+        else {
+            throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );
+        }
+
+
+        return this;
+    }
+
     private any function run( required string sql, struct options = {} ) {
         var q = runQuery( argumentCollection = arguments );
 
@@ -982,15 +1005,7 @@ component displayname="Builder" accessors="true" {
             return;
         }
 
-        if ( isClosure( returnFormat ) ) {
-            return returnFormat( q );
-        }
-
-        if ( getReturningArrays() ) {
-            return getUtils().queryToArrayOfStructs( q );
-        }
-
-        return q;
+        return returnFormat( q );
     }
 
     private any function runQuery( required string sql, struct options = {} ) {

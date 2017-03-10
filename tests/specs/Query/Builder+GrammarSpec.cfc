@@ -1012,6 +1012,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( "get", function() {
                     it( "executes the query when calling `get`", function() {
                         var builder = getBuilder();
+                        builder.setReturnFormat( "query" );
                         var expectedQuery = queryNew( "id", "integer", [ { id = 1 } ] );
                         builder.$( "runQuery" ).$args(
                             sql = "SELECT ""id"" FROM ""users""",
@@ -1033,6 +1034,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can pass in an array of columns to retrieve for the single query execution", function() {
                         var builder = getBuilder();
+                        builder.setReturnFormat( "query" );
                         var expectedGetQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
                         var expectedNormalQuery = queryNew( "id,name,age", "integer,varchar,integer", [ { id = 1, name = "foo", age = 24 } ] );
                         builder.$( "runQuery" ).$args(
@@ -1064,6 +1066,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can get a single column for a single query execution", function() {
                         var builder = getBuilder();
+                        builder.setReturnFormat( "query" );
                         var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
                         builder.$( "runQuery" ).$args(
                             sql = "SELECT ""name"" FROM ""users""",
@@ -1084,6 +1087,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "preserves original columns after executing a get with columns", function() {
                         var builder = getBuilder();
+                        builder.setReturnFormat( "query" );
                         var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
                         builder.$( "runQuery" ).$args(
                             sql = "SELECT ""name"" FROM ""users""",
@@ -1099,6 +1103,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( "first", function() {
                     it( "retrieves the first record when calling `first`", function() {
                         var builder = getBuilder();
+                        builder.setReturnFormat( "query" );
                         var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
                         builder.$( "runQuery" ).$args(
                             sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
@@ -1123,6 +1128,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( "find", function() {
                     it( "returns the first result by id when calling `find`", function() {
                         var builder = getBuilder();
+                        builder.setReturnFormat( "query" );
                         var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
                         builder.$( "runQuery" ).$args(
                             sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
@@ -1390,31 +1396,9 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
             } );
-            
-            describe( "returning results", function() {
-                it( "defaults to returning arrays of structs instead of queries", function() {
-                    var builder = getBuilder( returningArrays = true );
-                    var data = [ { id = 1 } ];
-                    var expectedQuery = queryNew( "id", "integer", data );
-                    builder.$( "runQuery" ).$args(
-                        sql = "SELECT ""id"" FROM ""users""",
-                        options = {}
-                    ).$results( expectedQuery );
 
-                    var results = builder.select( "id" ).from( "users" ).get();
-
-                    expect( results ).toBe( data );
-
-                    var runQueryLog = builder.$callLog().runQuery;
-                    expect( runQueryLog ).toBeArray();
-                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( {
-                        sql = "SELECT ""id"" FROM ""users""",
-                        options = {}
-                    } );
-                } );
-
-                it( "can set the builder to return queries instead of arrays", function() {
+            describe( "returnFormat", function() {
+                it( "has a default return value of array", function() {
                     var builder = getBuilder();
                     var data = [ { id = 1 } ];
                     var expectedQuery = queryNew( "id", "integer", data );
@@ -1425,8 +1409,80 @@ component extends="testbox.system.BaseSpec" {
 
                     var results = builder.select( "id" ).from( "users" ).get();
 
-                    expect( results ).toBe( expectedQuery );
+                    expect( results ).toBe( data );
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""id"" FROM ""users""",
+                        options = {}
+                    } );
+                } );
 
+                it( "can return an array of structs", function() {
+                    var builder = getBuilder();
+                    builder.setReturnFormat( "array" );
+                    var data = [ { id = 1 } ];
+                    var expectedQuery = queryNew( "id", "integer", data );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""id"" FROM ""users""",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.select( "id" ).from( "users" ).get();
+
+                    expect( results ).toBe( data );
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""id"" FROM ""users""",
+                        options = {}
+                    } );
+                } );
+
+                it( "can return a query", function() {
+                    var builder = getBuilder();
+                    builder.setReturnFormat( "query" );
+                    var data = [ { id = 1 } ];
+                    var expectedQuery = queryNew( "id", "integer", data );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""id"" FROM ""users""",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.select( "id" ).from( "users" ).get();
+
+                    expect( results ).toBe( expectedQuery );
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""id"" FROM ""users""",
+                        options = {}
+                    } );
+                } );
+
+                it( "can return the results of a closure", function() {
+                    var builder = getBuilder();
+                    builder.setReturnFormat( function( q ) {
+                        var results = [];
+                        for ( var row in q ) {
+                            row.id *= 2;
+                            arrayAppend( results, row );
+                        }
+                        return results;
+                    } );
+                    var data = [ { id = 1 }, { id = 2 } ];
+                    var expectedQuery = queryNew( "id", "integer", data );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""id"" FROM ""users""",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.select( "id" ).from( "users" ).get();
+
+                    expect( results ).toBe( [ { id = 2 }, { id = 4 } ] );
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
@@ -1440,15 +1496,13 @@ component extends="testbox.system.BaseSpec" {
 
     }
 
-    private Builder function getBuilder( returningArrays = false ) {
+    private Builder function getBuilder() {
         var grammar = getMockBox()
             .createMock( "qb.models.Query.Grammars.Grammar" );
         var queryUtils = getMockBox()
             .createMock( "qb.models.Query.QueryUtils" );
         var builder = getMockBox().createMock( "qb.models.Query.Builder" )
             .init( grammar, queryUtils );
-        builder.setReturningArrays( returningArrays );
-        builder.setReturnFormat( "" );
         return builder;
     }
 

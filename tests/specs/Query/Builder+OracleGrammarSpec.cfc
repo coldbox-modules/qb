@@ -67,15 +67,13 @@ component extends="testbox.system.BaseSpec" {
     }
 
 
-    private Builder function getBuilder( returningArrays = false ) {
+    private Builder function getBuilder() {
         variables.grammar = getMockBox()
             .createMock( "qb.models.Query.Grammars.OracleGrammar" );
         var queryUtils = getMockBox()
             .createMock( "qb.models.Query.QueryUtils" );
         var builder = getMockBox().createMock( "qb.models.Query.Builder" )
             .init( grammar, queryUtils );
-        builder.setReturningArrays( returningArrays );
-        builder.setReturnFormat( "" );
         return builder;
     }
 

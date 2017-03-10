@@ -129,6 +129,7 @@ component displayname="Builder" accessors="true" {
     *
     * @grammar The grammar to use when compiling queries. Default: qb.models.Query.Grammars.Grammar
     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
+    * @returnFormat the closure (or string format shortcut) that modifies the query and is eventually returned to the caller. Default: 'array'
     *
     * @return qb.models.Query.Builder
     */
@@ -217,6 +218,7 @@ component displayname="Builder" accessors="true" {
     * fully-qualified names with table aliases (i.e. "alias.some_column"),
     * and even set column aliases themselves (i.e. "some_column AS c")
     * Each value will be wrapped correctly, according to the database grammar being used.
+    * If no columns have been set, this column will overwrite the global "*".
     *
     * @return qb.models.Query.Builder
     */
@@ -239,14 +241,27 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds a Expression to the already selected columns.
+    *
+    * @expression A raw query expression to add to the query.
+    *
+    * Individual columns can contain fully-qualified names (i.e. "some_table.some_column"),
+    * fully-qualified names with table aliases (i.e. "alias.some_column"),
+    * and even set column aliases themselves (i.e. "some_column AS c")
+    * Each value will be wrapped correctly, according to the database grammar being used.
+    * If no columns have been set, this column will overwrite the global "*".
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function selectRaw( required any expression ) {
         addSelect( raw( expression ) );
         return this;        
     }
 
-    /**********************************************************************************************\
-    |                                    FROM clause functions                                   |
-    \**********************************************************************************************/
+    /********************************************************************************\
+    |                             FROM clause functions                              |
+    \********************************************************************************/
 
     /**
     * Sets the FROM table of the query.
@@ -273,10 +288,15 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    /**********************************************************************************************\
-    |                                    JOIN clause functions                                   |
-    \**********************************************************************************************/
+    /*******************************************************************************\
+    |                            JOIN clause functions                              |
+    \*******************************************************************************/
 
+    /**
+    * Adds a JOIN to another table
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function join(
         required string table,
         required any first,

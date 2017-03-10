@@ -918,7 +918,7 @@ component displayname="Builder" accessors="true" {
         select();
         var result = get( options = arguments.options ).aggregate;
         select( originalColumns );
-        setReturnFormat( originalReturnFormat)
+        setReturnFormat( originalReturnFormat );
         setAggregate( {} );
         return result;
     }
@@ -983,12 +983,12 @@ component displayname="Builder" accessors="true" {
         else if ( arguments.format == "array" ) {
             variables.returnFormat = function( q ) {
                 return getUtils().queryToArrayOfStructs( q );
-            }
+            };
         }
         else if ( arguments.format == "query" ) {
             variables.returnFormat = function( q ) {
                 return q;
-            }
+            };
         }
         else {
             throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );

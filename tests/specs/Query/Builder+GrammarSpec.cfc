@@ -74,7 +74,25 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                describe( "using table prefixes", function() {
+                describe( "from", function() {
+                    it( "can specify the table to select from", function() {
+                        var builder = getBuilder();
+                        builder.from( "users" );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT * FROM ""users"""
+                        );
+                    } );
+
+                    it( "can use `table` as an alias for from", function() {
+                        var builder = getBuilder();
+                        builder.table( "users" );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT * FROM ""users"""
+                        );
+                    } );
+                } );
+
+                xdescribe( "using table prefixes", function() {
                     it( "can perform a basic select with a table prefix", function() {
                         var builder = getBuilder();
                         builder.getGrammar().setTablePrefix( "prefix_" );

@@ -11,8 +11,7 @@ component {
     function configure() {
         settings = {
             defaultGrammar = "BaseGrammar",
-            returningArrays = true,
-            returnFormat = ""
+            returnFormat = "array"
         };
 
         binder.map( "BaseGrammar@qb" )
@@ -40,7 +39,8 @@ component {
         binder.map( "builder@qb" )
             .to( "qb.models.Query.Builder" )
             .initArg( name = "grammar", ref = "#settings.defaultGrammar#@qb" )
-            .initArg( name = "utils", ref = "QueryUtils@qb" );
+            .initArg( name = "utils", ref = "QueryUtils@qb" )
+            .initArg( name = "returnFormat", value = settings.returnFormat );
     }
 
 }

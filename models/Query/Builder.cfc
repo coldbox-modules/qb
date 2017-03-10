@@ -18,11 +18,13 @@ component displayname="Builder" accessors="true" {
     property name="utils";
 
     /**
-    * Injected returnFormat callback, if any.
+    * returnFormat callback
     * If provided, the result of the callback is returned as the result of builder.
-    * @default ""
+    * Can optionally pass either "array" or "query"
+    * and the correct callback will be generated
+    * @default "array"
     */
-    property name="returnFormat" inject="coldbox:setting:returnFormat@qb";
+    property name="returnFormat";
 
     /******************** Query Properties ********************/
 
@@ -132,12 +134,13 @@ component displayname="Builder" accessors="true" {
     */
     public Builder function init(
         Grammar grammar = new qb.models.Query.Grammars.Grammar(),
-        QueryUtils utils = new qb.models.Query.QueryUtils()
+        QueryUtils utils = new qb.models.Query.QueryUtils(),
+        any returnFormat = "array"
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
-        setReturnFormat( "array" );
+        setReturnFormat( arguments.returnFormat );
 
         setDefaultValues();
 

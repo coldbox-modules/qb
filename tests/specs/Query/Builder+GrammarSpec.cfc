@@ -627,80 +627,6 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                describe( """when"" callbacks", function() {
-                    it( "executes the callback when the condition is true", function() {
-                        var callback = function( query ) {
-                            query.where( "id", "=", 1 );
-                        };
-
-                        var builder = getBuilder();
-                        builder.select( "*" )
-                            .from( "users" )
-                            .when( true, callback )
-                            .where( "email", "foo" );
-                        expect( builder.toSql() ).toBeWithCase(
-                            "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
-                        );
-                        expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
-                    } );
-
-                    it( "does not execute the callback when the condition is false", function() {
-                        var callback = function( query ) {
-                            query.where( "id", "=", 1 );
-                        };
-
-                        var builder = getBuilder();
-                        builder.select( "*" )
-                            .from( "users" )
-                            .when( false, callback )
-                            .where( "email", "foo" );
-                        expect( builder.toSql() ).toBeWithCase(
-                            "SELECT * FROM ""users"" WHERE ""email"" = ?"
-                        );
-                        expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
-                    } );
-
-                    it( "executes the default callback when the condition is false", function() {
-                        var callback = function( query ) {
-                            query.where( "id", "=", 1 );
-                        };
-
-                        var defaultCallback = function( query ) {
-                            query.where( "id", "=", 2 );
-                        };
-
-                        var builder = getBuilder();
-                        builder.select( "*" )
-                            .from( "users" )
-                            .when( false, callback, defaultCallback )
-                            .where( "email", "foo" );
-                        expect( builder.toSql() ).toBeWithCase(
-                            "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
-                        );
-                        expect( getTestBindings( builder ) ).toBe( [ 2, "foo" ] );
-                    } );
-
-                    it( "does not execute the default callback when the condition is true", function() {
-                        var callback = function( query ) {
-                            query.where( "id", "=", 1 );
-                        };
-
-                        var defaultCallback = function( query ) {
-                            query.where( "id", "=", 2 );
-                        };
-
-                        var builder = getBuilder();
-                        builder.select( "*" )
-                            .from( "users" )
-                            .when( true, callback, defaultCallback )
-                            .where( "email", "foo" );
-                        expect( builder.toSql() ).toBeWithCase(
-                            "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
-                        );
-                        expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
-                    } );
-                } );
-
                 describe( "group bys", function() {
                     it( "can add a simple group by", function() {
                         var builder = getBuilder();
@@ -884,6 +810,113 @@ component extends="testbox.system.BaseSpec" {
                             "SELECT * FROM ""users"" LIMIT 0 OFFSET 0"
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
+                    } );
+                } );
+            } );
+
+            describe( "control flow", function() {
+                describe( "when", function() {
+                    it( "executes the callback when the condition is true", function() {
+                        var callback = function( query ) {
+                            query.where( "id", "=", 1 );
+                        };
+
+                        var builder = getBuilder();
+                        builder.select( "*" )
+                            .from( "users" )
+                            .when( true, callback )
+                            .where( "email", "foo" );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
+                    } );
+
+                    it( "does not execute the callback when the condition is false", function() {
+                        var callback = function( query ) {
+                            query.where( "id", "=", 1 );
+                        };
+
+                        var builder = getBuilder();
+                        builder.select( "*" )
+                            .from( "users" )
+                            .when( false, callback )
+                            .where( "email", "foo" );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT * FROM ""users"" WHERE ""email"" = ?"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
+                    } );
+
+                    it( "executes the default callback when the condition is false", function() {
+                        var callback = function( query ) {
+                            query.where( "id", "=", 1 );
+                        };
+
+                        var defaultCallback = function( query ) {
+                            query.where( "id", "=", 2 );
+                        };
+
+                        var builder = getBuilder();
+                        builder.select( "*" )
+                            .from( "users" )
+                            .when( false, callback, defaultCallback )
+                            .where( "email", "foo" );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [ 2, "foo" ] );
+                    } );
+
+                    it( "does not execute the default callback when the condition is true", function() {
+                        var callback = function( query ) {
+                            query.where( "id", "=", 1 );
+                        };
+
+                        var defaultCallback = function( query ) {
+                            query.where( "id", "=", 2 );
+                        };
+
+                        var builder = getBuilder();
+                        builder.select( "*" )
+                            .from( "users" )
+                            .when( true, callback, defaultCallback )
+                            .where( "email", "foo" );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?"
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [ 1, "foo" ] );
+                    } );
+                } );
+
+                describe( "tap", function() {
+                    it( "runs a callback that gets passed the query. without modifying the query", function() {
+                        var builder = getBuilder();
+                        var count = 0;
+                        builder.from( "users" )
+                            .tap( function( q ) {
+                                count++;
+                                expect( q.toSQL() ).toBe( "SELECT * FROM ""users""" );
+                                expect( getTestBindings( builder ) ).toBe( [] );
+                            } )
+                            .where( "id", 1 )
+                            .tap( function( q ) {
+                                count++;
+                                expect( q.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""id"" = ?" );
+                                expect( getTestBindings( q ) ).toBe( [ 1 ] );
+                            } )
+                            .tap( function( q ) {
+                                count++;
+                                // attempts to modify the query should not work
+                                return q.where( "foo", "bar" );
+                            } );
+
+                        expect( builder.toSQL() ).toBe(
+                            "SELECT * FROM ""users"" WHERE ""id"" = ?",
+                            "The query should not be modified from the last `tap` call."
+                        );
+                        expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+                        expect( count ).toBe( 3, "Three different tap functions should have been called." );
                     } );
                 } );
             } );

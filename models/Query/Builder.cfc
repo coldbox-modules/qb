@@ -1177,6 +1177,48 @@ component displayname="Builder" accessors="true" {
         limit( arguments.pageCount );
         return this;
     }
+
+    /*******************************************************************************\
+    |                             control flow functions                            |
+    \*******************************************************************************/
+
+    /**
+    * When is a useful helper method that introduces if / else control flow without breaking chainability.
+    * When the `condition` is true, the `onTrue` callback is triggered.  If the `condition` is false and an `onFalse` callback is passed, it is triggered.  Otherwise, the query is returned unmodified.
+    * 
+    * @condition A boolean condition that if true will trigger the `onTrue` callback. If not true, the `onFalse` callback will trigger if it was passed. Otherwise, the query is returned unmodified.
+    * @onTrue A closure that will be triggered if the `condition` is true.
+    * @onFlase A closure that will be triggered if the `condition` is false.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function when(
+        required boolean condition,
+        onTrue,
+        onFalse
+    ) {
+        var defaultCallback = function( q ) {
+            return q;
+        };
+        onFalse = isNull( onFalse ) ? defaultCallback : onFalse;
+        if ( condition ) {
+            onTrue( this );
+        } else {
+            onFalse( this );
+        }
+        return this;
+    }
+
+    /**
+    * Tap takes a callback and calls that callback with a copy of the current query.
+    * The results of calling the callback are ignored.  The query is returned unmodified.
+    *
+    * @callback A callback to execute with the current query.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function tap( required callback ) {
+        callback( duplicate( this ) );
         return this;
     }
 

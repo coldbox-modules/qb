@@ -1222,9 +1222,25 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    // insert
+    /*******************************************************************************\
+    |                        INSERT / UPDATE / DELETE functions                     |
+    \*******************************************************************************/
 
-    public any function insert( required any values, struct options = {}, boolean toSql = false ) {
+    /**
+    * Inserts a single struct or an array of structs in to a table.
+    * This call must come after setting the query's table using `from` or `table`.
+    *
+    * @values A struct or array of structs to insert in to the table.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+    *
+    * @return query
+    */
+    public any function insert(
+        required any values,
+        struct options = {},
+        boolean toSql = false
+    ) {
         if ( values.isEmpty() ) {
             return;
         }
@@ -1257,10 +1273,25 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
 
-        return run( sql, options );
+        return runQuery( sql, options );
     }
 
-    public any function update( required any values, struct options = {}, boolean toSql = false ) {
+    /**
+    * Updates a table with a struct of column and value pairs.
+    * This call must come after setting the query's table using `from` or `table`.
+    * Any constraining of the update query should be done using the appropriate WHERE statement before calling `update`.
+    *
+    * @values A struct of column and value pairs to update.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+    *
+    * @return query
+    */
+    public any function update(
+        required struct values,
+        struct options = {},
+        boolean toSql = false
+    ) {
         var updateArray = values.keyArray();
         updateArray.sort( "textnocase" );
 
@@ -1274,10 +1305,25 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
 
-        return run( sql, options );
+        return runQuery( sql, options );
     }
 
-    public function updateOrInsert( required any values, struct options = {}, boolean toSql = false ) {
+    /**
+    * If the query returns any rows, updates the first result found. Otherwise, inserts the values into the table.
+    * This call must come after setting the query's table using `from` or `table`.
+    * Any constraining of the query should be done using the appropriate WHERE statement before calling `updateOrInsert`.
+    *
+    * @values A struct of column and value pairs to update.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+    *
+    * @return query
+    */
+    public any function updateOrInsert(
+        required struct values,
+        struct options = {},
+        boolean toSql = false 
+    ) {
         if ( exists() ) {
             return this.limit( 1 ).update( argumentCollection = arguments ); 
         }
@@ -1285,9 +1331,26 @@ component displayname="Builder" accessors="true" {
         return this.insert( argumentCollection = arguments );
     }
 
-    public any function delete( any id, struct options = {}, boolean toSql = false ) {
+    /**
+    * Deletes a record set.
+    * This call must come after setting the query's table using `from` or `table`.
+    * Any constraining of the update query should be done using the appropriate WHERE statement before calling `update`.
+    *
+    * @id A convience argument for `where( "id", "=", arguments.id ).  The query can be constrained by normal WHERE methods if you have more complex needs.
+    * @idColumnName The name of the id column for the delete shorthand. Default: "id".
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public any function delete(
+        any id,
+        string idColumnName = "id",
+        struct options = {},
+        boolean toSql = false
+    ) {
         if ( ! isNull( arguments.id ) ) {
-            where( "id", "=", arguments.id );
+            where( arguments.idColumnName, "=", arguments.id );
         }
 
         var sql = getGrammar().compileDelete( this );
@@ -1296,7 +1359,7 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
         
-        return run( sql, options );
+        return runQuery( sql, options );
     }
 
     public Builder function newQuery() {

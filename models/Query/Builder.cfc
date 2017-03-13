@@ -1439,7 +1439,7 @@ component displayname="Builder" accessors="true" {
         }
 
         var arg = arguments[ 1 ];
-        if ( isInstanceOf( arg, "qb.models.Query.Expression" ) ) {
+        if ( getUtils().isExpression( arg ) ) {
             return [ arg ];
         }
 

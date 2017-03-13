@@ -1362,10 +1362,61 @@ component displayname="Builder" accessors="true" {
         return runQuery( sql, options );
     }
 
+    /*******************************************************************************\
+    |                               utility functions                               |
+    \*******************************************************************************/
+
+    /**
+    * Creates a new query using the same Grammar and QueryUtils.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function newQuery() {
-        return new qb.models.Query.Builder( grammar = getGrammar() );
+        return new qb.models.Query.Builder(
+            grammar = getGrammar(),
+            utils = getUtils()
+        );
     }
 
+    /**
+    * Sets the return format for the query.
+    * The return format can be a simple string like "query" to return queries or "array" to return an array of structs.
+    * Alternative, the return format can be a closure.  The closure is passed the query as the only argument.  The result of the closure is returned as the result of the query.
+    * 
+    * @format "query", "array", or a closure.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function setReturnFormat( required any format ) {
+        if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
+            variables.returnFormat = format;
+        }
+        else if ( arguments.format == "array" ) {
+            variables.returnFormat = function( q ) {
+                return getUtils().queryToArrayOfStructs( q );
+            };
+        }
+        else if ( arguments.format == "query" ) {
+            variables.returnFormat = function( q ) {
+                return q;
+            };
+        }
+        else {
+            throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );
+        }
+
+        return this;
+    }
+
+    /*******************************************************************************\
+    |                               binding functions                               |
+    \*******************************************************************************/
+
+    /**
+    * Returns a flat array of bindings.  Used as the parameter list for `queryExecute`.
+    *
+    * @return array of bindings
+    */
     public array function getBindings() {
         var bindingOrder = [ "update", "insert", "join", "where" ];
 
@@ -1379,10 +1430,20 @@ component displayname="Builder" accessors="true" {
         return flatBindings;
     }
 
+    /**
+    * Returns all the binding types and their associated bindings.
+    *
+    * @return struct of binding types and their bindings
+    */
     public struct function getRawBindings() {
         return bindings;
     }
 
+    /**
+    * Clear all the bindings on the query.
+    *
+    * @return qb.models.Query.Builder
+    */
     private Builder function clearBindings() {
         variables.join = [];
         variables.where = [];
@@ -1391,7 +1452,18 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    private Builder function addBindings( required any newBindings, string type = "where" ) {
+    /**
+    * Adds a single binding or an array of bindings to a query for a given type.
+    *
+    * @newBindings A single binding or an array of bindings to add for a given type.
+    * @type The type of binding to add.
+    *
+    * @return qb.models.Query.Builder
+    */
+    private Builder function addBindings(
+        required any newBindings,
+        string type = "where"
+    ) {
         if ( ! isArray( newBindings ) ) {
             newBindings = [ newBindings ];
         }

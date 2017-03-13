@@ -460,16 +460,22 @@ component displayname="Builder" accessors="true" {
     /**
     * Adds a WHERE clause to the query.
     *
-    * A closure can be passed instead of a column name to add nested where statements.
+    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
     *
     * @return qb.models.Query.Builder
     */
-    public Builder function where( column, operator, value, string combinator = "and" ) {
+    public Builder function where(
+        column,
+        operator,
+        value,
+        string combinator = "and"
+    ) {
         if ( isClosure( column ) ) {
             return whereNested( column, combinator );
         }
-
-        var argCount = argumentCount( arguments );
 
         if ( isInvalidCombinator( arguments.combinator ) ) {
             throw(
@@ -501,19 +507,72 @@ component displayname="Builder" accessors="true" {
             type = "basic"
         } );
 
-        if ( ! isInstanceOf( arguments.value, "qb.models.Query.Expression" ) ) {
+        if ( getUtils().isNotExpression( arguments.value ) ) {
             addBindings( utils.extractBinding( arguments.value ), "where" );
         }
 
         return this;
     }
 
+    /**
+    * Adds a where clause where the value is a subquery.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).
+    * @callback The closure that defines the subquery. A new query will be passed to the closure as the only argument.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
+    private Builder function whereSub(
+        column,
+        operator,
+        callback,
+        combinator = "and"
+    ) {
+        var query = newQuery();
+        callback( query );
+        variables.wheres.append( {
+            type = "sub",
+            column = arguments.column,
+            operator = arguments.operator,
+            query = query,
+            combinator = arguments.combinator
+        } );
+        addBindings( query.getBindings(), "where" );
+        return this;
+    }
+
+    /**
+    * Adds an OR WHERE clause to the query.
+    *
+    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as the value as well.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhere( column, operator, value ) {
         arguments.combinator = "or";
         return where( argumentCollection = arguments );
     }
 
-    public Builder function whereIn( column, values, combinator = "and", negate = false ) {
+    /**
+    * Adds a WHERE IN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+    * @values The values with which to constrain the column. An expression (`builder.raw()`) can be passed as any of the values as well.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for IN, True for NOT IN. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function whereIn(
+        column,
+        values,
+        combinator = "and",
+        negate = false
+    ) {
         if ( isClosure( values ) ) {
             arguments.callback = arguments.values;
             return whereInSub( argumentCollection = arguments );
@@ -527,13 +586,6 @@ component displayname="Builder" accessors="true" {
             combinator = arguments.combinator
         } );
 
-        // values.filter( function( value ) {
-        //     return ! isInstanceOf( value, "qb.models.Query.Expression" );
-        // } ).each( function( value ) {
-        //     var binding = utils.extractBinding( value );
-        //     variables.bindings.where.append( binding );
-        // } );
-
         var bindings = values
             .filter( utils.isNotExpression )
             .map( function( value ) {
@@ -544,7 +596,22 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    private Builder function whereInSub( column, callback, combinator = "and", negate = false ) {
+    /**
+    * Adds a WHERE IN clause to the query using a subselect.  To call this using the public api, pass a closure to `whereIn` as the second argument (`values`).
+    *
+    * @column The name of the column with which to constrain the query.
+    * @callback A closure that will contain the subquery with which to constain this clause.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for IN, True for NOT IN. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
+    private Builder function whereInSub(
+        column,
+        callback,
+        combinator = "and",
+        negate = false
+    ) {
         var query = newQuery();
         callback( query );
 
@@ -560,23 +627,62 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds an OR WHERE IN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+    * @values The values with which to constrain the column. An expression (`builder.raw()`) can be passed as any of the values as well.
+    * @negate False for IN, True for NOT IN. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereIn( column, values, negate = false ) {
         arguments.combinator = "or";
         return whereIn( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a WHERE NOT IN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+    * @values The values with which to constrain the column. An expression (`builder.raw()`) can be passed as any of the values as well.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function whereNotIn( column, values, combinator = "and" ) {
         arguments.negate = true;
         return whereIn( argumentCollection = arguments );
     }
 
+    /**
+    * Adds an OR WHERE NOT IN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+    * @values The values with which to constrain the column. An expression (`builder.raw()`) can be passed as any of the values as well.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereNotIn( column, values ) {
         arguments.combinator = "or";
         arguments.negate = true;
         return whereIn( argumentCollection = arguments );
     }
 
-    public Builder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {
+    /**
+    * Adds a raw SQL statement to the WHERE clauses.
+    *
+    * @sql The raw SQL to add to the query.
+    * @whereBindings Any bindings needed for the raw SQL. Default: [].
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function whereRaw(
+        required string sql,
+        array whereBindings = [],
+        string combinator = "and"
+    ) {
         addBindings( whereBindings.map( function( binding ) {
             return utils.extractBinding( binding );
         } ), "where" );
@@ -588,11 +694,32 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    public Builder function orWhereRaw( required string sql, array whereBindings = [] ) {
+    /**
+    * Adds a raw SQL statement to the WHERE clauses with an OR combinator.
+    *
+    * @sql The raw SQL to add to the query.
+    * @whereBindings Any bindings needed for the raw SQL. Default: [].
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function orWhereRaw(
+        required string sql,
+        array whereBindings = []
+    ) {
         arguments.combinator = "or";
         return whereRaw( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a WHERE clause to the query comparing two columns
+    *
+    * @first The name of the first column to compare.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `second` left null as a shortcut for equals (e.g. whereColumn( "columnA", "columnB" ) == where( "column", "=", "columnB" ) ).
+    * @second The name of the second column to compare.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function whereColumn( required first, operator, second, string combinator = "and" ) {
         if ( isNull( arguments.second ) ) {
             arguments.second = arguments.operator;
@@ -617,18 +744,53 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds a OR WHERE clause to the query comparing two columns
+    *
+    * @first The name of the first column to compare.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `second` left null as a shortcut for equals (e.g. whereColumn( "columnA", "columnB" ) == where( "column", "=", "columnB" ) ).
+    * @second The name of the second column to compare.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereColumn( required first, operator, second ) {
         arguments.combinator = "or";
         return whereColumn( argumentCollection = arguments );
     }
 
-    public Builder function whereExists( callback, combinator = "and", negate = false ) {
+    /**
+    * Adds a WHERE EXISTS clause to the query.
+    *
+    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for EXISTS, True for NOT EXISTS. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function whereExists(
+        callback,
+        combinator = "and",
+        negate = false
+    ) {
         var query = newQuery();
         callback( query );
         return addWhereExistsQuery( query, combinator, negate );
     }
 
-    private Builder function addWhereExistsQuery( query, combinator, negate ) {
+    /**
+    * Adds a WHERE EXISTS clause to the query.
+    *
+    * @query The EXISTS query to add as a constraint.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for EXISTS, True for NOT EXISTS. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
+    private Builder function addWhereExistsQuery(
+        query,
+        combinator = "and",
+        negate = false
+    ) {
         var type = negate ? "notExists" : "exists";
         variables.wheres.append( {
             type = type,
@@ -639,28 +801,72 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds an OR WHERE EXISTS clause to the query.
+    *
+    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
+    * @negate False for EXISTS, True for NOT EXISTS. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereExists( callback, negate = false ) {
         arguments.combinator = "or";
         return whereExists( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a WHERE NOT EXISTS clause to the query.
+    *
+    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function whereNotExists( callback, combinator = "and" ) {
         arguments.negate = true;
         return whereExists( argumentCollection = arguments );
     }
+
+    /**
+    * Adds a OR WHERE NOT EXISTS clause to the query.
+    *
+    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereNotExists( callback ) {
         arguments.combinator = "or";
         arguments.negate = true;
         return whereExists( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a nested where statement to the query. (Basically adding parenthesis to the statments in the nested section.)
+    * The public api to create a nested WHERE statement is by passing a callback as the first parameter to `where`.
+    *
+    * @callback The callback that contains the nested query logic.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
     private Builder function whereNested( required callback, combinator = "and" ) {
         var query = forNestedWhere();
         callback( query );
         return addNestedWhereQuery( query, combinator );
     }
 
-    private Builder function addNestedWhereQuery( required Builder query, string combinator = "and" ) {
+    /**
+    * Adds the bindings for a nested WHERE statment to the current query.
+    *
+    * @query The query to add as a nested WHERE statement
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
+    private Builder function addNestedWhereQuery(
+        required Builder query,
+        string combinator = "and"
+    ) {
         if ( ! query.getWheres().isEmpty() ) {
             variables.wheres.append( {
                 type = "nested",
@@ -672,25 +878,25 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Creates a new query scoped to the same table as the current query.
+    *
+    * @return qb.models.Query.Builder
+    */
     private Builder function forNestedWhere() {
         var query = newQuery();
         return query.from( getFrom() );
     }
 
-    private Builder function whereSub( column, operator, callback, combinator ) {
-        var query = newQuery();
-        callback( query );
-        variables.wheres.append( {
-            type = "sub",
-            column = arguments.column,
-            operator = arguments.operator,
-            query = query,
-            combinator = arguments.combinator
-        } );
-        addBindings( query.getBindings(), "where" );
-        return this;
-    }
-
+    /**
+    * Adds a WHERE NULL clause to the query.
+    *
+    * @column The name of the column to check if it is NULL.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for NULL, True for NOT NULL. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function whereNull( column, combinator = "and", negate = false ) {
         var type = negate ? "notNull" : "null";
         variables.wheres.append( {
@@ -701,23 +907,63 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds an OR WHERE NULL clause to the query.
+    *
+    * @column The name of the column to check if it is NULL.
+    * @negate False for NULL, True for NOT NULL. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereNull( column, negate = false ) {
         arguments.combinator = "or";
         return whereNull( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a WHERE NOT NULL clause to the query.
+    *
+    * @column The name of the column to check if it is NULL.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function whereNotNull( column, combinator = "and" ) {
         arguments.negate = true;
         return whereNull( argumentCollection = arguments );
     }
 
+    /**
+    * Adds an OR WHERE NOT NULL clause to the query.
+    *
+    * @column The name of the column to check if it is NULL.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereNotNull( column ) {
         arguments.combinator = "or";
         arguments.negate = true;
         return whereNull( argumentCollection = arguments );
     }
 
-    public Builder function whereBetween( column, start, end, combinator = "and", negate = false ) {
+    /**
+    * Adds a WHERE BETWEEN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @start The beginning value of the BETWEEN statement.
+    * @end The end value of the BETWEEN statement.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for BETWEEN, True for NOT BETWEEN. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function whereBetween(
+        column,
+        start,
+        end,
+        combinator = "and",
+        negate = false
+    ) {
         var type = negate ? "notBetween" : "between";
 
         variables.wheres.append( {
@@ -734,43 +980,65 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Adds a OR WHERE BETWEEN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @start The beginning value of the BETWEEN statement.
+    * @end The end value of the BETWEEN statement.
+    * @negate False for BETWEEN, True for NOT BETWEEN. Default: false.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereBetween( column, start, end, negate = false ) {
         arguments.combinator = "or";
         return whereBetween( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a WHERE NOT BETWEEN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @start The beginning value of the BETWEEN statement.
+    * @end The end value of the BETWEEN statement.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function whereNotBetween( column, start, end, combinator ) {
         arguments.negate = true;
         return whereBetween( argumentCollection = arguments );
     }
 
+    /**
+    * Adds an OR WHERE NOT BETWEEN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @start The beginning value of the BETWEEN statement.
+    * @end The end value of the BETWEEN statement.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orWhereNotBetween( column, start, end, combinator ) {
         arguments.combinator = "or";
         arguments.negate = true;
         return whereBetween( argumentCollection = arguments );
     }
 
-    // when
+    /*******************************************************************************\
+    |         GROUP BY / HAVING / ORDER BY / LIMIT / OFFSET clause functions        |
+    \*******************************************************************************/
 
-    public Builder function when(
-        required boolean condition,
-        onTrue,
-        onFalse
-    ) {
-        var defaultCallback = function( q ) {
-            return q;
-        };
-        onFalse = isNull( onFalse ) ? defaultCallback : onFalse;
-        if ( condition ) {
-            onTrue( this );
-        } else {
-            onFalse( this );
-        }
-        return this;
-    }
-
-    // group by
-
+    /**
+    * Add a group by clause to the query.
+    * `groupBy` allows three ways to specify the grouping columns:
+    * - a comma-separated list 
+    * - an array
+    * - variadic arguments
+    * All the columns passed this way will be individually added to the query.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function groupBy() {
         // This block is necessary for ACF 10.
         // It can't be extracted to a function because
@@ -789,15 +1057,21 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    // having
-
-    public Builder function having( column, operator, value, string combinator = "and" ) {
-        if ( isClosure( column ) ) {
-            return whereNested( column, combinator );
-        }
-
-        var argCount = argumentCount( arguments );
-
+    /**
+    * Add a having clause to a query.
+    *
+    * @column The column with which to constrain the having clause. An expression (`builder.raw()`) can be passed as well.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function having(
+        column,
+        operator,
+        value,
+        string combinator = "and"
+    ) {
         if ( isInvalidCombinator( arguments.combinator ) ) {
             throw(
                 type = "InvalidSQLType",
@@ -816,10 +1090,6 @@ component displayname="Builder" accessors="true" {
             );
         }
 
-        if ( isClosure( value ) ) {
-            return whereSub( column, operator, value, combinator );
-        }
-
         arrayAppend( variables.havings, {
             column = arguments.column,
             operator = arguments.operator,
@@ -827,15 +1097,22 @@ component displayname="Builder" accessors="true" {
             combinator = arguments.combinator
         } );
 
-        if ( ! isInstanceOf( arguments.value, "qb.models.Query.Expression" ) ) {
+        if ( getUtils().isNotExpression( arguments.value ) ) {
             addBindings( utils.extractBinding( arguments.value ), "where" );
         }
 
         return this;
     }
 
-    // order by
-
+    /**
+    * Add an order by clause to the query.  To order by multiple columns, call `orderBy` multiple times.
+    * The order in which `orderBy` is called matters and is the order it appears in the SQL.
+    *
+    * @column The name of the column to order by. An expression (`builder.raw()`) can be passed as well.
+    * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc".
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function orderBy( required any column, string direction = "asc" ) {
         if ( getUtils().isExpression( column ) ) {
             direction = "raw";
@@ -847,18 +1124,37 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    // limit
-
+    /**
+    * Sets the limit value for the query.
+    *
+    * @value The limit value for the query.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function limit( required numeric value ) {
         variables.limitValue = value;
         return this;
     }
 
+    /**
+    * Sets the limit value for the query.
+    * Alias for `limit`.
+    *
+    * @value The limit value for the query.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function take( required numeric value ) {
         return limit( argumentCollection = arguments );
     }
 
-    // offset
+    /**
+    * Sets the offset value for the query.
+    *
+    * @value The offset value for the query.
+    *
+    * @return qb.models.Query.Builder
+    */
     public Builder function offset( required numeric value ) {
         variables.offsetValue = value;
         return this;

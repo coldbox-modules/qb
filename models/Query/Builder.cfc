@@ -1408,6 +1408,63 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
+    /**
+    * Runs the code inside the callback with the return format specified and then sets the return format back to its original value.
+    *
+    * @returnFormat "query", "array", or a closure.
+    * @callback The code to execute with the given return format.
+    *
+    * @return any
+    */
+    private any function withReturnFormat(
+        required any returnFormat,
+        required any callback
+    ) {
+        var originalReturnFormat = getReturnFormat();
+        setReturnFormat( arguments.returnFormat );
+        var result = callback();
+        setReturnFormat( originalReturnFormat );
+        return result;
+    }
+
+    /**
+    * Runs the code inside the callback with the given columns selected and then sets the columns back to its original value.
+    *
+    * @columns A single column, a list or columns (comma-separated), or an array of columns.
+    * @callback The code to execute with the given columns.
+    *
+    * @return any
+    */
+    private any function withColumns(
+        required any columns,
+        required any callback
+    ) {
+        var originalColumns = getColumns();
+        select( arguments.columns );
+        var result = callback();
+        select( originalColumns );
+        return result;
+    }
+
+    /**
+    * Runs the code inside the callback with the given aggregate in place and then sets the aggregate back to its original value.
+    *
+    * @aggregate he aggregate option and column to execute. (e.g. `{ type = "count", column = "*" }`).
+    * @callback The code to execute with the given aggregate.
+    *
+    * @return any
+    */
+    private function withAggregate(
+        required struct aggregate,
+        required any callback
+    ) {
+        var originalAggregate = getAggregate();
+        setAggregate( arguments.aggregate );
+        var result = callback();
+        setAggregate( originalAggregate );
+        return result;
+    }
+
     /*******************************************************************************\
     |                               binding functions                               |
     \*******************************************************************************/
@@ -1475,7 +1532,9 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    // Aggregates
+    /*******************************************************************************\
+    |                              aggregate functions                              |
+    \*******************************************************************************/
 
     public numeric function count( string column = "*", struct options = {} ) {
         arguments.type = "count";
@@ -1502,16 +1561,13 @@ component displayname="Builder" accessors="true" {
         required string column = "*",
         struct options = {}
     ) {
-        setAggregate( { type = arguments.type, column = arguments.column } );
-        var originalColumns = getColumns();
-        var originalReturnFormat = getReturnFormat();
-        setReturnFormat( "query" );
-        select();
-        var result = get( options = arguments.options ).aggregate;
-        select( originalColumns );
-        setReturnFormat( originalReturnFormat );
-        setAggregate( {} );
-        return result;
+        return withAggregate( { type = type, column = column }, function() {
+            return withReturnFormat( "query", function() {
+                return withColumns( "*", function() {
+                    return get( options = options ).aggregate;;
+                } );
+            } );
+        } );
     }
 
     public boolean function exists( struct options = {} ) {
@@ -1565,28 +1621,6 @@ component displayname="Builder" accessors="true" {
             results.append( row[ column ] );
         }
         return results.toList( glue );
-    }
-
-    public Builder function setReturnFormat( required any format ) {
-        if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
-            variables.returnFormat = format;
-        }
-        else if ( arguments.format == "array" ) {
-            variables.returnFormat = function( q ) {
-                return getUtils().queryToArrayOfStructs( q );
-            };
-        }
-        else if ( arguments.format == "query" ) {
-            variables.returnFormat = function( q ) {
-                return q;
-            };
-        }
-        else {
-            throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );
-        }
-
-
-        return this;
     }
 
     private any function run( required string sql, struct options = {} ) {

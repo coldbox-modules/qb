@@ -1160,10 +1160,23 @@ component displayname="Builder" accessors="true" {
         return this;
     }
 
-    public Builder function forPage( required numeric page, required numeric limitValue ) {
-        arguments.limitValue = arguments.limitValue > 0 ? arguments.limitValue : 0;
-        offset( arguments.page * arguments.limitValue - arguments.limitValue );
-        limit( arguments.limitValue );
+    /**
+    * Helper method to calculate the limit and offset given a page number and count per page.
+    *
+    * @pageNumber The page number to retrieve
+    * @pageCount The number of records per page.
+    *
+    * @return qb.models.Query.Builder
+    */
+    public Builder function forPage(
+        required numeric pageNumber,
+        required numeric pageCount
+    ) {
+        arguments.pageCount = arguments.pageCount > 0 ? arguments.pageCount : 0;
+        offset( arguments.pageNumber * arguments.pageCount - arguments.pageCount );
+        limit( arguments.pageCount );
+        return this;
+    }
         return this;
     }
 

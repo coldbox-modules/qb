@@ -104,6 +104,17 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( result.recordCount ).toBe( 3 );
                 expect( result.columnList ).toBe( "id" );
             } );
+
+            it( "returns the query with specified columns removed when no rows exist in query", function() {
+                var data = [
+                ];
+                var q = queryNew( "id,name,age", "integer,varchar,integer", data );
+                var result = utils.queryRemoveColumns( q, "age,name" );
+
+                expect( result ).toBeQuery();
+                expect( result.recordCount ).toBe( 0 );
+                expect( result.columnList ).toBe( "id" );
+            } );
         } );
     }
 }

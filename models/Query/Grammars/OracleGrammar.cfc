@@ -4,7 +4,7 @@ component extends="qb.models.Query.Grammars.Grammar" {
 
     public any function runQuery( sql, bindings, options ) {
         var result = super.runQuery( argumentCollection = arguments );
-        if ( ! isNull( result ) ) {
+        if ( result.recordCount > 0 ) {
             return utils.queryRemoveColumns( result, "QB_RN" );
         }
         return;

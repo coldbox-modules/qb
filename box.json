@@ -41,7 +41,8 @@
         "**/.*",
         "test",
         "tests",
-        "node_modules"
+        "node_modules",
+        "docs/**/*.*"
     ],
     "testbox":{
         "runner":"http://localhost:7777/tests/runner.cfm"

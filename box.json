@@ -42,7 +42,12 @@
         "test",
         "tests",
         "node_modules",
-        "docs/**/*.*"
+        "docs/**/*.*",
+        "gulpfile.js",
+        "package.json",
+        "*.sublime-project",
+        "server.json",
+        "yarn.lock"
     ],
     "testbox":{
         "runner":"http://localhost:7777/tests/runner.cfm"

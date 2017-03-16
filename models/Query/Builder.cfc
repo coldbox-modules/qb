@@ -1363,6 +1363,309 @@ component displayname="Builder" accessors="true" {
     }
 
     /*******************************************************************************\
+    |                               binding functions                               |
+    \*******************************************************************************/
+
+    /**
+    * Returns a flat array of bindings.  Used as the parameter list for `queryExecute`.
+    *
+    * @return array of bindings
+    */
+    public array function getBindings() {
+        var bindingOrder = [ "update", "insert", "join", "where" ];
+
+        var flatBindings = [];
+        for ( var key in bindingOrder ) {
+            if ( structKeyExists( bindings, key ) ) {
+                arrayAppend( flatBindings, bindings[ key ], true );
+            }
+        }
+
+        return flatBindings;
+    }
+
+    /**
+    * Returns all the binding types and their associated bindings.
+    *
+    * @return struct of binding types and their bindings
+    */
+    public struct function getRawBindings() {
+        return bindings;
+    }
+
+    /**
+    * Clear all the bindings on the query.
+    *
+    * @return qb.models.Query.Builder
+    */
+    private Builder function clearBindings() {
+        variables.join = [];
+        variables.where = [];
+        variables.insert = [];
+        variables.update = [];
+        return this;
+    }
+
+    /**
+    * Adds a single binding or an array of bindings to a query for a given type.
+    *
+    * @newBindings A single binding or an array of bindings to add for a given type.
+    * @type The type of binding to add.
+    *
+    * @return qb.models.Query.Builder
+    */
+    private Builder function addBindings(
+        required any newBindings,
+        string type = "where"
+    ) {
+        if ( ! isArray( newBindings ) ) {
+            newBindings = [ newBindings ];
+        }
+
+        newBindings.each( function( binding ) {
+            variables.bindings[ type ].append( binding );
+        } );
+
+        return this;
+    }
+
+    /*******************************************************************************\
+    |                              aggregate functions                              |
+    \*******************************************************************************/
+
+    /**
+    * Return a count from a query.
+    * The original query is unaltered by this operation.
+    *
+    * @column The column on which to count records. Default: "*".
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return numeric
+    */
+    public numeric function count( string column = "*", struct options = {} ) {
+        arguments.type = "count";
+        return aggregateQuery( argumentCollection = arguments );
+    }
+
+    /**
+    * Return the max of a column from a query.
+    * The original query is unaltered by this operation.
+    *
+    * @column The column on which to find the max.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public any function max( required string column, struct options = {} ) {
+        arguments.type = "max";
+        return aggregateQuery( argumentCollection = arguments );
+    }
+
+    /**
+    * Return the min of a column from a query.
+    * The original query is unaltered by this operation.
+    *
+    * @column The column on which to find the min.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public any function min( required string column, struct options = {} ) {
+        arguments.type = "min";
+        return aggregateQuery( argumentCollection = arguments );
+    }
+
+    /**
+    * Return the sum of a column from a query.
+    * The original query is unaltered by this operation.
+    *
+    * @column The column on which to find the sum.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public any function sum( required string column, struct options = {} ) {
+        arguments.type = "sum";
+        return aggregateQuery( argumentCollection = arguments );
+    }
+
+    /**
+    * Perform an aggregate function on a query.
+    * The original query is unaltered by this operation.
+    *
+    * @type The aggregate type to execute.
+    * @column The column on which to find the specified aggregate. Default: "*".
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    private any function aggregateQuery(
+        required string type,
+        required string column = "*",
+        struct options = {}
+    ) {
+        return withAggregate( { type = type, column = column }, function() {
+            return withReturnFormat( "query", function() {
+                return withColumns( "*", function() {
+                    return get( options = options ).aggregate;;
+                } );
+            } );
+        } );
+    }
+
+    /**
+    * Returns true if the query returns any rows.
+    *
+    * @options Any options to pass to `queryExecute`. Default: {}. 
+    *
+    * @return boolean
+    */
+    public boolean function exists( struct options = {} ) {
+        return get( argumentCollection = arguments ).RECORDCOUNT > 0;
+    }
+
+    /*******************************************************************************\
+    |                               select functions                                |
+    \*******************************************************************************/
+
+    /**
+    * Runs the current select query.
+    *
+    * @columns An optional column, list of columns, or array of columns to select.
+    * The selected columns before calling get will be restored after running the query.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public any function get( any columns, struct options = {} ) {
+        var originalColumns = getColumns();
+        if ( ! isNull( arguments.columns ) ) {
+            select( arguments.columns );
+        }
+        var result = run( sql = toSql(), options = arguments.options );
+        select( originalColumns );
+        return result;
+    }
+
+    /**
+    * Returns the first record returned from a query.
+    *
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public any function first( struct options = {} ) {
+        take( 1 );
+        return get( options = arguments.options );
+    }
+
+
+    /**
+    * Adds an id constraint to the query and returns the first record from the query.
+    *
+    * @id The id value to look up.
+    * @idColumn The name of the id column to constrain.  Default: "id".
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public any function find(
+        required any id,
+        string idColumn = "id",
+        struct options = {}
+    ) {
+        where( idColumn, "=", arguments.id );
+        return first( options = arguments.options );
+    }
+
+    /**
+    * Returns the first value of a column in a query.
+    *
+    * @column The column for which to retrieve the value.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public any function value( required string column, struct options = {} ) {
+        return withReturnFormat( "query", function() {
+            select( column );
+            return first( options = options )[ column ];
+        } );
+    }
+
+    /**
+    * Returns an array of values for a column in a query.
+    *
+    * @column The column for which to retrieve the values.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public array function values( required string column, struct options = {} ) {
+        return withReturnFormat( "query", function() {
+            select( column );
+            var result = get( options = options );
+            var results = [];
+            for ( var row in result ) {
+                results.append( row[ column ] );
+            }
+            return results;
+        } );
+    }
+
+    /**
+    * Get all the values of a column in a query and return it as a single string glued together.
+    *
+    * @column The name of the column from which to extract the values.
+    * @glue The string to use when joining the columns together.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return string
+    */
+    public string function implode(
+        required string column,
+        string glue = "",
+        struct options = {}
+    ) {
+        return arrayToList( values( argumentCollection = arguments ), glue );
+    }
+
+    /**
+    * Execute a query and convert it to the proper return format.
+    *
+    * @sql The sql string to execute.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    private any function run( required string sql, struct options = {} ) {
+        var q = runQuery( argumentCollection = arguments );
+
+        if ( isNull( q ) ) {
+            return;
+        }
+
+        return returnFormat( q );
+    }
+
+    /**
+    * Run a query through the specified grammar then clear all bindings.
+    *
+    * @sql The sql string to execute.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    private any function runQuery( required string sql, struct options = {} ) {
+        var result = grammar.runQuery( sql, getBindings(), options );
+        clearBindings();
+        if ( ! isNull( result ) ) {
+            return result;
+        }
+        return;
+    }
+
+    /*******************************************************************************\
     |                               utility functions                               |
     \*******************************************************************************/
 
@@ -1376,6 +1679,27 @@ component displayname="Builder" accessors="true" {
             grammar = getGrammar(),
             utils = getUtils()
         );
+    }
+
+    /**
+    * Wrap up any sql in an Expression.
+    * Expressions are not parameterized or escaped in any way.
+    *
+    * @sql The raw sql to wrap up in an Expression.
+    *
+    * @return qb.models.Query.Expression
+    */
+    public Expression function raw( required string sql ) {
+        return new qb.models.Query.Expression( sql );
+    }
+
+    /**
+    * Returns the Builder compiled to grammar-specific sql.
+    *
+    * @return string
+    */
+    public string function toSQL() {
+        return grammar.compileSelect( this );
     }
 
     /**
@@ -1465,185 +1789,11 @@ component displayname="Builder" accessors="true" {
         return result;
     }
 
-    /*******************************************************************************\
-    |                               binding functions                               |
-    \*******************************************************************************/
-
     /**
-    * Returns a flat array of bindings.  Used as the parameter list for `queryExecute`.
+    * Converts the arguments passed in to it into an array.
     *
-    * @return array of bindings
+    * @return array
     */
-    public array function getBindings() {
-        var bindingOrder = [ "update", "insert", "join", "where" ];
-
-        var flatBindings = [];
-        for ( var key in bindingOrder ) {
-            if ( structKeyExists( bindings, key ) ) {
-                arrayAppend( flatBindings, bindings[ key ], true );
-            }
-        }
-
-        return flatBindings;
-    }
-
-    /**
-    * Returns all the binding types and their associated bindings.
-    *
-    * @return struct of binding types and their bindings
-    */
-    public struct function getRawBindings() {
-        return bindings;
-    }
-
-    /**
-    * Clear all the bindings on the query.
-    *
-    * @return qb.models.Query.Builder
-    */
-    private Builder function clearBindings() {
-        variables.join = [];
-        variables.where = [];
-        variables.insert = [];
-        variables.update = [];
-        return this;
-    }
-
-    /**
-    * Adds a single binding or an array of bindings to a query for a given type.
-    *
-    * @newBindings A single binding or an array of bindings to add for a given type.
-    * @type The type of binding to add.
-    *
-    * @return qb.models.Query.Builder
-    */
-    private Builder function addBindings(
-        required any newBindings,
-        string type = "where"
-    ) {
-        if ( ! isArray( newBindings ) ) {
-            newBindings = [ newBindings ];
-        }
-
-        newBindings.each( function( binding ) {
-            variables.bindings[ type ].append( binding );
-        } );
-
-        return this;
-    }
-
-    /*******************************************************************************\
-    |                              aggregate functions                              |
-    \*******************************************************************************/
-
-    public numeric function count( string column = "*", struct options = {} ) {
-        arguments.type = "count";
-        return aggregateQuery( argumentCollection = arguments );
-    }
-
-    public any function max( required string column, struct options = {} ) {
-        arguments.type = "max";
-        return aggregateQuery( argumentCollection = arguments );
-    }
-
-    public any function min( required string column, struct options = {} ) {
-        arguments.type = "min";
-        return aggregateQuery( argumentCollection = arguments );
-    }
-
-    public any function sum( required string column, struct options = {} ) {
-        arguments.type = "sum";
-        return aggregateQuery( argumentCollection = arguments );
-    }
-
-    private any function aggregateQuery(
-        required string type,
-        required string column = "*",
-        struct options = {}
-    ) {
-        return withAggregate( { type = type, column = column }, function() {
-            return withReturnFormat( "query", function() {
-                return withColumns( "*", function() {
-                    return get( options = options ).aggregate;;
-                } );
-            } );
-        } );
-    }
-
-    public boolean function exists( struct options = {} ) {
-        return get( argumentCollection = arguments ).RECORDCOUNT > 0;
-    }
-
-    // Collaborators
-
-    public Expression function raw( required string sql ) {
-        return new qb.models.Query.Expression( sql );
-    }
-
-    public string function toSQL() {
-        return grammar.compileSelect( this );
-    }
-
-    public any function get( any columns, struct options = {} ) {
-        var originalColumns = getColumns();
-        if ( ! isNull( arguments.columns ) ) {
-            select( arguments.columns );
-        }
-        var result = run( sql = toSql(), options = arguments.options );
-        select( originalColumns );
-        return result;
-    }
-
-    public any function first( struct options = {} ) {
-        take( 1 );
-        return get( options = arguments.options );
-    }
-
-    public any function find( required any id, struct options = {} ) {
-        where( "id", "=", arguments.id );
-        return first( options = arguments.options );
-    }
-
-    public any function value( required string column, struct options = {} ) {
-        select( column );
-        var originalReturnFormat = getReturnFormat();
-        setReturnFormat( "query" );
-        var result = first( options = arguments.options )[ column ];
-        setReturnFormat( originalReturnFormat );
-        return result;
-    }
-
-    public any function implode( required string column, string glue = "", struct options = {} ) {
-        select( column );
-        var result = get( options = arguments.options );
-        var results = [];
-        for ( var row in result ) {
-            results.append( row[ column ] );
-        }
-        return results.toList( glue );
-    }
-
-    private any function run( required string sql, struct options = {} ) {
-        var q = runQuery( argumentCollection = arguments );
-
-        if ( isNull( q ) ) {
-            return;
-        }
-
-        return returnFormat( q );
-    }
-
-    private any function runQuery( required string sql, struct options = {} ) {
-        var result = grammar.runQuery( sql, getBindings(), options );
-        clearBindings();
-        if ( ! isNull( result ) ) {
-            return result;
-        }
-        return;
-    }
-
-    // Unused(?)
-
     private array function normalizeToArray() {
         if ( isVariadicFunction( args = arguments ) ) {
             return normalizeVariadicArgumentsToArray( args = arguments );
@@ -1661,10 +1811,24 @@ component displayname="Builder" accessors="true" {
         return arg;
     }
 
+    /**
+    * Returns true if the arguments passed constitute a variadic function.
+    *
+    * @args The arguments of another function.
+    *
+    * @return boolean
+    */
     private boolean function isVariadicFunction( required struct args ) {
         return structCount( args ) > 1;
     }
 
+    /**
+    * Converts a variadic list of arguments to an array.
+    *
+    * @args The arguments of another function.
+    *
+    * @return array
+    */
     private array function normalizeVariadicArgumentsToArray( required struct args ) {
         var normalizedArgs = [];
         for ( var arg in arguments.args ) {
@@ -1673,6 +1837,13 @@ component displayname="Builder" accessors="true" {
         return normalizedArgs;
     }
 
+    /**
+    * Converts a list of arguments to an array.
+    *
+    * @list A list containing multiple arguments.
+    *
+    * @return array
+    */
     private array function normalizeListArgumentsToArray( required string list ) {
         var listAsArray = listToArray( arguments.list );
         var items = [];
@@ -1682,10 +1853,24 @@ component displayname="Builder" accessors="true" {
         return items;
     }
 
+    /**
+    * Checks if an operator is an invalid sql operator (according to qb).
+    *
+    * @operator The operator to check.
+    *
+    * @return boolean
+    */
     private boolean function isInvalidOperator( required string operator ) {
         return ! arrayContains( operators, operator );
     }
 
+    /**
+    * Checks if a combinator is an invalid sql combinator (according to qb).
+    *
+    * @combinator The combinator to check.
+    *
+    * @return boolean
+    */
     private boolean function isInvalidCombinator( required string combinator ) {
         for ( var validCombinator in variables.combinators ) {
             if ( validCombinator == arguments.combinator ) {
@@ -1695,16 +1880,16 @@ component displayname="Builder" accessors="true" {
         return true;
     }
 
-    private function argumentCount( args ) {
-        var count = 0;
-        for ( var key in args ) {
-            if ( ! isNull( args[ key ] ) ) {
-                count++;
-            }
-        }
-        return count;
-    }
-
+    /**
+    * onMissingMethod serves the following purpose for Builder:
+    *
+    * Magic `where` methods. If a method starts with `where` or `orWhere`
+    * but doesn't match any other methods, Builder assumes that what
+    * comes after is the column name to constrain.
+    * All the other arguments to `where` are shifted accordingly.
+    *
+    * @return any
+    */
     public any function onMissingMethod( string missingMethodName, struct missingMethodArguments ) {
         if ( ! arrayIsEmpty( REMatchNoCase( "^where(.+)", missingMethodName ) ) ) {
             var args = { "1" = mid( missingMethodName, 6, len( missingMethodName ) - 5 ) };

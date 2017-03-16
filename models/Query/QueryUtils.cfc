@@ -1,5 +1,15 @@
+/**
+* A collection of query utilities shared across multiple models
+*/
 component displayname="QueryUtils" {
 
+    /**
+    * Extract a binding from a value.
+    *
+    * @value The value from which to extract the binding
+    *
+    * @return struct
+    */
     public struct function extractBinding( required any value ) {
         var binding = isStruct( value ) ? value : { value = normalizeSqlValue( value ) };
 
@@ -12,6 +22,13 @@ component displayname="QueryUtils" {
         return binding;
     }
 
+    /**
+    * Infer the correct cf_sql_type from a value.
+    *
+    * @value The value from which to infer the cf_sql_type.
+    *
+    * @return string
+    */
     public string function inferSqlType( required any value ) {
         if ( isList( arguments.value ) ) {
             arguments.value = listToArray( arguments.value );
@@ -34,14 +51,35 @@ component displayname="QueryUtils" {
         return "CF_SQL_VARCHAR";
     }
 
+    /**
+    * Returns true if a value is an Expression.
+    *
+    * @value The value to check if it is an Expression.
+    *
+    * @return boolean
+    */
     public boolean function isExpression( required any value ) {
         return isInstanceOf( arguments.value, "qb.models.Query.Expression" );
     }
 
+    /**
+    * Returns true if a value is not an Expression.
+    *
+    * @value The value to check if it is not an Expression.
+    *
+    * @return boolean
+    */
     public boolean function isNotExpression( required any value ) {
         return ! isInstanceOf( arguments.value, "qb.models.Query.Expression" );
     }
 
+    /**
+    * Converts a query object to an array of structs.
+    *
+    * @q The query to convert.
+    *
+    * @return array
+    */
     public array function queryToArrayOfStructs( required any q ) {
         var results = [];
         for ( var row in arguments.q ) {
@@ -53,11 +91,10 @@ component displayname="QueryUtils" {
     /**
     * Remove a list of columns from a specified query.
     *
-    * @param theQuery     The query to manipulate. (Required)
-    * @param columnsToRemove      A list of columns to remove. (Required)
-    * @return Returns a query.
-    * @author Giampaolo Bellavite (giampaolo@bellavite.com)
-    * @version 1, April 14, 2005
+    * @q The query from which to remove the column.
+    * @columns A list of columns to remove from the query.
+    *
+    * @return query
     */
     public query function queryRemoveColumns(
         required query q,
@@ -77,6 +114,13 @@ component displayname="QueryUtils" {
         );
     }
 
+    /**
+    * Normalizes sql values in to a list.
+    *
+    * @value The value to normalize to a list.
+    *
+    * @return string
+    */
     private string function normalizeSqlValue( required any value ) {
         if ( isArray( arguments.value ) ) {
             return arrayToList( arguments.value );
@@ -85,6 +129,13 @@ component displayname="QueryUtils" {
         return arguments.value;
     }
 
+    /**
+    * Returns true if a value is a list.
+    *
+    * @value The value to check if it is a list.
+    *
+    * @return boolean
+    */
     private boolean function isList( required any value ) {
         if ( isStruct( value ) || isArray( value ) ) {
             return false;
@@ -94,7 +145,21 @@ component displayname="QueryUtils" {
         return arrayLen( listAsArray ) > 1;
     }
 
-    private any function arraySame( required array args, required any closure, any defaultValue = "" ) {
+    /**
+    * Returns the value of the closure if every element in the array returns the same value.
+    * Otherwise, it returns the default value.
+    *
+    * @args The array of elements.
+    * @closure The closure to execute and retrieve the compared value.
+    * @defaultValue The default value to return if the array does not return all the same values. Default: "".
+    *
+    * @return any
+    */
+    private any function arraySame(
+        required array args,
+        required any closure,
+        any defaultValue = ""
+    ) {
         if ( arrayLen( arguments.args ) == 0 ) {
             return arguments.defaultValue;
         }

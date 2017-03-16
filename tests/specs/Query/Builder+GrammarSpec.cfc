@@ -1206,6 +1206,29 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
+                describe( "values", function() {
+                    it( "returns an array of values for a column", function() {
+                        var builder = getBuilder();
+                        var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" }, { name = "bar" } ] );
+                        builder.$( "runQuery" ).$args(
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        ).$results( expectedQuery );
+
+                        var results = builder.from( "users" ).values( "name" );
+
+                        expect( results ).toBe( [ "foo", "bar" ] );
+
+                        var runQueryLog = builder.$callLog().runQuery;
+                        expect( runQueryLog ).toBeArray();
+                        expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                        expect( runQueryLog[ 1 ] ).toBe( {
+                            sql = "SELECT ""name"" FROM ""users""",
+                            options = {}
+                        } );
+                    } );
+                } );
+
                 describe( "implode", function() {
                     it( "can join the values of all columns together in to a single value", function() {
                         var builder = getBuilder();

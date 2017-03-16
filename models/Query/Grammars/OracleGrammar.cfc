@@ -2,6 +2,16 @@ import qb.models.Query.Builder;
 
 component extends="qb.models.Query.Grammars.Grammar" {
 
+    /**
+    * Runs a query through `queryExecute`.
+    * This function exists so that platform-specific grammars can override it if needed.
+    *
+    * @sql The sql string to execute.
+    * @bindings The bindings to apply to the query.
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
     public any function runQuery( sql, bindings, options ) {
         var result = super.runQuery( argumentCollection = arguments );
         if ( result.recordCount > 0 ) {
@@ -10,12 +20,28 @@ component extends="qb.models.Query.Grammars.Grammar" {
         return;
     }
 
+    /**
+    * Compile a Builder's query into a sql string.
+    *
+    * @query The Builder instance.
+    *
+    * @return string
+    */
     public string function compileSelect( required Builder query ) {
         var sql = super.compileSelect( argumentCollection = arguments );
 
         return compileOracleLimitAndOffset( query, sql );
     }
 
+    /**
+    * Compile a Builder's query into an insert string.
+    *
+    * @query The Builder instance.
+    * @columns The array of columns into which to insert.
+    * @values The array of values to insert.
+    *
+    * @return string
+    */
     public string function compileInsert( required Builder query, required array columns, required array values ) {
         var columnsString = columns.map( wrapColumn ).toList( ", " );
 
@@ -27,7 +53,19 @@ component extends="qb.models.Query.Grammars.Grammar" {
         return trim( "INSERT ALL #placeholderString# SELECT 1 FROM dual" );
     }
 
-    private string function compileOracleLimitAndOffset( required Builder query, required string sql ) {
+    /**
+    * Since Oracle doesn't know how to do a simple limit of offset without subquerys
+    * add a subquery around the compiled value for the limit and the offset.
+    *
+    * @query The Builder instance.
+    * @sql The generated sql string.
+    *
+    * @return string
+    */
+    private string function compileOracleLimitAndOffset(
+        required Builder query,
+        required string sql
+    ) {
         var limitAndOffset = [];
         if ( ! isNull( query.getOffsetValue() ) ) {
             limitAndOffset.append( """QB_RN"" > #query.getOffsetValue()#" );
@@ -45,14 +83,39 @@ component extends="qb.models.Query.Grammars.Grammar" {
         return "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (#sql#) results ) WHERE #limitAndOffset.toList( " AND " )#";
     }
 
+    /**
+    * Compiles the limit portion of a sql statement.
+    * Overridden here because Oracle needs to wrap the entire sql statement instead.
+    *
+    * @query The Builder instance.
+    * @limitValue The limit clauses.
+    *
+    * @return string
+    */
     private string function compileLimitValue( required Builder query, limitValue ) {
         return "";
     }
 
+    /**
+    * Compiles the offset portion of a sql statement.
+    * Overridden here because Oracle needs to wrap the entire sql statement instead.
+    *
+    * @query The Builder instance.
+    * @offsetValue The offset value.
+    *
+    * @return string
+    */
     private string function compileOffsetValue( required Builder query, offsetValue ) {
         return "";
     }
 
+    /**
+    * Parses and wraps a table from the Builder for use in a sql statement.
+    *
+    * @table The table to parse and wrap.
+    *
+    * @return string
+    */
     private string function wrapTable( required any table ) {
         var alias = "";
         if ( table.findNoCase( " as " ) > 0 ) {
@@ -68,6 +131,13 @@ component extends="qb.models.Query.Grammars.Grammar" {
         return alias == "" ? table : table & " " & wrapValue( alias );
     }
 
+    /**
+    * Parses and wraps a value from the Builder for use in a sql statement.
+    *
+    * @table The value to parse and wrap.
+    *
+    * @return string
+    */
     private string function wrapValue( required any value ) {
         return super.wrapValue( uCase( arguments.value ) );
     }

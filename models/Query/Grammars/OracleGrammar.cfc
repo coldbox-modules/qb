@@ -17,7 +17,7 @@ component extends="qb.models.Query.Grammars.Grammar" {
         if ( result.recordCount > 0 ) {
             return utils.queryRemoveColumns( result, "QB_RN" );
         }
-        return;
+        return result;
     }
 
     /**

@@ -867,14 +867,14 @@ component extends="testbox.system.BaseSpec" {
                                     .orderBy( [
                                         "last_name",
                                         "age|desc"
-                                    ])
+                                    ] )
                                     .orderBy( "favorite_color", "desc" )
                                     .orderBy( column = [ { column = "height" }, { column = "weight", direction = "asc" } ], direction = "desc" )
                                     .orderBy( column = "eye_color", direction = "desc" )
                                     .orderBy( [
                                         { column = "is_athletic", direction = "desc", extraKey = "ignored" },
                                         builder.raw( "DATE(created_at)" )
-                                    ])
+                                    ] )
                                     .orderBy( builder.raw( "DATE(modified_at)" ) );
 
                                 expect( builder.toSql() ).toBeWithCase(

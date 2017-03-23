@@ -1108,19 +1108,120 @@ component displayname="Builder" accessors="true" {
     * Add an order by clause to the query.  To order by multiple columns, call `orderBy` multiple times.
     * The order in which `orderBy` is called matters and is the order it appears in the SQL.
     *
-    * @column The name of the column to order by. An expression (`builder.raw()`) can be passed as well.
-    * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc".
+    * @column The name of the column(s) to order by. An expression (`builder.raw()`) can be passed as well. An array can be passed with any combination of simple values, array, struct, or list for each entry in the array (an example with all possible value styles: column = [ "last_name", [ "age", "desc" ], { column = "favorite_color", direction = "desc" }, "height|desc" ];. The column argument can also just accept a comman delimited list with a pipe ( | ) as the secondary delimiter denoting the direction of the order by. The pipe delimiter is also used when parsing the column argument when it is passed as an array and the entry in the array is a pipe delimited string. 
+    * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc". If column argument is an array this argument will be used as the default value for all entries in the column list or array that fail to specify a direction for a speicifc column.
     *
     * @return qb.models.Query.Builder
     */
     public Builder function orderBy( required any column, string direction = "asc" ) {
+        var validDirections = [ "asc", "desc" ];
+
         if ( getUtils().isExpression( column ) ) {
-            direction = "raw";
+            variables.orders.append( {
+                direction = "raw",
+                column = column
+            } );
         }
-        variables.orders.append( {
-            direction = direction,
-            column = column
-        } );
+        // if the column argument is an array 
+        else if ( isArray( column ) ) {
+
+            for ( var col in column ) {
+                //check the value of the current iteration to determine what blend of column def they went with
+                // ex: "DATE(created_at)" -- RAW expression
+                 if ( getUtils().isExpression( col ) ) {
+                    variables.orders.append( {
+                        direction = "raw",
+                        column = col
+                    } );
+                }
+                // ex: "favorite_color|desc,height|asc,weight|desc"
+                else if ( isSimpleValue( col ) && listLen( col ) > 1 ) {
+                    //convert list to array for easier looping and access to vals
+                    var arCols = listToArray( col );
+
+                    for ( var c in arCols ) {
+                        var colName = listFirst( c, "|" );
+                        
+                        if ( listLen( c, "|" ) == 2 ) {
+                            var dir = ( arrayFindNoCase( validDirections, listLast( c, "|" ) ) ) ? listLast( c, "|" ) : direction;
+                        } else {
+                            var dir = direction;
+                        }
+
+                        variables.orders.append( {
+                            direction = dir,
+                            column = colName
+                        } );
+                    }
+                }
+                // ex: "age|desc" || "last_name"
+                else if ( isSimpleValue( col ) ) {
+                    var colName = listFirst( col, "|" );
+                    // ex: "age|desc"
+                    if ( listLen( col, "|" ) == 2 ) {
+                        var dir = ( arrayFindNoCase( validDirections, listLast( col, "|" ) ) ) ? listLast( col, "|" ) : direction;
+                    } else {
+                        var dir = direction;
+                    }
+
+                    // now append the simple value column name and determined direction
+                    variables.orders.append( {
+                        direction = dir,
+                        column = colName
+                    } );
+                }
+                // ex: { "column" = "favorite_color" } || { "column" = "favorite_color", direction = "desc" }
+                else if ( isStruct( col ) && structKeyExists( col, "column" ) ) {
+                    //as long as the struct provided contains the column keyName then we can append it. If the direction column is omitted we will assume direction argument's value
+                    if ( getUtils().isExpression( col.column ) ) {
+                        var dir = "raw";
+                    } else {
+                        var dir = ( structKeyExists( col, "direction") && arrayFindNoCase( validDirections, col.direction ) ) ? col.direction : direction;
+                    }
+                    variables.orders.append({
+                        direction = dir,
+                        column = col.column
+                    });
+                }
+                // ex: [ "age", "desc" ]
+                else if ( isArray( col ) ) {
+                    //assume position 1 is the column name and position 2 if it exists and is a valid direction ( asc | desc ) use it.
+                    variables.orders.append({
+                        direction = ( arrayLen( col ) == 2 && arrayFindNoCase( validDirections, col[2] ) ) ? col[2] : direction,
+                        column = col[1]
+                    });
+                }
+                
+            }
+
+        }
+        // ex: "last_name|asc,age|desc"
+        else if ( listLen( column ) > 1 ) {
+            //convert list to array for easier looping and access to vals
+            var arCols = listToArray( column );
+
+            for ( var col in arCols ) {
+                var colName = listFirst( col, "|" );
+                
+                if ( listLen( col, "|" ) == 2 ) {
+                    var dir = ( arrayFindNoCase( validDirections, listLast( col, "|" ) ) ) ? listLast( col, "|" ) : direction;
+                } else {
+                    var dir = direction;
+                }
+
+                variables.orders.append( {
+                    direction = dir,
+                    column = colName
+                } );
+            }
+        }
+        else {
+            variables.orders.append( {
+                direction = direction,
+                column = column
+            } );
+        }
+
         return this;
     }
 

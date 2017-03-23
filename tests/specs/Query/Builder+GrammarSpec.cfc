@@ -760,6 +760,173 @@ component extends="testbox.system.BaseSpec" {
                         );
                         expect( getTestBindings( builder ) ).toBe( [] );
                     } );
+
+                    describe( "can accept an array for the column argument", function(){
+
+                        describe( "with the array values", function() {
+
+                            it( "as simple strings", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [ "last_name", "age", "favorite_color" ] );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" ASC, ""favorite_color"" ASC"
+                                );
+                            });
+
+                            it( "as pipe delimited strings", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [ "last_name|desc", "age|asc", "favorite_color|desc" ] );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" ASC, ""favorite_color"" DESC"
+                                );
+                            });
+
+                            it( "as a nested positional array", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [ [ "last_name", "desc" ], [ "age", "asc" ], [ "favorite_color" ] ] );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" ASC, ""favorite_color"" ASC"
+                                );
+                            });
+
+                            it( "as a nested positional array with leniency for arrays of length 1 or longer than 2 which assumes position 1 is column name and position 2 is the direction and ignores other entries in the nested array", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [ [ "last_name", "desc" ], [ "age", "asc" ], [ "favorite_color" ], [ "height", "asc", "will", "be", "ignored" ] ] );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" ASC, ""favorite_color"" ASC, ""height"" ASC"
+                                );
+                            });
+
+                            it( "as a any combo of values and ignores then inherits the direction's argument value if an invalid direction is supplied (anything other than (asc|desc)", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [
+                                        [ "last_name", "desc" ], 
+                                        [ "age", "forward" ], 
+                                        "favorite_color|backward",
+                                        "favorite_food|desc",
+                                        { column = "height", direction = "tallest" },
+                                        { column = "weight", direction = "desc" },
+                                        builder.raw( "DATE(created_at)" ),
+                                        { column = builder.raw( "DATE(modified_at)" ), direction = "desc" } //desc will be ignored in this case because it's an expression
+                                    ] );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" ASC, ""favorite_color"" ASC, ""favorite_food"" DESC, ""height"" ASC, ""weight"" DESC, DATE(created_at), DATE(modified_at)"
+                                );
+                            });
+
+                            it( "as raw expressions", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [ "last_name|desc", "age|asc", "favorite_color|desc" ] );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" ASC, ""favorite_color"" DESC"
+                                );
+                            });
+
+                            it( "as simple strings OR pipe delimited strings intermingled", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [ "last_name", "age|desc", "favorite_color" ] );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" DESC, ""favorite_color"" ASC"
+                                );
+                            });
+
+                            it( "can accept a struct with a column key and optionally the direction key", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [ { column = "last_name" } , { column = "age", direction = "asc" },{ column = "favorite_color", direction = "desc" } ], "desc" );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" ASC, ""favorite_color"" DESC"
+                                );
+                            });
+
+                            it( "as any combo of any valid values intermingled", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [
+                                        "last_name",
+                                        "age|desc",
+                                        "favorite_color|desc,height|asc,weight|desc",
+                                        [ "eye_color", "desc" ],
+                                        [ "hair_color" ],
+                                        { column = "is_musical" },
+                                        { column = "is_athletic", direction = "desc", extraKey = "ignored" },
+                                        builder.raw( "DATE(created_at)" ),
+                                        { column = builder.raw( "DATE(modified_at)" ), direction = "desc" } // direction is ignored because it should be RAW
+                                    ] );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" DESC, ""favorite_color"" DESC, ""height"" ASC, ""weight"" DESC, ""eye_color"" DESC, ""hair_color"" ASC, ""is_musical"" ASC, ""is_athletic"" DESC, DATE(created_at), DATE(modified_at)"
+                                );
+                            });
+
+                        });
+                    
+                    });
+
+                    describe( "can accept a comma delimited list for the column argument", function(){
+
+                        describe( "with the list values", function() {
+
+                            it( "as simple column names that inherit the default direction", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( "last_name,age,favorite_color");
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" ASC, ""favorite_color"" ASC"
+                                );
+                            });
+
+                            it( "as simple column names while inheriting the direction argument's supplied value", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( "last_name,age,favorite_color", "desc" );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" DESC, ""favorite_color"" DESC"
+                                );
+                            });
+
+                            it( "as column names with secondary piped delimited value representing the direction for each column", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( "last_name|desc,age|desc,favorite_color|asc" );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" DESC, ""favorite_color"" ASC"
+                                );
+                            });
+
+                            it( "as column names with secondary piped delimited value representing the direction for each column and inheriting direction from the direction argument's value when supplied", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( "last_name|asc,age,favorite_color|asc", "desc" );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" DESC, ""favorite_color"" ASC"
+                                );
+                            });
+
+                        });
+                    
+                    });
+
+                    
                 } );
 
                 describe( "limits", function() {

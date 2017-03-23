@@ -146,8 +146,6 @@ component displayname="Builder" accessors="true" {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
-        
-
         setReturnFormat( arguments.returnFormat );
 
         setDefaultValues();

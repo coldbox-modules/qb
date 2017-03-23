@@ -125,6 +125,11 @@ component displayname="Builder" accessors="true" {
     };
 
     /**
+    * Array holding the valid directions that a column can be sorted by in an order by clause.
+    */
+    variables.directions = [ "asc", "desc" ];
+
+    /**
     * Creates an empty query builder.
     *
     * @grammar The grammar to use when compiling queries. Default: qb.models.Query.Grammars.Grammar
@@ -140,6 +145,8 @@ component displayname="Builder" accessors="true" {
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
+
+        
 
         setReturnFormat( arguments.returnFormat );
 
@@ -1114,7 +1121,6 @@ component displayname="Builder" accessors="true" {
     * @return qb.models.Query.Builder
     */
     public Builder function orderBy( required any column, string direction = "asc" ) {
-        var validDirections = [ "asc", "desc" ];
 
         if ( getUtils().isExpression( column ) ) {
             variables.orders.append( {
@@ -1134,32 +1140,12 @@ component displayname="Builder" accessors="true" {
                         column = col
                     } );
                 }
-                // ex: "favorite_color|desc,height|asc,weight|desc"
-                else if ( isSimpleValue( col ) && listLen( col ) > 1 ) {
-                    //convert list to array for easier looping and access to vals
-                    var arCols = listToArray( col );
-
-                    for ( var c in arCols ) {
-                        var colName = listFirst( c, "|" );
-                        
-                        if ( listLen( c, "|" ) == 2 ) {
-                            var dir = ( arrayFindNoCase( validDirections, listLast( c, "|" ) ) ) ? listLast( c, "|" ) : direction;
-                        } else {
-                            var dir = direction;
-                        }
-
-                        variables.orders.append( {
-                            direction = dir,
-                            column = colName
-                        } );
-                    }
-                }
                 // ex: "age|desc" || "last_name"
                 else if ( isSimpleValue( col ) ) {
                     var colName = listFirst( col, "|" );
                     // ex: "age|desc"
                     if ( listLen( col, "|" ) == 2 ) {
-                        var dir = ( arrayFindNoCase( validDirections, listLast( col, "|" ) ) ) ? listLast( col, "|" ) : direction;
+                        var dir = ( arrayFindNoCase( variables.directions, listLast( col, "|" ) ) ) ? listLast( col, "|" ) : direction;
                     } else {
                         var dir = direction;
                     }
@@ -1176,7 +1162,7 @@ component displayname="Builder" accessors="true" {
                     if ( getUtils().isExpression( col.column ) ) {
                         var dir = "raw";
                     } else {
-                        var dir = ( structKeyExists( col, "direction") && arrayFindNoCase( validDirections, col.direction ) ) ? col.direction : direction;
+                        var dir = ( structKeyExists( col, "direction") && arrayFindNoCase( variables.directions, col.direction ) ) ? col.direction : direction;
                     }
                     variables.orders.append({
                         direction = dir,
@@ -1187,7 +1173,7 @@ component displayname="Builder" accessors="true" {
                 else if ( isArray( col ) ) {
                     //assume position 1 is the column name and position 2 if it exists and is a valid direction ( asc | desc ) use it.
                     variables.orders.append({
-                        direction = ( arrayLen( col ) == 2 && arrayFindNoCase( validDirections, col[2] ) ) ? col[2] : direction,
+                        direction = ( arrayLen( col ) == 2 && arrayFindNoCase( variables.directions, col[2] ) ) ? col[2] : direction,
                         column = col[1]
                     });
                 }
@@ -1204,7 +1190,7 @@ component displayname="Builder" accessors="true" {
                 var colName = listFirst( col, "|" );
                 
                 if ( listLen( col, "|" ) == 2 ) {
-                    var dir = ( arrayFindNoCase( validDirections, listLast( col, "|" ) ) ) ? listLast( col, "|" ) : direction;
+                    var dir = ( arrayFindNoCase( variables.directions, listLast( col, "|" ) ) ) ? listLast( col, "|" ) : direction;
                 } else {
                     var dir = direction;
                 }

@@ -827,10 +827,13 @@ component extends="testbox.system.BaseSpec" {
                             it( "as raw expressions", function(){
                                 var builder = getBuilder();
                                 builder.select( "*").from( "users" )
-                                    .orderBy( [ "last_name|desc", "age|asc", "favorite_color|desc" ] );
+                                    .orderBy( [ 
+                                        builder.raw( "DATE(created_at)" ),
+                                        { column = builder.raw( "DATE(modified_at)" ) }
+                                    ] );
 
                                 expect( builder.toSql() ).toBeWithCase(
-                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" ASC, ""favorite_color"" DESC"
+                                    "SELECT * FROM ""users"" ORDER BY DATE(created_at), DATE(modified_at)"
                                 );
                             });
 
@@ -847,10 +850,35 @@ component extends="testbox.system.BaseSpec" {
                             it( "can accept a struct with a column key and optionally the direction key", function(){
                                 var builder = getBuilder();
                                 builder.select( "*").from( "users" )
-                                    .orderBy( [ { column = "last_name" } , { column = "age", direction = "asc" },{ column = "favorite_color", direction = "desc" } ], "desc" );
+                                    .orderBy( [ 
+                                        { column = "last_name" },
+                                        { column = "age", direction = "asc" },
+                                        { column = "favorite_color", direction = "desc" } 
+                                    ], "desc" );
 
                                 expect( builder.toSql() ).toBeWithCase(
                                     "SELECT * FROM ""users"" ORDER BY ""last_name"" DESC, ""age"" ASC, ""favorite_color"" DESC"
+                                );
+                            });
+
+                            it( "as values that when additional orderBy() calls are chained the chained calls preserve the order of the calls", function(){
+                                var builder = getBuilder();
+                                builder.select( "*").from( "users" )
+                                    .orderBy( [
+                                        "last_name",
+                                        "age|desc"
+                                    ])
+                                    .orderBy( "favorite_color", "desc" )
+                                    .orderBy( column = [ { column = "height" }, { column = "weight", direction = "asc" } ], direction = "desc" )
+                                    .orderBy( column = "eye_color", direction = "desc" )
+                                    .orderBy( [
+                                        { column = "is_athletic", direction = "desc", extraKey = "ignored" },
+                                        builder.raw( "DATE(created_at)" )
+                                    ])
+                                    .orderBy( builder.raw( "DATE(modified_at)" ) );
+
+                                expect( builder.toSql() ).toBeWithCase(
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" DESC, ""favorite_color"" DESC, ""height"" DESC, ""weight"" ASC, ""eye_color"" DESC, ""is_athletic"" DESC, DATE(created_at), DATE(modified_at)"
                                 );
                             });
 
@@ -860,7 +888,6 @@ component extends="testbox.system.BaseSpec" {
                                     .orderBy( [
                                         "last_name",
                                         "age|desc",
-                                        "favorite_color|desc,height|asc,weight|desc",
                                         [ "eye_color", "desc" ],
                                         [ "hair_color" ],
                                         { column = "is_musical" },
@@ -870,7 +897,7 @@ component extends="testbox.system.BaseSpec" {
                                     ] );
 
                                 expect( builder.toSql() ).toBeWithCase(
-                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" DESC, ""favorite_color"" DESC, ""height"" ASC, ""weight"" DESC, ""eye_color"" DESC, ""hair_color"" ASC, ""is_musical"" ASC, ""is_athletic"" DESC, DATE(created_at), DATE(modified_at)"
+                                    "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" DESC, ""eye_color"" DESC, ""hair_color"" ASC, ""is_musical"" ASC, ""is_athletic"" DESC, DATE(created_at), DATE(modified_at)"
                                 );
                             });
 
@@ -912,7 +939,7 @@ component extends="testbox.system.BaseSpec" {
                                 );
                             });
 
-                            it( "as column names with secondary piped delimited value representing the direction for each column and inheriting direction from the direction argument's value when supplied", function(){
+                            it( "as column names with optional secondary piped delimited value representing the direction for that column and inherits the direction argument's value when supplied", function(){
                                 var builder = getBuilder();
                                 builder.select( "*").from( "users" )
                                     .orderBy( "last_name|asc,age,favorite_color|asc", "desc" );
@@ -925,7 +952,6 @@ component extends="testbox.system.BaseSpec" {
                         });
                     
                     });
-
                     
                 } );
 

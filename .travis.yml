@@ -2,6 +2,9 @@ language: java
 sudo: required
 jdk:
 - oraclejdk8
+cache:
+  directories:
+  - $HOME/.CommandBox
 env:
   matrix:
     - ENGINE=lucee@4.5

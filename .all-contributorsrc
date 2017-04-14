@@ -36,6 +36,15 @@
         "bug",
         "code"
       ]
+    },
+    {
+      "login": "timmaybrown",
+      "name": "Tim Brown",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/1346234?v=3",
+      "profile": "https://github.com/timmaybrown",
+      "contributions": [
+        "code"
+      ]
     }
   ]
 }

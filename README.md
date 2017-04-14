@@ -1,5 +1,5 @@
 # qb
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors)
 
 [![Master Branch Build Status](https://img.shields.io/travis/elpete/qb/master.svg?style=flat-square&label=master)](https://travis-ci.org/elpete/qb)
 [![Development Branch Build Status](https://img.shields.io/travis/elpete/qb/development.svg?style=flat-square&label=development)](https://travis-ci.org/elpete/qb)
@@ -135,8 +135,8 @@ Coming soon!
 Thanks goes to these wonderful people ([emoji key](https://github.com/kentcdodds/all-contributors#emoji-key)):
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-| [<img src="https://avatars2.githubusercontent.com/u/2583646?v=3" width="100px;"/><br /><sub>Eric Peterson</sub>](https://github.com/elpete)<br />[💻](https://github.com/elpete/qb/commits?author=elpete) [📖](https://github.com/elpete/qb/commits?author=elpete) | [<img src="https://avatars2.githubusercontent.com/u/148847?v=3" width="100px;"/><br /><sub>John Whish</sub>](http://www.aliaspooryorik.com/blog/)<br />💬 [💻](https://github.com/elpete/qb/commits?author=aliaspooryorik) |
-| :---: | :---: |
+| [<img src="https://avatars2.githubusercontent.com/u/2583646?v=3" width="100px;"/><br /><sub>Eric Peterson</sub>](https://github.com/elpete)<br />[💻](https://github.com/elpete/qb/commits?author=elpete) [📖](https://github.com/elpete/qb/commits?author=elpete) | [<img src="https://avatars2.githubusercontent.com/u/148847?v=3" width="100px;"/><br /><sub>John Whish</sub>](http://www.aliaspooryorik.com/blog/)<br />💬 [💻](https://github.com/elpete/qb/commits?author=aliaspooryorik) | [<img src="https://avatars0.githubusercontent.com/u/5429291?v=3" width="100px;"/><br /><sub>Dan Murphy</sub>](https://github.com/murphydan)<br />[🐛](https://github.com/elpete/qb/issues?q=author%3Amurphydan) [💻](https://github.com/elpete/qb/commits?author=murphydan) |
+| :---: | :---: | :---: |
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/kentcdodds/all-contributors) specification. Contributions of any kind welcome!

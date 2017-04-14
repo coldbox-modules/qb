@@ -26,6 +26,16 @@
         "question",
         "code"
       ]
+    },
+    {
+      "login": "murphydan",
+      "name": "Dan Murphy",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5429291?v=3",
+      "profile": "https://github.com/murphydan",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ]
 }

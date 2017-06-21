@@ -15,7 +15,7 @@ component displayname="QueryUtils" {
 
         structAppend( binding, {
             cfsqltype = inferSqlType( binding.value ),
-            list = isList( binding.value ),
+            list = false,
             null = false
         }, false );
 
@@ -30,10 +30,6 @@ component displayname="QueryUtils" {
     * @return string
     */
     public string function inferSqlType( required any value ) {
-        if ( isList( arguments.value ) ) {
-            arguments.value = listToArray( arguments.value );
-        }
-
         if ( isArray( value ) ) {
             return arraySame( value, function( val ) {
                 return inferSqlType( val );
@@ -127,22 +123,6 @@ component displayname="QueryUtils" {
         }
 
         return arguments.value;
-    }
-
-    /**
-    * Returns true if a value is a list.
-    *
-    * @value The value to check if it is a list.
-    *
-    * @return boolean
-    */
-    private boolean function isList( required any value ) {
-        if ( isStruct( value ) || isArray( value ) ) {
-            return false;
-        }
-
-        var listAsArray = listToArray( arguments.value );
-        return arrayLen( listAsArray ) > 1;
     }
 
     /**

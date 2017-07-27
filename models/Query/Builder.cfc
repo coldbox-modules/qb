@@ -1642,9 +1642,14 @@ component displayname="Builder" accessors="true" {
     */
     public any function first( struct options = {} ) {
         take( 1 );
-        return get( options = arguments.options );
+        var results = withReturnFormat( "array", function() {
+            return get( options = options );
+        } );
+        if ( arrayIsEmpty( results ) ) {
+            return {};
+        }
+        return results[ 1 ];
     }
-
 
     /**
     * Adds an id constraint to the query and returns the first record from the query.

@@ -1329,7 +1329,6 @@ component extends="testbox.system.BaseSpec" {
                 describe( "first", function() {
                     it( "retrieves the first record when calling `first`", function() {
                         var builder = getBuilder();
-                        builder.setReturnFormat( "query" );
                         var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
                         builder.$( "runQuery" ).$args(
                             sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
@@ -1338,7 +1337,8 @@ component extends="testbox.system.BaseSpec" {
 
                         var results = builder.from( "users" ).whereName( "foo" ).first();
 
-                        expect( results ).toBe( expectedQuery );
+                        expect( results ).toBeStruct();
+                        expect( results ).toBe( { id = 1, name = "foo" } );
                         expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
 
                         var runQueryLog = builder.$callLog().runQuery;
@@ -1363,7 +1363,8 @@ component extends="testbox.system.BaseSpec" {
 
                         var results = builder.from( "users" ).find( 1 );
 
-                        expect( results ).toBe( expectedQuery );
+                        expect( results ).toBeStruct();
+                        expect( results ).toBe( { id = 1, name = "foo" } );
                         expect( getTestBindings( builder ) ).toBe( [ 1 ] );
 
                         var runQueryLog = builder.$callLog().runQuery;

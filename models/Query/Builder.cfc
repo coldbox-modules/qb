@@ -1359,7 +1359,7 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
 
-        return runQuery( sql, options );
+        return runQuery( sql, options, "result" );
     }
 
     /**
@@ -1391,7 +1391,7 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
 
-        return runQuery( sql, options );
+        return runQuery( sql, options, "result" );
     }
 
     /**
@@ -1445,7 +1445,7 @@ component displayname="Builder" accessors="true" {
             return sql;
         }
         
-        return runQuery( sql, options );
+        return runQuery( sql, options, "result" );
     }
 
     /*******************************************************************************\
@@ -1747,8 +1747,12 @@ component displayname="Builder" accessors="true" {
     *
     * @return any
     */
-    private any function runQuery( required string sql, struct options = {} ) {
-        var result = grammar.runQuery( sql, getBindings(), options );
+    private any function runQuery(
+        required string sql,
+        struct options = {},
+        string returnObject = "query"
+    ) {
+        var result = grammar.runQuery( sql, getBindings(), options, returnObject );
         clearBindings();
         if ( ! isNull( result ) ) {
             return result;

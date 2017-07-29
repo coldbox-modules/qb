@@ -4,5 +4,8 @@
         "http":{
             "port":"7777"
         }
+    },
+    "app":{
+        "cfengine":"adobe@11"
     }
 }

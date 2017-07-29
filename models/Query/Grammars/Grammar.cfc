@@ -57,15 +57,29 @@ component displayname="Grammar" accessors="true" {
     *
     * @return any
     */
-    public any function runQuery( sql, bindings, options ) {
+    public any function runQuery( sql, bindings, options, returnObject = "query" ) {
+        local.result = "";
         if ( ! isNull( variables.interceptorService ) ) {
-            variables.interceptorService.processState( "preQBExecute", arguments );
+            variables.interceptorService.processState( "preQBExecute", {
+                sql = sql,
+                bindings = bindings,
+                options = options,
+                returnObject = returnObject
+            } );
         }
+        structAppend( options, { result = "local.result" }, true );
         var q = queryExecute( sql, bindings, options );
         if ( ! isNull( variables.interceptorService ) ) {
-            variables.interceptorService.processState( "postQBExecute", arguments );
+            variables.interceptorService.processState( "postQBExecute", {
+                sql = sql,
+                bindings = bindings,
+                options = options,
+                returnObject = returnObject,
+                query = isNull( q ) ? javacast( "null", "" ) : q,
+                result = local.result
+            } );
         }
-        return q;
+        return returnObject == "result" ? local.result : q;
     }
 
     /**

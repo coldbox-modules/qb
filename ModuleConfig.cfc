@@ -14,6 +14,10 @@ component {
             returnFormat = "array"
         };
 
+        interceptorSettings = {
+            customInterceptionPoints = [ "preQBExecute", "postQBExecute" ]
+        };
+
         binder.map( "BaseGrammar@qb" )
             .to( "qb.models.Query.Grammars.Grammar" )
             .asSingleton();
@@ -36,6 +40,9 @@ component {
     }
 
     function onLoad() {
+        binder.map( "DefaultGrammar@qb" )
+            .to( "qb.models.Query.Grammars.#settings.defaultGrammar#" );
+
         binder.map( "builder@qb" )
             .to( "qb.models.Query.Builder" )
             .initArg( name = "grammar", ref = "#settings.defaultGrammar#@qb" )

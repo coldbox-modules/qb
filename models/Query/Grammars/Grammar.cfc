@@ -10,6 +10,11 @@ import qb.models.Query.QueryUtils;
 component displayname="Grammar" accessors="true" {
 
     /**
+    * ColdBox Interceptor Service to announce pre- and post- interception points
+    */
+    property name="interceptorService" inject="coldbox:interceptorService";
+
+    /**
     * Query utilities shared across multiple models.
     */
     property name="utils";
@@ -53,7 +58,14 @@ component displayname="Grammar" accessors="true" {
     * @return any
     */
     public any function runQuery( sql, bindings, options ) {
-        return queryExecute( sql, bindings, options );
+        if ( ! isNull( variables.interceptorService ) ) {
+            variables.interceptorService.processState( "preQBExecute", arguments );
+        }
+        var q = queryExecute( sql, bindings, options );
+        if ( ! isNull( variables.interceptorService ) ) {
+            variables.interceptorService.processState( "postQBExecute", arguments );
+        }
+        return q;
     }
 
     /**

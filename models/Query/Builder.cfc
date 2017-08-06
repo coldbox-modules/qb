@@ -260,7 +260,7 @@ component displayname="Builder" accessors="true" {
         }
         
         if ( variables.columns.isEmpty() ||
-            ( variables.columns.len() == 1 && variables.columns[ 1 ] == "*" ) ) {
+            ( variables.columns.len() == 1 && isSimpleValue( variables.columns[ 1 ] ) && variables.columns[ 1 ] == "*" ) ) {
             variables.columns = [];
         }
         arrayAppend( variables.columns, normalizeToArray( argumentCollection = args ), true );

@@ -11,7 +11,13 @@ component displayname="QueryUtils" {
     * @return struct
     */
     public struct function extractBinding( required any value ) {
-        var binding = isStruct( value ) ? value : { value = normalizeSqlValue( value ) };
+        var binding = "";
+        if ( isStruct( value ) ) {
+            binding = value;
+        }
+        else {
+            binding = { value = normalizeSqlValue( value ) };
+        }
 
         structAppend( binding, {
             cfsqltype = inferSqlType( binding.value ),

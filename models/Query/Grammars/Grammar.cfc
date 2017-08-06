@@ -649,7 +649,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    private string function wrapTable( required any table ) {
+    public string function wrapTable( required any table ) {
         var alias = "";
         if ( table.findNoCase( " as " ) > 0 ) {
             var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );
@@ -676,7 +676,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    private string function wrapColumn( required any column ) {
+    public string function wrapColumn( required any column ) {
         if ( isInstanceOf( column, "qb.models.Query.Expression" ) ) {
             return column.getSQL();
         }
@@ -703,7 +703,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    private string function wrapValue( required any value ) {
+    public string function wrapValue( required any value ) {
         if ( value == "*" ) {
             return value;
         }

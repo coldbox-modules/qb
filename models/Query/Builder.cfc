@@ -118,6 +118,7 @@ component displayname="Builder" accessors="true" {
     * so we can serialize them in the correct order.
     */
     variables.bindings = {
+        "select" = [],
         "join" = [],
         "where" = [],
         "insert" = [],
@@ -215,6 +216,26 @@ component displayname="Builder" accessors="true" {
     }
 
     /**
+    * Adds a sub-select to the query.
+    *
+    * @alias The alias for the sub-select
+    * @callback The callback to configure the sub-select.
+    *
+    * @returns qb.models.Query.Builder
+    */
+    public Builder function subSelect(
+        required string alias,
+        required any callback
+    ) {
+        var subselect = newQuery();
+        callback( subselect );
+        return selectRaw(
+            "( #subselect.toSQL()# ) AS #getGrammar().wrapValue( alias )#",
+            subselect.getBindings()
+        );
+    }
+
+    /**
     * Adds a selection of columns to the already selected columns.
     *
     * @columns A single column, a list or columns (comma-separated), or an array of columns.
@@ -259,8 +280,14 @@ component displayname="Builder" accessors="true" {
     *
     * @return qb.models.Query.Builder
     */
-    public Builder function selectRaw( required any expression ) {
+    public Builder function selectRaw(
+        required any expression,
+        array bindings = []
+    ) {
         addSelect( raw( expression ) );
+        if ( ! arrayIsEmpty( arguments.bindings ) ) {
+            addBindings( arguments.bindings, "select" );
+        }
         return this;        
     }
 
@@ -1458,7 +1485,7 @@ component displayname="Builder" accessors="true" {
     * @return array of bindings
     */
     public array function getBindings() {
-        var bindingOrder = [ "update", "insert", "join", "where" ];
+        var bindingOrder = [ "update", "insert", "select", "join", "where" ];
 
         var flatBindings = [];
         for ( var key in bindingOrder ) {

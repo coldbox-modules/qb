@@ -90,6 +90,40 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
+                describe( "sub-selects", function() {
+                    it( "can execute sub-selects", function() {
+                        var builder = getBuilder();
+                        builder
+                            .from( "users" )
+                            .select( "name" )
+                            .subSelect( "latestUpdatedDate", function( q ) {
+                                return q.from( "posts" )
+                                    .selectRaw( "MAX(updated_date)" )
+                                    .whereColumn( "posts.user_id", "users.id" );
+                            } );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT ""name"", ( SELECT MAX(updated_date) FROM ""posts"" WHERE ""posts"".""user_id"" = ""users"".""id"" ) AS ""latestUpdatedDate"" FROM ""users"""
+                        );
+                    } );
+
+                    it( "can execute sub-selects with bindings", function() {
+                        var builder = getBuilder();
+                        builder
+                            .from( "users" )
+                            .select( "name" )
+                            .subSelect( "latestUpdatedDate", function( q ) {
+                                return q.from( "posts" )
+                                    .selectRaw( "MAX(updated_date)" )
+                                    .where( "posts.user_id", 1 );
+                            } );
+                        expect( builder.toSql() ).toBeWithCase(
+                            "SELECT ""name"", ( SELECT MAX(updated_date) FROM ""posts"" WHERE ""posts"".""user_id"" = ? ) AS ""latestUpdatedDate"" FROM ""users"""
+                        );
+
+                        expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+                    } );
+                } );
+
                 describe( "from", function() {
                     it( "can specify the table to select from", function() {
                         var builder = getBuilder();

@@ -2,7 +2,7 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "join methods", function() {
             beforeEach( function() {
-                variables.query = new qb.models.Query.Builder();
+                variables.query = new qb.models.Query.QueryBuilder();
                 getMockBox().prepareMock( query );
                 variables.utils = new qb.models.Query.QueryUtils();
                 query.$property( propertyName = "utils", mock = utils );

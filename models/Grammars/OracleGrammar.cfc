@@ -1,6 +1,6 @@
-import qb.models.Query.Builder;
+import qb.models.Query.QueryBuilder;
 
-component extends="qb.models.Query.Grammars.BaseGrammar" {
+component extends="qb.models.Grammars.Grammar" {
 
     /**
     * Runs a query through `queryExecute`.
@@ -27,7 +27,7 @@ component extends="qb.models.Query.Grammars.BaseGrammar" {
     *
     * @return string
     */
-    public string function compileSelect( required Builder query ) {
+    public string function compileSelect( required QueryBuilder query ) {
         var sql = super.compileSelect( argumentCollection = arguments );
 
         return compileOracleLimitAndOffset( query, sql );
@@ -42,7 +42,7 @@ component extends="qb.models.Query.Grammars.BaseGrammar" {
     *
     * @return string
     */
-    public string function compileInsert( required Builder query, required array columns, required array values ) {
+    public string function compileInsert( required QueryBuilder query, required array columns, required array values ) {
         var columnsString = columns.map( wrapColumn ).toList( ", " );
 
         var placeholderString = values.map( function( valueArray ) {
@@ -63,7 +63,7 @@ component extends="qb.models.Query.Grammars.BaseGrammar" {
     * @return string
     */
     private string function compileOracleLimitAndOffset(
-        required Builder query,
+        required QueryBuilder query,
         required string sql
     ) {
         var limitAndOffset = [];
@@ -79,7 +79,7 @@ component extends="qb.models.Query.Grammars.BaseGrammar" {
         if ( limitAndOffset.isEmpty() ) {
             return sql;
         }
-
+        
         return "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (#sql#) results ) WHERE #limitAndOffset.toList( " AND " )#";
     }
 
@@ -92,7 +92,7 @@ component extends="qb.models.Query.Grammars.BaseGrammar" {
     *
     * @return string
     */
-    private string function compileLimitValue( required Builder query, limitValue ) {
+    private string function compileLimitValue( required QueryBuilder query, limitValue ) {
         return "";
     }
 
@@ -105,7 +105,7 @@ component extends="qb.models.Query.Grammars.BaseGrammar" {
     *
     * @return string
     */
-    private string function compileOffsetValue( required Builder query, offsetValue ) {
+    private string function compileOffsetValue( required QueryBuilder query, offsetValue ) {
         return "";
     }
 

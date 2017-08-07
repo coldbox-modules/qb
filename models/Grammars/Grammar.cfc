@@ -1,4 +1,4 @@
-import qb.models.Query.Builder;
+import qb.models.Query.QueryBuilder;
 import qb.models.Query.QueryUtils;
 
 /**
@@ -37,9 +37,9 @@ component displayname="Grammar" accessors="true" {
     *
     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
     *
-    * @return qb.models.Query.Grammars.BaseGrammar
+    * @return qb.models.Grammars.Grammar
     */
-    public BaseGrammar function init(
+    public Grammar function init(
         QueryUtils utils = new qb.models.Query.QueryUtils()
     ) {
         variables.utils = arguments.utils;
@@ -89,7 +89,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    public string function compileSelect( required Builder query ) {
+    public string function compileSelect( required QueryBuilder query ) {
         var sql = [];
 
         for ( var component in selectComponents ) {
@@ -113,7 +113,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function compileColumns(
-        required Builder query,
+        required QueryBuilder query,
         required array columns
     ) {
         if ( ! query.getAggregate().isEmpty() ) {
@@ -132,7 +132,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function compileFrom(
-        required Builder query,
+        required QueryBuilder query,
         required string from
     ) {
         return "FROM " & wrapTable( from );
@@ -147,7 +147,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function compileJoins(
-        required Builder query,
+        required QueryBuilder query,
         required array joins
     ) {
         var joinsArray = [];
@@ -169,7 +169,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function compileWheres(
-        required Builder query,
+        required QueryBuilder query,
         array wheres = []
     ) {
         var wheresArray = [];
@@ -204,7 +204,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereBasic(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         if ( ! isStruct( where ) ) {
@@ -231,7 +231,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereRaw(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return where.sql;
@@ -246,7 +246,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereColumn(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return trim( "#wrapColumn( where.first )# #where.operator# #wrapColumn( where.second )#" );
@@ -261,7 +261,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereNested(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         var sql = compileWheres(
@@ -281,7 +281,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereSub(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapValue( where.column )# #where.operator# (#compileSelect( where.query )#)";
@@ -296,7 +296,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereExists(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "EXISTS (#compileSelect( where.query )#)";
@@ -311,7 +311,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereNotExists(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "NOT EXISTS (#compileSelect( where.query )#)";
@@ -326,7 +326,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereNull(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# IS NULL";
@@ -341,7 +341,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereNotNull(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# IS NOT NULL";
@@ -356,7 +356,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereBetween(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# BETWEEN ? AND ?";
@@ -371,7 +371,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereNotBetween(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# NOT BETWEEN ? AND ?";
@@ -386,7 +386,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereIn(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         var placeholderString = where.values.map( function( value ) {
@@ -407,7 +407,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereNotIn(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         var placeholderString = where.values.map( function( value ) {
@@ -428,7 +428,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereInSub(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# IN (#compileSelect( where.query )#)";
@@ -443,7 +443,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function whereNotInSub(
-        required Builder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# NOT IN (#compileSelect( where.query )#)";
@@ -457,7 +457,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    private string function compileGroups( required Builder query, required array groups ) {
+    private string function compileGroups( required QueryBuilder query, required array groups ) {
         if ( groups.isEmpty() ) {
             return "";
         }
@@ -473,7 +473,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    private string function compileHavings( required Builder query, required array havings ) {
+    private string function compileHavings( required QueryBuilder query, required array havings ) {
         if ( arguments.havings.isEmpty() ) {
             return "";
         }
@@ -503,7 +503,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function compileOrders(
-        required Builder query,
+        required QueryBuilder query,
         required array orders
     ) {
         if ( orders.isEmpty() ) {
@@ -527,7 +527,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    private string function compileLimitValue( required Builder query, limitValue ) {
+    private string function compileLimitValue( required QueryBuilder query, limitValue ) {
         if ( isNull( arguments.limitValue ) ) {
             return "";
         }
@@ -542,7 +542,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    private string function compileOffsetValue( required Builder query, offsetValue ) {
+    private string function compileOffsetValue( required QueryBuilder query, offsetValue ) {
         if ( isNull( arguments.offsetValue ) ) {
             return "";
         }
@@ -559,7 +559,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     public string function compileInsert(
-        required Builder query,
+        required QueryBuilder query,
         required array columns,
         required array values
     ) {
@@ -582,7 +582,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     public string function compileUpdate(
-        required Builder query,
+        required QueryBuilder query,
         required array columns
     ) {
         var updateList = columns.map( function( column ) {
@@ -599,7 +599,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    public string function compileDelete( required Builder query ) {
+    public string function compileDelete( required QueryBuilder query ) {
         return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )#" );
     }
 
@@ -611,7 +611,7 @@ component displayname="Grammar" accessors="true" {
     *
     * @return string
     */
-    private string function compileAggregate( required Builder query, required struct aggregate ) {
+    private string function compileAggregate( required QueryBuilder query, required struct aggregate ) {
         if ( aggregate.isEmpty() ) {
             return "";
         }
@@ -709,6 +709,96 @@ component displayname="Grammar" accessors="true" {
             return value;
         }
         return """#value#""";
+    }
+
+    function compileCreate( required blueprint ) {
+        return "CREATE TABLE #wrapTable( blueprint.getTable() )# (#compileCreateBody( blueprint )#)";
+    }
+
+    function compileCreateBody( blueprint ) {
+        return arrayToList( arrayFilter( [
+            compileCreateColumns( blueprint ),
+            compileCreateIndexes( blueprint )
+        ], function( item ) {
+            return item != "";
+        } ), ", " );
+    }
+
+    function compileCreateColumns( required blueprint ) {
+        return blueprint.getColumns().map( function( column ) {
+            return compileCreateColumn( column );
+        } ).toList( ", " );
+    }
+
+    function compileCreateIndexes( blueprint ) {
+        return blueprint.getIndexes().map( function( index ) {
+            return invoke( this, "index#index.getType()#", { index = index } );
+        } ).filter( function( item ) {
+            return item != "";
+        } ).toList( ", " );
+    }
+
+    function compileCreateColumn( column ) {
+        return arrayToList( arrayFilter( [
+            wrapColumn( column.getName() ),
+            generateType( column ),
+            generateNullConstraint( column ),
+            generateAutoIncrement( column ),
+            generateDefault( column )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
+    function generateType( column ) {
+        return invoke( this, "type#column.getType()#", { column = column } );
+    }
+
+    function generateNullConstraint( column ) {
+        return column.getNullable() ? "" : "NOT NULL";
+    }
+
+    function generateAutoIncrement( column ) {
+        return column.getAutoIncrement() ? "AUTO_INCREMENT" : "";
+    }
+
+    function generateDefault( column ) {
+        return column.getDefault() != "" ? "DEFAULT #column.getDefault()#" : "";
+    }
+
+    /*====================================
+    =            Column Types            =
+    ====================================*/
+    
+    function typeString( column ) {
+        return "VARCHAR(#column.getLength()#)";
+    }
+
+    function typeInteger( column ) {
+        return "INT";
+    }
+
+    function typeTimestamp( column ) {
+        return "TIMESTAMP";
+    }
+
+    /*===================================
+    =            Index Types            =
+    ===================================*/
+    
+    function indexPrimary( index ) {
+        return "PRIMARY KEY (#wrapColumn( index.getColumn() )#)";
+    }
+    
+    function indexForeign( index ) {
+        //FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
+        return arrayToList( [
+            "CONSTRAINT #wrapValue( "fk_#lcase( index.getForeignKey() )#" )#",
+            "FOREIGN KEY (#wrapColumn( index.getForeignKey() )#)",
+            "REFERENCES #wrapTable( index.getTable() )# (#wrapColumn( index.getColumn() )#)",
+            "ON UPDATE #ucase( index.getOnUpdate() )#",
+            "ON DELETE #ucase( index.getOnDelete() )#"
+        ], " " );
     }
 
 }

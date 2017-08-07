@@ -2,7 +2,7 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "where methods", function() {
             beforeEach( function() {
-                variables.query = new qb.models.Query.Builder();
+                variables.query = new qb.models.Query.QueryBuilder();
                 getMockBox().prepareMock( query );
                 query.$property( propertyName = "utils", mock = new qb.models.Query.QueryUtils() );
             } );
@@ -137,7 +137,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "returns the query instance to continue chaining", function() {
                         var q = query.whereSomeColumn( "::some value::" );
-                        expect( q ).toBeInstanceOf( "qb.models.Query.Builder" );
+                        expect( q ).toBeInstanceOf( "qb.models.Query.QueryBuilder" );
                     } );
                 } );
 

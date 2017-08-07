@@ -1,4 +1,4 @@
-component extends="qb.models.Query.Grammars.BaseGrammar" {
+component extends="qb.models.Grammars.Grammar" {
 
     /**
     * The different components of a select statement in the order of compilation.
@@ -16,7 +16,7 @@ component extends="qb.models.Query.Grammars.BaseGrammar" {
     *
     * @return string
     */
-    private string function compileOffsetValue( required qb.models.Query.Builder query, offsetValue ) {
+    private string function compileOffsetValue( required qb.models.Query.QueryBuilder query, offsetValue ) {
         if ( isNull( query.getOffsetValue() ) && isNull( query.getLimitValue() ) ) {
             return "";
         }
@@ -36,7 +36,7 @@ component extends="qb.models.Query.Grammars.BaseGrammar" {
     *
     * @return string
     */
-    private string function compileLimitValue( required qb.models.Query.Builder query, limitValue ) {
+    private string function compileLimitValue( required qb.models.Query.QueryBuilder query, limitValue ) {
         if ( isNull( arguments.limitValue ) ) {
             return "";
         }

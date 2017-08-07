@@ -4,13 +4,13 @@
 component
     displayname="JoinClause"
     accessors="true"
-    extends="qb.models.Query.Builder"
+    extends="qb.models.Query.QueryBuilder"
 {
 
     /**
     * A reference to the parent query to which this join clause belongs.
     */
-    property name="parentQuery" type="qb.models.Query.Builder";
+    property name="parentQuery" type="qb.models.Query.QueryBuilder";
 
     /**
     * The join type of the join clause.
@@ -40,7 +40,7 @@ component
     * @return qb.models.Query.JoinClause
     */
     public JoinClause function init(
-        required Builder parentQuery,
+        required QueryBuilder parentQuery,
         required string type,
         required string table
     ) {

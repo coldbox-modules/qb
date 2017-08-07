@@ -2,7 +2,7 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "get methods", function() {
             beforeEach( function() {
-                variables.query = new qb.models.Query.Builder();
+                variables.query = new qb.models.Query.QueryBuilder();
                 getMockBox().prepareMock( query );
 
                 var utils = new qb.models.Query.QueryUtils();

@@ -1,4 +1,4 @@
-import qb.models.Query.Builder;
+import qb.models.Query.QueryBuilder;
 
 component extends="testbox.system.BaseSpec" {
 
@@ -1804,15 +1804,15 @@ component extends="testbox.system.BaseSpec" {
 
     private function getBuilder() {
         var grammar = getMockBox()
-            .createMock( "qb.models.Query.Grammars.BaseGrammar" );
+            .createMock( "qb.models.Grammars.Grammar" );
         var queryUtils = getMockBox()
             .createMock( "qb.models.Query.QueryUtils" );
-        var builder = getMockBox().createMock( "qb.models.Query.Builder" )
+        var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" )
             .init( grammar, queryUtils );
         return builder;
     }
 
-    private array function getTestBindings( required Builder builder ) {
+    private array function getTestBindings( required QueryBuilder builder ) {
         return builder.getBindings().map( function( binding ) {
             return binding.value;
         } );

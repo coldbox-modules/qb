@@ -1636,7 +1636,9 @@ component displayname="Builder" accessors="true" {
     * @return boolean
     */
     public boolean function exists( struct options = {} ) {
-        return get( argumentCollection = arguments ).RECORDCOUNT > 0;
+        return withReturnFormat( "array", function() {
+            return arrayLen( get( options = options ) ) > 0;
+        });
     }
 
     /*******************************************************************************\

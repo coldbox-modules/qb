@@ -1675,7 +1675,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( "exists", function() {
                     it( "returns true if any records come back from the query", function() {
                         var builder = getBuilder();
-                        builder.$( "get", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [
+                        builder.$( "runQuery", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [
                             { name = "foo", email = "bar" }
                         ] ) );
                         expect( builder.select( "*" ).from( "users" ).exists() ).toBe( true );
@@ -1685,7 +1685,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "returns false if no records come back from the query", function() {
                         var builder = getBuilder();
-                        builder.$( "get", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [] ) );
+                        builder.$( "runQuery", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [] ) );
                         expect( builder.select( "*" ).from( "users" ).exists() ).toBe( false );
                     } );
                 } );

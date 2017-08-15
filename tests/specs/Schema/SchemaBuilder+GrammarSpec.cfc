@@ -30,7 +30,252 @@ component extends="testbox.system.BaseSpec" {
                         table.timestamp( "created_date" ).setDefault( "CURRENT_TIMESTAMP" );
                         table.timestamp( "modified_date" ).setDefault( "CURRENT_TIMESTAMP" );
                     }, false );
-                    expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INT NOT NULL AUTO_INCREMENT, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INT NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (""id""), CONSTRAINT ""fk_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
+                    expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INT UNSIGNED NOT NULL AUTO_INCREMENT, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INT UNSIGNED NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (""id""), CONSTRAINT ""fk_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
+                } );
+
+                describe( "column types", function() {
+                    it( "bigIncrements", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.bigIncrements( "id" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""id"" BIGINT UNSIGNED NOT NULL AUTO_INCREMENT)" );
+                    } );
+
+                    it( "bigInteger", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "weather_reports", function( table ) {
+                            table.bigInteger( "temperature" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""weather_reports"" (""temperature"" BIGINT NOT NULL)" );
+                    } );
+
+                    it( "boolean", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.boolean( "active" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT(1) NOT NULL)" );
+                    } );
+
+                    it( "char", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "date", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "dateTime", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "dateTimeTz", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "decimal", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "enum", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "float", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "increments", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "integer", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "json", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "longText", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "mediumIncrements", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "mediumInteger", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "mediumText", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "morphs", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "nullableMorphs", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "smallIncrements", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "smallInteger", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "string", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "text", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "time", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "timeTz", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "tinyInteger", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.tinyInteger( "active" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT NOT NULL)" );
+                    } );
+
+                    it( "tinyInteger with length", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.tinyInteger( "active", 3 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT(3) NOT NULL)" );
+                    } );
+
+                    it( "timestamp", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "timestampTz", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "unsignedBigInteger", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.unsignedBigInteger( "salary" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" BIGINT UNSIGNED NOT NULL)" );
+                    } );
+
+                    it( "unsignedInteger", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "unsignedMediumInteger", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "unsignedSmallInteger", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "unsignedTinyInteger", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "uuid", function() {
+                        fail( "test not implemented yet" );
+                    } );
+                } );
+
+                describe( "column modifiers", function() {
+                    it( "comment", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "default", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "nullable", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "unsigned", function() {
+                        fail( "test not implemented yet" );
+                    } );
+                } );
+
+                describe( "indexes", function() {
+                    it( "unique", function() {
+                        fail( "off of column" );
+                        fail( "off of table" );
+                    } );
+
+                    it( "index", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "composite index", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "override index name", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "primary", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "composite primary key", function() {
+                        fail( "test not implemented yet" );
+                    } );
+                } );
+
+                describe( "has", function() {
+                    it( "hasTable", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "hasColumn", function() {
+                        fail( "test not implemented yet" );
+                    } );
+                } );
+
+                describe( "rename", function() {
+                    it( "rename table", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "rename column", function() {
+                        fail( "test not implemented yet" );
+                    } );
+                } );
+
+                describe( "drop", function() {
+                    it( "drop table", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "dropIfExists", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    it( "drop column", function() {
+                        fail( "test not implemented yet" );
+                    } );
                 } );
             } );
         } );

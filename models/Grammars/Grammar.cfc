@@ -742,6 +742,7 @@ component displayname="Grammar" accessors="true" {
         return arrayToList( arrayFilter( [
             wrapColumn( column.getName() ),
             generateType( column ),
+            modifyUnsigned( column ),
             generateNullConstraint( column ),
             generateAutoIncrement( column ),
             generateDefault( column )
@@ -758,6 +759,10 @@ component displayname="Grammar" accessors="true" {
         return column.getNullable() ? "" : "NOT NULL";
     }
 
+    function modifyUnsigned( column ) {
+        return column.getUnsigned() ? "UNSIGNED" : "";
+    }
+
     function generateAutoIncrement( column ) {
         return column.getAutoIncrement() ? "AUTO_INCREMENT" : "";
     }
@@ -769,7 +774,11 @@ component displayname="Grammar" accessors="true" {
     /*====================================
     =            Column Types            =
     ====================================*/
-    
+
+    function typeBigInteger( column ) {
+        return "BIGINT";
+    }
+
     function typeString( column ) {
         return "VARCHAR(#column.getLength()#)";
     }
@@ -782,14 +791,18 @@ component displayname="Grammar" accessors="true" {
         return "TIMESTAMP";
     }
 
+    function typeTinyInteger( column ) {
+        return "TINYINT" & (column.getLength() != "" ? "(#column.getLength()#)" : "");
+    }
+
     /*===================================
     =            Index Types            =
     ===================================*/
-    
+
     function indexPrimary( index ) {
         return "PRIMARY KEY (#wrapColumn( index.getColumn() )#)";
     }
-    
+
     function indexForeign( index ) {
         //FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
         return arrayToList( [

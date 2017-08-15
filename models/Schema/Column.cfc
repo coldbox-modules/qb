@@ -15,10 +15,6 @@ component accessors="true" {
         return this;
     }
 
-    function getNullConstraint() {
-        return getNullable() ? "" : "NOT NULL";
-    }
-
     function references( column ) {
         arguments.type = "foreign";
         arguments.foreignKey = getName();

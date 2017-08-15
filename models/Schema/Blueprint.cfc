@@ -54,15 +54,40 @@ component accessors="true" {
     =            Column Types            =
     ====================================*/
 
+    function bigIncrements( name ) {
+        arguments.autoIncrement = true;
+        return unsignedBigInteger( argumentCollection = arguments );
+    }
+
+    function bigInteger( name ) {
+        arguments.type = "bigInteger";
+        return addColumn( argumentCollection = arguments );
+    }
+
+    function boolean( name ) {
+        arguments.length = 1;
+        return tinyInteger( argumentCollection = arguments );
+    }
+
     function increments( name ) {
         arguments.autoIncrement = true;
         addIndex( type = "primary", column = name );
         return unsignedInt( argumentCollection = arguments );
     }
 
+    function tinyInteger( name, length = "" ) {
+        arguments.type = "tinyInteger";
+        return addColumn( argumentCollection = arguments );
+    }
+
+    function unsignedBigInteger( name ) {
+        arguments.unsigned = true;
+        return bigInteger( argumentCollection = arguments );
+    }
+
     function unsignedInt( name ) {
         arguments.type = "integer";
-        arguments.unsinged = true;
+        arguments.unsigned = true;
         return addColumn( argumentCollection = arguments );
     }
 

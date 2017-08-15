@@ -696,7 +696,7 @@ component extends="testbox.system.BaseSpec" {
                                 "SELECT * FROM ""users"" GROUP BY ""id"", ""email"""
                             );
                         }
-                        
+
                         expect( getTestBindings( builder ) ).toBe( [] );
                     } );
 
@@ -853,8 +853,8 @@ component extends="testbox.system.BaseSpec" {
                                 var builder = getBuilder();
                                 builder.select( "*").from( "users" )
                                     .orderBy( [
-                                        [ "last_name", "desc" ], 
-                                        [ "age", "forward" ], 
+                                        [ "last_name", "desc" ],
+                                        [ "age", "forward" ],
                                         "favorite_color|backward",
                                         "favorite_food|desc",
                                         { column = "height", direction = "tallest" },
@@ -871,7 +871,7 @@ component extends="testbox.system.BaseSpec" {
                             it( "as raw expressions", function(){
                                 var builder = getBuilder();
                                 builder.select( "*").from( "users" )
-                                    .orderBy( [ 
+                                    .orderBy( [
                                         builder.raw( "DATE(created_at)" ),
                                         { column = builder.raw( "DATE(modified_at)" ) }
                                     ] );
@@ -894,10 +894,10 @@ component extends="testbox.system.BaseSpec" {
                             it( "can accept a struct with a column key and optionally the direction key", function(){
                                 var builder = getBuilder();
                                 builder.select( "*").from( "users" )
-                                    .orderBy( [ 
+                                    .orderBy( [
                                         { column = "last_name" },
                                         { column = "age", direction = "asc" },
-                                        { column = "favorite_color", direction = "desc" } 
+                                        { column = "favorite_color", direction = "desc" }
                                     ], "desc" );
 
                                 expect( builder.toSql() ).toBeWithCase(
@@ -946,7 +946,7 @@ component extends="testbox.system.BaseSpec" {
                             });
 
                         });
-                    
+
                     });
 
                     describe( "can accept a comma delimited list for the column argument", function(){
@@ -994,9 +994,9 @@ component extends="testbox.system.BaseSpec" {
                             });
 
                         });
-                    
+
                     });
-                    
+
                 } );
 
                 describe( "limits", function() {
@@ -1591,9 +1591,9 @@ component extends="testbox.system.BaseSpec" {
                         builder.from( "users" ).count();
 
                         expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
-                    } );    
+                    } );
                 } );
-                
+
                 describe( "max", function() {
                     it( "can return the max record of a table", function() {
                         var builder = getBuilder();
@@ -1617,7 +1617,7 @@ component extends="testbox.system.BaseSpec" {
                         } );
 
                         expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
-                    } );    
+                    } );
                 } );
 
                 describe( "min", function() {

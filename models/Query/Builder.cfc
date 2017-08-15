@@ -258,7 +258,7 @@ component displayname="Builder" accessors="true" {
             args[ count ] = arguments[ arg ];
             count--;
         }
-        
+
         if ( variables.columns.isEmpty() ||
             ( variables.columns.len() == 1 && isSimpleValue( variables.columns[ 1 ] ) && variables.columns[ 1 ] == "*" ) ) {
             variables.columns = [];
@@ -288,7 +288,7 @@ component displayname="Builder" accessors="true" {
         if ( ! arrayIsEmpty( arguments.bindings ) ) {
             addBindings( arguments.bindings, "select" );
         }
-        return this;        
+        return this;
     }
 
     /********************************************************************************\
@@ -1067,7 +1067,7 @@ component displayname="Builder" accessors="true" {
     /**
     * Add a group by clause to the query.
     * `groupBy` allows three ways to specify the grouping columns:
-    * - a comma-separated list 
+    * - a comma-separated list
     * - an array
     * - variadic arguments
     * All the columns passed this way will be individually added to the query.
@@ -1143,7 +1143,7 @@ component displayname="Builder" accessors="true" {
     * Add an order by clause to the query.  To order by multiple columns, call `orderBy` multiple times.
     * The order in which `orderBy` is called matters and is the order it appears in the SQL.
     *
-    * @column The name of the column(s) to order by. An expression (`builder.raw()`) can be passed as well. An array can be passed with any combination of simple values, array, struct, or list for each entry in the array (an example with all possible value styles: column = [ "last_name", [ "age", "desc" ], { column = "favorite_color", direction = "desc" }, "height|desc" ];. The column argument can also just accept a comman delimited list with a pipe ( | ) as the secondary delimiter denoting the direction of the order by. The pipe delimiter is also used when parsing the column argument when it is passed as an array and the entry in the array is a pipe delimited string. 
+    * @column The name of the column(s) to order by. An expression (`builder.raw()`) can be passed as well. An array can be passed with any combination of simple values, array, struct, or list for each entry in the array (an example with all possible value styles: column = [ "last_name", [ "age", "desc" ], { column = "favorite_color", direction = "desc" }, "height|desc" ];. The column argument can also just accept a comman delimited list with a pipe ( | ) as the secondary delimiter denoting the direction of the order by. The pipe delimiter is also used when parsing the column argument when it is passed as an array and the entry in the array is a pipe delimited string.
     * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc". If column argument is an array this argument will be used as the default value for all entries in the column list or array that fail to specify a direction for a speicifc column.
     *
     * @return qb.models.Query.Builder
@@ -1156,7 +1156,7 @@ component displayname="Builder" accessors="true" {
                 column = column
             } );
         }
-        // if the column argument is an array 
+        // if the column argument is an array
         else if ( isArray( column ) ) {
 
             for ( var col in column ) {
@@ -1205,7 +1205,7 @@ component displayname="Builder" accessors="true" {
                         column = col[1]
                     });
                 }
-                
+
             }
 
         }
@@ -1216,7 +1216,7 @@ component displayname="Builder" accessors="true" {
 
             for ( var col in arCols ) {
                 var colName = listFirst( col, "|" );
-                
+
                 if ( listLen( col, "|" ) == 2 ) {
                     var dir = ( arrayFindNoCase( variables.directions, listLast( col, "|" ) ) ) ? listLast( col, "|" ) : direction;
                 } else {
@@ -1300,7 +1300,7 @@ component displayname="Builder" accessors="true" {
     /**
     * When is a useful helper method that introduces if / else control flow without breaking chainability.
     * When the `condition` is true, the `onTrue` callback is triggered.  If the `condition` is false and an `onFalse` callback is passed, it is triggered.  Otherwise, the query is returned unmodified.
-    * 
+    *
     * @condition A boolean condition that if true will trigger the `onTrue` callback. If not true, the `onFalse` callback will trigger if it was passed. Otherwise, the query is returned unmodified.
     * @onTrue A closure that will be triggered if the `condition` is true.
     * @onFlase A closure that will be triggered if the `condition` is false.
@@ -1437,10 +1437,10 @@ component displayname="Builder" accessors="true" {
     public any function updateOrInsert(
         required struct values,
         struct options = {},
-        boolean toSql = false 
+        boolean toSql = false
     ) {
         if ( exists() ) {
-            return this.limit( 1 ).update( argumentCollection = arguments ); 
+            return this.limit( 1 ).update( argumentCollection = arguments );
         }
 
         return this.insert( argumentCollection = arguments );
@@ -1473,7 +1473,7 @@ component displayname="Builder" accessors="true" {
         if ( toSql ) {
             return sql;
         }
-        
+
         return runQuery( sql, options, "result" );
     }
 
@@ -1631,7 +1631,7 @@ component displayname="Builder" accessors="true" {
     /**
     * Returns true if the query returns any rows.
     *
-    * @options Any options to pass to `queryExecute`. Default: {}. 
+    * @options Any options to pass to `queryExecute`. Default: {}.
     *
     * @return boolean
     */
@@ -1830,7 +1830,7 @@ component displayname="Builder" accessors="true" {
     * Sets the return format for the query.
     * The return format can be a simple string like "query" to return queries or "array" to return an array of structs.
     * Alternative, the return format can be a closure.  The closure is passed the query as the only argument.  The result of the closure is returned as the result of the query.
-    * 
+    *
     * @format "query", "array", or a closure.
     *
     * @return qb.models.Query.Builder

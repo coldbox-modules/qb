@@ -45,6 +45,17 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "BluewaterSolutions",
+      "name": "BluewaterSolutions",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/23514337?v=4",
+      "profile": "https://github.com/BluewaterSolutions",
+      "contributions": [
+        "bug",
+        "code",
+        "doc"
+      ]
     }
   ]
 }

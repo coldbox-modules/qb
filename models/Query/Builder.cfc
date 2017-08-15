@@ -610,6 +610,8 @@ component displayname="Builder" accessors="true" {
             return whereInSub( argumentCollection = arguments );
         }
 
+        arguments.values = normalizeToArray( arguments.values );
+
         var type = negate ? "notIn" : "in";
         variables.wheres.append( {
             type = type,

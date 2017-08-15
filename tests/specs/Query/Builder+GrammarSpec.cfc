@@ -403,7 +403,17 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     describe( "where in", function() {
-                        it( "can add where in statements", function() {
+                        it( "can add where in statements from a list", function() {
+                            var builder = getBuilder();
+                            builder.from( "users" )
+                                .whereIn( "id", "1,2,3" );
+                            expect( builder.toSql() ).toBeWithCase(
+                                "SELECT * FROM ""users"" WHERE ""id"" IN (?, ?, ?)"
+                            );
+                            expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3 ] );
+                        } );
+
+                        it( "can add where in statements from an array", function() {
                             var builder = getBuilder();
                             builder.select( "*" ).from( "users" )
                                 .whereIn( "id", [ 1, 2, 3 ] );

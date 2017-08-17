@@ -1384,6 +1384,8 @@ component displayname="Builder" accessors="true" {
 
         var sql = getGrammar().compileInsert( this, columns, bindings );
 
+        clearBindings( except = "insert" );
+
         if ( toSql ) {
             return sql;
         }
@@ -1513,11 +1515,19 @@ component displayname="Builder" accessors="true" {
     *
     * @return qb.models.Query.Builder
     */
-    private Builder function clearBindings() {
-        variables.join = [];
-        variables.where = [];
-        variables.insert = [];
-        variables.update = [];
+    private Builder function clearBindings( only = [], except = [] ) {
+        arguments.only = normalizeToArray( arguments.only );
+        arguments.except = normalizeToArray( arguments.except );
+        if ( arguments.only.isEmpty() ) {
+            arguments.only = [ "select", "join", "where", "insert", "update" ];
+        }
+
+        for ( var bindingType in arguments.only ) {
+            if ( ! arrayContains( arguments.except, bindingType ) ) {
+                variables.bindings[ bindingType ] = [];
+            }
+        }
+
         return this;
     }
 

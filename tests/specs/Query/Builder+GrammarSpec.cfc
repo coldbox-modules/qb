@@ -1225,10 +1225,10 @@ component extends="testbox.system.BaseSpec" {
                     expect( bindings.insert ).toBeArray();
                     expect( bindings.insert ).toHaveLength( 1 );
                     expect( bindings.insert[ 1 ].value ).toBe( "baz" );
+                } );
 
-                    expect( bindings.where ).toBeArray();
-                    expect( bindings.where ).toHaveLength( 1 );
-                    expect( bindings.where[ 1 ].value ).toBe( "foo" );
+                it( "only the insert bindings get passed to the runQuery grammar method", function() {
+
                 } );
 
                 it( "updates an existing record when the where clause brings back at least one record", function() {

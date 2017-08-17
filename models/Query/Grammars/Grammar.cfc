@@ -139,7 +139,7 @@ component displayname="Grammar" accessors="true" {
     }
 
     /**
-    * Compiles the joins portion of a sql statement. 
+    * Compiles the joins portion of a sql statement.
     *
     * @query The Builder instance.
     * @joins The selected joins.
@@ -173,14 +173,14 @@ component displayname="Grammar" accessors="true" {
         array wheres = []
     ) {
         var wheresArray = [];
-        
+
         if ( arguments.wheres.isEmpty() ) {
             return "";
         }
 
         for ( var where in arguments.wheres ) {
             var whereFunc = variables[ "where#where.type#" ];
-            var sql = uCase( where.combinator ) & " " & whereFunc( query, where );
+            var sql = uCase( where.combinator ) & " " & whereFunc( query, duplicate( where ) );
             wheresArray.append( sql );
         }
 
@@ -680,6 +680,7 @@ component displayname="Grammar" accessors="true" {
         if ( isInstanceOf( column, "qb.models.Query.Expression" ) ) {
             return column.getSQL();
         }
+
         var alias = "";
         if ( column.findNoCase( " as " ) > 0 ) {
             var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", column, 1, true );
@@ -693,7 +694,7 @@ component displayname="Grammar" accessors="true" {
             column = listGetAt( column, 1, " " );
         }
         column = column.listToArray( "." ).map( wrapValue ).toList( "." );
-        return alias == "" ? column : column & " AS " & wrapValue( alias ); 
+        return alias == "" ? column : column & " AS " & wrapValue( alias );
     }
 
     /**

@@ -1225,10 +1225,9 @@ component extends="testbox.system.BaseSpec" {
                     expect( bindings.insert ).toBeArray();
                     expect( bindings.insert ).toHaveLength( 1 );
                     expect( bindings.insert[ 1 ].value ).toBe( "baz" );
-                } );
 
-                it( "only the insert bindings get passed to the runQuery grammar method", function() {
-
+                    expect( builder.getBindings() ).toBeArray();
+                    expect( builder.getBindings() ).toHaveLength( 1 );
                 } );
 
                 it( "updates an existing record when the where clause brings back at least one record", function() {
@@ -1250,6 +1249,9 @@ component extends="testbox.system.BaseSpec" {
                     expect( bindings.where ).toBeArray();
                     expect( bindings.where ).toHaveLength( 1 );
                     expect( bindings.where[ 1 ].value ).toBe( "foo" );
+
+                    expect( builder.getBindings() ).toBeArray();
+                    expect( builder.getBindings() ).toHaveLength( 2 );
                 } );
             } );
 
@@ -1784,6 +1786,16 @@ component extends="testbox.system.BaseSpec" {
                         sql = "SELECT ""id"" FROM ""users""",
                         options = {}
                     } );
+                } );
+            } );
+
+            describe( "compiling the same builder multiple times", function() {
+                it( "can call toSql many times and get the same output", function() {
+                    var builder = getBuilder();
+                    builder.from( "users" ).whereId( 10 );
+                    var sql = builder.toSql();
+                    var sqlAgain = builder.toSql();
+                    expect( sql ).toBe( sqlAgain );
                 } );
             } );
         } );

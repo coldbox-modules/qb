@@ -5,6 +5,7 @@ component accessors="true" {
     property name="name";
     property name="type";
     property name="length" default="255";
+    property name="precision" default="10";
     property name="nullable" default="false";
     property name="unsigned" default="false";
     property name="autoIncrement" default="false";

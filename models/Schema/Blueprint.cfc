@@ -56,6 +56,7 @@ component accessors="true" {
 
     function bigIncrements( name ) {
         arguments.autoIncrement = true;
+        addIndex( type = "primary", column = name );
         return unsignedBigInteger( argumentCollection = arguments );
     }
 
@@ -75,6 +76,11 @@ component accessors="true" {
         return unsignedInt( argumentCollection = arguments );
     }
 
+    function integer( name, precision = 10 ) {
+        arguments.type = "integer";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function tinyInteger( name, length = "" ) {
         arguments.type = "tinyInteger";
         return addColumn( argumentCollection = arguments );
@@ -83,6 +89,11 @@ component accessors="true" {
     function unsignedBigInteger( name ) {
         arguments.unsigned = true;
         return bigInteger( argumentCollection = arguments );
+    }
+
+    function unsignedInteger( name ) {
+        arguments.unsigned = true;
+        return integer( argumentCollection = arguments );
     }
 
     function unsignedInt( name ) {
@@ -96,6 +107,11 @@ component accessors="true" {
         if ( isNull( arguments.length ) ) {
             arguments.length = getSchemaBuilder().getDefaultStringLength();
         }
+        return addColumn( argumentCollection = arguments );
+    }
+
+    function text( name ) {
+        arguments.type = "text";
         return addColumn( argumentCollection = arguments );
     }
 

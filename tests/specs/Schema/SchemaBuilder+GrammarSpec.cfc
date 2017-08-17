@@ -30,7 +30,7 @@ component extends="testbox.system.BaseSpec" {
                         table.timestamp( "created_date" ).setDefault( "CURRENT_TIMESTAMP" );
                         table.timestamp( "modified_date" ).setDefault( "CURRENT_TIMESTAMP" );
                     }, false );
-                    expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INT UNSIGNED NOT NULL AUTO_INCREMENT, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INT UNSIGNED NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (""id""), CONSTRAINT ""fk_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
+                    expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INTEGER(10) UNSIGNED NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (""id""), CONSTRAINT ""fk_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
                 } );
 
                 describe( "column types", function() {
@@ -39,7 +39,7 @@ component extends="testbox.system.BaseSpec" {
                         var blueprint = schema.create( "users", function( table ) {
                             table.bigIncrements( "id" );
                         }, false );
-                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""id"" BIGINT UNSIGNED NOT NULL AUTO_INCREMENT)" );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""id"" BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY (""id""))" );
                     } );
 
                     it( "bigInteger", function() {
@@ -87,11 +87,27 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "increments", function() {
-                        fail( "test not implemented yet" );
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.increments( "id" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY (""id""))" );
                     } );
 
                     it( "integer", function() {
-                        fail( "test not implemented yet" );
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.integer( "age" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) NOT NULL)" );
+                    } );
+
+                    it( "integer with precision", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.integer( "age", 2 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(2) NOT NULL)" );
                     } );
 
                     it( "json", function() {
@@ -135,7 +151,11 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "text", function() {
-                        fail( "test not implemented yet" );
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "posts", function( table ) {
+                            table.text( "body" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" );
                     } );
 
                     it( "time", function() {
@@ -179,7 +199,11 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "unsignedInteger", function() {
-                        fail( "test not implemented yet" );
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.unsignedInteger( "age" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) UNSIGNED NOT NULL)" );
                     } );
 
                     it( "unsignedMediumInteger", function() {

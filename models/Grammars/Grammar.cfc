@@ -779,12 +779,16 @@ component displayname="Grammar" accessors="true" {
         return "BIGINT";
     }
 
+    function typeInteger( column ) {
+        return "INTEGER(#column.getPrecision()#)";
+    }
+
     function typeString( column ) {
         return "VARCHAR(#column.getLength()#)";
     }
 
-    function typeInteger( column ) {
-        return "INT";
+    function typeText( column ) {
+        return "TEXT";
     }
 
     function typeTimestamp( column ) {

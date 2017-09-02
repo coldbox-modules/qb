@@ -779,6 +779,10 @@ component displayname="Grammar" accessors="true" {
         return "BIGINT";
     }
 
+    function typeChar( column ) {
+        return "CHAR(#column.getLength()#)";
+    }
+
     function typeInteger( column ) {
         return "INTEGER(#column.getPrecision()#)";
     }

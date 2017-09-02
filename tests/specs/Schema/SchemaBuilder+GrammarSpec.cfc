@@ -59,30 +59,50 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "char", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "classifications", function( table ) {
+                            table.char( "level" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""classifications"" (""level"" CHAR(1) NOT NULL)" );
+                    } );
+
+                    it( "char (with length)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "classifications", function( table ) {
+                            table.char( "abbreviation", 3 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""classifications"" (""abbreviation"" CHAR(3) NOT NULL)" );
+                    } );
+
+                    it( "char (limits length over 255 to 255)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "classifications", function( table ) {
+                            table.char( "abbreviation", 300 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""classifications"" (""abbreviation"" CHAR(255) NOT NULL)" );
+                    } );
+
+                    xit( "date", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "date", function() {
+                    xit( "dateTime", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "dateTime", function() {
+                    xit( "dateTimeTz", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "dateTimeTz", function() {
+                    xit( "decimal", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "decimal", function() {
+                    xit( "enum", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "enum", function() {
-                        fail( "test not implemented yet" );
-                    } );
-
-                    it( "float", function() {
+                    xit( "float", function() {
                         fail( "test not implemented yet" );
                     } );
 
@@ -110,44 +130,60 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(2) NOT NULL)" );
                     } );
 
-                    it( "json", function() {
+                    xit( "json", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "longText", function() {
+                    xit( "longText", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "mediumIncrements", function() {
+                    xit( "mediumIncrements", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "mediumInteger", function() {
+                    xit( "mediumInteger", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "mediumText", function() {
+                    xit( "mediumText", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "morphs", function() {
+                    xit( "morphs", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "nullableMorphs", function() {
+                    xit( "nullableMorphs", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "smallIncrements", function() {
+                    xit( "raw", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "smallInteger", function() {
+                    xit( "smallIncrements", function() {
+                        fail( "test not implemented yet" );
+                    } );
+
+                    xit( "smallInteger", function() {
                         fail( "test not implemented yet" );
                     } );
 
                     it( "string", function() {
-                        fail( "test not implemented yet" );
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.string( "username" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL)" );
+                    } );
+
+                    it( "string (with length)", function() {
+                        var schema = getBuilder();
+                    var blueprint = schema.create( "users", function( table ) {
+                        table.string( "password", 50 );
+                    }, false );
+                    expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""password"" VARCHAR(50) NOT NULL)" );
                     } );
 
                     it( "text", function() {
@@ -158,11 +194,11 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" );
                     } );
 
-                    it( "time", function() {
+                    xit( "time", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "timeTz", function() {
+                    xit( "timeTz", function() {
                         fail( "test not implemented yet" );
                     } );
 
@@ -182,11 +218,11 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT(3) NOT NULL)" );
                     } );
 
-                    it( "timestamp", function() {
+                    xit( "timestamp", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "timestampTz", function() {
+                    xit( "timestampTz", function() {
                         fail( "test not implemented yet" );
                     } );
 
@@ -206,24 +242,24 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) UNSIGNED NOT NULL)" );
                     } );
 
-                    it( "unsignedMediumInteger", function() {
+                    xit( "unsignedMediumInteger", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "unsignedSmallInteger", function() {
+                    xit( "unsignedSmallInteger", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "unsignedTinyInteger", function() {
+                    xit( "unsignedTinyInteger", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "uuid", function() {
+                    xit( "uuid", function() {
                         fail( "test not implemented yet" );
                     } );
                 } );
 
-                describe( "column modifiers", function() {
+                xdescribe( "column modifiers", function() {
                     it( "comment", function() {
                         fail( "test not implemented yet" );
                     } );
@@ -241,7 +277,7 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                describe( "indexes", function() {
+                xdescribe( "indexes", function() {
                     it( "unique", function() {
                         fail( "off of column" );
                         fail( "off of table" );
@@ -268,7 +304,7 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                describe( "has", function() {
+                xdescribe( "has", function() {
                     it( "hasTable", function() {
                         fail( "test not implemented yet" );
                     } );
@@ -278,7 +314,7 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                describe( "rename", function() {
+                xdescribe( "rename", function() {
                     it( "rename table", function() {
                         fail( "test not implemented yet" );
                     } );
@@ -288,7 +324,7 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                describe( "drop", function() {
+                xdescribe( "drop", function() {
                     it( "drop table", function() {
                         fail( "test not implemented yet" );
                     } );

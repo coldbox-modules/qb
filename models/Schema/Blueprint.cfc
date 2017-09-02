@@ -70,6 +70,12 @@ component accessors="true" {
         return tinyInteger( argumentCollection = arguments );
     }
 
+    function char( name, length = 1 ) {
+        arguments.length = arguments.length > 255 ? 255 : arguments.length;
+        arguments.type = "char";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function increments( name ) {
         arguments.autoIncrement = true;
         addIndex( type = "primary", column = name );

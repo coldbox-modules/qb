@@ -154,8 +154,36 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""tshirt_size"" ENUM(""S"",""M"",""L"",""XL"",""XXL"") NOT NULL)" );
                     } );
 
-                    xit( "float", function() {
-                        fail( "test not implemented yet" );
+                    it( "float (with defaults)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.float( "salary" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" FLOAT(10,0) NOT NULL)" );
+                    } );
+
+                    it( "float (with length)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.float( "salary", 3 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" FLOAT(3,0) NOT NULL)" );
+                    } );
+
+                    it( "float (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.float( name = "salary", precision = 2 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" FLOAT(10,2) NOT NULL)" );
+                    } );
+
+                    it( "float (with length and precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.float( "salary", 3, 2 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" FLOAT(3,2) NOT NULL)" );
                     } );
 
                     it( "increments", function() {

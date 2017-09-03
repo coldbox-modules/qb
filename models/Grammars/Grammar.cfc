@@ -810,6 +810,10 @@ component displayname="Grammar" accessors="true" {
         return "ENUM(#values#)";
     }
 
+    function typeFloat( column ) {
+        return "FLOAT(#column.getLength()#,#column.getPrecision()#)";
+    }
+
     function typeInteger( column ) {
         return "INTEGER(#column.getPrecision()#)";
     }

@@ -110,7 +110,7 @@ component accessors="true" {
     function increments( name ) {
         arguments.autoIncrement = true;
         addIndex( type = "primary", column = name );
-        return unsignedInt( argumentCollection = arguments );
+        return unsignedInteger( argumentCollection = arguments );
     }
 
     function integer( name, precision = 10 ) {
@@ -128,29 +128,30 @@ component accessors="true" {
         return addColumn( argumentCollection = arguments );
     }
 
+    function mediumIncrements( name ) {
+        arguments.autoIncrement = true;
+        addIndex( type = "primary", column = name );
+        return unsignedMediumInteger( argumentCollection = arguments );
+    }
+
+    function mediumInteger( name, precision = 10 ) {
+        arguments.type = "mediumInteger";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function mediumText( name ) {
         arguments.type = "mediumText";
         return addColumn( argumentCollection = arguments );
     }
 
-    function tinyInteger( name, length = "" ) {
-        arguments.type = "tinyInteger";
-        return addColumn( argumentCollection = arguments );
+    function smallIncrements( name ) {
+        arguments.autoIncrement = true;
+        addIndex( type = "primary", column = name );
+        return unsignedSmallInteger( argumentCollection = arguments );
     }
 
-    function unsignedBigInteger( name ) {
-        arguments.unsigned = true;
-        return bigInteger( argumentCollection = arguments );
-    }
-
-    function unsignedInteger( name ) {
-        arguments.unsigned = true;
-        return integer( argumentCollection = arguments );
-    }
-
-    function unsignedInt( name ) {
-        arguments.type = "integer";
-        arguments.unsigned = true;
+    function smallInteger( name, precision = 10 ) {
+        arguments.type = "smallInteger";
         return addColumn( argumentCollection = arguments );
     }
 
@@ -175,6 +176,42 @@ component accessors="true" {
     function timestamp( name ) {
         arguments.type = "timestamp";
         return addColumn( argumentCollection = arguments );
+    }
+
+    function tinyIncrements( name ) {
+        arguments.autoIncrement = true;
+        addIndex( type = "primary", column = name );
+        return unsignedTinyInteger( argumentCollection = arguments );
+    }
+
+    function tinyInteger( name, precision = 10 ) {
+        arguments.type = "tinyInteger";
+        return addColumn( argumentCollection = arguments );
+    }
+
+    function unsignedBigInteger( name ) {
+        arguments.unsigned = true;
+        return bigInteger( argumentCollection = arguments );
+    }
+
+    function unsignedInteger( name ) {
+        arguments.unsigned = true;
+        return integer( argumentCollection = arguments );
+    }
+
+    function unsignedMediumInteger( name ) {
+        arguments.unsigned = true;
+        return mediumInteger( argumentCollection = arguments );
+    }
+
+    function unsignedSmallInteger( name ) {
+        arguments.unsigned = true;
+        return smallInteger( argumentCollection = arguments );
+    }
+
+    function unsignedTinyInteger( name ) {
+        arguments.unsigned = true;
+        return tinyInteger( argumentCollection = arguments );
     }
 
 }

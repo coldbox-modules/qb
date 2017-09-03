@@ -826,8 +826,16 @@ component displayname="Grammar" accessors="true" {
         return "TEXT";
     }
 
+    function typeMediumInteger( column ) {
+        return "INTEGER(#column.getPrecision()#)";
+    }
+
     function typeMediumText( column ) {
         return "TEXT";
+    }
+
+    function typeSmallInteger( column ) {
+        return "INTEGER(#column.getPrecision()#)";
     }
 
     function typeString( column ) {
@@ -847,7 +855,7 @@ component displayname="Grammar" accessors="true" {
     }
 
     function typeTinyInteger( column ) {
-        return "TINYINT" & (column.getLength() != "" ? "(#column.getLength()#)" : "");
+        return "INTEGER(#column.getPrecision()#)";
     }
 
     /*===================================

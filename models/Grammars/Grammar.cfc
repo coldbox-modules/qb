@@ -873,7 +873,11 @@ component displayname="Grammar" accessors="true" {
     ===================================*/
 
     function indexBasic( index ) {
-        return "";
+        var indexColumns = isArray( index.getColumn() ) ? index.getColumn() : [ index.getColumn() ];
+        var columnsString = indexColumns.map( function( column ) {
+            return wrapValue( column );
+        } ).toList( "," );
+        return "INDEX #wrapValue( index.getName() )# (#columnsString#)";
     }
 
     function indexForeign( index ) {

@@ -156,14 +156,22 @@ component accessors="true" {
     function morphs( name ) {
         unsignedInteger( "#name#_id" );
         string( "#name#_type" );
-        addIndex( type = "basic", column = [ "#name#_id", "#name#_type" ] );
+        addIndex(
+            type = "basic",
+            name = "#name#_index",
+            column = [ "#name#_id", "#name#_type" ]
+        );
         return this;
     }
 
     function nullableMorphs( name ) {
         unsignedInteger( "#name#_id" ).nullable();
         string( "#name#_type" ).nullable();
-        addIndex( type = "basic", column = [ "#name#_id", "#name#_type" ] );
+        addIndex(
+            type = "basic",
+            name = "#name#_index",
+            column = [ "#name#_id", "#name#_type" ]
+        );
         return this;
     }
 

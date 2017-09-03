@@ -340,7 +340,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" );
                     } );
 
-                    xit( "morphs", function() {
+                    it( "morphs", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "tags", function( table ) {
                             table.morphs( "taggable" );
@@ -348,11 +348,10 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED NOT NULL, ""taggable_type"" VARCHAR(255) NOT NULL)" );
-                        fail( "need expectations on the index" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED NOT NULL, ""taggable_type"" VARCHAR(255) NOT NULL, INDEX ""taggable_index"" (""taggable_id"",""taggable_type""))" );
                     } );
 
-                    xit( "nullableMorphs", function() {
+                    it( "nullableMorphs", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "tags", function( table ) {
                             table.nullableMorphs( "taggable" );
@@ -360,8 +359,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED, ""taggable_type"" VARCHAR(255))" );
-                        fail( "need expectations on the index" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED, ""taggable_type"" VARCHAR(255), INDEX ""taggable_index"" (""taggable_id"",""taggable_type""))" );
                     } );
 
                     xit( "raw", function() {

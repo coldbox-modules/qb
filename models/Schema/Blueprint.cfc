@@ -3,6 +3,7 @@ component accessors="true" {
     property name="schemaBuilder";
     property name="grammar";
     property name="table";
+    property name="commands";
 
     property name="columns";
     property name="indexes";
@@ -11,13 +12,21 @@ component accessors="true" {
         setSchemaBuilder( schemaBuilder );
         setGrammar( grammar );
 
-        variables.columns = [];
-        variables.indexes = [];
+        setColumns( [] );
+        setCommands( [] );
+        setIndexes( [] );
+        return this;
+    }
+
+    function addCommand( command ) {
+        variables.commands.append( command );
         return this;
     }
 
     function toSql() {
-        return getGrammar().compileCreate( this );
+        return variables.commands.map( function( command ) {
+            return invoke( getGrammar(), "compile#command#", { blueprint = this } );
+        } );
     }
 
     function addColumn() {

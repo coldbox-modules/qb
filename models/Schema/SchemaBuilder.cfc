@@ -10,10 +10,13 @@ component accessors="true" singleton {
 
     function create( table, callback, build = true, options = {} ) {
         var blueprint = new Blueprint( this, getGrammar() );
+        blueprint.addCommand( "create" );
         blueprint.setTable( table );
         callback( blueprint );
         if ( build ) {
-            getGrammar().runQuery( blueprint.toSql(), {}, options, "result" );
+            blueprint.getSql().each( function( statement ) {
+                getGrammar().runQuery( statement, {}, options, "result" );
+            } );
         }
         return blueprint;
     }

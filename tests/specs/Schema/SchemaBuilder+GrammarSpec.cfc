@@ -82,16 +82,20 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""classifications"" (""abbreviation"" CHAR(255) NOT NULL)" );
                     } );
 
-                    xit( "date", function() {
-                        fail( "test not implemented yet" );
+                    it( "date", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "posts", function( table ) {
+                            table.date( "posted_date" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""posted_date"" DATE NOT NULL)" );
                     } );
 
-                    xit( "dateTime", function() {
-                        fail( "test not implemented yet" );
-                    } );
-
-                    xit( "dateTimeTz", function() {
-                        fail( "test not implemented yet" );
+                    it( "datetime", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "posts", function( table ) {
+                            table.datetime( "posted_date" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""posted_date"" DATETIME NOT NULL)" );
                     } );
 
                     xit( "decimal", function() {
@@ -194,12 +198,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" );
                     } );
 
-                    xit( "time", function() {
-                        fail( "test not implemented yet" );
-                    } );
-
-                    xit( "timeTz", function() {
-                        fail( "test not implemented yet" );
+                    it( "time", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "recurring_tasks", function( table ) {
+                            table.time( "fire_time" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""recurring_tasks"" (""fire_time"" TIME NOT NULL)" );
                     } );
 
                     it( "tinyInteger", function() {
@@ -218,12 +222,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT(3) NOT NULL)" );
                     } );
 
-                    xit( "timestamp", function() {
-                        fail( "test not implemented yet" );
-                    } );
-
-                    xit( "timestampTz", function() {
-                        fail( "test not implemented yet" );
+                    it( "timestamp", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "posts", function( table ) {
+                            table.timestamp( "posted_date" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL)" );
                     } );
 
                     it( "unsignedBigInteger", function() {

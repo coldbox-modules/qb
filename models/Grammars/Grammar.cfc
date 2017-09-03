@@ -783,6 +783,14 @@ component displayname="Grammar" accessors="true" {
         return "CHAR(#column.getLength()#)";
     }
 
+    function typeDate( column ) {
+        return "DATE";
+    }
+
+    function typeDatetime( column ) {
+        return "DATETIME";
+    }
+
     function typeInteger( column ) {
         return "INTEGER(#column.getPrecision()#)";
     }
@@ -793,6 +801,10 @@ component displayname="Grammar" accessors="true" {
 
     function typeText( column ) {
         return "TEXT";
+    }
+
+    function typeTime( column ) {
+        return "TIME";
     }
 
     function typeTimestamp( column ) {

@@ -76,6 +76,16 @@ component accessors="true" {
         return addColumn( argumentCollection = arguments );
     }
 
+    function date( name ) {
+        arguments.type = "date";
+        return addColumn( argumentCollection = arguments );
+    }
+
+    function datetime( name ) {
+        arguments.type = "datetime";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function increments( name ) {
         arguments.autoIncrement = true;
         addIndex( type = "primary", column = name );
@@ -118,6 +128,11 @@ component accessors="true" {
 
     function text( name ) {
         arguments.type = "text";
+        return addColumn( argumentCollection = arguments );
+    }
+
+    function time( name ) {
+        arguments.type = "time";
         return addColumn( argumentCollection = arguments );
     }
 

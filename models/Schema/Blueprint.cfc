@@ -118,6 +118,11 @@ component accessors="true" {
         return addColumn( argumentCollection = arguments );
     }
 
+    function json( name ) {
+        arguments.type = "json";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function tinyInteger( name, length = "" ) {
         arguments.type = "tinyInteger";
         return addColumn( argumentCollection = arguments );

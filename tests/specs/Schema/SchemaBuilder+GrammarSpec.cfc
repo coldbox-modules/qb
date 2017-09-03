@@ -210,8 +210,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(2) NOT NULL)" );
                     } );
 
-                    xit( "json", function() {
-                        fail( "test not implemented yet" );
+                    it( "json", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.json( "personalizations" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""personalizations"" TEXT NOT NULL)" );
                     } );
 
                     xit( "longText", function() {

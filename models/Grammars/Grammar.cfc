@@ -818,6 +818,10 @@ component displayname="Grammar" accessors="true" {
         return "INTEGER(#column.getPrecision()#)";
     }
 
+    function typeJson( column ) {
+        return "TEXT";
+    }
+
     function typeString( column ) {
         return "VARCHAR(#column.getLength()#)";
     }

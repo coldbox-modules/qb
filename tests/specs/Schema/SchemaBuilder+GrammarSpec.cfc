@@ -218,8 +218,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""personalizations"" TEXT NOT NULL)" );
                     } );
 
-                    xit( "longText", function() {
-                        fail( "test not implemented yet" );
+                    it( "longText", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "posts", function( table ) {
+                            table.longText( "body" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" );
                     } );
 
                     xit( "mediumIncrements", function() {
@@ -230,8 +234,12 @@ component extends="testbox.system.BaseSpec" {
                         fail( "test not implemented yet" );
                     } );
 
-                    xit( "mediumText", function() {
-                        fail( "test not implemented yet" );
+                    it( "mediumText", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "posts", function( table ) {
+                            table.mediumText( "body" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" );
                     } );
 
                     xit( "morphs", function() {

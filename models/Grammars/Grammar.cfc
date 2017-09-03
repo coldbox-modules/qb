@@ -822,6 +822,14 @@ component displayname="Grammar" accessors="true" {
         return "TEXT";
     }
 
+    function typeLongText( column ) {
+        return "TEXT";
+    }
+
+    function typeMediumText( column ) {
+        return "TEXT";
+    }
+
     function typeString( column ) {
         return "VARCHAR(#column.getLength()#)";
     }

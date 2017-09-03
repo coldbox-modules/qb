@@ -123,6 +123,16 @@ component accessors="true" {
         return addColumn( argumentCollection = arguments );
     }
 
+    function longText( name ) {
+        arguments.type = "longText";
+        return addColumn( argumentCollection = arguments );
+    }
+
+    function mediumText( name ) {
+        arguments.type = "mediumText";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function tinyInteger( name, length = "" ) {
         arguments.type = "tinyInteger";
         return addColumn( argumentCollection = arguments );

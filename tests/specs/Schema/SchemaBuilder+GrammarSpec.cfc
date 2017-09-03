@@ -114,8 +114,36 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""posts"" (""posted_date"" DATETIME NOT NULL)" );
                     } );
 
-                    xit( "decimal", function() {
-                        fail( "test not implemented yet" );
+                    it( "decimal (with defaults)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.decimal( "salary" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" DECIMAL(10,0) NOT NULL)" );
+                    } );
+
+                    it( "decimal (with length)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.decimal( "salary", 3 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" DECIMAL(3,0) NOT NULL)" );
+                    } );
+
+                    it( "decimal (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.decimal( name = "salary", precision = 2 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" DECIMAL(10,2) NOT NULL)" );
+                    } );
+
+                    it( "decimal (with length and precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.decimal( "salary", 3, 2 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" DECIMAL(3,2) NOT NULL)" );
                     } );
 
                     xit( "enum", function() {
@@ -142,7 +170,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) NOT NULL)" );
                     } );
 
-                    it( "integer with precision", function() {
+                    it( "integer with length", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.integer( "age", 2 );

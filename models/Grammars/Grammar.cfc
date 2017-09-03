@@ -799,6 +799,10 @@ component displayname="Grammar" accessors="true" {
         return "DATETIME";
     }
 
+    function typeDecimal( column ) {
+        return "DECIMAL(#column.getLength()#,#column.getPrecision()#)";
+    }
+
     function typeInteger( column ) {
         return "INTEGER(#column.getPrecision()#)";
     }

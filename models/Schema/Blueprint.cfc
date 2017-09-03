@@ -92,6 +92,11 @@ component accessors="true" {
         return addColumn( argumentCollection = arguments );
     }
 
+    function decimal( name, length = 10, precision = 0 ) {
+        arguments.type = "decimal";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function increments( name ) {
         arguments.autoIncrement = true;
         addIndex( type = "primary", column = name );

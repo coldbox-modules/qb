@@ -251,11 +251,21 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     xit( "morphs", function() {
-                        fail( "test not implemented yet" );
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "tags", function( table ) {
+                            table.morphs( "taggable" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED NOT NULL, ""taggable_type"" VARCHAR(255) NOT NULL)" );
+                        fail( "need expectations on the index" );
                     } );
 
                     xit( "nullableMorphs", function() {
-                        fail( "test not implemented yet" );
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "tags", function( table ) {
+                            table.nullableMorphs( "taggable" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED, ""taggable_type"" VARCHAR(255))" );
+                        fail( "need expectations on the index" );
                     } );
 
                     xit( "raw", function() {

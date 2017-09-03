@@ -872,8 +872,8 @@ component displayname="Grammar" accessors="true" {
     =            Index Types            =
     ===================================*/
 
-    function indexPrimary( index ) {
-        return "PRIMARY KEY (#wrapColumn( index.getColumn() )#)";
+    function indexBasic( index ) {
+        return "";
     }
 
     function indexForeign( index ) {
@@ -885,6 +885,10 @@ component displayname="Grammar" accessors="true" {
             "ON UPDATE #ucase( index.getOnUpdate() )#",
             "ON DELETE #ucase( index.getOnDelete() )#"
         ], " " );
+    }
+
+    function indexPrimary( index ) {
+        return "PRIMARY KEY (#wrapColumn( index.getColumn() )#)";
     }
 
 }

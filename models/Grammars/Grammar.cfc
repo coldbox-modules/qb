@@ -858,6 +858,10 @@ component displayname="Grammar" accessors="true" {
         return "INTEGER(#column.getPrecision()#)";
     }
 
+    function typeUuid( column ) {
+        return "CHAR(35)";
+    }
+
     /*===================================
     =            Index Types            =
     ===================================*/

@@ -214,4 +214,9 @@ component accessors="true" {
         return tinyInteger( argumentCollection = arguments );
     }
 
+    function uuid( name ) {
+        arguments.type = "uuid";
+        return addColumn( argumentCollection = arguments );
+    }
+
 }

@@ -745,7 +745,8 @@ component displayname="Grammar" accessors="true" {
             modifyUnsigned( column ),
             generateNullConstraint( column ),
             generateAutoIncrement( column ),
-            generateDefault( column )
+            generateDefault( column ),
+            generateComment( column )
         ], function( item ) {
             return item != "";
         } ), " " );
@@ -769,6 +770,11 @@ component displayname="Grammar" accessors="true" {
 
     function generateDefault( column ) {
         return column.getDefault() != "" ? "DEFAULT #column.getDefault()#" : "";
+    }
+
+    function generateComment( column ) {
+        return column.getComment() != "" ? "COMMENT ""#column.getComment()#""" : "";
+
     }
 
     /*====================================

@@ -396,12 +396,20 @@ component extends="testbox.system.BaseSpec" {
                 } );
 
                 describe( "column modifiers", function() {
-                    xit( "comment", function() {
-                        fail( "test not implemented yet" );
+                    it( "comment", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.boolean( "active" ).comment( "This is a comment" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT(1) NOT NULL COMMENT ""This is a comment"")" );
                     } );
 
-                    xit( "default", function() {
-                        fail( "test not implemented yet" );
+                    it( "default", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.boolean( "active" ).default( 1 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT(1) NOT NULL DEFAULT 1)" );
                     } );
 
                     it( "nullable", function() {

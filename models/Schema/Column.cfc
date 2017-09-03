@@ -10,6 +10,7 @@ component accessors="true" {
     property name="unsigned" default="false";
     property name="autoIncrement" default="false";
     property name="default" default="";
+    property name="comment" default="";
     property name="values";
 
     function init( blueprint ) {
@@ -18,10 +19,26 @@ component accessors="true" {
         return this;
     }
 
+    function comment( comment ) {
+        return setComment( comment );
+    }
+
+    function default( value ) {
+        return setDefault( value );
+    }
+
+    function nullable() {
+        return setNullable( true );
+    }
+
     function references( column ) {
         arguments.type = "foreign";
         arguments.foreignKey = getName();
         return getBlueprint().addIndex( argumentCollection = arguments );
+    }
+
+    function unsigned() {
+        return setUnsigned( true );
     }
 
 }

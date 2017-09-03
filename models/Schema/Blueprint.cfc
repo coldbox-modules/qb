@@ -67,7 +67,8 @@ component accessors="true" {
 
     function boolean( name ) {
         arguments.length = 1;
-        return tinyInteger( argumentCollection = arguments );
+        arguments.type = "boolean";
+        return addColumn( argumentCollection = arguments );
     }
 
     function char( name, length = 1 ) {

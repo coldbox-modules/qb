@@ -50,6 +50,22 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""weather_reports"" (""temperature"" BIGINT NOT NULL)" );
                     } );
 
+                    it( "bit", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.bit( "active" );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""active"" BIT(1) NOT NULL)" );
+                    } );
+
+                    it( "bit (with length)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.bit( "something", 4 );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""users"" (""something"" BIT(4) NOT NULL)" );
+                    } );
+
                     it( "boolean", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {

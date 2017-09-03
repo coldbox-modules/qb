@@ -65,6 +65,11 @@ component accessors="true" {
         return addColumn( argumentCollection = arguments );
     }
 
+    function bit( name, length = 1 ) {
+        arguments.type = "bit";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function boolean( name ) {
         arguments.length = 1;
         arguments.type = "boolean";

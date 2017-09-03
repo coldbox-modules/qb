@@ -803,6 +803,13 @@ component displayname="Grammar" accessors="true" {
         return "DECIMAL(#column.getLength()#,#column.getPrecision()#)";
     }
 
+    function typeEnum( column ) {
+        var values = column.getValues().map( function ( value ) {
+            return wrapValue( value );
+        } ).toList( "," );
+        return "ENUM(#values#)";
+    }
+
     function typeInteger( column ) {
         return "INTEGER(#column.getPrecision()#)";
     }

@@ -10,9 +10,11 @@ component accessors="true" {
     property name="unsigned" default="false";
     property name="autoIncrement" default="false";
     property name="default" default="";
+    property name="values";
 
     function init( blueprint ) {
         setBlueprint( blueprint );
+        variables.values = [];
         return this;
     }
 

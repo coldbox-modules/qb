@@ -146,8 +146,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" DECIMAL(3,2) NOT NULL)" );
                     } );
 
-                    xit( "enum", function() {
-                        fail( "test not implemented yet" );
+                    it( "enum", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.enum( "tshirt_size", [ "S", "M", "L", "XL", "XXL" ] );
+                        }, false );
+                        expect( blueprint.toSql() ).toBeWithCase( "CREATE TABLE ""employees"" (""tshirt_size"" ENUM(""S"",""M"",""L"",""XL"",""XXL"") NOT NULL)" );
                     } );
 
                     xit( "float", function() {

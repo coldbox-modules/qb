@@ -97,6 +97,11 @@ component accessors="true" {
         return addColumn( argumentCollection = arguments );
     }
 
+    function enum( name, values ) {
+        arguments.type = "enum";
+        return addColumn( argumentCollection = arguments );
+    }
+
     function increments( name ) {
         arguments.autoIncrement = true;
         addIndex( type = "primary", column = name );

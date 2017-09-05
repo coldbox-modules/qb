@@ -76,69 +76,9 @@ qb enables you to explore new ways of organizing your code by letting you pass a
 Here's a gist with an example of the powerful models you can create with this!
 https://gist.github.com/elpete/80d641b98025f16059f6476561d88202
 
-## Usage
+## Full Docs
 
-To start a new query, instantiate a new Builder: `wirebox.getInstance('Builder@qb')`.
-
-By default, qb uses a generic Grammar.  You can specify your specific grammar in ColdBox by setting the `defaultGrammar` in your `moduleSettings`.
-
-```
-moduleSettings = {
-    qb = {
-        defaultGrammar = "MySQLGrammar"
-    }
-};
-```
-
-If you are not using WireBox, just make sure to wire up the `Builder` object with the correct grammar:
-
-```
-var grammar = new qb.models.Query.Grammars.MySQLGrammar();
-var builder = new qb.models.Query.Builder( grammar );
-```
-
-### Return Format
-
-You can influence the return format of the result in two ways.
-
-By default, qb returns an array of structs as the result of your query.  You can turn this behavior off by setting `builder.setReturningArrays( false )` for one-offs or setting `returningArrays = false` in your ColdBox config.
-
-```
-moduleSettings = {
-    qb = {
-        returningArrays = false
-    }
-};
-```
-
-If you want complete control over your return result, you can provide a closure as a `returnFormat`.  The results of the closure will be returned as the results of the builder.
-
-```
-moduleSettings = {
-    qb = {
-        returnFormat = function( q ) {
-            return application.wirebox.getInstance(
-                name = "Collection",
-                initArguments = { collection = q }
-            );
-        }
-    }
-};
-```
-
-## Interception Points
-
-Two interception points are available from QB: `preQBExecute` and `postQBExecute`.  These fire before and after the `queryExecute` call, respectively.  The following information is available in the `interceptData` struct:
-
-| Name | Type | Description |
-| --- | --- | --- |
-| sql | String | The sql string to execute | 
-| bindings | Struct | The struct of bindings (keys and values) for the query |
-| options | Struct | Any options to pass along to `queryExecute` |
-
-## Docs
-
-Coming soon!
+You can browse the full documentation at https://elpete.gitbooks.io/qb
 
 ## Contributors
 

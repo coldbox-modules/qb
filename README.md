@@ -3,6 +3,8 @@
 [![Master Branch Build Status](https://img.shields.io/travis/elpete/qb/master.svg?style=flat-square&label=master)](https://travis-ci.org/elpete/qb)
 [![Development Branch Build Status](https://img.shields.io/travis/elpete/qb/development.svg?style=flat-square&label=development)](https://travis-ci.org/elpete/qb)
 
+<a href="https://app.codesponsor.io/link/TQMfPZtDP7SHs7UgJVGg61uH/elpete/qb" rel="nofollow"><img src="https://app.codesponsor.io/embed/TQMfPZtDP7SHs7UgJVGg61uH/elpete/qb.svg" style="width: 888px; height: 68px;" alt="Sponsor" /></a>
+
 ## Introduction
 
 qb is a fluent query builder for ColdBox.  It is **heavily** inspired by [Eloquent](https://laravel.com/docs/5.3/eloquent) from [Laravel](https://laravel.com/).

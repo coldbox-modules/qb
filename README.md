@@ -7,7 +7,7 @@
 
 ## Introduction
 
-qb is a fluent query builder for ColdBox.  It is **heavily** inspired by [Eloquent](https://laravel.com/docs/5.3/eloquent) from [Laravel](https://laravel.com/).
+qb is a fluent query builder for CFML.  It is **heavily** inspired by [Eloquent](https://laravel.com/docs/5.3/eloquent) from [Laravel](https://laravel.com/).
 
 Using qb, you can:
 

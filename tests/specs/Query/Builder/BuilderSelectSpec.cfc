@@ -2,7 +2,7 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "select methods", function() {
             beforeEach( function() {
-                variables.mockGrammar = getMockBox().createMock( "qb.models.Grammars.Grammar" );
+                variables.mockGrammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" );
                 variables.query = new qb.models.Query.QueryBuilder( variables.mockGrammar );
             } );
 

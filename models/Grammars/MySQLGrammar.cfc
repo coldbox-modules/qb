@@ -1,4 +1,4 @@
-component extends="qb.models.Grammars.Grammar" {
+component extends="qb.models.Grammars.BaseGrammar" {
 
     /**
     * Parses and wraps a value from the Builder for use in a sql statement.
@@ -12,6 +12,6 @@ component extends="qb.models.Grammars.Grammar" {
             return value;
         }
         return "`#value#`";
-    }    
+    }
 
 }

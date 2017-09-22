@@ -19,7 +19,7 @@ component {
         };
 
         binder.map( "BaseGrammar@qb" )
-            .to( "qb.models.Grammars.Grammar" )
+            .to( "qb.models.Grammars.BaseGrammar" )
             .asSingleton();
 
         binder.map( "MySQLGrammar@qb" )
@@ -45,7 +45,7 @@ component {
 
         binder.map( "QueryBuilder@qb" )
             .to( "qb.models.Query.QueryBuilder" )
-            .initArg( name = "grammar", ref = "#settings.defaultGrammar#@qb" )
+            .initArg( name = "grammar", ref = "DefaultGrammar@qb" )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = settings.returnFormat );
     }

@@ -659,7 +659,7 @@ component extends="testbox.system.BaseSpec" {
 
     private function getBuilder() {
         var grammar = getMockBox()
-            .createMock( "qb.models.Grammars.Grammar" );
+            .createMock( "qb.models.Grammars.BaseGrammar" );
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
             .init( grammar );
         return builder;

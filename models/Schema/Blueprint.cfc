@@ -8,6 +8,8 @@ component accessors="true" {
     property name="columns";
     property name="indexes";
 
+    property name="ifExists" default="false";
+
     function init( schemaBuilder, grammar ) {
         setSchemaBuilder( schemaBuilder );
         setGrammar( grammar );

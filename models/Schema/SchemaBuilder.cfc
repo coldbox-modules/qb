@@ -33,4 +33,17 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    function dropIfExists( table, options = {}, build = true ) {
+        var blueprint = new Blueprint( this, getGrammar() );
+        blueprint.addCommand( "drop" );
+        blueprint.setTable( table );
+        blueprint.setIfExists( true );
+        if ( build ) {
+            blueprint.getSql().each( function( statement ) {
+                getGrammar().runQuery( statement, {}, options, "result" );
+            } );
+        }
+        return blueprint;
+    }
+
 }

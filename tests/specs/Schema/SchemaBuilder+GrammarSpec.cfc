@@ -650,8 +650,13 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements[ 1 ] ).toBeWithCase( "DROP TABLE ""users""" );
                     } );
 
-                    xit( "dropIfExists", function() {
-                        fail( "test not implemented yet" );
+                    it( "dropIfExists", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.dropIfExists( "users", {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "DROP TABLE IF EXISTS ""users""" );
                     } );
 
                     xit( "drop column", function() {

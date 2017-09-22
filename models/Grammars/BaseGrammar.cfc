@@ -763,7 +763,17 @@ component displayname="Grammar" accessors="true" {
     =======================================*/
 
     function compileDrop( required blueprint ) {
-        return "DROP TABLE #wrapTable( blueprint.getTable() )#";
+        return arrayToList( arrayFilter( [
+            "DROP TABLE",
+            generateIfExists( blueprint ),
+            wrapTable( blueprint.getTable() )
+        ], function( item ) {
+            return item != "";
+        } ), " ");
+    }
+
+    function generateIfExists( blueprint ) {
+        return blueprint.getIfExists() ? "IF EXISTS" : "";
     }
 
     /*=====  End of Blueprint: Drop  ======*/

@@ -22,14 +22,17 @@ component accessors="true" {
         return this;
     }
 
-    function addCommand( command ) {
-        variables.commands.append( command );
+    function addCommand( command, parameters = [] ) {
+        variables.commands.append( new SchemaCommand( type = command, parameters = parameters ) );
         return this;
     }
 
     function toSql() {
         return variables.commands.map( function( command ) {
-            return invoke( getGrammar(), "compile#command#", { blueprint = this } );
+            return invoke( getGrammar(), "compile#command.getType()#", {
+                blueprint = this,
+                commandParameters = command.getParameters()
+            } );
         } );
     }
 
@@ -78,7 +81,7 @@ component accessors="true" {
                 invoke( dropColumn, "set#arg#", { 1 = arguments[ arg ] } );
             }
         }
-        variables.dropColumns.append( dropColumn );
+        addCommand( "dropColumn", { column = dropColumn } );
         return dropColumn;
     }
 

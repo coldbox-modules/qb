@@ -669,6 +669,19 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements ).toHaveLength( 1 );
                         expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP COLUMN ""username""" );
                     } );
+
+                    it( "drop multiple columns", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.alter( "users", function( table ) {
+                            table.dropColumn( "username" );
+                            table.dropColumn( "password" );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 2 );
+                        expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP COLUMN ""username""" );
+                        expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP COLUMN ""password""" );
+                    } );
                 } );
             } );
         } );

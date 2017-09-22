@@ -48,7 +48,6 @@ component accessors="true" singleton {
 
     function alter( table, callback, options = {}, build = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
-        blueprint.addCommand( "alter" );
         blueprint.setTable( table );
         callback( blueprint );
         if ( build ) {

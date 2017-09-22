@@ -794,28 +794,12 @@ component displayname="Grammar" accessors="true" {
     =            Blueprint: Alter            =
     ========================================*/
 
-    function compileAlter( required blueprint ) {
-        return "ALTER TABLE #wrapTable( blueprint.getTable() )# #compileAlterBody( blueprint )#";
-    }
-
-    function compileAlterBody( blueprint ) {
+    function compileDropColumn( blueprint, commandParameters ) {
         return arrayToList( arrayFilter( [
-            compileDropColumns( blueprint )
-        ], function( item ) {
-            return item != "";
-        } ), ", " );
-    }
-
-    function compileDropColumns( required blueprint ) {
-        return blueprint.getDropColumns().map( function( column ) {
-            return compileDropColumn( column );
-        } ).toList( ", " );
-    }
-
-    function compileDropColumn( column ) {
-        return arrayToList( arrayFilter( [
+            "ALTER TABLE",
+            wrapTable( blueprint.getTable() ),
             "DROP COLUMN",
-            wrapColumn( column.getName() )
+            wrapColumn( commandParameters.column.getName() )
         ], function( item ) {
             return item != "";
         } ), " " );

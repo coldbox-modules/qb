@@ -734,14 +734,6 @@ component displayname="Grammar" accessors="true" {
         } ).toList( ", " );
     }
 
-    function compileCreateIndexes( blueprint ) {
-        return blueprint.getIndexes().map( function( index ) {
-            return invoke( this, "index#index.getType()#", { index = index } );
-        } ).filter( function( item ) {
-            return item != "";
-        } ).toList( ", " );
-    }
-
     function compileCreateColumn( column ) {
         return arrayToList( arrayFilter( [
             wrapColumn( column.getName() ),
@@ -754,6 +746,26 @@ component displayname="Grammar" accessors="true" {
         ], function( item ) {
             return item != "";
         } ), " " );
+    }
+
+    function generateNullConstraint( column ) {
+        return column.getNullable() ? "" : "NOT NULL";
+    }
+
+    function modifyUnsigned( column ) {
+        return column.getUnsigned() ? "UNSIGNED" : "";
+    }
+
+    function generateAutoIncrement( column ) {
+        return column.getAutoIncrement() ? "AUTO_INCREMENT" : "";
+    }
+
+    function generateDefault( column ) {
+        return column.getDefault() != "" ? "DEFAULT #column.getDefault()#" : "";
+    }
+
+    function generateComment( column ) {
+        return column.getComment() != "" ? "COMMENT ""#column.getComment()#""" : "";
     }
 
     /*=====  End of Blueprint: Create  ======*/
@@ -811,36 +823,13 @@ component displayname="Grammar" accessors="true" {
 
     /*=====  End of Blueprint: Alter  ======*/
 
-
+    /*====================================
+    =            Column Types            =
+    ====================================*/
 
     function generateType( column ) {
         return invoke( this, "type#column.getType()#", { column = column } );
     }
-
-    function generateNullConstraint( column ) {
-        return column.getNullable() ? "" : "NOT NULL";
-    }
-
-    function modifyUnsigned( column ) {
-        return column.getUnsigned() ? "UNSIGNED" : "";
-    }
-
-    function generateAutoIncrement( column ) {
-        return column.getAutoIncrement() ? "AUTO_INCREMENT" : "";
-    }
-
-    function generateDefault( column ) {
-        return column.getDefault() != "" ? "DEFAULT #column.getDefault()#" : "";
-    }
-
-    function generateComment( column ) {
-        return column.getComment() != "" ? "COMMENT ""#column.getComment()#""" : "";
-
-    }
-
-    /*====================================
-    =            Column Types            =
-    ====================================*/
 
     function typeBigInteger( column ) {
         return "BIGINT";
@@ -929,9 +918,19 @@ component displayname="Grammar" accessors="true" {
         return "CHAR(35)";
     }
 
+    /*=====  End of Column Types  ======*/
+
     /*===================================
     =            Index Types            =
     ===================================*/
+
+    function compileCreateIndexes( blueprint ) {
+        return blueprint.getIndexes().map( function( index ) {
+            return invoke( this, "index#index.getType()#", { index = index } );
+        } ).filter( function( item ) {
+            return item != "";
+        } ).toList( ", " );
+    }
 
     function indexBasic( index ) {
         var indexColumns = isArray( index.getColumn() ) ? index.getColumn() : [ index.getColumn() ];
@@ -955,5 +954,7 @@ component displayname="Grammar" accessors="true" {
     function indexPrimary( index ) {
         return "PRIMARY KEY (#wrapColumn( index.getColumn() )#)";
     }
+
+    /*=====  End of Index Types  ======*/
 
 }

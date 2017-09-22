@@ -711,6 +711,10 @@ component displayname="Grammar" accessors="true" {
         return """#value#""";
     }
 
+    /*=========================================
+    =            Blueprint: Create            =
+    =========================================*/
+
     function compileCreate( required blueprint ) {
         return "CREATE TABLE #wrapTable( blueprint.getTable() )# (#compileCreateBody( blueprint )#)";
     }
@@ -751,6 +755,19 @@ component displayname="Grammar" accessors="true" {
             return item != "";
         } ), " " );
     }
+
+    /*=====  End of Blueprint: Create  ======*/
+
+    /*=======================================
+    =            Blueprint: Drop            =
+    =======================================*/
+
+    function compileDrop( required blueprint ) {
+        return "DROP TABLE #wrapTable( blueprint.getTable() )#";
+    }
+
+    /*=====  End of Blueprint: Drop  ======*/
+
 
     function generateType( column ) {
         return invoke( this, "type#column.getType()#", { column = column } );

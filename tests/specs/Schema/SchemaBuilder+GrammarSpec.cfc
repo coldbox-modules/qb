@@ -640,16 +640,21 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                xdescribe( "drop", function() {
+                describe( "drop", function() {
                     it( "drop table", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.drop( "users", {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "DROP TABLE ""users""" );
+                    } );
+
+                    xit( "dropIfExists", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "dropIfExists", function() {
-                        fail( "test not implemented yet" );
-                    } );
-
-                    it( "drop column", function() {
+                    xit( "drop column", function() {
                         fail( "test not implemented yet" );
                     } );
                 } );

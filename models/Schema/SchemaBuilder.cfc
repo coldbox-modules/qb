@@ -21,4 +21,16 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    function drop( table, options = {}, build = true ) {
+        var blueprint = new Blueprint( this, getGrammar() );
+        blueprint.addCommand( "drop" );
+        blueprint.setTable( table );
+        if ( build ) {
+            blueprint.getSql().each( function( statement ) {
+                getGrammar().runQuery( statement, {}, options, "result" );
+            } );
+        }
+        return blueprint;
+    }
+
 }

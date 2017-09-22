@@ -1,6 +1,6 @@
 import qb.models.Query.Builder;
 
-component extends="qb.models.Query.Grammars.Grammar" {
+component extends="qb.models.Query.Grammars.BaseGrammar" {
 
     /**
     * Runs a query through `queryExecute`.
@@ -79,7 +79,7 @@ component extends="qb.models.Query.Grammars.Grammar" {
         if ( limitAndOffset.isEmpty() ) {
             return sql;
         }
-        
+
         return "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (#sql#) results ) WHERE #limitAndOffset.toList( " AND " )#";
     }
 

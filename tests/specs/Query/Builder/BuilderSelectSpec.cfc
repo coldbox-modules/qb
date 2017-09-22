@@ -2,7 +2,7 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "select methods", function() {
             beforeEach( function() {
-                variables.mockGrammar = getMockBox().createMock( "qb.models.Query.Grammars.Grammar" );
+                variables.mockGrammar = getMockBox().createMock( "qb.models.Query.Grammars.BaseGrammar" );
                 variables.query = new qb.models.Query.Builder( variables.mockGrammar );
             } );
 
@@ -71,8 +71,8 @@ component extends="testbox.system.BaseSpec" {
                     query.distinct();
 
                     expect( query.getDistinct() ).toBe( true,
-                        "Distinct should be set to true" );       
-                } );   
+                        "Distinct should be set to true" );
+                } );
             } );
         } );
     }

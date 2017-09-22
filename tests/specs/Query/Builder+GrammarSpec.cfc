@@ -1804,7 +1804,7 @@ component extends="testbox.system.BaseSpec" {
 
     private function getBuilder() {
         var grammar = getMockBox()
-            .createMock( "qb.models.Query.Grammars.Grammar" );
+            .createMock( "qb.models.Query.Grammars.BaseGrammar" );
         var queryUtils = getMockBox()
             .createMock( "qb.models.Query.QueryUtils" );
         var builder = getMockBox().createMock( "qb.models.Query.Builder" )

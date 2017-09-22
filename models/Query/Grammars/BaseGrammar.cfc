@@ -37,9 +37,9 @@ component displayname="Grammar" accessors="true" {
     *
     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
     *
-    * @return qb.models.Query.Grammars.Grammar
+    * @return qb.models.Query.Grammars.BaseGrammar
     */
-    public Grammar function init(
+    public BaseGrammar function init(
         QueryUtils utils = new qb.models.Query.QueryUtils()
     ) {
         variables.utils = arguments.utils;

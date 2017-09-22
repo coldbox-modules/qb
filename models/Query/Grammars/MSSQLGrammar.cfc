@@ -1,4 +1,4 @@
-component extends="qb.models.Query.Grammars.Grammar" {
+component extends="qb.models.Query.Grammars.BaseGrammar" {
 
     /**
     * The different components of a select statement in the order of compilation.

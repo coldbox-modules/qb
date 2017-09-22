@@ -1,5 +1,5 @@
 import qb.models.Query.Builder;
-import qb.models.Query.Grammars.Grammar;
+import qb.models.Query.Grammars.BaseGrammar;
 
 /**
 * Query Builder for fluently creating SQL queries.
@@ -133,14 +133,14 @@ component displayname="Builder" accessors="true" {
     /**
     * Creates an empty query builder.
     *
-    * @grammar The grammar to use when compiling queries. Default: qb.models.Query.Grammars.Grammar
+    * @grammar The grammar to use when compiling queries. Default: qb.models.Query.Grammars.BaseGrammar
     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
     * @returnFormat the closure (or string format shortcut) that modifies the query and is eventually returned to the caller. Default: 'array'
     *
     * @return qb.models.Query.Builder
     */
     public Builder function init(
-        Grammar grammar = new qb.models.Query.Grammars.Grammar(),
+        BaseGrammar grammar = new qb.models.Query.Grammars.BaseGrammar(),
         QueryUtils utils = new qb.models.Query.QueryUtils(),
         any returnFormat = "array"
     ) {

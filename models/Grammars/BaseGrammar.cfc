@@ -798,6 +798,17 @@ component displayname="Grammar" accessors="true" {
     =            Blueprint: Alter            =
     ========================================*/
 
+    function compileAddColumn( blueprint, commandParameters ) {
+        return arrayToList( arrayFilter( [
+            "ALTER TABLE",
+            wrapTable( blueprint.getTable() ),
+            "ADD",
+            compileCreateColumn( commandParameters.column )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
     function compileDropColumn( blueprint, commandParameters ) {
         return arrayToList( arrayFilter( [
             "ALTER TABLE",

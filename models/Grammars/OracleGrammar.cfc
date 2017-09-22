@@ -166,4 +166,11 @@ component extends="qb.models.Grammars.BaseGrammar" {
         } ), " " );
     }
 
+    function typeEnum( column ) {
+        var values = column.getValues().map( function ( value ) {
+            return wrapValue( value );
+        } ).toList( "," );
+        return "VARCHAR(255) CHECK(#wrapColumn(column.getName())# IN (#values#))";
+    }
+
 }

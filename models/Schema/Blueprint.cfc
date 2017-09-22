@@ -27,12 +27,20 @@ component accessors="true" {
         return this;
     }
 
+    function hasCommand( commandType ) {
+        return ! arrayIsEmpty( arrayFilter( getCommands(), function( command ) {
+            return command.getType() == commandType;
+        } ) );
+    }
+
     function toSql() {
         return variables.commands.map( function( command ) {
             return invoke( getGrammar(), "compile#command.getType()#", {
                 blueprint = this,
                 commandParameters = command.getParameters()
             } );
+        } ).filter( function ( sql ) {
+            return sql != "";
         } );
     }
 
@@ -41,7 +49,7 @@ component accessors="true" {
         return this;
     }
 
-    function addColumn() {
+    function appendColumn() {
         var newColumn = new Column( this );
         var indexMetadata = getMetadata( newColumn );
         var functionNames = indexMetadata.functions.map( function( func ) {
@@ -74,6 +82,11 @@ component accessors="true" {
     /*======================================
     =            Alter Commands            =
     ======================================*/
+
+    function addColumn( columnDefinition ) {
+        addCommand( "addColumn", { column = columnDefinition } );
+        return this;
+    }
 
     function dropColumn( name ) {
         var dropColumn = new Column( this );
@@ -115,49 +128,49 @@ component accessors="true" {
 
     function bigInteger( name ) {
         arguments.type = "bigInteger";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function bit( name, length = 1 ) {
         arguments.type = "bit";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function boolean( name ) {
         arguments.length = 1;
         arguments.type = "boolean";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function char( name, length = 1 ) {
         arguments.length = arguments.length > 255 ? 255 : arguments.length;
         arguments.type = "char";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function date( name ) {
         arguments.type = "date";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function datetime( name ) {
         arguments.type = "datetime";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function decimal( name, length = 10, precision = 0 ) {
         arguments.type = "decimal";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function enum( name, values ) {
         arguments.type = "enum";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function float( name, length = 10, precision = 0 ) {
         arguments.type = "float";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function increments( name ) {
@@ -168,17 +181,17 @@ component accessors="true" {
 
     function integer( name, precision = 10 ) {
         arguments.type = "integer";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function json( name ) {
         arguments.type = "json";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function longText( name ) {
         arguments.type = "longText";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function mediumIncrements( name ) {
@@ -189,12 +202,12 @@ component accessors="true" {
 
     function mediumInteger( name, precision = 10 ) {
         arguments.type = "mediumInteger";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function mediumText( name ) {
         arguments.type = "mediumText";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function morphs( name ) {
@@ -227,7 +240,7 @@ component accessors="true" {
 
     function smallInteger( name, precision = 10 ) {
         arguments.type = "smallInteger";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function string( name, length ) {
@@ -235,22 +248,22 @@ component accessors="true" {
         if ( isNull( arguments.length ) ) {
             arguments.length = getSchemaBuilder().getDefaultStringLength();
         }
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function text( name ) {
         arguments.type = "text";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function time( name ) {
         arguments.type = "time";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function timestamp( name ) {
         arguments.type = "timestamp";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function tinyIncrements( name ) {
@@ -261,7 +274,7 @@ component accessors="true" {
 
     function tinyInteger( name, precision = 10 ) {
         arguments.type = "tinyInteger";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
     function unsignedBigInteger( name ) {
@@ -291,7 +304,7 @@ component accessors="true" {
 
     function uuid( name ) {
         arguments.type = "uuid";
-        return addColumn( argumentCollection = arguments );
+        return appendColumn( argumentCollection = arguments );
     }
 
 }

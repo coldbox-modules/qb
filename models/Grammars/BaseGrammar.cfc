@@ -778,6 +778,40 @@ component displayname="Grammar" accessors="true" {
 
     /*=====  End of Blueprint: Drop  ======*/
 
+    /*========================================
+    =            Blueprint: Alter            =
+    ========================================*/
+
+    function compileAlter( required blueprint ) {
+        return "ALTER TABLE #wrapTable( blueprint.getTable() )# #compileAlterBody( blueprint )#";
+    }
+
+    function compileAlterBody( blueprint ) {
+        return arrayToList( arrayFilter( [
+            compileDropColumns( blueprint )
+        ], function( item ) {
+            return item != "";
+        } ), ", " );
+    }
+
+    function compileDropColumns( required blueprint ) {
+        return blueprint.getDropColumns().map( function( column ) {
+            return compileDropColumn( column );
+        } ).toList( ", " );
+    }
+
+    function compileDropColumn( column ) {
+        return arrayToList( arrayFilter( [
+            "DROP COLUMN",
+            wrapColumn( column.getName() )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
+    /*=====  End of Blueprint: Alter  ======*/
+
+
 
     function generateType( column ) {
         return invoke( this, "type#column.getType()#", { column = column } );

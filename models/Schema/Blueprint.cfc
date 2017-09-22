@@ -6,6 +6,7 @@ component accessors="true" {
     property name="commands";
 
     property name="columns";
+    property name="dropColumns";
     property name="indexes";
 
     property name="ifExists" default="false";
@@ -15,6 +16,7 @@ component accessors="true" {
         setGrammar( grammar );
 
         setColumns( [] );
+        setDropColumns( [] );
         setCommands( [] );
         setIndexes( [] );
         return this;
@@ -60,6 +62,28 @@ component accessors="true" {
         variables.indexes.append( newIndex );
         return newIndex;
     }
+
+    /*======================================
+    =            Alter Commands            =
+    ======================================*/
+
+    function dropColumn( name ) {
+        var dropColumn = new Column( this );
+        var indexMetadata = getMetadata( dropColumn );
+        var functionNames = indexMetadata.functions.map( function( func ) {
+            return lcase( func.name );
+        } );
+        for ( var arg in arguments ) {
+            if ( functionNames.contains( lcase( "set#arg#" ) ) ) {
+                invoke( dropColumn, "set#arg#", { 1 = arguments[ arg ] } );
+            }
+        }
+        variables.dropColumns.append( dropColumn );
+        return dropColumn;
+    }
+
+    /*=====  End of Alter Commands  ======*/
+
 
     /*====================================
     =            Column Types            =

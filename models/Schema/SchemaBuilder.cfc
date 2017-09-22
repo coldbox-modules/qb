@@ -46,4 +46,17 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    function alter( table, callback, options = {}, build = true ) {
+        var blueprint = new Blueprint( this, getGrammar() );
+        blueprint.addCommand( "alter" );
+        blueprint.setTable( table );
+        callback( blueprint );
+        if ( build ) {
+            blueprint.getSql().each( function( statement ) {
+                getGrammar().runQuery( statement, {}, options, "result" );
+            } );
+        }
+        return blueprint;
+    }
+
 }

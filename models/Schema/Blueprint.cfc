@@ -36,6 +36,11 @@ component accessors="true" {
         } );
     }
 
+    function raw( sql ) {
+        variables.columns.append( new qb.models.Query.Expression( sql ) );
+        return this;
+    }
+
     function addColumn() {
         var newColumn = new Column( this );
         var indexMetadata = getMetadata( newColumn );

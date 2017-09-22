@@ -362,8 +362,15 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED, ""taggable_type"" VARCHAR(255), INDEX ""taggable_index"" (""taggable_id"",""taggable_type""))" );
                     } );
 
-                    xit( "raw", function() {
-                        fail( "test not implemented yet" );
+                    it( "raw", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.raw( "id BLOB NOT NULL" );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (id BLOB NOT NULL)" );
                     } );
 
                     it( "smallIncrements", function() {
@@ -715,8 +722,10 @@ component extends="testbox.system.BaseSpec" {
     }
 
     private function getBuilder() {
+        var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
         var grammar = getMockBox()
-            .createMock( "qb.models.Grammars.BaseGrammar" );
+            .createMock( "qb.models.Grammars.BaseGrammar" )
+            .init( utils );
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
             .init( grammar );
         return builder;

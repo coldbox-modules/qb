@@ -42,8 +42,10 @@ component extends="testbox.system.BaseSpec" {
     }
 
     private function getBuilder() {
+        var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
         var grammar = getMockBox()
-            .createMock( "qb.models.Grammars.MySQLGrammar" );
+            .createMock( "qb.models.Grammars.MySQLGrammar" )
+            .init( utils );
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
             .init( grammar );
         return builder;

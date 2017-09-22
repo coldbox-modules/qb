@@ -735,6 +735,10 @@ component displayname="Grammar" accessors="true" {
     }
 
     function compileCreateColumn( column ) {
+        if ( utils.isExpression( column ) ) {
+            return column.getSql();
+        }
+
         return arrayToList( arrayFilter( [
             wrapColumn( column.getName() ),
             generateType( column ),

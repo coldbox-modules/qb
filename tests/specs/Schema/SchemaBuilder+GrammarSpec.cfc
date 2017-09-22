@@ -630,12 +630,17 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                xdescribe( "rename", function() {
+                describe( "rename", function() {
                     it( "rename table", function() {
-                        fail( "test not implemented yet" );
+                        var schema = getBuilder();
+                        var blueprint = schema.rename( "workers", "employees", {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""workers"" RENAME TO ""employees""" );
                     } );
 
-                    it( "rename column", function() {
+                    xit( "rename column", function() {
                         fail( "test not implemented yet" );
                     } );
                 } );
@@ -670,7 +675,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP COLUMN ""username""" );
                     } );
 
-                    it( "drop multiple columns", function() {
+                    it( "drops multiple columns", function() {
                         var schema = getBuilder();
                         var blueprint = schema.alter( "users", function( table ) {
                             table.dropColumn( "username" );

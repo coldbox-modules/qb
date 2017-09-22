@@ -14,4 +14,15 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "`#value#`";
     }
 
+    function compileRenameTable( blueprint, commandParameters ) {
+        return arrayToList( arrayFilter( [
+            "RENAME TABLE",
+            wrapTable( blueprint.getTable() ),
+            "TO",
+            wrapTable( commandParameters.to )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
 }

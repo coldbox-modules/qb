@@ -816,6 +816,18 @@ component displayname="Grammar" accessors="true" {
         } ), " " );
     }
 
+    function compileRenameColumn( blueprint, commandParameters ) {
+        return arrayToList( arrayFilter( [
+            "ALTER TABLE",
+            wrapTable( blueprint.getTable() ),
+            "CHANGE",
+            wrapColumn( commandParameters.from ),
+            compileCreateColumn( commandParameters.to )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
     /*=====  End of Blueprint: Alter  ======*/
 
     /*====================================

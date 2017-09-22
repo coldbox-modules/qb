@@ -1,18 +1,7 @@
 component extends="testbox.system.BaseSpec" {
 
     function run() {
-        describe( "schema builder + mysql grammar", function() {
-            describe( "rename", function() {
-                it( "rename table", function() {
-                    var schema = getBuilder();
-                    var blueprint = schema.rename( "workers", "employees", {}, false );
-                    var statements = blueprint.toSql();
-                    expect( statements ).toBeArray();
-                    expect( statements ).toHaveLength( 1 );
-                    expect( statements[ 1 ] ).toBeWithCase( "RENAME TABLE `workers` TO `employees`" );
-                } );
-            } );
-
+        describe( "schema builder + oracle grammar", function() {
             describe( "rename columns", function() {
                 it( "renames a column", function() {
                     var schema = getBuilder();
@@ -22,7 +11,7 @@ component extends="testbox.system.BaseSpec" {
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 1 );
-                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE `users` CHANGE `name` `username` VARCHAR(255) NOT NULL" );
+                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""USERS"" RENAME COLUMN ""NAME"" TO ""USERNAME""" );
                 } );
 
                 it( "renames multiple columns", function() {
@@ -34,8 +23,8 @@ component extends="testbox.system.BaseSpec" {
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 2 );
-                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE `users` CHANGE `name` `username` VARCHAR(255) NOT NULL" );
-                    expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE `users` CHANGE `purchase_date` `purchased_at` TIMESTAMP" );
+                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""USERS"" RENAME COLUMN ""NAME"" TO ""USERNAME""" );
+                    expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""USERS"" RENAME COLUMN ""PURCHASE_DATE"" TO ""PURCHASED_AT""" );
                 } );
             } );
         } );
@@ -43,7 +32,7 @@ component extends="testbox.system.BaseSpec" {
 
     private function getBuilder() {
         var grammar = getMockBox()
-            .createMock( "qb.models.Grammars.MySQLGrammar" );
+            .createMock( "qb.models.Grammars.OracleGrammar" );
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
             .init( grammar );
         return builder;

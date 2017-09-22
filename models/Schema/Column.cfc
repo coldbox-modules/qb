@@ -20,15 +20,18 @@ component accessors="true" {
     }
 
     function comment( comment ) {
-        return setComment( comment );
+        setComment( comment );
+        return this;
     }
 
     function default( value ) {
-        return setDefault( value );
+        setDefault( value );
+        return this;
     }
 
     function nullable() {
-        return setNullable( true );
+        setNullable( true );
+        return this;
     }
 
     function references( column ) {
@@ -38,7 +41,8 @@ component accessors="true" {
     }
 
     function unsigned() {
-        return setUnsigned( true );
+        setUnsigned( true );
+        return this;
     }
 
 }

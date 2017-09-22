@@ -142,4 +142,17 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return super.wrapValue( uCase( arguments.value ) );
     }
 
+    function compileRenameColumn( blueprint, commandParameters ) {
+        return arrayToList( arrayFilter( [
+            "ALTER TABLE",
+            wrapTable( blueprint.getTable() ),
+            "RENAME COLUMN",
+            wrapColumn( commandParameters.from ),
+            "TO",
+            wrapColumn( commandParameters.to.getName() )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
 }

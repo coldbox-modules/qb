@@ -85,6 +85,11 @@ component accessors="true" {
         return dropColumn;
     }
 
+    function renameColumn( name, newColumnDefinition ) {
+        addCommand( "renameColumn", { from = name, to = newColumnDefinition } );
+        return this;
+    }
+
     /*=====  End of Alter Commands  ======*/
 
 

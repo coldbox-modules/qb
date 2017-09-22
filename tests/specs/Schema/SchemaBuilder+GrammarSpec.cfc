@@ -450,10 +450,6 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL)" );
                     } );
 
-                    xit( "timestamps", function() {
-                        fail( "test not implemented yet" );
-                    } );
-
                     it( "tinyIncrements", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
@@ -672,6 +668,49 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""name"" ""username"" VARCHAR(255) NOT NULL" );
                         expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""purchase_date"" ""purchased_at"" TIMESTAMP" );
                     } );
+                } );
+
+                describe( "modify columns", function() {
+                    it( "modifies a column", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.alter( "users", function( table ) {
+                            table.modifyColumn( "name", table.string( "username" ) );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""name"" ""username"" VARCHAR(255) NOT NULL" );
+                    } );
+
+                    it( "modifies multiple columns", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.alter( "users", function( table ) {
+                            table.modifyColumn( "name", table.string( "username" ) );
+                            table.modifyColumn( "purchase_date", table.timestamp( "purchased_at" ).nullable() );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 2 );
+                        expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""name"" ""username"" VARCHAR(255) NOT NULL" );
+                        expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""purchase_date"" ""purchased_at"" TIMESTAMP" );
+                    } );
+                } );
+
+                xit( "can drop, add, rename, and modify columns at the same time ", function() {
+                    var schema = getBuilder();
+                    var blueprint = schema.alter( "users", function( table ) {
+                        table.dropColumn( "is_active" );
+                        table.enum( "tshirt_size", [ "S", "M", "L", "XL", "XXL" ] );
+                        table.renameColumn( "name", table.string( "username" ) );
+                        table.modifyColumn( "purchase_date", table.timestamp( "purchase_date" ).nullable() );
+                    }, {}, false );
+                    var statements = blueprint.toSql();
+                    expect( statements ).toBeArray();
+                    expect( statements ).toHaveLength( 4 );
+                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP COLUMN ""is_active""" );
+                    expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" ENUM(""S"",""M"",""L"",""XL"",""XXL"") NOT NULL" );
+                    expect( statements[ 3 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""name"" ""username"" VARCHAR(255) NOT NULL" );
+                    expect( statements[ 4 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""purchase_date"" ""purchased_at"" TIMESTAMP" );
                 } );
 
                 describe( "drop", function() {

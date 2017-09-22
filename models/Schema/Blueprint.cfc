@@ -95,6 +95,11 @@ component accessors="true" {
         return this;
     }
 
+    function modifyColumn( name, newColumnDefinition ) {
+        addCommand( "modifyColumn", { from = name, to = newColumnDefinition } );
+        return this;
+    }
+
     /*=====  End of Alter Commands  ======*/
 
 

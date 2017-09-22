@@ -155,4 +155,15 @@ component extends="qb.models.Grammars.BaseGrammar" {
         } ), " " );
     }
 
+    function compileModifyColumn( blueprint, commandParameters ) {
+        return arrayToList( arrayFilter( [
+            "ALTER TABLE",
+            wrapTable( blueprint.getTable() ),
+            "MODIFY",
+            compileCreateColumn( commandParameters.to )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
 }

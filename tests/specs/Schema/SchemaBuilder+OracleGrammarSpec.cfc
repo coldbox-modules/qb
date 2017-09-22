@@ -27,6 +27,32 @@ component extends="testbox.system.BaseSpec" {
                     expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""USERS"" RENAME COLUMN ""PURCHASE_DATE"" TO ""PURCHASED_AT""" );
                 } );
             } );
+
+            describe( "modify columns", function() {
+                it( "modifies a column", function() {
+                    var schema = getBuilder();
+                    var blueprint = schema.alter( "users", function( table ) {
+                        table.modifyColumn( "name", table.string( "name", 100 ) );
+                    }, {}, false );
+                    var statements = blueprint.toSql();
+                    expect( statements ).toBeArray();
+                    expect( statements ).toHaveLength( 1 );
+                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""USERS"" MODIFY ""NAME"" VARCHAR(100) NOT NULL" );
+                } );
+
+                it( "modifies multiple columns", function() {
+                    var schema = getBuilder();
+                    var blueprint = schema.alter( "users", function( table ) {
+                        table.modifyColumn( "name", table.string( "name", 100 ) );
+                        table.modifyColumn( "purchase_date", table.timestamp( "purchase_date" ).nullable() );
+                    }, {}, false );
+                    var statements = blueprint.toSql();
+                    expect( statements ).toBeArray();
+                    expect( statements ).toHaveLength( 2 );
+                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""USERS"" MODIFY ""NAME"" VARCHAR(100) NOT NULL" );
+                    expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""USERS"" MODIFY ""PURCHASE_DATE"" TIMESTAMP" );
+                } );
+            } );
         } );
     }
 

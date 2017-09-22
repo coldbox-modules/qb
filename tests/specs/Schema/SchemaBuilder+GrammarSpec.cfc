@@ -5,7 +5,7 @@ component extends="testbox.system.BaseSpec" {
             describe( "create tables", function() {
                 it( "can create an empty table", function() {
                     var schema = getBuilder();
-                    var blueprint = schema.create( "users", function() {}, false );
+                    var blueprint = schema.create( "users", function() {}, {}, false );
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 1 );
@@ -17,7 +17,7 @@ component extends="testbox.system.BaseSpec" {
                     var blueprint = schema.create( "users", function( table ) {
                         table.string( "username" );
                         table.string( "password" );
-                    }, false );
+                    }, {}, false );
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 1 );
@@ -35,7 +35,7 @@ component extends="testbox.system.BaseSpec" {
                         table.unsignedInteger( "country_id" ).references( "id" ).setTable( "countries" ).setOnDelete( "cascade" );
                         table.timestamp( "created_date" ).setDefault( "CURRENT_TIMESTAMP" );
                         table.timestamp( "modified_date" ).setDefault( "CURRENT_TIMESTAMP" );
-                    }, false );
+                    }, {}, false );
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 1 );
@@ -47,7 +47,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.bigIncrements( "id" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -58,7 +58,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "weather_reports", function( table ) {
                             table.bigInteger( "temperature" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -69,7 +69,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.bit( "active" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -80,7 +80,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.bit( "something", 4 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -91,7 +91,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.boolean( "active" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -102,7 +102,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "classifications", function( table ) {
                             table.char( "level" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -113,7 +113,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "classifications", function( table ) {
                             table.char( "abbreviation", 3 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -124,7 +124,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "classifications", function( table ) {
                             table.char( "abbreviation", 300 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -135,7 +135,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "posts", function( table ) {
                             table.date( "posted_date" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -146,7 +146,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "posts", function( table ) {
                             table.datetime( "posted_date" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -157,7 +157,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.decimal( "salary" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -168,7 +168,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.decimal( "salary", 3 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -179,7 +179,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.decimal( name = "salary", precision = 2 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -190,7 +190,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.decimal( "salary", 3, 2 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -201,7 +201,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.enum( "tshirt_size", [ "S", "M", "L", "XL", "XXL" ] );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -212,7 +212,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.float( "salary" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -223,7 +223,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.float( "salary", 3 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -234,7 +234,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.float( name = "salary", precision = 2 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -245,7 +245,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.float( "salary", 3, 2 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -256,7 +256,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.increments( "id" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -267,7 +267,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.integer( "age" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -278,7 +278,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.integer( "age", 2 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -289,7 +289,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.json( "personalizations" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -300,7 +300,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "posts", function( table ) {
                             table.longText( "body" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -311,7 +311,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.mediumIncrements( "id" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -322,7 +322,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.integer( "age" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -333,7 +333,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "posts", function( table ) {
                             table.mediumText( "body" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -344,7 +344,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "tags", function( table ) {
                             table.morphs( "taggable" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -355,7 +355,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "tags", function( table ) {
                             table.nullableMorphs( "taggable" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -370,7 +370,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.smallIncrements( "id" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -381,7 +381,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.smallInteger( "age" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -392,7 +392,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.string( "username" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -403,7 +403,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.string( "password", 50 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -414,7 +414,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "posts", function( table ) {
                             table.text( "body" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -425,7 +425,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "recurring_tasks", function( table ) {
                             table.time( "fire_time" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -436,7 +436,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "posts", function( table ) {
                             table.timestamp( "posted_date" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -451,7 +451,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.tinyIncrements( "id" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -462,7 +462,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.tinyInteger( "active" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -473,7 +473,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.tinyInteger( "active", 3 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -484,7 +484,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "employees", function( table ) {
                             table.unsignedBigInteger( "salary" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -495,7 +495,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.unsignedInteger( "age" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -506,7 +506,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.unsignedMediumInteger( "age" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -517,7 +517,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.unsignedSmallInteger( "age" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -528,7 +528,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.unsignedTinyInteger( "age" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -539,7 +539,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.uuid( "id" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -552,7 +552,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.boolean( "active" ).comment( "This is a comment" );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -563,7 +563,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.boolean( "active" ).default( 1 );
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -574,7 +574,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.uuid( "id" ).nullable();
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
@@ -585,7 +585,7 @@ component extends="testbox.system.BaseSpec" {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.integer( "age" ).unsigned();
-                        }, false );
+                        }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );

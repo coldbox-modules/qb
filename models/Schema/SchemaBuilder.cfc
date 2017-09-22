@@ -8,7 +8,7 @@ component accessors="true" singleton {
         return this;
     }
 
-    function create( table, callback, build = true, options = {} ) {
+    function create( table, callback, options = {}, build = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "create" );
         blueprint.setTable( table );

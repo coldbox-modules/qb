@@ -93,7 +93,7 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
-            xit( "can drop and add and rename and modify columns at the same time", function() {
+            it( "can drop and add and rename and modify columns at the same time", function() {
                 var schema = getBuilder();
                 var blueprint = schema.alter( "users", function( table ) {
                     table.dropColumn( "is_active" );
@@ -104,10 +104,10 @@ component extends="testbox.system.BaseSpec" {
                 var statements = blueprint.toSql();
                 expect( statements ).toBeArray();
                 expect( statements ).toHaveLength( 4 );
-                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP COLUMN ""is_active""" );
+                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""USERS"" DROP COLUMN ""IS_ACTIVE""" );
                 expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""USERS"" ADD ""TSHIRT_SIZE"" VARCHAR(255) CHECK(""TSHIRT_SIZE"" IN (""S"",""M"",""L"",""XL"",""XXL"")) NOT NULL" );
-                expect( statements[ 3 ] ).toBeWithCase( "ALTER TABLE ""users"" RENAME COLUMN ""name"" TO ""username""" );
-                expect( statements[ 4 ] ).toBeWithCase( "ALTER TABLE ""users"" MODIFY ""purchase_date"" TIMESTAMP" );
+                expect( statements[ 3 ] ).toBeWithCase( "ALTER TABLE ""USERS"" RENAME COLUMN ""NAME"" TO ""USERNAME""" );
+                expect( statements[ 4 ] ).toBeWithCase( "ALTER TABLE ""USERS"" MODIFY ""PURCHASE_DATE"" TIMESTAMP" );
             } );
         } );
     }

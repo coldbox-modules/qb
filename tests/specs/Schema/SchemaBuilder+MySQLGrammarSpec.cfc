@@ -87,6 +87,31 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            xdescribe( "indexes", function() {
+                it( "unique (off of column)", function() {
+                    var schema = getBuilder();
+                    var blueprint = schema.create( "users", function( table ) {
+                        table.string( "username" ).unique();
+                    }, {}, false );
+                    var statements = blueprint.toSql();
+                    expect( statements ).toBeArray();
+                    expect( statements ).toHaveLength( 1 );
+                    expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL, CONSTRAINT unique_username UNIQUE (`username`))" );
+                } );
+
+                it( "unique (off of table)", function() {
+                    var schema = getBuilder();
+                    var blueprint = schema.create( "users", function( table ) {
+                        table.string( "username" );
+                        table.unique( "username" );
+                    }, {}, false );
+                    var statements = blueprint.toSql();
+                    expect( statements ).toBeArray();
+                    expect( statements ).toHaveLength( 1 );
+                    expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL, UNIQUE (`username`))" );
+                } );
+            } );
+
             it( "can drop and add and rename and modify columns at the same time", function() {
                 var schema = getBuilder();
                 var blueprint = schema.alter( "users", function( table ) {

@@ -596,29 +596,111 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                xdescribe( "indexes", function() {
-                    it( "unique", function() {
-                        fail( "off of column" );
-                        fail( "off of table" );
+                describe( "indexes", function() {
+                    describe( "unique", function() {
+                        describe( "in create", function() {
+                            it( "unique (off of column)", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.create( "users", function( table ) {
+                                    table.string( "username" ).unique();
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 1 );
+                                expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL UNIQUE)" );
+                            } );
+
+                            it( "unique (off of table)", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.create( "users", function( table ) {
+                                    table.string( "username" );
+                                    table.unique( "username" );
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 1 );
+                                expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL, CONSTRAINT ""unique_username"" UNIQUE (""username""))" );
+                            } );
+
+                            it( "unique (overriding constaint name)", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.create( "users", function( table ) {
+                                    table.string( "username" );
+                                    table.unique( "username", "unq_uname" );
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 1 );
+                                expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_uname"" UNIQUE (""username""))" );
+                            } );
+
+                            it( "unique (multiple columns)", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.create( "users", function( table ) {
+                                    table.string( "first_name" );
+                                    table.string( "last_name" );
+                                    table.unique( [ "first_name", "last_name" ] );
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 1 );
+                                expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""unique_first_name_last_name"" UNIQUE (""first_name"", ""last_name""))" );
+                            } );
+                        } );
+
+                        xdescribe( "in alter", function() {
+                            it( "add constraint", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.alter( "users", function( table ) {
+                                    table.addConstraint( table.unique( "username" ) );
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 1 );
+                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unique_username"" (""username"")" );
+                            } );
+
+                            it( "remove constraint", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.alter( "users", function( table ) {
+                                    table.removeConstraint( "unique_username" );
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 1 );
+                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP INDEX ""unique_username""" );
+                            } );
+
+                            it( "remove constraint (from index object)", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.alter( "users", function( table ) {
+                                    table.removeConstraint( table.unique( "username" ) );
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 1 );
+                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP INDEX ""unique_username""" );
+                            } );
+                        } );
                     } );
 
-                    it( "index", function() {
+                    xit( "index", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "composite index", function() {
+                    xit( "composite index", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "override index name", function() {
+                    xit( "override index name", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "primary", function() {
+                    xit( "primary", function() {
                         fail( "test not implemented yet" );
                     } );
 
-                    it( "composite primary key", function() {
+                    xit( "composite primary key", function() {
                         fail( "test not implemented yet" );
                     } );
                 } );

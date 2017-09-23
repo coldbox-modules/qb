@@ -9,6 +9,7 @@ component accessors="true" {
     property name="dropColumns";
     property name="indexes";
 
+    property name="creating" default="false";
     property name="ifExists" default="false";
 
     function init( schemaBuilder, grammar ) {
@@ -115,6 +116,20 @@ component accessors="true" {
 
     /*=====  End of Alter Commands  ======*/
 
+    /*===================================
+    =            Constraints            =
+    ===================================*/
+
+    function unique( columns, name ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        arguments.name = isNull( name ) ? "unique_#arrayToList( columns, "_" )#" : arguments.name;
+        addIndex( type = "unique", columns = columns, name = name );
+        return this;
+    }
+
+    /*=====  End of Constraints  ======*/
+
+
 
     /*====================================
     =            Column Types            =
@@ -122,7 +137,7 @@ component accessors="true" {
 
     function bigIncrements( name ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", column = name );
+        addIndex( type = "primary", columns = name );
         return unsignedBigInteger( argumentCollection = arguments );
     }
 
@@ -175,7 +190,7 @@ component accessors="true" {
 
     function increments( name ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", column = name );
+        addIndex( type = "primary", columns = name );
         return unsignedInteger( argumentCollection = arguments );
     }
 
@@ -196,7 +211,7 @@ component accessors="true" {
 
     function mediumIncrements( name ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", column = name );
+        addIndex( type = "primary", columns = name );
         return unsignedMediumInteger( argumentCollection = arguments );
     }
 
@@ -216,7 +231,7 @@ component accessors="true" {
         addIndex(
             type = "basic",
             name = "#name#_index",
-            column = [ "#name#_id", "#name#_type" ]
+            columns = [ "#name#_id", "#name#_type" ]
         );
         return this;
     }
@@ -227,14 +242,14 @@ component accessors="true" {
         addIndex(
             type = "basic",
             name = "#name#_index",
-            column = [ "#name#_id", "#name#_type" ]
+            columns = [ "#name#_id", "#name#_type" ]
         );
         return this;
     }
 
     function smallIncrements( name ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", column = name );
+        addIndex( type = "primary", columns = name );
         return unsignedSmallInteger( argumentCollection = arguments );
     }
 
@@ -268,7 +283,7 @@ component accessors="true" {
 
     function tinyIncrements( name ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", column = name );
+        addIndex( type = "primary", columns = name );
         return unsignedTinyInteger( argumentCollection = arguments );
     }
 

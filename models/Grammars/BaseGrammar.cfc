@@ -744,6 +744,7 @@ component displayname="Grammar" accessors="true" {
             generateType( column ),
             modifyUnsigned( column ),
             generateNullConstraint( column ),
+            generateUniqueConstraint( column ),
             generateAutoIncrement( column ),
             generateDefault( column ),
             generateComment( column )
@@ -754,6 +755,10 @@ component displayname="Grammar" accessors="true" {
 
     function generateNullConstraint( column ) {
         return column.getNullable() ? "" : "NOT NULL";
+    }
+
+    function generateUniqueConstraint( column ) {
+        return column.getUnique() ? "UNIQUE" : "";
     }
 
     function modifyUnsigned( column ) {
@@ -856,6 +861,18 @@ component displayname="Grammar" accessors="true" {
     }
 
     /*=====  End of Blueprint: Alter  ======*/
+
+    /*===================================
+    =            Constraints            =
+    ===================================*/
+
+    function compileAddConstraint( blueprint, commandParameters ) {
+        if ( blueprint.getCreating() ) {
+            return "";
+        }
+    }
+
+    /*=====  End of Constraints  ======*/
 
     /*====================================
     =            Column Types            =
@@ -967,8 +984,7 @@ component displayname="Grammar" accessors="true" {
     }
 
     function indexBasic( index ) {
-        var indexColumns = isArray( index.getColumn() ) ? index.getColumn() : [ index.getColumn() ];
-        var columnsString = indexColumns.map( function( column ) {
+        var columnsString = index.getColumns().map( function( column ) {
             return wrapValue( column );
         } ).toList( "," );
         return "INDEX #wrapValue( index.getName() )# (#columnsString#)";
@@ -976,17 +992,30 @@ component displayname="Grammar" accessors="true" {
 
     function indexForeign( index ) {
         //FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
+        var references = index.getColumns().map( function( column ) {
+            return wrapColumn( column );
+        } ).toList( ", " );
         return arrayToList( [
             "CONSTRAINT #wrapValue( "fk_#lcase( index.getForeignKey() )#" )#",
             "FOREIGN KEY (#wrapColumn( index.getForeignKey() )#)",
-            "REFERENCES #wrapTable( index.getTable() )# (#wrapColumn( index.getColumn() )#)",
+            "REFERENCES #wrapTable( index.getTable() )# (#references#)",
             "ON UPDATE #ucase( index.getOnUpdate() )#",
             "ON DELETE #ucase( index.getOnDelete() )#"
         ], " " );
     }
 
     function indexPrimary( index ) {
-        return "PRIMARY KEY (#wrapColumn( index.getColumn() )#)";
+        var references = index.getColumns().map( function( column ) {
+            return wrapColumn( column );
+        } ).toList( ", " );
+        return "PRIMARY KEY (#references#)";
+    }
+
+    function indexUnique( index ) {
+        var references = index.getColumns().map( function( column ) {
+            return wrapColumn( column );
+        } ).toList( ", " );
+        return "CONSTRAINT #wrapValue( index.getName() )# UNIQUE (#references#)";
     }
 
     /*=====  End of Index Types  ======*/

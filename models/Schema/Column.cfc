@@ -11,6 +11,7 @@ component accessors="true" {
     property name="autoIncrement" default="false";
     property name="default" default="";
     property name="comment" default="";
+    property name="unique" default="false";
     property name="values";
 
     function init( blueprint ) {
@@ -34,7 +35,7 @@ component accessors="true" {
         return this;
     }
 
-    function references( column ) {
+    function references( columns ) {
         arguments.type = "foreign";
         arguments.foreignKey = getName();
         return getBlueprint().addIndex( argumentCollection = arguments );
@@ -42,6 +43,11 @@ component accessors="true" {
 
     function unsigned() {
         setUnsigned( true );
+        return this;
+    }
+
+    function unique() {
+        setUnique( true );
         return this;
     }
 

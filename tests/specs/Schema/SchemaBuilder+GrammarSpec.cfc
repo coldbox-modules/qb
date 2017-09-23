@@ -724,8 +724,8 @@ component extends="testbox.system.BaseSpec" {
                         } );
                     } );
 
-                    xdescribe( "primary indexes", function() {
-                        xit( "column primary key", function() {
+                    describe( "primary indexes", function() {
+                        it( "column primary key", function() {
                             var schema = getBuilder();
                             var blueprint = schema.create( "users", function( table ) {
                                 table.string( "uuid" ).primaryKey();
@@ -733,7 +733,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL PRIMARY KEY" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_uuid"" PRIMARY KEY (""uuid""))" );
                         } );
 
                         it( "table primary key", function() {
@@ -758,7 +758,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_first_name_last_name"" PRIMARY KEY (""first_name"",""last_name""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_first_name_last_name"" PRIMARY KEY (""first_name"", ""last_name""))" );
                         } );
 
                         it( "override primary key index name", function() {
@@ -771,7 +771,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_full_name"" PRIMARY KEY (""first_name"",""last_name""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_full_name"" PRIMARY KEY (""first_name"", ""last_name""))" );
                         } );
                     } );
                 } );

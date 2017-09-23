@@ -35,6 +35,11 @@ component accessors="true" {
         return this;
     }
 
+    function primaryKey( indexName ) {
+        arguments.indexName = isNull( arguments.indexName ) ? "pk_#getBlueprint().getTable()#_#getName()#" : arguments.indexName;
+        return getBlueprint().addIndex( type = "primary", columns = getName(), name = arguments.indexName );
+    }
+
     function references( columns ) {
         arguments.type = "foreign";
         arguments.foreignKey = getName();

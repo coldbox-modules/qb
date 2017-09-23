@@ -623,16 +623,6 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                xdescribe( "has", function() {
-                    it( "hasTable", function() {
-                        fail( "test not implemented yet" );
-                    } );
-
-                    it( "hasColumn", function() {
-                        fail( "test not implemented yet" );
-                    } );
-                } );
-
                 describe( "rename tables", function() {
                     it( "rename table", function() {
                         var schema = getBuilder();
@@ -786,13 +776,13 @@ component extends="testbox.system.BaseSpec" {
         } );
     }
 
-    private function getBuilder() {
+    private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
-        var grammar = getMockBox()
-            .createMock( "qb.models.Grammars.BaseGrammar" )
-            .init( utils );
+        arguments.mockGrammar = isNull( arguments.mockGrammar ) ?
+            getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init( utils ) :
+            arguments.mockGrammar;
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
-            .init( grammar );
+            .init( arguments.mockGrammar );
         return builder;
     }
 

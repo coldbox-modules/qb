@@ -15,7 +15,7 @@ component accessors="true" singleton {
         callback( blueprint );
         if ( build ) {
             blueprint.getSql().each( function( statement ) {
-                getGrammar().runQuery( statement, {}, options, "result" );
+                getGrammar().runQuery( statement, [], options, "result" );
             } );
         }
         return blueprint;
@@ -27,7 +27,7 @@ component accessors="true" singleton {
         blueprint.setTable( table );
         if ( build ) {
             blueprint.getSql().each( function( statement ) {
-                getGrammar().runQuery( statement, {}, options, "result" );
+                getGrammar().runQuery( statement, [], options, "result" );
             } );
         }
         return blueprint;
@@ -40,7 +40,7 @@ component accessors="true" singleton {
         blueprint.setIfExists( true );
         if ( build ) {
             blueprint.getSql().each( function( statement ) {
-                getGrammar().runQuery( statement, {}, options, "result" );
+                getGrammar().runQuery( statement, [], options, "result" );
             } );
         }
         return blueprint;
@@ -52,7 +52,7 @@ component accessors="true" singleton {
         callback( blueprint );
         if ( build ) {
             blueprint.getSql().each( function( statement ) {
-                getGrammar().runQuery( statement, {}, options, "result" );
+                getGrammar().runQuery( statement, [], options, "result" );
             } );
         }
         return blueprint;
@@ -64,10 +64,28 @@ component accessors="true" singleton {
         blueprint.addCommand( "renameTable", { to = to } );
         if ( build ) {
             blueprint.getSql().each( function( statement ) {
-                getGrammar().runQuery( statement, {}, options, "result" );
+                getGrammar().runQuery( statement, [], options, "result" );
             } );
         }
         return blueprint;
+    }
+
+    function hasTable( name, options = {}, build = true ) {
+        var sql = getGrammar().compileTableExists( name );
+        if ( build ) {
+            var q = getGrammar().runQuery( sql, [ name ], options, "query" );
+            return q.RecordCount > 0;
+        }
+        return sql;
+    }
+
+    function hasColumn( table, column, options = {}, build = true ) {
+        var sql = getGrammar().compileColumnExists( table, column );
+        if ( build ) {
+            var q = getGrammar().runQuery( sql, [ table, column ], options, "query" );
+            return q.RecordCount > 0;
+        }
+        return sql;
     }
 
 }

@@ -25,4 +25,12 @@ component extends="qb.models.Grammars.BaseGrammar" {
         } ), " " );
     }
 
+    function compileTableExists( tableName ) {
+        return "SELECT 1 FROM `information_schema`.`tables` WHERE `table_name` = ?";
+    }
+
+    function compileColumnExists( table, column ) {
+        return "SELECT 1 FROM `information_schema`.`columns` WHERE `table_name` = ? AND `column_name` = ?";
+    }
+
 }

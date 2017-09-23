@@ -15,6 +15,28 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            describe( "has", function() {
+                it( "hasTable", function() {
+                    var mockGrammar = getMockBox().createMock( "qb.models.Grammars.OracleGrammar" );
+                    mockGrammar.$( "runQuery", queryNew( "result", "CF_SQL_INTEGER", [ { result = 1 } ] ) );
+                    var schema = getBuilder( mockGrammar );
+                    var result = schema.hasTable( "users" );
+                    expect( result ).toBeTrue();
+                    var sql = schema.hasTable( "users", {}, false );
+                    expect( sql ).toBeWithCase( "SELECT 1 FROM ""DBA_TABLES"" where ""TABLE_NAME"" = ?" );
+                } );
+
+                it( "hasColumn", function() {
+                    var mockGrammar = getMockBox().createMock( "qb.models.Grammars.OracleGrammar" );
+                    mockGrammar.$( "runQuery", queryNew( "result", "CF_SQL_INTEGER", [ { result = 1 } ] ) );
+                    var schema = getBuilder( mockGrammar );
+                    var result = schema.hasColumn( "users", "username" );
+                    expect( result ).toBeTrue();
+                    var sql = schema.hasColumn( "users", "username", {}, false );
+                    expect( sql ).toBeWithCase( "SELECT 1 FROM ""DBA_TAB_COL"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ?" );
+                } );
+            } );
+
             describe( "rename columns", function() {
                 it( "renames a column", function() {
                     var schema = getBuilder();
@@ -112,13 +134,13 @@ component extends="testbox.system.BaseSpec" {
         } );
     }
 
-    private function getBuilder() {
+    private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
-        var grammar = getMockBox()
-            .createMock( "qb.models.Grammars.OracleGrammar" )
-            .init( utils );
+        arguments.mockGrammar = isNull( arguments.mockGrammar ) ?
+            getMockBox().createMock( "qb.models.Grammars.OracleGrammar" ).init( utils ) :
+            arguments.mockGrammar;
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
-            .init( grammar );
+            .init( arguments.mockGrammar );
         return builder;
     }
 

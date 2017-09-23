@@ -173,4 +173,12 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "VARCHAR(255) CHECK(#wrapColumn(column.getName())# IN (#values#))";
     }
 
+    function compileTableExists( tableName ) {
+        return "SELECT 1 FROM ""DBA_TABLES"" where ""TABLE_NAME"" = ?";
+    }
+
+    function compileColumnExists( table, column ) {
+        return "SELECT 1 FROM ""DBA_TAB_COL"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ?";
+    }
+
 }

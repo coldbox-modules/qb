@@ -151,6 +151,13 @@ component accessors="true" {
         return this;
     }
 
+    function primaryKey( columns, name ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        arguments.name = isNull( name ) ? "pk_#arrayToList( columns, "_" )#" : arguments.name;
+        addIndex( type = "primary", columns = columns, name = name );
+        return this;
+    }
+
     /*=====  End of Constraints  ======*/
 
 
@@ -159,9 +166,10 @@ component accessors="true" {
     =            Column Types            =
     ====================================*/
 
-    function bigIncrements( name ) {
+    function bigIncrements( name, indexName ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", columns = name );
+        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
+        addIndex( type = "primary", columns = name, name = indexName );
         return unsignedBigInteger( argumentCollection = arguments );
     }
 
@@ -212,9 +220,10 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
-    function increments( name ) {
+    function increments( name, indexName ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", columns = name );
+        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
+        addIndex( type = "primary", columns = name, name = indexName );
         return unsignedInteger( argumentCollection = arguments );
     }
 
@@ -233,9 +242,10 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
-    function mediumIncrements( name ) {
+    function mediumIncrements( name, indexName ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", columns = name );
+        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
+        addIndex( type = "primary", columns = name, name = indexName );
         return unsignedMediumInteger( argumentCollection = arguments );
     }
 
@@ -271,9 +281,10 @@ component accessors="true" {
         return this;
     }
 
-    function smallIncrements( name ) {
+    function smallIncrements( name, indexName ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", columns = name );
+        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
+        addIndex( type = "primary", columns = name, name = indexName );
         return unsignedSmallInteger( argumentCollection = arguments );
     }
 
@@ -305,9 +316,10 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
-    function tinyIncrements( name ) {
+    function tinyIncrements( name, indexName ) {
         arguments.autoIncrement = true;
-        addIndex( type = "primary", columns = name );
+        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
+        addIndex( type = "primary", columns = name, name = indexName );
         return unsignedTinyInteger( argumentCollection = arguments );
     }
 

@@ -88,27 +88,42 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             xdescribe( "indexes", function() {
-                it( "unique (off of column)", function() {
-                    var schema = getBuilder();
-                    var blueprint = schema.create( "users", function( table ) {
-                        table.string( "username" ).unique();
-                    }, {}, false );
-                    var statements = blueprint.toSql();
-                    expect( statements ).toBeArray();
-                    expect( statements ).toHaveLength( 1 );
-                    expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL, CONSTRAINT unique_username UNIQUE (`username`))" );
+                describe( "unique", function() {
+                    it( "unique (off of column)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.string( "username" ).unique();
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL, CONSTRAINT unique_username UNIQUE (`username`))" );
+                    } );
+
+                    it( "unique (off of table)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.string( "username" );
+                            table.unique( "username" );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL, UNIQUE (`username`))" );
+                    } );
                 } );
 
-                it( "unique (off of table)", function() {
-                    var schema = getBuilder();
-                    var blueprint = schema.create( "users", function( table ) {
-                        table.string( "username" );
-                        table.unique( "username" );
-                    }, {}, false );
-                    var statements = blueprint.toSql();
-                    expect( statements ).toBeArray();
-                    expect( statements ).toHaveLength( 1 );
-                    expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL, UNIQUE (`username`))" );
+                describe( "primary indexes", function() {
+                    it( "column primary key", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.string( "uuid" ).primaryKey();
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`uuid` VARCHAR(255) NOT NULL, PRIMARY KEY (`uuid`)" );
+                    } );
                 } );
             } );
 

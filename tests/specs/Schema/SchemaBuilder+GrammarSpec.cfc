@@ -39,7 +39,7 @@ component extends="testbox.system.BaseSpec" {
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 1 );
-                    expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INTEGER(10) UNSIGNED NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (""id""), CONSTRAINT ""fk_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
+                    expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INTEGER(10) UNSIGNED NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""), CONSTRAINT ""fk_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
                 } );
 
                 describe( "column types", function() {
@@ -51,7 +51,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "bigInteger", function() {
@@ -260,7 +260,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "integer", function() {
@@ -315,7 +315,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "mediumInteger", function() {
@@ -381,7 +381,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "smallInteger", function() {
@@ -458,7 +458,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "tinyInteger", function() {
@@ -684,50 +684,95 @@ component extends="testbox.system.BaseSpec" {
                         } );
                     } );
 
-                    it( "basic index", function() {
-                        var schema = getBuilder();
-                        var blueprint = schema.create( "users", function( table ) {
-                            table.timestamp( "published_date" );
-                            table.index( "published_date" );
-                        }, {}, false );
-                        var statements = blueprint.toSql();
-                        expect( statements ).toBeArray();
-                        expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""published_date"" TIMESTAMP NOT NULL, INDEX ""idx_published_date"" (""published_date""))" );
+                    describe( "basic indexes", function() {
+                        it( "basic index", function() {
+                            var schema = getBuilder();
+                            var blueprint = schema.create( "users", function( table ) {
+                                table.timestamp( "published_date" );
+                                table.index( "published_date" );
+                            }, {}, false );
+                            var statements = blueprint.toSql();
+                            expect( statements ).toBeArray();
+                            expect( statements ).toHaveLength( 1 );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""published_date"" TIMESTAMP NOT NULL, INDEX ""idx_published_date"" (""published_date""))" );
+                        } );
+
+                        it( "composite index", function() {
+                            var schema = getBuilder();
+                            var blueprint = schema.create( "users", function( table ) {
+                                table.string( "first_name" );
+                                table.string( "last_name" );
+                                table.index( [ "first_name", "last_name" ] );
+                            }, {}, false );
+                            var statements = blueprint.toSql();
+                            expect( statements ).toBeArray();
+                            expect( statements ).toHaveLength( 1 );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""idx_first_name_last_name"" (""first_name"",""last_name""))" );
+                        } );
+
+                        it( "override index name", function() {
+                            var schema = getBuilder();
+                            var blueprint = schema.create( "users", function( table ) {
+                                table.string( "first_name" );
+                                table.string( "last_name" );
+                                table.index( [ "first_name", "last_name" ], "index_full_name" );
+                            }, {}, false );
+                            var statements = blueprint.toSql();
+                            expect( statements ).toBeArray();
+                            expect( statements ).toHaveLength( 1 );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""index_full_name"" (""first_name"",""last_name""))" );
+                        } );
                     } );
 
-                    it( "composite index", function() {
-                        var schema = getBuilder();
-                        var blueprint = schema.create( "users", function( table ) {
-                            table.string( "first_name" );
-                            table.string( "last_name" );
-                            table.index( [ "first_name", "last_name" ] );
-                        }, {}, false );
-                        var statements = blueprint.toSql();
-                        expect( statements ).toBeArray();
-                        expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""idx_first_name_last_name"" (""first_name"",""last_name""))" );
-                    } );
+                    xdescribe( "primary indexes", function() {
+                        it( "column primary key", function() {
+                            var schema = getBuilder();
+                            var blueprint = schema.create( "users", function( table ) {
+                                table.string( "uuid" ).primaryKey();
+                            }, {}, false );
+                            var statements = blueprint.toSql();
+                            expect( statements ).toBeArray();
+                            expect( statements ).toHaveLength( 1 );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL PRIMARY KEY" );
+                        } );
 
-                    it( "override index name", function() {
-                        var schema = getBuilder();
-                        var blueprint = schema.create( "users", function( table ) {
-                            table.string( "first_name" );
-                            table.string( "last_name" );
-                            table.index( [ "first_name", "last_name" ], "index_full_name" );
-                        }, {}, false );
-                        var statements = blueprint.toSql();
-                        expect( statements ).toBeArray();
-                        expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""index_full_name"" (""first_name"",""last_name""))" );
-                    } );
+                        it( "table primary key", function() {
+                            var schema = getBuilder();
+                            var blueprint = schema.create( "users", function( table ) {
+                                table.string( "uuid" );
+                                table.primaryKey( "uuid" );
+                            }, {}, false );
+                            var statements = blueprint.toSql();
+                            expect( statements ).toBeArray();
+                            expect( statements ).toHaveLength( 1 );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_uuid"" PRIMARY KEY (""uuid""))" );
+                        } );
 
-                    xit( "primary", function() {
-                        fail( "test not implemented yet" );
-                    } );
+                        it( "composite primary key", function() {
+                            var schema = getBuilder();
+                            var blueprint = schema.create( "users", function( table ) {
+                                table.string( "first_name" );
+                                table.string( "last_name" );
+                                table.primaryKey( [ "first_name", "last_name" ] );
+                            }, {}, false );
+                            var statements = blueprint.toSql();
+                            expect( statements ).toBeArray();
+                            expect( statements ).toHaveLength( 1 );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_first_name_last_name"" PRIMARY KEY (""first_name"",""last_name""))" );
+                        } );
 
-                    xit( "composite primary key", function() {
-                        fail( "test not implemented yet" );
+                        it( "override primary key index name", function() {
+                            var schema = getBuilder();
+                            var blueprint = schema.create( "users", function( table ) {
+                                table.string( "first_name" );
+                                table.string( "last_name" );
+                                table.primaryKey( [ "first_name", "last_name" ], "pk_full_name" );
+                            }, {}, false );
+                            var statements = blueprint.toSql();
+                            expect( statements ).toBeArray();
+                            expect( statements ).toHaveLength( 1 );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_full_name"" PRIMARY KEY (""first_name"",""last_name""))" );
+                        } );
                     } );
                 } );
 

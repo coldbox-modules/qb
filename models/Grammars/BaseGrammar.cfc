@@ -1015,7 +1015,7 @@ component displayname="Grammar" accessors="true" {
         var references = index.getColumns().map( function( column ) {
             return wrapColumn( column );
         } ).toList( ", " );
-        return "PRIMARY KEY (#references#)";
+        return "CONSTRAINT #wrapValue( index.getName() )# PRIMARY KEY (#references#)";
     }
 
     function indexUnique( index ) {

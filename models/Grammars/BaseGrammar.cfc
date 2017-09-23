@@ -11,8 +11,10 @@ component displayname="Grammar" accessors="true" {
 
     /**
     * ColdBox Interceptor Service to announce pre- and post- interception points
+    * This is not injected since we need to determine if we are in CommandBox or ColdBox first.
+    * This is handled in the ModuleConfig file
     */
-    property name="interceptorService" inject="coldbox:interceptorService";
+    property name="interceptorService";
 
     /**
     * Query utilities shared across multiple models.
@@ -59,27 +61,48 @@ component displayname="Grammar" accessors="true" {
     */
     public any function runQuery( sql, bindings, options, returnObject = "query" ) {
         local.result = "";
-        if ( ! isNull( variables.interceptorService ) ) {
-            variables.interceptorService.processState( "preQBExecute", {
-                sql = sql,
-                bindings = bindings,
-                options = options,
-                returnObject = returnObject
-            } );
-        }
+        var data = duplicate( arguments );
+        tryPreInterceptor( data );
         structAppend( options, { result = "local.result" }, true );
         var q = queryExecute( sql, bindings, options );
-        if ( ! isNull( variables.interceptorService ) ) {
-            variables.interceptorService.processState( "postQBExecute", {
-                sql = sql,
-                bindings = bindings,
-                options = options,
-                returnObject = returnObject,
-                query = isNull( q ) ? javacast( "null", "" ) : q,
-                result = local.result
-            } );
-        }
+        data.query = isNull( q ) ? javacast( "null", "" ) : q;
+        data.result = local.result
+        tryPostInterceptor( data );
         return returnObject == "result" ? local.result : q;
+    }
+
+    /**
+    * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
+    */
+    private function tryPreInterceptor( data ) {
+        if ( isNull( variables.interceptorService ) ) {
+            return;
+        }
+
+        if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
+            variables.interceptorService.announceInterception( "preQBExecute", data );
+            return;
+        }
+
+        variables.interceptorService.processState( "preQBExecute", data );
+        return;
+    }
+
+    /**
+    * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
+    */
+    private function tryPostInterceptor( data ) {
+        if ( isNull( variables.interceptorService ) ) {
+            return;
+        }
+
+        if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
+            variables.interceptorService.announceInterception( "postQBExecute", data );
+            return;
+        }
+
+        variables.interceptorService.processState( "postQBExecute", data );
+        return;
     }
 
     /**

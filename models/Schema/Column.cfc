@@ -41,9 +41,12 @@ component accessors="true" {
     }
 
     function references( columns ) {
-        arguments.type = "foreign";
-        arguments.foreignKey = getName();
-        return getBlueprint().addIndex( argumentCollection = arguments );
+        return getBlueprint().addIndex(
+            type = "foreign",
+            columns = columns,
+            foreignKey = getName(),
+            name = "fk_#getBlueprint().getTable()#_#getName()#"
+        );
     }
 
     function unsigned() {

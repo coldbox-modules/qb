@@ -1003,7 +1003,7 @@ component displayname="Grammar" accessors="true" {
             return wrapColumn( column );
         } ).toList( ", " );
         return arrayToList( [
-            "CONSTRAINT #wrapValue( "fk_#lcase( index.getForeignKey() )#" )#",
+            "CONSTRAINT #wrapValue( index.getName() )#",
             "FOREIGN KEY (#wrapColumn( index.getForeignKey() )#)",
             "REFERENCES #wrapTable( index.getTable() )# (#references#)",
             "ON UPDATE #ucase( index.getOnUpdate() )#",

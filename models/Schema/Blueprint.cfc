@@ -65,6 +65,23 @@ component accessors="true" {
         return newColumn;
     }
 
+    function addConstraint( constraint ) {
+        addCommand( "addConstraint" );
+        return this;
+    }
+
+    function removeConstraint( name ) {
+        if ( ! isSimpleValue( name ) ) {
+            name.getIndexes().each( function( index ) {
+                removeConstraint( index.getName() );
+            } );
+        }
+        else {
+            addCommand( "removeConstraint", { name = name } );
+        }
+        return this;
+    }
+
     function addIndex() {
         var newIndex = new TableIndex( this );
         var indexMetadata = getMetadata( newIndex );

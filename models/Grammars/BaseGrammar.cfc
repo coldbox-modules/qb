@@ -867,9 +867,16 @@ component displayname="Grammar" accessors="true" {
     ===================================*/
 
     function compileAddConstraint( blueprint, commandParameters ) {
-        if ( blueprint.getCreating() ) {
-            return "";
-        }
+        var constraints = blueprint.getIndexes().map( function( index ) {
+            return invoke( this, "index#index.getType()#", { index = index } );
+        } ).filter( function( item ) {
+            return item != "";
+        } ).toList( ", " );
+        return "ALTER TABLE #wrapTable( blueprint.getTable() )# ADD #constraints#";
+    }
+
+    function compileRemoveConstraint( blueprint, commandParameters ) {
+        return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP INDEX #wrapValue( commandParameters.name )#";
     }
 
     /*=====  End of Constraints  ======*/

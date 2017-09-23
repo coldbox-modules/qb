@@ -648,7 +648,7 @@ component extends="testbox.system.BaseSpec" {
                             } );
                         } );
 
-                        xdescribe( "in alter", function() {
+                        describe( "in alter", function() {
                             it( "add constraint", function() {
                                 var schema = getBuilder();
                                 var blueprint = schema.alter( "users", function( table ) {
@@ -657,7 +657,7 @@ component extends="testbox.system.BaseSpec" {
                                 var statements = blueprint.toSql();
                                 expect( statements ).toBeArray();
                                 expect( statements ).toHaveLength( 1 );
-                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unique_username"" (""username"")" );
+                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unique_username"" UNIQUE (""username"")" );
                             } );
 
                             it( "remove constraint", function() {

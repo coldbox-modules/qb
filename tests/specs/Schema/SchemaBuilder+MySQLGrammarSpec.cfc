@@ -70,7 +70,7 @@ component extends="testbox.system.BaseSpec" {
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 1 );
-                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`,`M`,`L`,`XL`,`XXL`) NOT NULL" );
+                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL" );
                 } );
 
                 it( "can add multiple columns", function() {
@@ -82,7 +82,7 @@ component extends="testbox.system.BaseSpec" {
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 2 );
-                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`,`M`,`L`,`XL`,`XXL`) NOT NULL" );
+                    expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL" );
                     expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE `users` ADD `is_active` TINYINT(1) NOT NULL" );
                 } );
             } );
@@ -139,7 +139,7 @@ component extends="testbox.system.BaseSpec" {
                 expect( statements ).toBeArray();
                 expect( statements ).toHaveLength( 4 );
                 expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE `users` DROP COLUMN `is_active`" );
-                expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`,`M`,`L`,`XL`,`XXL`) NOT NULL" );
+                expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL" );
                 expect( statements[ 3 ] ).toBeWithCase( "ALTER TABLE `users` CHANGE `name` `username` VARCHAR(255) NOT NULL" );
                 expect( statements[ 4 ] ).toBeWithCase( "ALTER TABLE `users` CHANGE `purchase_date` `purchase_date` TIMESTAMP" );
             } );

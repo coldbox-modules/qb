@@ -920,7 +920,7 @@ component displayname="Grammar" accessors="true" {
     function typeEnum( column ) {
         var values = column.getValues().map( function ( value ) {
             return wrapValue( value );
-        } ).toList( "," );
+        } ).toList( ", " );
         return "ENUM(#values#)";
     }
 
@@ -993,7 +993,7 @@ component displayname="Grammar" accessors="true" {
     function indexBasic( index ) {
         var columnsString = index.getColumns().map( function( column ) {
             return wrapValue( column );
-        } ).toList( "," );
+        } ).toList( ", " );
         return "INDEX #wrapValue( index.getName() )# (#columnsString#)";
     }
 

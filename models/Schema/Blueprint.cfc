@@ -153,7 +153,7 @@ component accessors="true" {
 
     function primaryKey( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "pk_#arrayToList( columns, "_" )#" : arguments.name;
+        arguments.name = isNull( name ) ? "pk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
         addIndex( type = "primary", columns = columns, name = name );
         return this;
     }

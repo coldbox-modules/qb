@@ -205,7 +205,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""employees"" (""tshirt_size"" ENUM(""S"",""M"",""L"",""XL"",""XXL"") NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""employees"" (""tshirt_size"" ENUM(""S"", ""M"", ""L"", ""XL"", ""XXL"") NOT NULL)" );
                     } );
 
                     it( "float (with defaults)", function() {
@@ -348,7 +348,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED NOT NULL, ""taggable_type"" VARCHAR(255) NOT NULL, INDEX ""taggable_index"" (""taggable_id"",""taggable_type""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED NOT NULL, ""taggable_type"" VARCHAR(255) NOT NULL, INDEX ""taggable_index"" (""taggable_id"", ""taggable_type""))" );
                     } );
 
                     it( "nullableMorphs", function() {
@@ -359,7 +359,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED, ""taggable_type"" VARCHAR(255), INDEX ""taggable_index"" (""taggable_id"",""taggable_type""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED, ""taggable_type"" VARCHAR(255), INDEX ""taggable_index"" (""taggable_id"", ""taggable_type""))" );
                     } );
 
                     it( "raw", function() {
@@ -707,7 +707,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""idx_users_first_name_last_name"" (""first_name"",""last_name""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""idx_users_first_name_last_name"" (""first_name"", ""last_name""))" );
                         } );
 
                         it( "override index name", function() {
@@ -720,12 +720,12 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""index_full_name"" (""first_name"",""last_name""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""index_full_name"" (""first_name"", ""last_name""))" );
                         } );
                     } );
 
                     xdescribe( "primary indexes", function() {
-                        it( "column primary key", function() {
+                        xit( "column primary key", function() {
                             var schema = getBuilder();
                             var blueprint = schema.create( "users", function( table ) {
                                 table.string( "uuid" ).primaryKey();
@@ -848,7 +848,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD ""tshirt_size"" ENUM(""S"",""M"",""L"",""XL"",""XXL"") NOT NULL" );
+                        expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD ""tshirt_size"" ENUM(""S"", ""M"", ""L"", ""XL"", ""XXL"") NOT NULL" );
                     } );
 
                     it( "can add multiple columns", function() {
@@ -860,7 +860,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 2 );
-                        expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD ""tshirt_size"" ENUM(""S"",""M"",""L"",""XL"",""XXL"") NOT NULL" );
+                        expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD ""tshirt_size"" ENUM(""S"", ""M"", ""L"", ""XL"", ""XXL"") NOT NULL" );
                         expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD ""is_active"" TINYINT(1) NOT NULL" );
                     } );
                 } );
@@ -877,7 +877,7 @@ component extends="testbox.system.BaseSpec" {
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 4 );
                     expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP COLUMN ""is_active""" );
-                    expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD ""tshirt_size"" ENUM(""S"",""M"",""L"",""XL"",""XXL"") NOT NULL" );
+                    expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD ""tshirt_size"" ENUM(""S"", ""M"", ""L"", ""XL"", ""XXL"") NOT NULL" );
                     expect( statements[ 3 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""name"" ""username"" VARCHAR(255) NOT NULL" );
                     expect( statements[ 4 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""purchase_date"" ""purchase_date"" TIMESTAMP" );
                 } );

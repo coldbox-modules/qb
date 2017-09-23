@@ -775,7 +775,7 @@ component extends="testbox.system.BaseSpec" {
                         } );
                     } );
 
-                    xdescribe( "foreign key indexes", function() {
+                    describe( "foreign key indexes", function() {
                         it( "column foreign key", function() {
                             var schema = getBuilder();
                             var blueprint = schema.create( "posts", function( table ) {
@@ -784,45 +784,42 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
                         } );
 
-                        it( "table primary key", function() {
+                        it( "table foreign key", function() {
                             var schema = getBuilder();
-                            var blueprint = schema.create( "users", function( table ) {
-                                table.string( "uuid" );
-                                table.primaryKey( "uuid" );
+                            var blueprint = schema.create( "posts", function( table ) {
+                                table.unsignedInteger( "author_id" );
+                                table.foreignKey( "author_id" ).references( "id" ).onTable( "users" );
                             }, {}, false );
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_uuid"" PRIMARY KEY (""uuid""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
                         } );
 
-                        it( "composite primary key", function() {
+                        it( "override column foreign key index name", function() {
                             var schema = getBuilder();
-                            var blueprint = schema.create( "users", function( table ) {
-                                table.string( "first_name" );
-                                table.string( "last_name" );
-                                table.primaryKey( [ "first_name", "last_name" ] );
+                            var blueprint = schema.create( "posts", function( table ) {
+                                table.unsignedInteger( "author_id" ).references( "id" ).onTable( "users" ).setName( "fk_author" );
                             }, {}, false );
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_first_name_last_name"" PRIMARY KEY (""first_name"", ""last_name""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
                         } );
 
-                        it( "override primary key index name", function() {
+                        it( "override table foreign key index name", function() {
                             var schema = getBuilder();
-                            var blueprint = schema.create( "users", function( table ) {
-                                table.string( "first_name" );
-                                table.string( "last_name" );
-                                table.primaryKey( [ "first_name", "last_name" ], "pk_full_name" );
+                            var blueprint = schema.create( "posts", function( table ) {
+                                table.unsignedInteger( "author_id" );
+                                table.foreignKey( "author_id" ).references( "id" ).onTable( "users" ).setName( "fk_author" );
                             }, {}, false );
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_full_name"" PRIMARY KEY (""first_name"", ""last_name""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
                         } );
                     } );
                 } );

@@ -41,10 +41,11 @@ component accessors="true" {
     }
 
     function references( columns ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
         return getBlueprint().addIndex(
             type = "foreign",
             columns = columns,
-            foreignKey = getName(),
+            foreignKey = [ getName() ],
             name = "fk_#getBlueprint().getTable()#_#getName()#"
         );
     }

@@ -72,9 +72,7 @@ component accessors="true" {
 
     function removeConstraint( name ) {
         if ( ! isSimpleValue( name ) ) {
-            name.getIndexes().each( function( index ) {
-                removeConstraint( index.getName() );
-            } );
+            removeConstraint( name.getName() );
         }
         else {
             addCommand( "removeConstraint", { name = name } );
@@ -140,22 +138,25 @@ component accessors="true" {
     function unique( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        addIndex( type = "unique", columns = columns, name = name );
-        return this;
+        return addIndex( type = "unique", columns = columns, name = name );
     }
 
     function index( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "idx_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        addIndex( type = "basic", columns = columns, name = name );
-        return this;
+        return addIndex( type = "basic", columns = columns, name = name );
     }
 
     function primaryKey( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "pk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        addIndex( type = "primary", columns = columns, name = name );
-        return this;
+        return addIndex( type = "primary", columns = columns, name = name );
+    }
+
+    function foreignKey( columns, name ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        arguments.name = isNull( name ) ? "fk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
+        return addIndex( type = "foreign", foreignKey = columns, name = name );
     }
 
     /*=====  End of Constraints  ======*/

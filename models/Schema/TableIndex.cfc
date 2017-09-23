@@ -13,6 +13,12 @@ component accessors="true" {
         return this;
     }
 
+    function references( columns ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        setColumns( columns );
+        return this;
+    }
+
     function onTable( table ) {
         setTable( table );
         return this;

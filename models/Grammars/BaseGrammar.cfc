@@ -999,12 +999,15 @@ component displayname="Grammar" accessors="true" {
 
     function indexForeign( index ) {
         //FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
+        var keys = index.getForeignKey().map( function( key ) {
+            return wrapColumn( key );
+        } ).toList( ", " );
         var references = index.getColumns().map( function( column ) {
             return wrapColumn( column );
         } ).toList( ", " );
         return arrayToList( [
             "CONSTRAINT #wrapValue( index.getName() )#",
-            "FOREIGN KEY (#wrapColumn( index.getForeignKey() )#)",
+            "FOREIGN KEY (#keys#)",
             "REFERENCES #wrapTable( index.getTable() )# (#references#)",
             "ON UPDATE #ucase( index.getOnUpdate() )#",
             "ON DELETE #ucase( index.getOnDelete() )#"

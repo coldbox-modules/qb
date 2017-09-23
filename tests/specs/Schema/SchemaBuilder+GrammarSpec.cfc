@@ -684,16 +684,42 @@ component extends="testbox.system.BaseSpec" {
                         } );
                     } );
 
-                    xit( "index", function() {
-                        fail( "test not implemented yet" );
+                    it( "basic index", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.timestamp( "published_date" );
+                            table.index( "published_date" );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""published_date"" TIMESTAMP NOT NULL, INDEX ""idx_published_date"" (""published_date""))" );
                     } );
 
-                    xit( "composite index", function() {
-                        fail( "test not implemented yet" );
+                    it( "composite index", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.string( "first_name" );
+                            table.string( "last_name" );
+                            table.index( [ "first_name", "last_name" ] );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""idx_first_name_last_name"" (""first_name"",""last_name""))" );
                     } );
 
-                    xit( "override index name", function() {
-                        fail( "test not implemented yet" );
+                    it( "override index name", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.string( "first_name" );
+                            table.string( "last_name" );
+                            table.index( [ "first_name", "last_name" ], "index_full_name" );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""index_full_name"" (""first_name"",""last_name""))" );
                     } );
 
                     xit( "primary", function() {

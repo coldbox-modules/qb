@@ -144,6 +144,13 @@ component accessors="true" {
         return this;
     }
 
+    function index( columns, name ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        arguments.name = isNull( name ) ? "idx_#arrayToList( columns, "_" )#" : arguments.name;
+        addIndex( type = "basic", columns = columns, name = name );
+        return this;
+    }
+
     /*=====  End of Constraints  ======*/
 
 

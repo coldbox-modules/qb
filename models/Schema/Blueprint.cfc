@@ -139,14 +139,14 @@ component accessors="true" {
 
     function unique( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "unique_#arrayToList( columns, "_" )#" : arguments.name;
+        arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
         addIndex( type = "unique", columns = columns, name = name );
         return this;
     }
 
     function index( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "idx_#arrayToList( columns, "_" )#" : arguments.name;
+        arguments.name = isNull( name ) ? "idx_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
         addIndex( type = "basic", columns = columns, name = name );
         return this;
     }

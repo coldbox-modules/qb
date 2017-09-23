@@ -97,7 +97,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL, CONSTRAINT unique_username UNIQUE (`username`))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL, CONSTRAINT `unq_users_username` UNIQUE (`username`))" );
                     } );
 
                     it( "unique (off of table)", function() {

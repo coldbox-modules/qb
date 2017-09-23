@@ -619,7 +619,7 @@ component extends="testbox.system.BaseSpec" {
                                 var statements = blueprint.toSql();
                                 expect( statements ).toBeArray();
                                 expect( statements ).toHaveLength( 1 );
-                                expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL, CONSTRAINT ""unique_username"" UNIQUE (""username""))" );
+                                expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_users_username"" UNIQUE (""username""))" );
                             } );
 
                             it( "unique (overriding constaint name)", function() {
@@ -644,7 +644,7 @@ component extends="testbox.system.BaseSpec" {
                                 var statements = blueprint.toSql();
                                 expect( statements ).toBeArray();
                                 expect( statements ).toHaveLength( 1 );
-                                expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""unique_first_name_last_name"" UNIQUE (""first_name"", ""last_name""))" );
+                                expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_users_first_name_last_name"" UNIQUE (""first_name"", ""last_name""))" );
                             } );
                         } );
 
@@ -657,7 +657,7 @@ component extends="testbox.system.BaseSpec" {
                                 var statements = blueprint.toSql();
                                 expect( statements ).toBeArray();
                                 expect( statements ).toHaveLength( 1 );
-                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unique_username"" UNIQUE (""username"")" );
+                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_username"" UNIQUE (""username"")" );
                             } );
 
                             it( "remove constraint", function() {
@@ -679,7 +679,7 @@ component extends="testbox.system.BaseSpec" {
                                 var statements = blueprint.toSql();
                                 expect( statements ).toBeArray();
                                 expect( statements ).toHaveLength( 1 );
-                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP INDEX ""unique_username""" );
+                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP INDEX ""unq_users_username""" );
                             } );
                         } );
                     } );
@@ -694,7 +694,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""published_date"" TIMESTAMP NOT NULL, INDEX ""idx_published_date"" (""published_date""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""published_date"" TIMESTAMP NOT NULL, INDEX ""idx_users_published_date"" (""published_date""))" );
                         } );
 
                         it( "composite index", function() {
@@ -707,7 +707,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""idx_first_name_last_name"" (""first_name"",""last_name""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, INDEX ""idx_users_first_name_last_name"" (""first_name"",""last_name""))" );
                         } );
 
                         it( "override index name", function() {
@@ -745,7 +745,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_uuid"" PRIMARY KEY (""uuid""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_uuid"" PRIMARY KEY (""uuid""))" );
                         } );
 
                         it( "composite primary key", function() {
@@ -758,7 +758,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_first_name_last_name"" PRIMARY KEY (""first_name"",""last_name""))" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_first_name_last_name"" PRIMARY KEY (""first_name"",""last_name""))" );
                         } );
 
                         it( "override primary key index name", function() {

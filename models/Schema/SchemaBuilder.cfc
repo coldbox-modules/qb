@@ -1,13 +1,43 @@
+/**
+* Schema Builder for creating database objects (tables, fields, indexes, etc.)
+*/
 component accessors="true" singleton {
 
+    /**
+    * The specific grammar that will compile the builder statements.
+    * e.g. MySQLGrammar, OracleGrammar, etc.
+    */
     property name="grammar";
+
+    /**
+    * Default length for strings used by the Blueprint.
+    * Can be overridden with `setDefaultStringLength( length )`
+    */
     property name="defaultStringLength" default="255";
 
+    /**
+    * Create a new schema builder.
+    *
+    * @grammar The specific grammar that will compile the builder statements.
+    *
+    * @returns The schema builder instance.
+    */
     function init( grammar ) {
         variables.grammar = arguments.grammar;
         return this;
     }
 
+    /**
+    * Create a new table in the database.
+    *
+    * @table    The name of the table to create.
+    * @callback A callback to define the structure of the table. The callback is passed an
+    *           instance of `Blueprint` as the only argument.
+    * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+    * @execute  Flag to immediately execute the statement.  Default: `true`.
+    *
+    * @returns  The blueprint instance
+    */
     function create( table, callback, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "create" );
@@ -22,6 +52,15 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    /**
+    * Drop an existing table in the database.
+    *
+    * @table    The name of the table to drop.
+    * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+    * @execute  Flag to immediately execute the statement.  Default: `true`.
+    *
+    * @returns  The blueprint instance
+    */
     function drop( table, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
@@ -34,6 +73,15 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    /**
+    * Drop an existing table if it exists in the database.
+    *
+    * @table    The name of the table to drop.
+    * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+    * @execute  Flag to immediately execute the statement.  Default: `true`.
+    *
+    * @returns  The blueprint instance
+    */
     function dropIfExists( table, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
@@ -47,6 +95,17 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    /**
+    * Alter an existing table in the database.
+    *
+    * @table    The name of the table to alter.
+    * @callback A callback to define the changes for the table. The callback is passed an
+    *           instance of `Blueprint` as the only argument.
+    * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+    * @execute  Flag to immediately execute the statement.  Default: `true`.
+    *
+    * @returns  The blueprint instance
+    */
     function alter( table, callback, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( table );
@@ -59,6 +118,16 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    /**
+    * Rename an existing table in the database.
+    *
+    * @from     The current name of the table.
+    * @to       The new name of the table.
+    * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+    * @execute  Flag to immediately execute the statement.  Default: `true`.
+    *
+    * @returns  The blueprint instance
+    */
     function rename( from, to, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( from );
@@ -71,6 +140,15 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    /**
+    * Check if a table exists in the database.
+    *
+    * @name     The name of the table to check.
+    * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+    * @execute  Flag to immediately execute the statement.  Default: `true`.
+    *
+    * @returns  The blueprint instance
+    */
     function hasTable( name, options = {}, execute = true ) {
         var sql = getGrammar().compileTableExists( name );
         if ( execute ) {
@@ -80,6 +158,16 @@ component accessors="true" singleton {
         return sql;
     }
 
+    /**
+    * Check if a column exists in a provided table in the database.
+    *
+    * @table    The name of the table to check for the column.
+    * @column   The name of the column to check.
+    * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+    * @execute  Flag to immediately execute the statement.  Default: `true`.
+    *
+    * @returns  The blueprint instance
+    */
     function hasColumn( table, column, options = {}, execute = true ) {
         var sql = getGrammar().compileColumnExists( table, column );
         if ( execute ) {

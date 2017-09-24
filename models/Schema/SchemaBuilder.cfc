@@ -8,13 +8,13 @@ component accessors="true" singleton {
         return this;
     }
 
-    function create( table, callback, options = {}, build = true ) {
+    function create( table, callback, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "create" );
         blueprint.setCreating( true );
         blueprint.setTable( table );
         callback( blueprint );
-        if ( build ) {
+        if ( execute ) {
             blueprint.toSql().each( function( statement ) {
                 getGrammar().runQuery( statement, [], options, "result" );
             } );
@@ -22,11 +22,11 @@ component accessors="true" singleton {
         return blueprint;
     }
 
-    function drop( table, options = {}, build = true ) {
+    function drop( table, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
         blueprint.setTable( table );
-        if ( build ) {
+        if ( execute ) {
             blueprint.toSql().each( function( statement ) {
                 getGrammar().runQuery( statement, [], options, "result" );
             } );
@@ -34,12 +34,12 @@ component accessors="true" singleton {
         return blueprint;
     }
 
-    function dropIfExists( table, options = {}, build = true ) {
+    function dropIfExists( table, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
         blueprint.setTable( table );
         blueprint.setIfExists( true );
-        if ( build ) {
+        if ( execute ) {
             blueprint.toSql().each( function( statement ) {
                 getGrammar().runQuery( statement, [], options, "result" );
             } );
@@ -47,11 +47,11 @@ component accessors="true" singleton {
         return blueprint;
     }
 
-    function alter( table, callback, options = {}, build = true ) {
+    function alter( table, callback, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( table );
         callback( blueprint );
-        if ( build ) {
+        if ( execute ) {
             blueprint.toSql().each( function( statement ) {
                 getGrammar().runQuery( statement, [], options, "result" );
             } );
@@ -59,11 +59,11 @@ component accessors="true" singleton {
         return blueprint;
     }
 
-    function rename( from, to, options = {}, build = true ) {
+    function rename( from, to, options = {}, execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( from );
         blueprint.addCommand( "renameTable", { to = to } );
-        if ( build ) {
+        if ( execute ) {
             blueprint.toSql().each( function( statement ) {
                 getGrammar().runQuery( statement, [], options, "result" );
             } );
@@ -71,18 +71,18 @@ component accessors="true" singleton {
         return blueprint;
     }
 
-    function hasTable( name, options = {}, build = true ) {
+    function hasTable( name, options = {}, execute = true ) {
         var sql = getGrammar().compileTableExists( name );
-        if ( build ) {
+        if ( execute ) {
             var q = getGrammar().runQuery( sql, [ name ], options, "query" );
             return q.RecordCount > 0;
         }
         return sql;
     }
 
-    function hasColumn( table, column, options = {}, build = true ) {
+    function hasColumn( table, column, options = {}, execute = true ) {
         var sql = getGrammar().compileColumnExists( table, column );
-        if ( build ) {
+        if ( execute ) {
             var q = getGrammar().runQuery( sql, [ table, column ], options, "query" );
             return q.RecordCount > 0;
         }

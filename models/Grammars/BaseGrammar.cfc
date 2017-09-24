@@ -66,7 +66,7 @@ component displayname="Grammar" accessors="true" {
         structAppend( options, { result = "local.result" }, true );
         var q = queryExecute( sql, bindings, options );
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
-        data.result = local.result
+        data.result = local.result;
         tryPostInterceptor( data );
         return returnObject == "result" ? local.result : q;
     }

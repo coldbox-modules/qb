@@ -57,7 +57,7 @@ component accessors="true" {
             return lcase( func.name );
         } );
         for ( var arg in arguments ) {
-            if ( functionNames.contains( lcase( "set#arg#" ) ) ) {
+            if ( functionNames.contains( lcase( "set#arg#" ) ) && ! isNull( arguments[ arg ] ) ) {
                 invoke( newColumn, "set#arg#", { 1 = arguments[ arg ] } );
             }
         }
@@ -174,7 +174,7 @@ component accessors="true" {
         return unsignedBigInteger( argumentCollection = arguments );
     }
 
-    function bigInteger( name ) {
+    function bigInteger( name, precision ) {
         arguments.type = "bigInteger";
         return appendColumn( argumentCollection = arguments );
     }
@@ -228,7 +228,7 @@ component accessors="true" {
         return unsignedInteger( argumentCollection = arguments );
     }
 
-    function integer( name, precision = 10 ) {
+    function integer( name, precision ) {
         arguments.type = "integer";
         return appendColumn( argumentCollection = arguments );
     }
@@ -250,7 +250,7 @@ component accessors="true" {
         return unsignedMediumInteger( argumentCollection = arguments );
     }
 
-    function mediumInteger( name, precision = 10 ) {
+    function mediumInteger( name, precision ) {
         arguments.type = "mediumInteger";
         return appendColumn( argumentCollection = arguments );
     }
@@ -289,7 +289,7 @@ component accessors="true" {
         return unsignedSmallInteger( argumentCollection = arguments );
     }
 
-    function smallInteger( name, precision = 10 ) {
+    function smallInteger( name, precision ) {
         arguments.type = "smallInteger";
         return appendColumn( argumentCollection = arguments );
     }
@@ -324,32 +324,32 @@ component accessors="true" {
         return unsignedTinyInteger( argumentCollection = arguments );
     }
 
-    function tinyInteger( name, precision = 10 ) {
+    function tinyInteger( name, precision ) {
         arguments.type = "tinyInteger";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function unsignedBigInteger( name ) {
+    function unsignedBigInteger( name, precision ) {
         arguments.unsigned = true;
         return bigInteger( argumentCollection = arguments );
     }
 
-    function unsignedInteger( name ) {
+    function unsignedInteger( name, precision ) {
         arguments.unsigned = true;
         return integer( argumentCollection = arguments );
     }
 
-    function unsignedMediumInteger( name ) {
+    function unsignedMediumInteger( name, precision ) {
         arguments.unsigned = true;
         return mediumInteger( argumentCollection = arguments );
     }
 
-    function unsignedSmallInteger( name ) {
+    function unsignedSmallInteger( name, precision ) {
         arguments.unsigned = true;
         return smallInteger( argumentCollection = arguments );
     }
 
-    function unsignedTinyInteger( name ) {
+    function unsignedTinyInteger( name, precision ) {
         arguments.unsigned = true;
         return tinyInteger( argumentCollection = arguments );
     }

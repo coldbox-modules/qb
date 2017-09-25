@@ -913,7 +913,12 @@ component displayname="Grammar" accessors="true" {
     }
 
     function typeBigInteger( column ) {
-        return "BIGINT";
+        return arrayToList( arrayFilter( [
+            "BIGINT",
+            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+        ], function( item ) {
+            return item != "";
+        } ), "" );
     }
 
     function typeBit( column ) {
@@ -952,7 +957,12 @@ component displayname="Grammar" accessors="true" {
     }
 
     function typeInteger( column ) {
-        return "INTEGER(#column.getPrecision()#)";
+        return arrayToList( arrayFilter( [
+            "INTEGER",
+            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+        ], function( item ) {
+            return item != "";
+        } ), "" );
     }
 
     function typeJson( column ) {
@@ -964,7 +974,12 @@ component displayname="Grammar" accessors="true" {
     }
 
     function typeMediumInteger( column ) {
-        return "INTEGER(#column.getPrecision()#)";
+        return arrayToList( arrayFilter( [
+            "MEDIUMINT",
+            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+        ], function( item ) {
+            return item != "";
+        } ), "" );
     }
 
     function typeMediumText( column ) {
@@ -972,7 +987,12 @@ component displayname="Grammar" accessors="true" {
     }
 
     function typeSmallInteger( column ) {
-        return "INTEGER(#column.getPrecision()#)";
+        return arrayToList( arrayFilter( [
+            "SMALLINT",
+            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+        ], function( item ) {
+            return item != "";
+        } ), "" );
     }
 
     function typeString( column ) {
@@ -992,7 +1012,12 @@ component displayname="Grammar" accessors="true" {
     }
 
     function typeTinyInteger( column ) {
-        return "INTEGER(#column.getPrecision()#)";
+        return arrayToList( arrayFilter( [
+            "TINYINT",
+            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+        ], function( item ) {
+            return item != "";
+        } ), "" );
     }
 
     function typeUuid( column ) {

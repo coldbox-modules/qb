@@ -39,7 +39,7 @@ component extends="testbox.system.BaseSpec" {
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
                     expect( statements ).toHaveLength( 1 );
-                    expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INTEGER(10) UNSIGNED NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""), CONSTRAINT ""fk_users_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
+                    expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER UNSIGNED NOT NULL AUTO_INCREMENT, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INTEGER UNSIGNED NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""), CONSTRAINT ""fk_users_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NONE ON DELETE CASCADE)" );
                 } );
 
                 describe( "column types", function() {
@@ -63,6 +63,17 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
                         expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""weather_reports"" (""temperature"" BIGINT NOT NULL)" );
+                    } );
+
+                    it( "bigInteger (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "weather_reports", function( table ) {
+                            table.bigInteger( "temperature", 5 );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""weather_reports"" (""temperature"" BIGINT(5) NOT NULL)" );
                     } );
 
                     it( "bit", function() {
@@ -260,7 +271,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "integer", function() {
@@ -271,10 +282,10 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER NOT NULL)" );
                     } );
 
-                    it( "integer with length", function() {
+                    it( "integer (with precision)", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.integer( "age", 2 );
@@ -315,18 +326,29 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "mediumInteger", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
-                            table.integer( "age" );
+                            table.mediumInteger( "age" );
                         }, {}, false );
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" MEDIUMINT NOT NULL)" );
+                    } );
+
+                    it( "mediumInteger (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.mediumInteger( "age", 5 );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" MEDIUMINT(5) NOT NULL)" );
                     } );
 
                     it( "mediumText", function() {
@@ -348,7 +370,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED NOT NULL, ""taggable_type"" VARCHAR(255) NOT NULL, INDEX ""taggable_index"" (""taggable_id"", ""taggable_type""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER UNSIGNED NOT NULL, ""taggable_type"" VARCHAR(255) NOT NULL, INDEX ""taggable_index"" (""taggable_id"", ""taggable_type""))" );
                     } );
 
                     it( "nullableMorphs", function() {
@@ -359,7 +381,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER(10) UNSIGNED, ""taggable_type"" VARCHAR(255), INDEX ""taggable_index"" (""taggable_id"", ""taggable_type""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""tags"" (""taggable_id"" INTEGER UNSIGNED, ""taggable_type"" VARCHAR(255), INDEX ""taggable_index"" (""taggable_id"", ""taggable_type""))" );
                     } );
 
                     it( "raw", function() {
@@ -381,7 +403,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "smallInteger", function() {
@@ -392,7 +414,18 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" SMALLINT NOT NULL)" );
+                    } );
+
+                    it( "smallInteger (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.smallInteger( "age", 5 );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" SMALLINT(5) NOT NULL)" );
                     } );
 
                     it( "string", function() {
@@ -458,7 +491,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" INTEGER(10) UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""id"" TINYINT UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" );
                     } );
 
                     it( "tinyInteger", function() {
@@ -469,10 +502,10 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""active"" INTEGER(10) NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT NOT NULL)" );
                     } );
 
-                    it( "tinyInteger with length", function() {
+                    it( "tinyInteger (with precision)", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
                             table.tinyInteger( "active", 3 );
@@ -480,7 +513,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""active"" INTEGER(3) NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""active"" TINYINT(3) NOT NULL)" );
                     } );
 
                     it( "unsignedBigInteger", function() {
@@ -494,6 +527,17 @@ component extends="testbox.system.BaseSpec" {
                         expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" BIGINT UNSIGNED NOT NULL)" );
                     } );
 
+                    it( "unsignedBigInteger (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "employees", function( table ) {
+                            table.unsignedBigInteger( "salary", 5 );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""employees"" (""salary"" BIGINT(5) UNSIGNED NOT NULL)" );
+                    } );
+
                     it( "unsignedInteger", function() {
                         var schema = getBuilder();
                         var blueprint = schema.create( "users", function( table ) {
@@ -502,7 +546,18 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) UNSIGNED NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER UNSIGNED NOT NULL)" );
+                    } );
+
+                    it( "unsignedInteger (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.unsignedInteger( "age", 5 );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(5) UNSIGNED NOT NULL)" );
                     } );
 
                     it( "unsignedMediumInteger", function() {
@@ -513,7 +568,18 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) UNSIGNED NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" MEDIUMINT UNSIGNED NOT NULL)" );
+                    } );
+
+                    it( "unsignedMediumInteger (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.unsignedMediumInteger( "age", 5 );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" MEDIUMINT(5) UNSIGNED NOT NULL)" );
                     } );
 
                     it( "unsignedSmallInteger", function() {
@@ -524,7 +590,18 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) UNSIGNED NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" SMALLINT UNSIGNED NOT NULL)" );
+                    } );
+
+                    it( "unsignedSmallInteger (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.unsignedSmallInteger( "age", 5 );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" SMALLINT(5) UNSIGNED NOT NULL)" );
                     } );
 
                     it( "unsignedTinyInteger", function() {
@@ -535,7 +612,18 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) UNSIGNED NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" TINYINT UNSIGNED NOT NULL)" );
+                    } );
+
+                    it( "unsignedTinyInteger (with precision)", function() {
+                        var schema = getBuilder();
+                        var blueprint = schema.create( "users", function( table ) {
+                            table.unsignedTinyInteger( "age", 5 );
+                        }, {}, false );
+                        var statements = blueprint.toSql();
+                        expect( statements ).toBeArray();
+                        expect( statements ).toHaveLength( 1 );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" TINYINT(5) UNSIGNED NOT NULL)" );
                     } );
 
                     it( "uuid", function() {
@@ -592,7 +680,7 @@ component extends="testbox.system.BaseSpec" {
                         var statements = blueprint.toSql();
                         expect( statements ).toBeArray();
                         expect( statements ).toHaveLength( 1 );
-                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER(10) UNSIGNED NOT NULL)" );
+                        expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""users"" (""age"" INTEGER UNSIGNED NOT NULL)" );
                     } );
                 } );
 
@@ -784,7 +872,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER UNSIGNED NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
                         } );
 
                         it( "table foreign key", function() {
@@ -796,7 +884,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER UNSIGNED NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
                         } );
 
                         it( "override column foreign key index name", function() {
@@ -807,7 +895,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER UNSIGNED NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
                         } );
 
                         it( "override table foreign key index name", function() {
@@ -819,7 +907,7 @@ component extends="testbox.system.BaseSpec" {
                             var statements = blueprint.toSql();
                             expect( statements ).toBeArray();
                             expect( statements ).toHaveLength( 1 );
-                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER(10) UNSIGNED NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
+                            expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER UNSIGNED NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NONE ON DELETE NONE)" );
                         } );
                     } );
                 } );

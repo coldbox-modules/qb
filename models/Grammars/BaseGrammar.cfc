@@ -1020,10 +1020,6 @@ component displayname="Grammar" accessors="true" {
         } ), "" );
     }
 
-    function typeUuid( column ) {
-        return "CHAR(35)";
-    }
-
     /*=====  End of Column Types  ======*/
 
     /*===================================

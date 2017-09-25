@@ -355,8 +355,7 @@ component accessors="true" {
     }
 
     function uuid( name ) {
-        arguments.type = "uuid";
-        return appendColumn( argumentCollection = arguments );
+        return char( name, 35 );
     }
 
 }

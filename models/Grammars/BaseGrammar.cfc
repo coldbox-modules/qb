@@ -797,7 +797,7 @@ component displayname="Grammar" accessors="true" {
     }
 
     function generateComment( column ) {
-        return column.getComment() != "" ? "COMMENT ""#column.getComment()#""" : "";
+        return column.getComment() != "" ? "COMMENT #wrapValue( column.getComment() )#" : "";
     }
 
     /*=====  End of Blueprint: Create  ======*/
@@ -915,7 +915,7 @@ component displayname="Grammar" accessors="true" {
     function typeBigInteger( column ) {
         return arrayToList( arrayFilter( [
             "BIGINT",
-            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
         ], function( item ) {
             return item != "";
         } ), "" );
@@ -959,7 +959,7 @@ component displayname="Grammar" accessors="true" {
     function typeInteger( column ) {
         return arrayToList( arrayFilter( [
             "INTEGER",
-            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
         ], function( item ) {
             return item != "";
         } ), "" );
@@ -976,7 +976,7 @@ component displayname="Grammar" accessors="true" {
     function typeMediumInteger( column ) {
         return arrayToList( arrayFilter( [
             "MEDIUMINT",
-            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
         ], function( item ) {
             return item != "";
         } ), "" );
@@ -989,7 +989,7 @@ component displayname="Grammar" accessors="true" {
     function typeSmallInteger( column ) {
         return arrayToList( arrayFilter( [
             "SMALLINT",
-            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
         ], function( item ) {
             return item != "";
         } ), "" );
@@ -1014,7 +1014,7 @@ component displayname="Grammar" accessors="true" {
     function typeTinyInteger( column ) {
         return arrayToList( arrayFilter( [
             "TINYINT",
-            column.hasPrecision() ? "(#column.getPrecision()#)" : ""
+            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
         ], function( item ) {
             return item != "";
         } ), "" );

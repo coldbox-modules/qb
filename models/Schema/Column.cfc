@@ -60,8 +60,4 @@ component accessors="true" {
         return this;
     }
 
-    function hasPrecision() {
-        return ! isNull( getPrecision() );
-    }
-
 }

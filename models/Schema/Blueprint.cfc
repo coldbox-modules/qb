@@ -135,24 +135,61 @@ component accessors="true" {
     =            Constraints            =
     ===================================*/
 
+    /**
+    * Create a foreign key constraint from one or more columns.
+    * Follow up this call with calls to the `TableIndex` `references` and `onTable` methods.
+    *
+    * @columns The column or array of columns that references a key or keys on another table.
+    * @name    The name of the foreign key constraint.
+    *          Default: A generated name consisting of the table name and column name(s).
+    *
+    * @returns The created TableIndex instance.
+    */
     function foreignKey( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "fk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
         return addIndex( type = "foreign", foreignKey = columns, name = name );
     }
 
+    /**
+    * Create a generic index from one or more columns.
+    *
+    * @columns The column or array of columns that make up the index.
+    * @name    The name of the index constraint.
+    *          Default: A generated name consisting of the table name and column name(s).
+    *
+    * @returns The created TableIndex instance.
+    */
     function index( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "idx_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
         return addIndex( type = "basic", columns = columns, name = name );
     }
 
+    /**
+    * Create a primary key constraint from one or more columns.
+    *
+    * @columns The column or array of columns that make up the primary key.
+    * @name    The name of the primary key constraint.
+    *          Default: A generated name consisting of the table name and column name(s).
+    *
+    * @returns The created TableIndex instance.
+    */
     function primaryKey( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "pk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
         return addIndex( type = "primary", columns = columns, name = name );
     }
 
+    /**
+    * Create a unique constraint from one or more columns.
+    *
+    * @columns The column or array of columns that make up the unique constraint.
+    * @name    The name of the unique constraint.
+    *          Default: A generated name consisting of the table name and column name(s).
+    *
+    * @returns The created TableIndex instance.
+    */
     function unique( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;

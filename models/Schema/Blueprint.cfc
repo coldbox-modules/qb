@@ -23,181 +23,6 @@ component accessors="true" {
         return this;
     }
 
-    function addCommand( command, parameters = [] ) {
-        variables.commands.append( new SchemaCommand( type = command, parameters = parameters ) );
-        return this;
-    }
-
-    function hasCommand( commandType ) {
-        return ! arrayIsEmpty( arrayFilter( getCommands(), function( command ) {
-            return command.getType() == commandType;
-        } ) );
-    }
-
-    function toSql() {
-        return variables.commands.map( function( command ) {
-            return invoke( getGrammar(), "compile#command.getType()#", {
-                blueprint = this,
-                commandParameters = command.getParameters()
-            } );
-        } ).filter( function ( sql ) {
-            return sql != "";
-        } );
-    }
-
-    function raw( sql ) {
-        variables.columns.append( new qb.models.Query.Expression( sql ) );
-        return this;
-    }
-
-    function appendColumn() {
-        var newColumn = new Column( this );
-        var indexMetadata = getMetadata( newColumn );
-        var functionNames = indexMetadata.functions.map( function( func ) {
-            return lcase( func.name );
-        } );
-        for ( var arg in arguments ) {
-            if ( functionNames.contains( lcase( "set#arg#" ) ) && ! isNull( arguments[ arg ] ) ) {
-                invoke( newColumn, "set#arg#", { 1 = arguments[ arg ] } );
-            }
-        }
-        variables.columns.append( newColumn );
-        return newColumn;
-    }
-
-    function addConstraint( constraint ) {
-        addCommand( "addConstraint" );
-        return this;
-    }
-
-    function removeConstraint( name ) {
-        if ( ! isSimpleValue( name ) ) {
-            removeConstraint( name.getName() );
-        }
-        else {
-            addCommand( "removeConstraint", { name = name } );
-        }
-        return this;
-    }
-
-    function addIndex() {
-        var newIndex = new TableIndex( this );
-        var indexMetadata = getMetadata( newIndex );
-        var functionNames = indexMetadata.functions.map( function( func ) {
-            return lcase( func.name );
-        } );
-        for ( var arg in arguments ) {
-            if ( functionNames.contains( lcase( "set#arg#" ) ) ) {
-                invoke( newIndex, "set#arg#", { 1 = arguments[ arg ] } );
-            }
-        }
-        variables.indexes.append( newIndex );
-        return newIndex;
-    }
-
-    /*======================================
-    =            Alter Commands            =
-    ======================================*/
-
-    function addColumn( columnDefinition ) {
-        addCommand( "addColumn", { column = columnDefinition } );
-        return this;
-    }
-
-    function dropColumn( name ) {
-        var dropColumn = new Column( this );
-        var indexMetadata = getMetadata( dropColumn );
-        var functionNames = indexMetadata.functions.map( function( func ) {
-            return lcase( func.name );
-        } );
-        for ( var arg in arguments ) {
-            if ( functionNames.contains( lcase( "set#arg#" ) ) ) {
-                invoke( dropColumn, "set#arg#", { 1 = arguments[ arg ] } );
-            }
-        }
-        addCommand( "dropColumn", { column = dropColumn } );
-        return dropColumn;
-    }
-
-    function renameColumn( name, newColumnDefinition ) {
-        addCommand( "renameColumn", { from = name, to = newColumnDefinition } );
-        return this;
-    }
-
-    function modifyColumn( name, newColumnDefinition ) {
-        addCommand( "modifyColumn", { from = name, to = newColumnDefinition } );
-        return this;
-    }
-
-    /*=====  End of Alter Commands  ======*/
-
-    /*===================================
-    =            Constraints            =
-    ===================================*/
-
-    /**
-    * Create a foreign key constraint from one or more columns.
-    * Follow up this call with calls to the `TableIndex` `references` and `onTable` methods.
-    *
-    * @columns The column or array of columns that references a key or keys on another table.
-    * @name    The name of the foreign key constraint.
-    *          Default: A generated name consisting of the table name and column name(s).
-    *
-    * @returns The created TableIndex instance.
-    */
-    function foreignKey( columns, name ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "fk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return addIndex( type = "foreign", foreignKey = columns, name = name );
-    }
-
-    /**
-    * Create a generic index from one or more columns.
-    *
-    * @columns The column or array of columns that make up the index.
-    * @name    The name of the index constraint.
-    *          Default: A generated name consisting of the table name and column name(s).
-    *
-    * @returns The created TableIndex instance.
-    */
-    function index( columns, name ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "idx_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return addIndex( type = "basic", columns = columns, name = name );
-    }
-
-    /**
-    * Create a primary key constraint from one or more columns.
-    *
-    * @columns The column or array of columns that make up the primary key.
-    * @name    The name of the primary key constraint.
-    *          Default: A generated name consisting of the table name and column name(s).
-    *
-    * @returns The created TableIndex instance.
-    */
-    function primaryKey( columns, name ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "pk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return addIndex( type = "primary", columns = columns, name = name );
-    }
-
-    /**
-    * Create a unique constraint from one or more columns.
-    *
-    * @columns The column or array of columns that make up the unique constraint.
-    * @name    The name of the unique constraint.
-    *          Default: A generated name consisting of the table name and column name(s).
-    *
-    * @returns The created TableIndex instance.
-    */
-    function unique( columns, name ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return addIndex( type = "unique", columns = columns, name = name );
-    }
-
-    /*=====  End of Constraints  ======*/
-
 
 
     /*====================================
@@ -207,7 +32,7 @@ component accessors="true" {
     function bigIncrements( name, indexName ) {
         arguments.autoIncrement = true;
         arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        addIndex( type = "primary", columns = name, name = indexName );
+        appendIndex( type = "primary", columns = name, name = indexName );
         return unsignedBigInteger( argumentCollection = arguments );
     }
 
@@ -261,7 +86,7 @@ component accessors="true" {
     function increments( name, indexName ) {
         arguments.autoIncrement = true;
         arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        addIndex( type = "primary", columns = name, name = indexName );
+        appendIndex( type = "primary", columns = name, name = indexName );
         return unsignedInteger( argumentCollection = arguments );
     }
 
@@ -283,7 +108,7 @@ component accessors="true" {
     function mediumIncrements( name, indexName ) {
         arguments.autoIncrement = true;
         arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        addIndex( type = "primary", columns = name, name = indexName );
+        appendIndex( type = "primary", columns = name, name = indexName );
         return unsignedMediumInteger( argumentCollection = arguments );
     }
 
@@ -300,7 +125,7 @@ component accessors="true" {
     function morphs( name ) {
         unsignedInteger( "#name#_id" );
         string( "#name#_type" );
-        addIndex(
+        appendIndex(
             type = "basic",
             name = "#name#_index",
             columns = [ "#name#_id", "#name#_type" ]
@@ -311,7 +136,7 @@ component accessors="true" {
     function nullableMorphs( name ) {
         unsignedInteger( "#name#_id" ).nullable();
         string( "#name#_type" ).nullable();
-        addIndex(
+        appendIndex(
             type = "basic",
             name = "#name#_index",
             columns = [ "#name#_id", "#name#_type" ]
@@ -319,10 +144,15 @@ component accessors="true" {
         return this;
     }
 
+    function raw( sql ) {
+        variables.columns.append( new qb.models.Query.Expression( sql ) );
+        return this;
+    }
+
     function smallIncrements( name, indexName ) {
         arguments.autoIncrement = true;
         arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        addIndex( type = "primary", columns = name, name = indexName );
+        appendIndex( type = "primary", columns = name, name = indexName );
         return unsignedSmallInteger( argumentCollection = arguments );
     }
 
@@ -357,7 +187,7 @@ component accessors="true" {
     function tinyIncrements( name, indexName ) {
         arguments.autoIncrement = true;
         arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        addIndex( type = "primary", columns = name, name = indexName );
+        appendIndex( type = "primary", columns = name, name = indexName );
         return unsignedTinyInteger( argumentCollection = arguments );
     }
 
@@ -393,6 +223,175 @@ component accessors="true" {
 
     function uuid( name ) {
         return char( name, 35 );
+    }
+
+
+
+    /*===================================
+    =            Constraints            =
+    ===================================*/
+
+    /**
+    * Create a foreign key constraint from one or more columns.
+    * Follow up this call with calls to the `TableIndex` `references` and `onTable` methods.
+    *
+    * @columns The column or array of columns that references a key or keys on another table.
+    * @name    The name of the foreign key constraint.
+    *          Default: A generated name consisting of the table name and column name(s).
+    *
+    * @returns The created TableIndex instance.
+    */
+    function foreignKey( columns, name ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        arguments.name = isNull( name ) ? "fk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
+        return appendIndex( type = "foreign", foreignKey = columns, name = name );
+    }
+
+    /**
+    * Create a generic index from one or more columns.
+    *
+    * @columns The column or array of columns that make up the index.
+    * @name    The name of the index constraint.
+    *          Default: A generated name consisting of the table name and column name(s).
+    *
+    * @returns The created TableIndex instance.
+    */
+    function index( columns, name ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        arguments.name = isNull( name ) ? "idx_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
+        return appendIndex( type = "basic", columns = columns, name = name );
+    }
+
+    /**
+    * Create a primary key constraint from one or more columns.
+    *
+    * @columns The column or array of columns that make up the primary key.
+    * @name    The name of the primary key constraint.
+    *          Default: A generated name consisting of the table name and column name(s).
+    *
+    * @returns The created TableIndex instance.
+    */
+    function primaryKey( columns, name ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        arguments.name = isNull( name ) ? "pk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
+        return appendIndex( type = "primary", columns = columns, name = name );
+    }
+
+    /**
+    * Create a unique constraint from one or more columns.
+    *
+    * @columns The column or array of columns that make up the unique constraint.
+    * @name    The name of the unique constraint.
+    *          Default: A generated name consisting of the table name and column name(s).
+    *
+    * @returns The created TableIndex instance.
+    */
+    function unique( columns, name ) {
+        arguments.columns = isArray( columns ) ? columns : [ columns ];
+        arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
+        return appendIndex( type = "unique", columns = columns, name = name );
+    }
+
+
+    /*======================================
+    =            Alter Commands            =
+    ======================================*/
+
+    function addColumn( columnDefinition ) {
+        addCommand( "addColumn", { column = columnDefinition } );
+        return this;
+    }
+
+    function dropColumn( name ) {
+        var dropColumn = new Column( this );
+        var indexMetadata = getMetadata( dropColumn );
+        var functionNames = indexMetadata.functions.map( function( func ) {
+            return lcase( func.name );
+        } );
+        for ( var arg in arguments ) {
+            if ( functionNames.contains( lcase( "set#arg#" ) ) ) {
+                invoke( dropColumn, "set#arg#", { 1 = arguments[ arg ] } );
+            }
+        }
+        addCommand( "dropColumn", { column = dropColumn } );
+        return dropColumn;
+    }
+
+    function renameColumn( name, newColumnDefinition ) {
+        addCommand( "renameColumn", { from = name, to = newColumnDefinition } );
+        return this;
+    }
+
+    function modifyColumn( name, newColumnDefinition ) {
+        addCommand( "modifyColumn", { from = name, to = newColumnDefinition } );
+        return this;
+    }
+
+
+
+    /*=======================================
+    =            Command Helpers            =
+    =======================================*/
+
+    function addCommand( command, parameters = [] ) {
+        variables.commands.append( new SchemaCommand( type = command, parameters = parameters ) );
+        return this;
+    }
+
+    function addConstraint( constraint ) {
+        addCommand( "addConstraint" );
+        return this;
+    }
+
+    function appendColumn() {
+        var newColumn = new Column( this );
+        var indexMetadata = getMetadata( newColumn );
+        var functionNames = indexMetadata.functions.map( function( func ) {
+            return lcase( func.name );
+        } );
+        for ( var arg in arguments ) {
+            if ( functionNames.contains( lcase( "set#arg#" ) ) && ! isNull( arguments[ arg ] ) ) {
+                invoke( newColumn, "set#arg#", { 1 = arguments[ arg ] } );
+            }
+        }
+        variables.columns.append( newColumn );
+        return newColumn;
+    }
+
+    function appendIndex() {
+        var newIndex = new TableIndex( this );
+        var indexMetadata = getMetadata( newIndex );
+        var functionNames = indexMetadata.functions.map( function( func ) {
+            return lcase( func.name );
+        } );
+        for ( var arg in arguments ) {
+            if ( functionNames.contains( lcase( "set#arg#" ) ) ) {
+                invoke( newIndex, "set#arg#", { 1 = arguments[ arg ] } );
+            }
+        }
+        variables.indexes.append( newIndex );
+        return newIndex;
+    }
+
+    function removeConstraint( name ) {
+        if ( ! isSimpleValue( name ) ) {
+            removeConstraint( name.getName() );
+        }
+        else {
+            addCommand( "removeConstraint", { name = name } );
+        }
+        return this;
+    }
+
+    function toSql() {
+        return variables.commands.map( function( command ) {
+            return invoke( getGrammar(), "compile#command.getType()#", {
+                blueprint = this,
+                commandParameters = command.getParameters()
+            } );
+        } ).filter( function ( sql ) {
+            return sql != "";
+        } );
     }
 
 }

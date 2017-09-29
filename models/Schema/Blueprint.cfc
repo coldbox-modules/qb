@@ -135,10 +135,10 @@ component accessors="true" {
     =            Constraints            =
     ===================================*/
 
-    function unique( columns, name ) {
+    function foreignKey( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return addIndex( type = "unique", columns = columns, name = name );
+        arguments.name = isNull( name ) ? "fk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
+        return addIndex( type = "foreign", foreignKey = columns, name = name );
     }
 
     function index( columns, name ) {
@@ -153,10 +153,10 @@ component accessors="true" {
         return addIndex( type = "primary", columns = columns, name = name );
     }
 
-    function foreignKey( columns, name ) {
+    function unique( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "fk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return addIndex( type = "foreign", foreignKey = columns, name = name );
+        arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
+        return addIndex( type = "unique", columns = columns, name = name );
     }
 
     /*=====  End of Constraints  ======*/

@@ -842,7 +842,7 @@ component displayname="Grammar" accessors="true" {
             "ALTER TABLE",
             wrapTable( blueprint.getTable() ),
             "DROP COLUMN",
-            wrapColumn( commandParameters.column.getName() )
+            wrapColumn( commandParameters.name )
         ], function( item ) {
             return item != "";
         } ), " " );

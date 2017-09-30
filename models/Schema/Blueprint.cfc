@@ -297,29 +297,29 @@ component accessors="true" {
     =            Alter Commands            =
     ======================================*/
 
-    function addColumn( columnDefinition ) {
-        addCommand( "addColumn", { column = columnDefinition } );
+    function addColumn( column ) {
+        addCommand( "addColumn", { column = column } );
+        return this;
+    }
+
+    function dropColumn( name ) {
+        addCommand( "dropColumn", { name = name } );
+        return this;
+    }
+
+    function modifyColumn( name, newColumnDefinition ) {
+        addCommand( "modifyColumn", { from = name, to = newColumnDefinition } );
+        return this;
+    }
+
+    function renameColumn( name, newColumnDefinition ) {
+        addCommand( "renameColumn", { from = name, to = newColumnDefinition } );
         return this;
     }
 
     function addConstraint( constraint ) {
         addCommand( "addConstraint", { index = constraint } );
         return this;
-    }
-
-    function dropColumn( name ) {
-        var dropColumn = new Column( this );
-        var indexMetadata = getMetadata( dropColumn );
-        var functionNames = indexMetadata.functions.map( function( func ) {
-            return lcase( func.name );
-        } );
-        for ( var arg in arguments ) {
-            if ( functionNames.contains( lcase( "set#arg#" ) ) ) {
-                invoke( dropColumn, "set#arg#", { 1 = arguments[ arg ] } );
-            }
-        }
-        addCommand( "dropColumn", { column = dropColumn } );
-        return dropColumn;
     }
 
     function dropConstraint( name ) {
@@ -332,18 +332,8 @@ component accessors="true" {
         return this;
     }
 
-    function renameColumn( name, newColumnDefinition ) {
-        addCommand( "renameColumn", { from = name, to = newColumnDefinition } );
-        return this;
-    }
-
     function renameConstraint( oldName, newName ) {
         addCommand( "renameConstraint", { from = oldName, to = newName } );
-        return this;
-    }
-
-    function modifyColumn( name, newColumnDefinition ) {
-        addCommand( "modifyColumn", { from = name, to = newColumnDefinition } );
         return this;
     }
 

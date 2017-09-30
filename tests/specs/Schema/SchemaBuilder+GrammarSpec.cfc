@@ -761,6 +761,17 @@ component extends="testbox.system.BaseSpec" {
                                 expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_email"" UNIQUE (""email"")" );
                             } );
 
+                            it( "renames constraints", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.alter( "users", function( table ) {
+                                    table.renameConstraint( "unq_users_first_name_last_name", "unq_users_full_name" );
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 1 );
+                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" RENAME INDEX ""unq_users_first_name_last_name"" TO ""unq_users_full_name""" );
+                            } );
+
                             it( "drop constraint", function() {
                                 var schema = getBuilder();
                                 var blueprint = schema.alter( "users", function( table ) {

@@ -871,6 +871,19 @@ component displayname="Grammar" accessors="true" {
         } ), " " );
     }
 
+    function compileRenameConstraint( blueprint, commandParameters ) {
+        return arrayToList( arrayFilter( [
+            "ALTER TABLE",
+            wrapTable( blueprint.getTable() ),
+            "RENAME INDEX",
+            wrapColumn( commandParameters.from ),
+            "TO",
+            wrapColumn( commandParameters.to )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
     function compileModifyColumn( blueprint, commandParameters ) {
         return arrayToList( arrayFilter( [
             "ALTER TABLE",

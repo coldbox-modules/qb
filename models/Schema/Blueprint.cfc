@@ -337,6 +337,11 @@ component accessors="true" {
         return this;
     }
 
+    function renameConstraint( oldName, newName ) {
+        addCommand( "renameConstraint", { from = oldName, to = newName } );
+        return this;
+    }
+
     function modifyColumn( name, newColumnDefinition ) {
         addCommand( "modifyColumn", { from = name, to = newColumnDefinition } );
         return this;

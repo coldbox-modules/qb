@@ -890,12 +890,9 @@ component displayname="Grammar" accessors="true" {
     ===================================*/
 
     function compileAddConstraint( blueprint, commandParameters ) {
-        var constraints = blueprint.getIndexes().map( function( index ) {
-            return invoke( this, "index#index.getType()#", { index = index } );
-        } ).filter( function( item ) {
-            return item != "";
-        } ).toList( ", " );
-        return "ALTER TABLE #wrapTable( blueprint.getTable() )# ADD #constraints#";
+        var index = commandParameters.index;
+        var constraint = invoke( this, "index#index.getType()#", { index = index } );
+        return "ALTER TABLE #wrapTable( blueprint.getTable() )# ADD #constraint#";
     }
 
     function compileRemoveConstraint( blueprint, commandParameters ) {

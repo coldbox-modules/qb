@@ -748,6 +748,19 @@ component extends="testbox.system.BaseSpec" {
                                 expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_username"" UNIQUE (""username"")" );
                             } );
 
+                            it( "adds multiple constraints at once", function() {
+                                var schema = getBuilder();
+                                var blueprint = schema.alter( "users", function( table ) {
+                                    table.addConstraint( table.unique( "username" ) );
+                                    table.addConstraint( table.unique( "email" ) );
+                                }, {}, false );
+                                var statements = blueprint.toSql();
+                                expect( statements ).toBeArray();
+                                expect( statements ).toHaveLength( 2 );
+                                expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_username"" UNIQUE (""username"")" );
+                                expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_email"" UNIQUE (""email"")" );
+                            } );
+
                             it( "remove constraint", function() {
                                 var schema = getBuilder();
                                 var blueprint = schema.alter( "users", function( table ) {
@@ -1001,21 +1014,29 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
-                it( "can drop and add and rename and modify columns at the same time", function() {
+                it( "can drop and add and rename and modify columns and constraints at the same time", function() {
                     var schema = getBuilder();
                     var blueprint = schema.alter( "users", function( table ) {
                         table.dropColumn( "is_active" );
                         table.addColumn( table.enum( "tshirt_size", [ "S", "M", "L", "XL", "XXL" ] ) );
                         table.renameColumn( "name", table.string( "username" ) );
                         table.modifyColumn( "purchase_date", table.timestamp( "purchase_date" ).nullable() );
+                        table.addConstraint( table.unique( "username" ) );
+                        table.addConstraint( table.unique( "email" ) );
+                        table.removeConstraint( "idx_users_created_date" );
+                        table.removeConstraint( "idx_users_modified_date" );
                     }, {}, false );
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();
-                    expect( statements ).toHaveLength( 4 );
+                    expect( statements ).toHaveLength( 8 );
                     expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP COLUMN ""is_active""" );
                     expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD ""tshirt_size"" ENUM(""S"", ""M"", ""L"", ""XL"", ""XXL"") NOT NULL" );
                     expect( statements[ 3 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""name"" ""username"" VARCHAR(255) NOT NULL" );
                     expect( statements[ 4 ] ).toBeWithCase( "ALTER TABLE ""users"" CHANGE ""purchase_date"" ""purchase_date"" TIMESTAMP" );
+                    expect( statements[ 5 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_username"" UNIQUE (""username"")" );
+                    expect( statements[ 6 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_email"" UNIQUE (""email"")" );
+                    expect( statements[ 7 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP INDEX ""idx_users_created_date""" );
+                    expect( statements[ 8 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP INDEX ""idx_users_modified_date""" );
                 } );
 
                 describe( "drop", function() {

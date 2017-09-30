@@ -339,7 +339,7 @@ component accessors="true" {
     }
 
     function addConstraint( constraint ) {
-        addCommand( "addConstraint" );
+        addCommand( "addConstraint", { index = constraint } );
         return this;
     }
 

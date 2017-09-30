@@ -307,13 +307,13 @@ component accessors="true" {
         return this;
     }
 
-    function modifyColumn( name, newColumnDefinition ) {
-        addCommand( "modifyColumn", { from = name, to = newColumnDefinition } );
+    function modifyColumn( name, column ) {
+        addCommand( "modifyColumn", { from = name, to = column } );
         return this;
     }
 
-    function renameColumn( name, newColumnDefinition ) {
-        addCommand( "renameColumn", { from = name, to = newColumnDefinition } );
+    function renameColumn( name, column ) {
+        addCommand( "renameColumn", { from = name, to = column } );
         return this;
     }
 
@@ -333,7 +333,13 @@ component accessors="true" {
     }
 
     function renameConstraint( oldName, newName ) {
-        addCommand( "renameConstraint", { from = oldName, to = newName } );
+        if ( ! isSimpleValue( arguments.oldName ) ) {
+            arguments.oldName = dropConstraint( arguments.oldName.getName() );
+        }
+        if ( ! isSimpleValue( arguments.newName ) ) {
+            arguments.newName = dropConstraint( arguments.newName.getName() );
+        }
+        addCommand( "renameConstraint", { from = arguments.oldName, to = arguments.newName } );
         return this;
     }
 

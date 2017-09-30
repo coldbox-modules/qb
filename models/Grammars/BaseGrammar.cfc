@@ -895,7 +895,7 @@ component displayname="Grammar" accessors="true" {
         return "ALTER TABLE #wrapTable( blueprint.getTable() )# ADD #constraint#";
     }
 
-    function compileRemoveConstraint( blueprint, commandParameters ) {
+    function compileDropConstraint( blueprint, commandParameters ) {
         return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP INDEX #wrapValue( commandParameters.name )#";
     }
 

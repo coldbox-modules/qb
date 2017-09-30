@@ -761,10 +761,10 @@ component extends="testbox.system.BaseSpec" {
                                 expect( statements[ 2 ] ).toBeWithCase( "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_email"" UNIQUE (""email"")" );
                             } );
 
-                            it( "remove constraint", function() {
+                            it( "drop constraint", function() {
                                 var schema = getBuilder();
                                 var blueprint = schema.alter( "users", function( table ) {
-                                    table.removeConstraint( "unique_username" );
+                                    table.dropConstraint( "unique_username" );
                                 }, {}, false );
                                 var statements = blueprint.toSql();
                                 expect( statements ).toBeArray();
@@ -772,10 +772,10 @@ component extends="testbox.system.BaseSpec" {
                                 expect( statements[ 1 ] ).toBeWithCase( "ALTER TABLE ""users"" DROP INDEX ""unique_username""" );
                             } );
 
-                            it( "remove constraint (from index object)", function() {
+                            it( "drop constraint (from index object)", function() {
                                 var schema = getBuilder();
                                 var blueprint = schema.alter( "users", function( table ) {
-                                    table.removeConstraint( table.unique( "username" ) );
+                                    table.dropConstraint( table.unique( "username" ) );
                                 }, {}, false );
                                 var statements = blueprint.toSql();
                                 expect( statements ).toBeArray();
@@ -1023,8 +1023,8 @@ component extends="testbox.system.BaseSpec" {
                         table.modifyColumn( "purchase_date", table.timestamp( "purchase_date" ).nullable() );
                         table.addConstraint( table.unique( "username" ) );
                         table.addConstraint( table.unique( "email" ) );
-                        table.removeConstraint( "idx_users_created_date" );
-                        table.removeConstraint( "idx_users_modified_date" );
+                        table.dropConstraint( "idx_users_created_date" );
+                        table.dropConstraint( "idx_users_modified_date" );
                     }, {}, false );
                     var statements = blueprint.toSql();
                     expect( statements ).toBeArray();

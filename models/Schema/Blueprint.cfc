@@ -302,6 +302,11 @@ component accessors="true" {
         return this;
     }
 
+    function addConstraint( constraint ) {
+        addCommand( "addConstraint", { index = constraint } );
+        return this;
+    }
+
     function dropColumn( name ) {
         var dropColumn = new Column( this );
         var indexMetadata = getMetadata( dropColumn );
@@ -315,6 +320,16 @@ component accessors="true" {
         }
         addCommand( "dropColumn", { column = dropColumn } );
         return dropColumn;
+    }
+
+    function dropConstraint( name ) {
+        if ( ! isSimpleValue( name ) ) {
+            dropConstraint( name.getName() );
+        }
+        else {
+            addCommand( "dropConstraint", { name = name } );
+        }
+        return this;
     }
 
     function renameColumn( name, newColumnDefinition ) {
@@ -335,11 +350,6 @@ component accessors="true" {
 
     function addCommand( command, parameters = [] ) {
         variables.commands.append( new SchemaCommand( type = command, parameters = parameters ) );
-        return this;
-    }
-
-    function addConstraint( constraint ) {
-        addCommand( "addConstraint", { index = constraint } );
         return this;
     }
 
@@ -371,16 +381,6 @@ component accessors="true" {
         }
         variables.indexes.append( newIndex );
         return newIndex;
-    }
-
-    function removeConstraint( name ) {
-        if ( ! isSimpleValue( name ) ) {
-            removeConstraint( name.getName() );
-        }
-        else {
-            addCommand( "removeConstraint", { name = name } );
-        }
-        return this;
     }
 
     function toSql() {

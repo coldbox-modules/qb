@@ -18,7 +18,7 @@
     },
     "bugs":"https://github.com/elpete/qb/issues",
     "slug":"qb",
-    "shortDescription":"A query builder for the rest of us.",
+    "shortDescription":"A query builder for the rest of us",
     "type":"modules",
     "keywords":[
         "ORM",

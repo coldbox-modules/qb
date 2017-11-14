@@ -54,7 +54,5 @@
     "testbox":{
         "runner":"http://localhost:7777/tests/runner.cfm"
     },
-    "dependencies":{
-        
-    }
+    "dependencies":{}
 }

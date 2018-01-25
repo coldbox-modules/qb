@@ -33,7 +33,7 @@ Compare these two examples:
 q = queryExecute("SELECT * FROM users");
 
 // qb
-query = wirebox.getInstance('Builder@qb');
+query = wirebox.getInstance('QueryBuilder@qb');
 q = query.from('users').get();
 ```
 
@@ -47,7 +47,7 @@ q = queryExecute(
 );
 
 // qb
-query = wirebox.getInstance('Builder@qb');
+query = wirebox.getInstance('QueryBuilder@qb');
 q = query.from('posts')
          .whereNotNull('published_at')
          .whereIn('author_id', [5, 10, 27])
@@ -57,7 +57,7 @@ q = query.from('posts')
 With Quick you can easily handle setting order by statements before the columns you want or join statements after a where clause:
 
 ```cfc
-query = wirebox.getInstance('Builder@qb');
+query = wirebox.getInstance('QueryBuilder@qb');
 q = query.from('posts')
          .orderBy('published_at')
          .select('post_id', 'author_id', 'title', 'body')

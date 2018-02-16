@@ -828,6 +828,30 @@ component displayname="Grammar" accessors="true" {
         return blueprint.getIfExists() ? "IF EXISTS" : "";
     }
 
+    function compileDropAllObjects() {
+        throw(
+            type = "OperationNotSupported",
+            message = "This database grammar does not support this operation",
+            detail = "compileDropAllObjects"
+        );
+    }
+
+    function compileEnableForeignKeyConstraints() {
+        throw(
+            type = "OperationNotSupported",
+            message = "This database grammar does not support this operation",
+            detail = "compileEnableForeignKeyConstraints"
+        );
+    }
+
+    function compileDisableForeignKeyConstraints() {
+        throw(
+            type = "OperationNotSupported",
+            message = "This database grammar does not support this operation",
+            detail = "compileDisableForeignKeyConstraints"
+        );
+    }
+
     /*=====  End of Blueprint: Drop  ======*/
 
     /*========================================

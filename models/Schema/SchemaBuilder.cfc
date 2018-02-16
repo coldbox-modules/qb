@@ -177,4 +177,54 @@ component accessors="true" singleton {
         return sql;
     }
 
+    /**
+     * Drops all objects in a database.
+     *
+     * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+     * @execute  Flag to immediately execute the statement.  Default: `true`.
+     *
+     * @returns The array of executed statements.
+     */
+    function dropAllObjects( options = {}, execute = true ) {
+        var statements = getGrammar().compileDropAllObjects( options );
+        if ( execute ) {
+            statements.each( function( statement ) {
+                getGrammar().runQuery( statement, [], options, "result" );
+            } );
+        }
+        return statements;
+    }
+
+    /**
+     * Enables the foreign key constraints for a database.
+     *
+     * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+     * @execute  Flag to immediately execute the statement.  Default: `true`.
+     *
+     * @returns The executed sql statement.
+     */
+    function enableForeignKeyConstraints( options = {}, execute = true ) {
+        var statement = getGrammar().compileEnableForeignKeyConstraints( options );
+        if ( execute ) {
+            getGrammar().runQuery( statement, [], options, "result" );
+        }
+        return statement;
+    }
+
+    /**
+     * Disables the foreign key constraints for a database.
+     *
+     * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+     * @execute  Flag to immediately execute the statement.  Default: `true`.
+     *
+     * @returns The executed sql statement.
+     */
+    function disableForeignKeyConstraints( options = {}, execute = true ) {
+        var statement = getGrammar().compileDisableForeignKeyConstraints( options );
+        if ( execute ) {
+            getGrammar().runQuery( statement, [], options, "result" );
+        }
+        return statement;
+    }
+
 }

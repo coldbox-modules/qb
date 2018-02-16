@@ -143,6 +143,19 @@ component extends="testbox.system.BaseSpec" {
                 expect( statements[ 3 ] ).toBeWithCase( "ALTER TABLE `users` CHANGE `name` `username` VARCHAR(255) NOT NULL" );
                 expect( statements[ 4 ] ).toBeWithCase( "ALTER TABLE `users` CHANGE `purchase_date` `purchase_date` TIMESTAMP" );
             } );
+
+            describe( "drop all objects", function() {
+                it( "can drop all objects from the database", function() {
+                    var schema = getBuilder();
+                    variables.mockGrammar.$( "getAllTableNames", [ "users", "countries", "cfmigrations" ] );
+                    var statements = schema.dropAllObjects( {}, false );
+                    expect( statements ).toBeArray();
+                    expect( statements ).toHaveLength( 3 );
+                    expect( statements[ 1 ] ).toBe( "SET FOREIGN_KEY_CHECKS=0" );
+                    expect( statements[ 2 ] ).toBe( "DROP TABLE `users`, `countries`, `cfmigrations`" );
+                    expect( statements[ 3 ] ).toBe( "SET FOREIGN_KEY_CHECKS=1" );
+                } );
+            } );
         } );
     }
 
@@ -153,6 +166,7 @@ component extends="testbox.system.BaseSpec" {
             arguments.mockGrammar;
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
             .init( arguments.mockGrammar );
+        variables.mockGrammar = arguments.mockGrammar;
         return builder;
     }
 

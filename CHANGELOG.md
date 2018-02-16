@@ -1,3 +1,15 @@
+# v5.1.0
+## 16 Feb 2018 — 22:23:59 UTC
+
+### feat
+
++ __SchemaBuilder:__ Add dropAllObjects action. (#31) ([c3e23b5](https://github.com/coldbox-modules/qb/commit/c3e23b5c110fae3464d48d62ae80e357e8c38842))
+
+### other
+
++ __\*:__ Updated API Docs ([b1499a3](https://github.com/coldbox-modules/qb/commit/b1499a3de00191478aa916aec368dc40c68319b7))
+
+
 # v5.0.3
 ## 16 Feb 2018 — 21:10:33 UTC
 

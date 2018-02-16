@@ -762,6 +762,14 @@ component displayname="Grammar" accessors="true" {
             return column.getSql();
         }
 
+        if ( isInstanceOf( column, "qb.models.Schema.TableIndex" ) ) {
+            throw(
+                type = "InvalidColumn",
+                message = "Recieved a TableIndex instead of a Column when trying to create a Column.",
+                detail = "Did you maybe try to add a column and a constraint in an ALTER clause at the same time? Split those up in to separate addColumn and addConstraint commands."
+            );
+        }
+
         return arrayToList( arrayFilter( [
             wrapColumn( column.getName() ),
             generateType( column ),

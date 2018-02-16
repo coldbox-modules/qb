@@ -933,6 +933,27 @@ component extends="testbox.system.BaseSpec" {
                             expect( statements ).toHaveLength( 1 );
                             expect( statements[ 1 ] ).toBeWithCase( "CREATE TABLE ""posts"" (""author_id"" INTEGER UNSIGNED NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)" );
                         } );
+
+                        it( "alter table foreign key with better exception messages", function() {
+                            var schema = getBuilder();
+                            var blueprint = schema.alter( "users", function( table ) {
+                                table.addColumn( table.string( "country_id" ).references( "id" ).onTable( "countries" ) );
+                            }, {}, false );
+                            try {
+                                var statements = blueprint.toSql();
+                            }
+                            catch ( any e ) {
+                                // Darn ACF nests the exception message. 😠
+                                if ( e.message == "An exception occurred while calling the function map." ) {
+                                    expect( e.detail ).toBe( "Recieved a TableIndex instead of a Column when trying to create a Column." );
+                                }
+                                else {
+                                    expect( e.message ).toBe( "Recieved a TableIndex instead of a Column when trying to create a Column." );
+                                }
+                                return;
+                            }
+                            fail( "Should have caught an exception, but didn't." );
+                        } );
                     } );
                 } );
 

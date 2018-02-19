@@ -65,4 +65,11 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "SET FOREIGN_KEY_CHECKS=1";
     }
 
+    function generateDefault( column ) {
+        if ( column.getDefault() == "" && column.getType() == "TIMESTAMP" ) {
+            column.setDefault( "CURRENT_TIMESTAMP" );
+        }
+        return super.generateDefault( column );
+    }
+
 }

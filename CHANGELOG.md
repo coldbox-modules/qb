@@ -1,3 +1,15 @@
+# v5.1.1
+## 19 Feb 2018 — 18:03:58 UTC
+
+### fix
+
++ __MySQLGrammar:__ Default to CURRENT_TIMESTAMP for timestamp columns (#32) ([680750a](https://github.com/coldbox-modules/qb/commit/680750a9894c56271cc7748a6dc501c2c266ea85))
+
+### other
+
++ __\*:__ Updated API Docs ([f78a21a](https://github.com/coldbox-modules/qb/commit/f78a21aaae8cb8fb1a475fa2f74acbafd506015f))
+
+
 # v5.1.0
 ## 16 Feb 2018 — 22:23:59 UTC
 

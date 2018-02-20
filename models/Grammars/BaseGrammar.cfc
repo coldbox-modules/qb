@@ -700,7 +700,11 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     public string function wrapColumn( required any column ) {
-        if ( isInstanceOf( column, "qb.models.Query.Expression" ) ) {
+        // In this case, isInstanceOf takes ~30 ms while this takes ~0 ms
+        if ( ! isSimpleValue( column ) &&
+             isObject( column ) &&
+             structKeyExists( column, "getSQL" )
+        ) {
             return column.getSQL();
         }
 

@@ -1516,8 +1516,8 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     private QueryBuilder function clearBindings( only = [], except = [] ) {
-        arguments.only = normalizeToArray( arguments.only );
-        arguments.except = normalizeToArray( arguments.except );
+        arguments.only = isArray( arguments.only ) ? arguments.only : [ arguments.only ];
+        arguments.except = isArray( arguments.except ) ? arguments.except : [ arguments.except ];
         if ( arguments.only.isEmpty() ) {
             arguments.only = [ "select", "join", "where", "insert", "update" ];
         }

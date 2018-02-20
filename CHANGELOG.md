@@ -1,3 +1,16 @@
+# v5.1.2
+## 20 Feb 2018 — 06:59:54 UTC
+
+### other
+
++ __\*:__ Updated API Docs ([fae1106](https://github.com/coldbox-modules/qb/commit/fae11067373d1e63d64318b4e27ec19aff16c4ce))
+
+### perf
+
++ __QueryBuilder:__ Replace normalizeToArray with simpler Array check ([d54bcce](https://github.com/coldbox-modules/qb/commit/d54bccec88da95f2982423ea7bfbd0785e2e8d7b))
++ __BaseGrammar:__ Avoid isInstanceOf in wrapColumn ([15042ce](https://github.com/coldbox-modules/qb/commit/15042ce04384536ecda2f06148481bd32b252eb8))
+
+
 # v5.1.1
 ## 19 Feb 2018 — 18:03:58 UTC
 

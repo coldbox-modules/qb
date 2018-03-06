@@ -110,28 +110,6 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     /**
-    * Parses and wraps a table from the Builder for use in a sql statement.
-    *
-    * @table The table to parse and wrap.
-    *
-    * @return string
-    */
-    private string function wrapTable( required any table ) {
-        var alias = "";
-        if ( table.findNoCase( " as " ) > 0 ) {
-            var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );
-            if ( matches.pos.len() >= 3 ) {
-                alias = mid( table, matches.pos[3], matches.len[3] );
-                table = mid( table, matches.pos[2], matches.len[2] );
-            }
-        }
-        table = table.listToArray( "." ).map( function( tablePart, index ) {
-            return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
-        } ).toList( "." );
-        return alias == "" ? table : table & " " & wrapValue( alias );
-    }
-
-    /**
     * Parses and wraps a value from the Builder for use in a sql statement.
     *
     * @table The value to parse and wrap.
@@ -140,6 +118,33 @@ component extends="qb.models.Grammars.BaseGrammar" {
     */
     private string function wrapValue( required any value ) {
         return super.wrapValue( uCase( arguments.value ) );
+    }
+
+    function compileCreateColumn( column, blueprint ) {
+        if ( utils.isExpression( column ) ) {
+            return column.getSql();
+        }
+
+        if ( isInstanceOf( column, "qb.models.Schema.TableIndex" ) ) {
+            throw(
+                type = "InvalidColumn",
+                message = "Recieved a TableIndex instead of a Column when trying to create a Column.",
+                detail = "Did you maybe try to add a column and a constraint in an ALTER clause at the same time? Split those up in to separate addColumn and addConstraint commands."
+            );
+        }
+
+        return arrayToList( arrayFilter( [
+            wrapColumn( column.getName() ),
+            generateType( column, blueprint ),
+            modifyUnsigned( column ),
+            generateAutoIncrement( column, blueprint ),
+            generateDefault( column ),
+            generateNullConstraint( column ),
+            generateUniqueConstraint( column, blueprint ),
+            generateComment( column, blueprint )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
     }
 
     function compileRenameColumn( blueprint, commandParameters ) {
@@ -155,30 +160,205 @@ component extends="qb.models.Grammars.BaseGrammar" {
         } ), " " );
     }
 
-    function compileModifyColumn( blueprint, commandParameters ) {
+    function compileAddColumn( blueprint, commandParameters ) {
+        var originalIndexes = blueprint.getIndexes();
+        blueprint.setIndexes( [] );
+
+        var body = arrayToList( arrayFilter( [
+            compileCreateColumn( commandParameters.column, blueprint )
+        ], function( item ) {
+            return item != "";
+        } ), ", " );
+
+        for ( var index in blueprint.getIndexes() ) {
+            blueprint.addConstraint( index );
+        }
+
+        blueprint.setIndexes( originalIndexes );
+
         return arrayToList( arrayFilter( [
             "ALTER TABLE",
             wrapTable( blueprint.getTable() ),
-            "MODIFY",
-            compileCreateColumn( commandParameters.to )
+            "ADD",
+            body
         ], function( item ) {
             return item != "";
         } ), " " );
     }
 
+    function compileModifyColumn( blueprint, commandParameters ) {
+        return arrayToList( arrayFilter( [
+            "ALTER TABLE",
+            wrapTable( blueprint.getTable() ),
+            "MODIFY",
+            "(" & compileCreateColumn( commandParameters.to, blueprint ) & ")"
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
+    function compileRenameConstraint( blueprint, commandParameters ) {
+        return arrayToList( arrayFilter( [
+            "ALTER TABLE",
+            wrapTable( blueprint.getTable() ),
+            "RENAME CONSTRAINT",
+            wrapColumn( commandParameters.from ),
+            "TO",
+            wrapColumn( commandParameters.to )
+        ], function( item ) {
+            return item != "";
+        } ), " " );
+    }
+
+    function compileDropConstraint( blueprint, commandParameters ) {
+        return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( commandParameters.name )#";
+    }
+
+    function generateIfExists( blueprint ) {
+        return "";
+    }
+
+    function modifyUnsigned( column ) {
+        return "";
+    }
+
+    function generateAutoIncrement( column, blueprint ) {
+        if ( ! column.getAutoIncrement() ) {
+            return "";
+        }
+
+        var table = ucase( blueprint.getTable() );
+        var columnName = uCase( column.getName() );
+        var sequenceName = "SEQ_#table#";
+        var triggerName = "TRG_#table#";
+        blueprint.addCommand( "raw", "CREATE SEQUENCE ""#sequenceName#""" );
+        blueprint.addCommand( "raw", "CREATE OR REPLACE TRIGGER ""#triggerName#"" BEFORE INSERT ON ""#table#"" FOR EACH ROW WHEN (new.""#columnName#"" IS NULL) BEGIN SELECT ""#sequenceName#"".NEXTVAL INTO :new.""#columnName#"" FROM dual; END" );
+        return "";
+    }
+
+    function generateUniqueConstraint( column, blueprint ) {
+        if ( column.getUnique() ) {
+            blueprint.unique( [ column.getName() ] );
+        }
+        return "";
+    }
+
+    function generateComment( column, blueprint ) {
+        if ( column.getComment() != "" ) {
+            blueprint.addCommand( "addComment", { table = blueprint.getTable(), column = column } );
+        }
+        return "";
+    }
+
+    function typeBigInteger( column ) {
+        var precision = isNull( column.getPrecision() ) ? 19 : column.getPrecision();
+        return "NUMBER(#precision#, 0)";
+    }
+
+    function typeBit( column ) {
+        return "RAW";
+    }
+
+    function typeBoolean( column ) {
+        return "NUMBER(1, 0)";
+    }
+
+    function typeDatetime( column ) {
+        return "DATE";
+    }
+
+    function typeDecimal( column ) {
+        return "FLOAT";
+    }
+
     function typeEnum( column ) {
-        var values = column.getValues().map( function ( value ) {
-            return wrapValue( value );
-        } ).toList( "," );
-        return "VARCHAR(255) CHECK(#wrapColumn(column.getName())# IN (#values#))";
+        blueprint.appendIndex(
+            type = "check",
+            name = "enum_#blueprint.getTable()#_#column.getName()#",
+            columns = column
+        );
+        return "VARCHAR2(255)";
+    }
+
+    function typeFloat( column ) {
+        return "FLOAT";
+    }
+
+    function typeInteger( column ) {
+        var precision = isNull( column.getPrecision() ) ? 10 : column.getPrecision();
+        return "NUMBER(#precision#, 0)";
+    }
+
+    function typeJson( column ) {
+        return "CLOB";
+    }
+
+    function typeLongText( column ) {
+        return "CLOB";
+    }
+
+    function typeMediumInteger( column ) {
+        var precision = isNull( column.getPrecision() ) ? 7 : column.getPrecision();
+        return "NUMBER(#precision#, 0)";
+    }
+
+    function typeMediumText( column ) {
+        return "CLOB";
+    }
+
+    function typeSmallInteger( column ) {
+        var precision = isNull( column.getPrecision() ) ? 5 : column.getPrecision();
+        return "NUMBER(#precision#, 0)";
+    }
+
+    function typeString( column ) {
+        return "VARCHAR2(#column.getLength()#)";
+    }
+
+    function typeText( column ) {
+        return "CLOB";
+    }
+
+    function typeTime( column ) {
+        return "DATE";
+    }
+
+    function typeTimestamp( column ) {
+        return "DATE";
+    }
+
+    function typeTinyInteger( column ) {
+        var precision = isNull( column.getPrecision() ) ? 3 : column.getPrecision();
+        return "NUMBER(#precision#, 0)";
+    }
+
+    function indexForeign( index ) {
+        //FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
+        var keys = index.getForeignKey().map( function( key ) {
+            return wrapColumn( key );
+        } ).toList( ", " );
+        var references = index.getColumns().map( function( column ) {
+            return wrapColumn( column );
+        } ).toList( ", " );
+        return arrayToList( [
+            "CONSTRAINT #wrapValue( index.getName() )#",
+            "FOREIGN KEY (#keys#)",
+            "REFERENCES #wrapTable( index.getTable() )# (#references#)",
+            "ON DELETE #ucase( index.getOnDelete() )#"
+        ], " " );
+    }
+
+    function indexBasic( index, blueprint ) {
+        blueprint.addCommand( "addIndex", { index = index, table = blueprint.getTable() } );
+        return "";
     }
 
     function compileTableExists( tableName ) {
-        return "SELECT 1 FROM ""DBA_TABLES"" where ""TABLE_NAME"" = ?";
+        return "SELECT 1 FROM ""DBA_TABLES"" WHERE ""TABLE_NAME"" = ?";
     }
 
     function compileColumnExists( table, column ) {
-        return "SELECT 1 FROM ""DBA_TAB_COL"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ?";
+        return "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ?";
     }
 
 }

@@ -738,6 +738,21 @@ component displayname="Grammar" accessors="true" {
         return """#value#""";
     }
 
+    /**
+    * Parses and wraps a value from the Builder for use in a sql statement.
+    *
+    * @table The value to parse and wrap.
+    *
+    * @return string
+    */
+    public string function wrapAlias( required any value ) {
+        return wrapValue( value );
+    }
+
+    function compileRaw( blueprint, commandParameters ) {
+        return commandParameters;
+    }
+
     /*=========================================
     =            Blueprint: Create            =
     =========================================*/
@@ -757,11 +772,11 @@ component displayname="Grammar" accessors="true" {
 
     function compileCreateColumns( required blueprint ) {
         return blueprint.getColumns().map( function( column ) {
-            return compileCreateColumn( column );
+            return compileCreateColumn( column, blueprint );
         } ).toList( ", " );
     }
 
-    function compileCreateColumn( column ) {
+    function compileCreateColumn( column, blueprint ) {
         if ( utils.isExpression( column ) ) {
             return column.getSql();
         }
@@ -776,13 +791,13 @@ component displayname="Grammar" accessors="true" {
 
         return arrayToList( arrayFilter( [
             wrapColumn( column.getName() ),
-            generateType( column ),
+            generateType( column, blueprint ),
             modifyUnsigned( column ),
             generateNullConstraint( column ),
-            generateUniqueConstraint( column ),
-            generateAutoIncrement( column ),
+            generateUniqueConstraint( column, blueprint ),
+            generateAutoIncrement( column, blueprint ),
             generateDefault( column ),
-            generateComment( column )
+            generateComment( column, blueprint )
         ], function( item ) {
             return item != "";
         } ), " " );
@@ -792,7 +807,7 @@ component displayname="Grammar" accessors="true" {
         return column.getNullable() ? "" : "NOT NULL";
     }
 
-    function generateUniqueConstraint( column ) {
+    function generateUniqueConstraint( column, blueprint ) {
         return column.getUnique() ? "UNIQUE" : "";
     }
 
@@ -800,7 +815,7 @@ component displayname="Grammar" accessors="true" {
         return column.getUnsigned() ? "UNSIGNED" : "";
     }
 
-    function generateAutoIncrement( column ) {
+    function generateAutoIncrement( column, blueprint ) {
         return column.getAutoIncrement() ? "AUTO_INCREMENT" : "";
     }
 
@@ -810,6 +825,15 @@ component displayname="Grammar" accessors="true" {
 
     function generateComment( column ) {
         return column.getComment() != "" ? "COMMENT #wrapValue( column.getComment() )#" : "";
+    }
+
+    function compileAddComment( blueprint, commandParameters ) {
+        return arrayToList( [
+            "COMMENT ON COLUMN",
+            wrapColumn( commandParameters.table & "." & commandParameters.column.getName() ),
+            "IS",
+            "'" & commandParameters.column.getComment() & "'"
+        ], " " );
     }
 
     /*=====  End of Blueprint: Create  ======*/
@@ -863,11 +887,23 @@ component displayname="Grammar" accessors="true" {
     ========================================*/
 
     function compileAddColumn( blueprint, commandParameters ) {
+        var existingIndexes = blueprint.getIndexes();
+        blueprint.setIndexes( [] );
+
+        var body = arrayToList( arrayFilter( [
+            compileCreateColumn( commandParameters.column, blueprint ),
+            compileCreateIndexes( blueprint )
+        ], function( item ) {
+            return item != "";
+        } ), ", " );
+
+        blueprint.setIndexes( existingIndexes );
+
         return arrayToList( arrayFilter( [
             "ALTER TABLE",
             wrapTable( blueprint.getTable() ),
             "ADD",
-            compileCreateColumn( commandParameters.column )
+            body
         ], function( item ) {
             return item != "";
         } ), " " );
@@ -901,7 +937,7 @@ component displayname="Grammar" accessors="true" {
             wrapTable( blueprint.getTable() ),
             "CHANGE",
             wrapColumn( commandParameters.from ),
-            compileCreateColumn( commandParameters.to )
+            compileCreateColumn( commandParameters.to, blueprint )
         ], function( item ) {
             return item != "";
         } ), " " );
@@ -926,7 +962,7 @@ component displayname="Grammar" accessors="true" {
             wrapTable( blueprint.getTable() ),
             "CHANGE",
             wrapColumn( commandParameters.from ),
-            compileCreateColumn( commandParameters.to )
+            compileCreateColumn( commandParameters.to, blueprint )
         ], function( item ) {
             return item != "";
         } ), " " );
@@ -954,8 +990,8 @@ component displayname="Grammar" accessors="true" {
     =            Column Types            =
     ====================================*/
 
-    function generateType( column ) {
-        return invoke( this, "type#column.getType()#", { column = column } );
+    function generateType( column, blueprint ) {
+        return invoke( this, "type#column.getType()#", { column = column, blueprint = blueprint } );
     }
 
     function typeBigInteger( column ) {
@@ -1074,13 +1110,27 @@ component displayname="Grammar" accessors="true" {
 
     function compileCreateIndexes( blueprint ) {
         return blueprint.getIndexes().map( function( index ) {
-            return invoke( this, "index#index.getType()#", { index = index } );
+            return invoke( this, "index#index.getType()#", { index = index, blueprint = blueprint } );
         } ).filter( function( item ) {
             return item != "";
         } ).toList( ", " );
     }
 
-    function indexBasic( index ) {
+    function compileAddIndex( blueprint, commandParameters ) {
+        var columnList = commandParameters.index.getColumns().map( function( column ) {
+            column = isSimpleValue( column ) ? column : column.getName();
+            return wrapValue( column );
+        } ).toList( ", " );
+        return arrayToList( [
+            "CREATE INDEX",
+            wrapValue( commandParameters.index.getName() ),
+            "ON",
+            wrapTable( commandParameters.table ),
+            "(#columnList#)"
+        ], " " );
+    }
+
+    function indexBasic( index, blueprint ) {
         var columnsString = index.getColumns().map( function( column ) {
             return wrapValue( column );
         } ).toList( ", " );
@@ -1118,14 +1168,33 @@ component displayname="Grammar" accessors="true" {
         return "CONSTRAINT #wrapValue( index.getName() )# UNIQUE (#references#)";
     }
 
+    function indexCheck( index ) {
+        var column = index.getColumns()[ 1 ];
+        var values = column.getValues().map( function( val ) {
+            return "'#val#'";
+        } ).toList( ", " );
+        return arrayToList( arrayFilter( [
+            "CONSTRAINT",
+            wrapValue( index.getName() ),
+            "CHECK",
+            "(#wrapValue( column.getName() )# IN (#values#))"
+        ], function( str ) {
+            return str != "";
+        } ), " " );
+    }
+
     /*=====  End of Index Types  ======*/
 
     function compileTableExists( tableName ) {
-        return "SELECT 1 FROM `information_schema`.`tables` WHERE `table_name` = ?";
+        return "SELECT 1 FROM ""information_schema"".""tables"" WHERE ""table_name"" = ?";
     }
 
     function compileColumnExists( table, column ) {
-        return "SELECT 1 FROM `information_schema`.`columns` WHERE `table_name` = ? AND `column_name` = ?";
+        return "SELECT 1 FROM ""information_schema"".""columns"" WHERE ""table_name"" = ? AND ""column_name"" = ?";
+    }
+
+    function compileAddType() {
+        return "";
     }
 
 }

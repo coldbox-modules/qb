@@ -74,6 +74,7 @@ component accessors="true" {
     }
 
     function enum( name, values ) {
+        prependCommand( "addType", { name = name, values = values } );
         arguments.type = "enum";
         return appendColumn( argumentCollection = arguments );
     }
@@ -354,6 +355,11 @@ component accessors="true" {
         return this;
     }
 
+    function prependCommand( command, parameters = [] ) {
+        variables.commands.prepend( new SchemaCommand( type = command, parameters = parameters ) );
+        return this;
+    }
+
     function appendColumn() {
         var newColumn = new Column( this );
         var indexMetadata = getMetadata( newColumn );
@@ -385,14 +391,19 @@ component accessors="true" {
     }
 
     function toSql() {
-        return variables.commands.map( function( command ) {
-            return invoke( getGrammar(), "compile#command.getType()#", {
+        var statements = [];
+        // we use a for loop here because we can potentially modify this array while looping over it.
+        for ( var i = 1; i <= variables.commands.len(); i++ ) {
+            var command = variables.commands[ i ];
+            var result = invoke( getGrammar(), "compile#command.getType()#", {
                 blueprint = this,
                 commandParameters = command.getParameters()
             } );
-        } ).filter( function ( sql ) {
-            return sql != "";
-        } );
+            if ( result != "" ) {
+                statements.append( result );
+            }
+        }
+        return statements;
     }
 
 }

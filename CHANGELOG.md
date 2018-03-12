@@ -1,3 +1,15 @@
+# v5.2.0
+## 12 Mar 2018 — 21:33:37 UTC
+
+### feat
+
++ __Grammar:__ Added official support for MSSQL, Oracle, and Postgres. (#34) ([733dae3](https://github.com/coldbox-modules/qb/commit/733dae3498814f49a829b604799824e9f755bb85))
+
+### other
+
++ __\*:__ Updated API Docs ([b99e000](https://github.com/coldbox-modules/qb/commit/b99e00030a2451807e3d7df9e365ee86e7be8543))
+
+
 # v5.1.2
 ## 20 Feb 2018 — 06:59:54 UTC
 

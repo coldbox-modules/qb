@@ -32,10 +32,10 @@
         }
     ],
     "devDependencies":{
-        "testbox":"2.3.0+00044"
+        "testbox":"^2.3.0"
     },
     "installPaths":{
-        "testbox":"testbox"
+        "testbox":"testbox/"
     },
     "ignore":[
         "**/.*",
@@ -51,6 +51,5 @@
     ],
     "testbox":{
         "runner":"http://localhost:7777/tests/runner.cfm"
-    },
-    "dependencies":{}
+    }
 }

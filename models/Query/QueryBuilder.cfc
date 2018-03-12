@@ -230,7 +230,7 @@ component displayname="QueryBuilder" accessors="true" {
         var subselect = newQuery();
         callback( subselect );
         return selectRaw(
-            "( #subselect.toSQL()# ) AS #getGrammar().wrapValue( alias )#",
+            "( #subselect.toSQL()# ) AS #getGrammar().wrapAlias( alias )#",
             subselect.getBindings()
         );
     }
@@ -625,7 +625,7 @@ component displayname="QueryBuilder" accessors="true" {
             .map( function( value ) {
                 return utils.extractBinding( value );
             } );
-        // writeDump( var = bindings, abort = true );
+
         addBindings( bindings, "where" );
 
         return this;

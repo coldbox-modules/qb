@@ -113,7 +113,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( "dynamic where statements", function() {
                     it( "translates whereColumn in to where(""column""", function() {
                         query.whereSomeColumn( "::some value::" );
-                        
+
                         expect( query.getWheres() ).toBe( [ {
                             column = "somecolumn",
                             operator = "=",
@@ -125,7 +125,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "also translates orWhereColumn in to orWhere(""column""", function() {
                         query.orWhereSomeColumn( "::some value::" );
-                        
+
                         expect( query.getWheres() ).toBe( [ {
                             column = "somecolumn",
                             operator = "=",
@@ -146,7 +146,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( function() {
                             query.where( "::some column::", "::invalid operator::", "::some value::" );
                         } ).toThrow(
-                            type = "InvalidArgumentException",
+                            type = "InvalidSQLType",
                             regex = "Illegal operator"
                         );
                     } );

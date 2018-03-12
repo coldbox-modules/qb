@@ -7,11 +7,22 @@ component extends="qb.models.Grammars.BaseGrammar" {
     *
     * @return string
     */
-    private string function wrapValue( required any value ) {
+    function wrapValue( required any value ) {
         if ( value == "*" ) {
             return value;
         }
         return "`#value#`";
+    }
+
+    /**
+    * Parses and wraps a value from the Builder for use in a sql statement.
+    *
+    * @table The value to parse and wrap.
+    *
+    * @return string
+    */
+    public string function wrapAlias( required any value ) {
+        return """#value#""";
     }
 
     function compileRenameTable( blueprint, commandParameters ) {
@@ -70,6 +81,14 @@ component extends="qb.models.Grammars.BaseGrammar" {
             column.setDefault( "CURRENT_TIMESTAMP" );
         }
         return super.generateDefault( column );
+    }
+
+    function typeString( column ) {
+        return "NVARCHAR(#column.getLength()#)";
+    }
+
+    function typeChar( column ) {
+        return "NCHAR(#column.getLength()#)";
     }
 
 }

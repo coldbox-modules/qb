@@ -1813,7 +1813,8 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function newQuery() {
         return new qb.models.Query.QueryBuilder(
             grammar = getGrammar(),
-            utils = getUtils()
+            utils = getUtils(),
+            returnFormat = getReturnFormat()
         );
     }
 

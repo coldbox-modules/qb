@@ -1,3 +1,15 @@
+# v5.2.1
+## 14 Mar 2018 — 03:18:19 UTC
+
+### fix
+
++ __QueryBuilder:__ Preserve returnFormat when creating a new builder ([4538947](https://github.com/coldbox-modules/qb/commit/4538947807d3c33865281bdf7852b858c393dbfb))
+
+### other
+
++ __\*:__ Updated API Docs ([6bd1da1](https://github.com/coldbox-modules/qb/commit/6bd1da1c68ecd11227d575f9f6b0de652188633f))
+
+
 # v5.2.0
 ## 12 Mar 2018 — 21:33:37 UTC
 

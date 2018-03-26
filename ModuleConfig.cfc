@@ -10,7 +10,7 @@ component {
 
     function configure() {
         settings = {
-            defaultGrammar = "BaseGrammar",
+            defaultGrammar = "AutoDiscover",
             returnFormat = "array"
         };
 
@@ -53,15 +53,42 @@ component {
             .property( name = "interceptorService", value = interceptorService )
             .asSingleton();
 
+        var defaultGrammar = settings.defaultGrammar;
+        if ( settings.defaultGrammar == "AutoDiscover") {
+            defaultGrammar = autoDiscoverGrammar();
+        }
+
         binder.map( "QueryBuilder@qb" )
             .to( "qb.models.Query.QueryBuilder" )
-            .initArg( name = "grammar", ref = "#settings.defaultGrammar#@qb" )
+            .initArg( name = "grammar", ref = "#defaultGrammar#@qb" )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
             .initArg( name = "returnFormat", value = settings.returnFormat );
 
         binder.map( "SchemaBuilder@qb" )
             .to( "qb.models.Schema.SchemaBuilder" )
-            .initArg( name = "grammar", ref = "#settings.defaultGrammar#@qb" );
+            .initArg( name = "grammar", ref = "#defaultGrammar#@qb" );
+    }
+
+    private function autoDiscoverGrammar() {
+        try {
+            cfdbinfo( type = "Version", name = "local.dbInfo" );
+
+            switch( dbInfo.DATABASE_PRODUCTNAME ) {
+                case "MySQL":
+                    return "MySQLGrammar";
+                case "PostgreSQL":
+                    return "PostgresGrammar";
+                case "Microsoft SQL Server":
+                    return "MSSQLGrammar";
+                case "Oracle":
+                    return "OracleGrammar";
+                default:
+                    return "BaseGrammar";
+            }
+        }
+        catch ( any e ) {
+            return "BaseGrammar";
+        }
     }
 
 }

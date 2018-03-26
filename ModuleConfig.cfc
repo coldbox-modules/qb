@@ -38,6 +38,11 @@ component {
             .property( name = "interceptorService", value = interceptorService )
             .asSingleton();
 
+        binder.map( "PostgresGrammar@qb" )
+            .to( "qb.models.Grammars.PostgresGrammar" )
+            .property( name = "interceptorService", value = interceptorService )
+            .asSingleton();
+
         binder.map( "OracleGrammar@qb" )
             .to( "qb.models.Grammars.OracleGrammar" )
             .property( name = "interceptorService", value = interceptorService )

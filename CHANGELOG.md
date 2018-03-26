@@ -1,3 +1,23 @@
+# v5.3.0
+## 26 Mar 2018 — 16:15:55 UTC
+
+### chore
+
++ __README:__ Update references to elpete to coldbox-modules ([bc7c99c](https://github.com/coldbox-modules/qb/commit/bc7c99c5f32c71bd899321dc3909313c17beb853))
+
+### feat
+
++ __ModuleConfig:__ Auto discover grammar by default. ([b2347ae](https://github.com/coldbox-modules/qb/commit/b2347aebae9ca5a42655b0f7ed5fd2ed6ec804fb))
+
+### fix
+
++ __ModuleConfig:__ Add PostgresGrammar alias to WireBox ([eca03f0](https://github.com/coldbox-modules/qb/commit/eca03f0594147c9323bc99ddd9505b8e7b4c6571))
+
+### other
+
++ __\*:__ Updated API Docs ([654eb0c](https://github.com/coldbox-modules/qb/commit/654eb0c67e69c06e3f3fc6bc17c3fef26b95ee54))
+
+
 # v5.2.1
 ## 14 Mar 2018 — 03:18:19 UTC
 

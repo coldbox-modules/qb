@@ -1,3 +1,15 @@
+# v5.3.1
+## 28 Mar 2018 — 22:12:45 UTC
+
+### fix
+
++ __ModuleConfig:__ Fix logic for determining CommandBox vs ColdBox environment ([5c66466](https://github.com/coldbox-modules/qb/commit/5c66466b11707342265a9589fefe016df134cb48))
+
+### other
+
++ __\*:__ Updated API Docs ([9136823](https://github.com/coldbox-modules/qb/commit/913682381ec4ad6627a4c136d191a3b637fa4d75))
+
+
 # v5.3.0
 ## 26 Mar 2018 — 16:15:55 UTC
 

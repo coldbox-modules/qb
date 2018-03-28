@@ -24,9 +24,9 @@ component {
     }
 
     function onLoad() {
-        var interceptorService = ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) ?
-            binder.getInjector().getInstance( "shell" ).getInterceptorService() :
-            binder.getInjector().getInstance( dsl = "coldbox:interceptorService" );
+        var interceptorService = ( structKeyExists( application, "cbController" ) ) ?
+            binder.getInjector().getInstance( dsl = "coldbox:interceptorService" ) :
+            binder.getInjector().getInstance( "shell" ).getInterceptorService();
 
         binder.map( "BaseGrammar@qb" )
             .to( "qb.models.Grammars.BaseGrammar" )

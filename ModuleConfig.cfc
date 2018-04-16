@@ -28,6 +28,10 @@ component {
             binder.getInjector().getInstance( dsl = "coldbox:interceptorService" ) :
             binder.getInjector().getInstance( "shell" ).getInterceptorService();
 
+        binder.map( "AutoDiscover@qb" )
+            .to( "qb.models.Grammars.AutoDiscover" )
+            .asSingleton();
+
         binder.map( "BaseGrammar@qb" )
             .to( "qb.models.Grammars.BaseGrammar" )
             .property( name = "interceptorService", value = interceptorService )

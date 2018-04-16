@@ -1,3 +1,15 @@
+# v5.4.0
+## 16 Apr 2018 — 21:36:02 UTC
+
+### feat
+
++ __AutoDiscover:__ Allow for runtime discovery ([700948a](https://github.com/coldbox-modules/qb/commit/700948a6ac503b7af59efb0e00894c211c3d8882))
+
+### other
+
++ __\*:__ Updated API Docs ([f078222](https://github.com/coldbox-modules/qb/commit/f0782223d11052c560d45a6f120eb56402949d20))
+
+
 # v5.3.1
 ## 28 Mar 2018 — 22:12:45 UTC
 

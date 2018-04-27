@@ -1,3 +1,16 @@
+# v5.4.1
+## 27 Apr 2018 — 22:48:54 UTC
+
+### fix
+
++ __PostgresGrammar:__ Fix typo in getAllTableNames ([91caf6a](https://github.com/coldbox-modules/qb/commit/91caf6a467fa585fdeef26e08171b59ff71b59e1))
++ __SchemaBuilder:__ Fix dropping foreign keys in MySQL ([8895447](https://github.com/coldbox-modules/qb/commit/8895447cf3a0c36c2579a2867f0510033a28b0b7))
+
+### other
+
++ __\*:__ Updated API Docs ([84913a9](https://github.com/coldbox-modules/qb/commit/84913a9cabf35fc2429787d1b7f4a37dfadb4e50))
+
+
 # v5.4.0
 ## 16 Apr 2018 — 21:36:02 UTC
 

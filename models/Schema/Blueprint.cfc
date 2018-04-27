@@ -333,6 +333,16 @@ component accessors="true" {
         return this;
     }
 
+    function dropForeignKey( name ) {
+        if ( ! isSimpleValue( name ) ) {
+            dropForeignKey( name.getName() );
+        }
+        else {
+            addCommand( "dropForeignKey", { name = name } );
+        }
+        return this;
+    }
+
     function renameConstraint( oldName, newName ) {
         if ( ! isSimpleValue( arguments.oldName ) ) {
             arguments.oldName = dropConstraint( arguments.oldName.getName() );

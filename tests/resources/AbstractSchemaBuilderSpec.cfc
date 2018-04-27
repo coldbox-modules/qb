@@ -573,6 +573,14 @@ component extends="testbox.system.BaseSpec" {
                                 }, {}, false );
                             }, dropConstraintFromIndex() );
                         } );
+
+                        it( "drop foreign key", function() {
+                            testCase( function( schema ) {
+                                return schema.alter( "users", function( table ) {
+                                    table.dropForeignKey( "fk_posts_author_id" );
+                                }, {}, false );
+                            }, dropForeignKey() );
+                        } );
                     } );
                 } );
 

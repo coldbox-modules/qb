@@ -44,6 +44,10 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "SELECT 1 FROM `information_schema`.`columns` WHERE `table_name` = ? AND `column_name` = ?";
     }
 
+    function compileDropForeignKey( blueprint, commandParameters ) {
+        return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP FOREIGN KEY #wrapValue( commandParameters.name )#";
+    }
+
     function compileDropAllObjects( options ) {
         var tables = getAllTableNames( options );
         var tableList = arrayToList( arrayMap( tables, function( table ) {

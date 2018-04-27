@@ -984,6 +984,10 @@ component displayname="Grammar" accessors="true" {
         return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP INDEX #wrapValue( commandParameters.name )#";
     }
 
+    function compileDropForeignKey( blueprint, commandParameters ) {
+        return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( commandParameters.name )#";
+    }
+
     /*=====  End of Constraints  ======*/
 
     /*====================================

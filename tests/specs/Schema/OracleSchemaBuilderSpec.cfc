@@ -312,6 +312,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE ""USERS"" DROP CONSTRAINT ""UNQ_USERS_USERNAME""" ];
     }
 
+    function dropForeignKey() {
+        return [ "ALTER TABLE ""USERS"" DROP CONSTRAINT ""FK_POSTS_AUTHOR_ID""" ];
+    }
+
     function basicIndex() {
         return [
             "CREATE TABLE ""USERS"" (""PUBLISHED_DATE"" DATE NOT NULL)",

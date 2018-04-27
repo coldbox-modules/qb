@@ -103,7 +103,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
         );
         var tables = [];
         for ( var table in tablesQuery ) {
-            arrayAppend( tables, table[ "tablename" ] );
+            arrayAppend( tables, table[ "table_name" ] );
         }
         return tables;
     }

@@ -101,6 +101,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function andWhere() {
+        return {
+            sql = "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?",
+            bindings = [ 1, "foo" ]
+        };
+    }
+
     function whereRaw() {
         return {
             sql = "SELECT * FROM ""users"" WHERE id = ? OR email = ?",

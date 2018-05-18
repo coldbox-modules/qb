@@ -181,6 +181,16 @@ component extends="testbox.system.BaseSpec" {
                             }, orWhere() );
                         } );
 
+                        it( "can add and where statements", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .where( "id", "=", 1 )
+                                    .andWhere( "email", "foo" );
+                            }, andWhere() );
+                        } );
+
                         it( "can add raw where statements", function() {
                             testCase( function( builder ) {
                                 builder.select( "*" ).from( "users" ).whereRaw( "id = ? OR email = ?", [ 1, "foo" ] );

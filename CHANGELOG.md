@@ -1,3 +1,15 @@
+# v5.5.0
+## 07 Jun 2018 — 03:00:22 UTC
+
+### feat
+
++ __QueryBuilder:__ Add andWhere method for more readable chains. ([309f4d8](https://github.com/coldbox-modules/qb/commit/309f4d85fa3ad7ef9d5a49008eec8fb4f7e1c44c))
+
+### other
+
++ __\*:__ Updated API Docs ([d944917](https://github.com/coldbox-modules/qb/commit/d9449175e9e694f09b751138a4821829f167d476))
+
+
 # v5.4.1
 ## 27 Apr 2018 — 22:48:54 UTC
 

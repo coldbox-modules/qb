@@ -293,6 +293,20 @@ component accessors="true" {
         return appendIndex( type = "unique", columns = columns, name = name );
     }
 
+    /**
+    * Create a default constraint from a column.
+    *
+    * @columns The column that makes up the default constraint.
+    * @name    The name of the default constraint.
+    *          Default: A generated name consisting of the table name and column name.
+    *
+    * @returns The created TableIndex instance.
+    */
+    function default( column, name ) {
+        arguments.name = isNull( name ) ? "df_#getTable()#_#column#" : arguments.name;
+        return createIndex( type = "default", columns = column, name = name );
+    }
+
 
     /*======================================
     =            Alter Commands            =
@@ -376,6 +390,12 @@ component accessors="true" {
     }
 
     function appendIndex() {
+        var newIndex = createIndex( argumentCollection = arguments );
+        variables.indexes.append( newIndex );
+        return newIndex;
+    }
+
+    function createIndex() {
         var newIndex = new TableIndex( this );
         var indexMetadata = getMetadata( newIndex );
         var functionNames = indexMetadata.functions.map( function( func ) {
@@ -386,7 +406,6 @@ component accessors="true" {
                 invoke( newIndex, "set#arg#", { 1 = arguments[ arg ] } );
             }
         }
-        variables.indexes.append( newIndex );
         return newIndex;
     }
 

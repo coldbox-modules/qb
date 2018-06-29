@@ -140,7 +140,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     function generateDefault( column, blueprint ) {
-        return column.getDefault() != "" ? "CONSTRAINT DF_#blueprint.getTable()#_#column.getName()# DEFAULT #column.getDefault()#" : "";
+        return column.getDefault() != "" ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #column.getDefault()#" : "";
     }
 
     function generateComment( column ) {

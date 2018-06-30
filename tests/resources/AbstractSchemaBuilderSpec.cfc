@@ -842,8 +842,6 @@ component extends="testbox.system.BaseSpec" {
         if ( ! isArray( statements ) ) {
             statements = [ statements ];
         }
-        debug( statements );
-        debug( expected );
         expect( statements ).toBeArray();
         expect( statements ).toHaveLength( arrayLen( expected ) );
         for ( var i = 1; i <= expected.len(); i++ ) {

@@ -139,6 +139,10 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return column.getAutoIncrement() ? "IDENTITY" : "";
     }
 
+    function generateDefault( column, blueprint ) {
+        return column.getDefault() != "" ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #column.getDefault()#" : "";
+    }
+
     function generateComment( column ) {
         return "";
     }

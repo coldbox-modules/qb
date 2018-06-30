@@ -123,7 +123,7 @@ component extends="testbox.system.BaseSpec" {
                     var builder = getBuilder();
                     var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" }, { id = 2, name = "test" } ] );
                     builder.$( "runQuery" ).$args(
-                        sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
+                        sql = "SELECT * FROM ""users""",
                         options = {}
                     ).$results( expectedQuery );
 

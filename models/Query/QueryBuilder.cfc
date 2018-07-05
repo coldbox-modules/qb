@@ -5,6 +5,8 @@ import qb.models.Grammars.BaseGrammar;
 * Query Builder for fluently creating SQL queries.
 */
 component displayname="QueryBuilder" accessors="true" {
+    
+    property name="paginator" inject="paginator@cbox-paginator";
 
     /**
     * The specific grammar that will compile the builder statements.
@@ -544,6 +546,26 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         return this;
+    }
+
+    /**
+    * Adds a WHERE clause to the query.
+    * Alias for `where`.
+    *
+    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhere(
+        column,
+        operator,
+        value,
+        string combinator = "and"
+    ) {
+        return where( argumentCollection = arguments );
     }
 
     /**
@@ -1293,6 +1315,18 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    public function paginate( perPage = 15, columns = ['*'], pageName = 'page', page = "" ) {
+
+        page = structKeyExists(arguments, page) ? page : paginator.resolveCurrentPage(pageName);
+        total = this.count();
+        results = forPage(page, perPage).get(columns);
+
+        return paginator.build(results, total, perPage, page, {
+            'path' = paginator.resolveCurrentPath(),
+            'pageName' = pageName,
+        });;
+    }
+
     /*******************************************************************************\
     |                             control flow functions                            |
     \*******************************************************************************/
@@ -1693,23 +1727,6 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-    * Returns the last record returned from a query.
-    *
-    * @options Any options to pass to `queryExecute`. Default: {}.
-    *
-    * @return any
-    */
-    public any function last( struct options = {} ) {
-        var results = withReturnFormat( "array", function() {
-            return get( options = options );
-        } );
-        if ( arrayIsEmpty( results ) ) {
-            return {};
-        }
-        return results[ results.len() ];
-    }
-
-    /**
     * Adds an id constraint to the query and returns the first record from the query.
     *
     * @id The id value to look up.
@@ -2037,7 +2054,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
     * onMissingMethod serves the following purpose for Builder:
     *
-    * Magic `where` methods. If a method starts with `where` or `orWhere`
+    * Magic `where` methods. If a method starts with `where`, `andWhere`, or `orWhere`
     * but doesn't match any other methods, Builder assumes that what
     * comes after is the column name to constrain.
     * All the other arguments to `where` are shifted accordingly.
@@ -2051,6 +2068,15 @@ component displayname="QueryBuilder" accessors="true" {
                 args[ key + 1 ] = missingMethodArguments[ key ];
             }
             return where( argumentCollection = args );
+        }
+
+        if ( ! arrayIsEmpty( REMatchNoCase( "^andWhere(.+)", missingMethodName ) ) ) {
+            var args = { "1" = mid( missingMethodName, 9, len( missingMethodName ) - 8 ) };
+            for ( var key in missingMethodArguments ) {
+                args[ key + 1 ] = missingMethodArguments[ key ];
+            }
+
+            return andWhere( argumentCollection = args );
         }
 
         if ( ! arrayIsEmpty( REMatchNoCase( "^orWhere(.+)", missingMethodName ) ) ) {

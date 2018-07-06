@@ -1315,16 +1315,17 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
-    public function paginate( perPage = 15, columns = ['*'], pageName = 'page', page = "" ) {
+    public function paginate( perPage = 15, columns = ["*"], pageName = "page", page = "" ) {
 
-        page = structKeyExists(arguments, page) ? page : paginator.resolveCurrentPage(pageName);
-        total = this.count();
-        results = forPage(page, perPage).get(columns);
+        var page = structKeyExists(arguments, page) ? page : paginator.resolveCurrentPage(pageName);
+        var total = this.count();
+        var results = forPage( page, perPage ).get( arguments.columns );
+        var options = {
+            "path" = paginator.resolveCurrentPath(),
+            "pageName" = pageName
+        };
 
-        return paginator.build(results, total, perPage, page, {
-            'path' = paginator.resolveCurrentPath(),
-            'pageName' = pageName,
-        });;
+        return paginator.build( results, total, perPage, page, options );
     }
 
     /*******************************************************************************\

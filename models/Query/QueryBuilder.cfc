@@ -6,6 +6,8 @@ import qb.models.Grammars.BaseGrammar;
 */
 component displayname="QueryBuilder" accessors="true" {
 
+    property name="paginator" inject="paginator@cbox-paginator";
+
     /**
     * The specific grammar that will compile the builder statements.
     * e.g. MySQLGrammar, OracleGrammar, etc.
@@ -1861,6 +1863,19 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    public function paginate( perPage = 15, columns = ["*"], pageName = "page", page = "" ) {
+
+        var page = structKeyExists(arguments, page) ? page : paginator.resolveCurrentPage(pageName);
+        var total = this.count();
+        var results = forPage( page, perPage ).get( arguments.columns );
+        var options = {
+            "path" = paginator.resolveCurrentPath(),
+            "pageName" = pageName
+        };
+
+        return paginator.build( results, total, perPage, page, options );
+    }
+    
     /*******************************************************************************\
     |                             control flow functions                            |
     \*******************************************************************************/

@@ -1863,9 +1863,13 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
-    public function paginate( perPage = 15, columns = ["*"], pageName = "page", page = "" ) {
-
-        var page = structKeyExists(arguments, page) ? page : paginator.resolveCurrentPage(pageName);
+    public function paginate(
+        numeric perPage = 15,
+        array columns = ["*"],
+        string pageName = "page",
+        numeric page
+    ) {
+        arguments.page = isNull( arguments.page ) ? paginator.resolveCurrentPage( pageName ) : page;
         var total = this.count();
         var results = forPage( page, perPage ).get( arguments.columns );
         var options = {

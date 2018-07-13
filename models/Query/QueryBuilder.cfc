@@ -1713,6 +1713,23 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+    * Returns the last record returned from a query.
+    *
+    * @options Any options to pass to `queryExecute`. Default: {}.
+    *
+    * @return any
+    */
+    public any function last( struct options = {} ) {
+        var results = withReturnFormat( "array", function() {
+            return get( options = options );
+        } );
+        if ( arrayIsEmpty( results ) ) {
+            return {};
+        }
+        return results[ results.len() ];
+    }
+
+    /**
     * Adds an id constraint to the query and returns the first record from the query.
     *
     * @id The id value to look up.

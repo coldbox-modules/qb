@@ -796,7 +796,7 @@ component displayname="Grammar" accessors="true" {
             generateNullConstraint( column ),
             generateUniqueConstraint( column, blueprint ),
             generateAutoIncrement( column, blueprint ),
-            generateDefault( column ),
+            generateDefault( column, blueprint ),
             generateComment( column, blueprint )
         ], function( item ) {
             return item != "";

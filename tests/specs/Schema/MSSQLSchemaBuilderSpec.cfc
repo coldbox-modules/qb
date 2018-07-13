@@ -9,7 +9,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function complicatedTable() {
-        return [ "CREATE TABLE [users] ([id] INTEGER NOT NULL IDENTITY, [username] NVARCHAR(255) NOT NULL, [first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, [password] NVARCHAR(100) NOT NULL, [country_id] INTEGER NOT NULL, [created_date] DATETIME2 NOT NULL DEFAULT CURRENT_TIMESTAMP, [modified_date] DATETIME2 NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT [pk_users_id] PRIMARY KEY ([id]), CONSTRAINT [fk_users_country_id] FOREIGN KEY ([country_id]) REFERENCES [countries] ([id]) ON UPDATE NO ACTION ON DELETE CASCADE)" ];
+        return [ "CREATE TABLE [users] ([id] INTEGER NOT NULL IDENTITY, [username] NVARCHAR(255) NOT NULL, [first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, [password] NVARCHAR(100) NOT NULL, [country_id] INTEGER NOT NULL, [created_date] DATETIME2 NOT NULL CONSTRAINT [df_users_created_date] DEFAULT CURRENT_TIMESTAMP, [modified_date] DATETIME2 NOT NULL CONSTRAINT [df_users_modified_date] DEFAULT CURRENT_TIMESTAMP, CONSTRAINT [pk_users_id] PRIMARY KEY ([id]), CONSTRAINT [fk_users_country_id] FOREIGN KEY ([country_id]) REFERENCES [countries] ([id]) ON UPDATE NO ACTION ON DELETE CASCADE)" ];
     }
 
     function bigIncrements() {
@@ -231,7 +231,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function default() {
-        return [ "CREATE TABLE [users] ([active] NCHAR(1) NOT NULL DEFAULT 'Y')" ];
+        return [ "CREATE TABLE [users] ([active] NCHAR(1) NOT NULL CONSTRAINT [df_users_active] DEFAULT 'Y')" ];
     }
 
     function nullable() {

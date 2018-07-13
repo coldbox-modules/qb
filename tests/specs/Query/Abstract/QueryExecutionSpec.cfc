@@ -118,6 +118,22 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            describe( "last", function() {
+                it( "retrieves the last record when calling `last`", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" }, { id = 2, name = "test" } ] );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT * FROM ""users""",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.from( "users" ).last();
+
+                    expect( results ).toBeStruct();
+                    expect( results ).toBe( { id = 2, name = "test" } );
+                } );
+            } );
+
             describe( "find", function() {
                 it( "returns the first result by id when calling `find`", function() {
                     var builder = getBuilder();

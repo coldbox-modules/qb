@@ -825,14 +825,26 @@ component extends="testbox.system.BaseSpec" {
 
             it( "has table", function() {
                 testCase( function( schema ) {
-                    return schema.hasTable( "users", {}, false );
+                    return schema.hasTable( name = "users", options = {}, execute = false );
                 }, hasTable() );
+            } );
+
+            it( "has table in a schema", function() {
+                testCase( function( schema ) {
+                    return schema.hasTable( name = "users", schema = "foo", options = {}, execute = false );
+                }, hasTableInSchema() );
             } );
 
             it( "has column", function() {
                 testCase( function( schema ) {
-                    return schema.hasColumn( "users", "username", {}, false );
+                    return schema.hasColumn( table = "users", column = "username", options = {}, execute = false );
                 }, hasColumn() );
+            } );
+
+            it( "has column in a schema", function() {
+                testCase( function( schema ) {
+                    return schema.hasColumn( "users", "username", "foo", {}, false );
+                }, hasColumnInSchema() );
             } );
         } );
     }

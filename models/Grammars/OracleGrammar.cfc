@@ -353,12 +353,20 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "";
     }
 
-    function compileTableExists( tableName ) {
-        return "SELECT 1 FROM ""DBA_TABLES"" WHERE ""TABLE_NAME"" = ?";
+    function compileTableExists( tableName, schemaName = "" ) {
+        var sql = "SELECT 1 FROM #wrapTable( "dba_tables" )# WHERE #wrapColumn( "table_name" )# = ?";
+        if ( schemaName != "" ) {
+            sql &= " AND #wrapColumn( "owner" )# = ?";
+        }
+        return sql;
     }
 
-    function compileColumnExists( table, column ) {
-        return "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ?";
+    function compileColumnExists( table, column, scehma = "" ) {
+        var sql = "SELECT 1 FROM #wrapTable( "dba_tab_columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
+        if ( scehma != "" ) {
+            sql &= " AND #wrapColumn( "owner" )# = ?";
+        }
+        return sql;
     }
 
 }

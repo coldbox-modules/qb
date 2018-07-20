@@ -1189,12 +1189,20 @@ component displayname="Grammar" accessors="true" {
 
     /*=====  End of Index Types  ======*/
 
-    function compileTableExists( tableName ) {
-        return "SELECT 1 FROM ""information_schema"".""tables"" WHERE ""table_name"" = ?";
+    function compileTableExists( tableName, schemaName = "" ) {
+        var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_name" )# = ?";
+        if ( schemaName != "" ) {
+            sql &= " AND #wrapColumn( "schema_name" )# = ?";
+        }
+        return sql;
     }
 
-    function compileColumnExists( table, column ) {
-        return "SELECT 1 FROM ""information_schema"".""columns"" WHERE ""table_name"" = ? AND ""column_name"" = ?";
+    function compileColumnExists( table, column, scehma = "" ) {
+        var sql = "SELECT 1 FROM #wrapTable( "information_schema.columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
+        if ( scehma != "" ) {
+            sql &= " AND #wrapColumn( "schema_name" )# = ?";
+        }
+        return sql;
     }
 
     function compileAddType() {

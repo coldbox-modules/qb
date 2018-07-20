@@ -447,8 +447,16 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "SELECT 1 FROM ""DBA_TABLES"" WHERE ""TABLE_NAME"" = ?" ];
     }
 
+    function hasTableInSchema() {
+        return [ "SELECT 1 FROM ""DBA_TABLES"" WHERE ""TABLE_NAME"" = ? AND ""OWNER"" = ?" ];
+    }
+
     function hasColumn() {
         return [ "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ?" ];
+    }
+
+    function hasColumnInSchema() {
+        return [ "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ? AND ""OWNER"" = ?" ];
     }
 
     private function getBuilder( mockGrammar ) {

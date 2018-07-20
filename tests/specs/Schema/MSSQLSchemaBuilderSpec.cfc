@@ -404,8 +404,16 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "SELECT 1 FROM [information_schema].[tables] WHERE [table_name] = ?" ];
     }
 
+    function hasTableInSchema() {
+        return [ "SELECT 1 FROM [information_schema].[tables] WHERE [table_name] = ? AND [schema_name] = ?" ];
+    }
+
     function hasColumn() {
         return [ "SELECT 1 FROM [information_schema].[columns] WHERE [table_name] = ? AND [column_name] = ?" ];
+    }
+
+    function hasColumnInSchema() {
+        return [ "SELECT 1 FROM [information_schema].[columns] WHERE [table_name] = ? AND [column_name] = ? AND [schema_name] = ?" ];
     }
 
     private function getBuilder( mockGrammar ) {

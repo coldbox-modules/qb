@@ -144,15 +144,20 @@ component accessors="true" singleton {
     * Check if a table exists in the database.
     *
     * @name     The name of the table to check.
+    * @schema   The name of the schema to check.  If blank, checks all schemas.
     * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
     * @execute  Flag to immediately execute the statement.  Default: `true`.
     *
     * @returns  The blueprint instance
     */
-    function hasTable( name, options = {}, execute = true ) {
-        var sql = getGrammar().compileTableExists( name );
+    function hasTable( name, schema = "", options = {}, execute = true ) {
+        var args = [ name ];
+        if ( schema != "" ) {
+            arrayAppend( args, schema );
+        }
+        var sql = getGrammar().compileTableExists( name, schema );
         if ( execute ) {
-            var q = getGrammar().runQuery( sql, [ name ], options, "query" );
+            var q = getGrammar().runQuery( sql, args, options, "query" );
             return q.RecordCount > 0;
         }
         return sql;
@@ -163,15 +168,20 @@ component accessors="true" singleton {
     *
     * @table    The name of the table to check for the column.
     * @column   The name of the column to check.
+    * @schema   The name of the schema to check.  If blank, checks all schemas.
     * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
     * @execute  Flag to immediately execute the statement.  Default: `true`.
     *
     * @returns  The blueprint instance
     */
-    function hasColumn( table, column, options = {}, execute = true ) {
-        var sql = getGrammar().compileColumnExists( table, column );
+    function hasColumn( table, column, schema = "", options = {}, execute = true ) {
+        var args = [ table, column ];
+        if ( schema != "" ) {
+            arrayAppend( args, schema );
+        }
+        var sql = getGrammar().compileColumnExists( table, column, schema );
         if ( execute ) {
-            var q = getGrammar().runQuery( sql, [ table, column ], options, "query" );
+            var q = getGrammar().runQuery( sql, args, options, "query" );
             return q.RecordCount > 0;
         }
         return sql;

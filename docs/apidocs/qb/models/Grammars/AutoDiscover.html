@@ -3,8 +3,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>Expression</title>
-	<meta name="keywords" content="qb.models.Query.concurrent.Callable interface">
+	<title>AutoDiscover</title>
+	<meta name="keywords" content="qb.models.Grammars.concurrent.Callable interface">
 	<!-- common assets -->
 	
 
@@ -96,7 +96,7 @@ $(document).ready(function() {
 	      	</ul>
 
 			<ul class="nav navbar-nav navbar-right">
-				<li><a href="../../../index.html?qb/models/Query/Expression.html" target="_top">
+				<li><a href="../../../index.html?qb/models/Grammars/AutoDiscover.html" target="_top">
 					<i class="glyphicon glyphicon-fullscreen"></i> Frames
 					</a>
 				</li>
@@ -114,7 +114,7 @@ $(document).ready(function() {
 
 <!-- Package -->
 <div class="pull-right">
-	<a href="package-summary.html" title="Package: qb.models.Query"><span class="label label-success">qb.models.Query</span></a>
+	<a href="package-summary.html" title="Package: qb.models.Grammars"><span class="label label-success">qb.models.Grammars</span></a>
 </div>
 
 <h2>
@@ -122,7 +122,7 @@ $(document).ready(function() {
 
 Class
 
- Expression</h2>
+ AutoDiscover</h2>
 
 
 
@@ -147,7 +147,7 @@ Class
 
 <!-- Inheritance Tree-->
 <pre style="background:white">lucee.Component
-    <img src="../../../resources/inherit.gif" alt="extended by ">qb.models.Query.Expression
+    <img src="../../../resources/inherit.gif" alt="extended by ">qb.models.Grammars.AutoDiscover
 </pre>
 
 
@@ -161,12 +161,6 @@ Class
 
 
 
-<div id="class-hint">
-	<p>Expression is a simple wrapper around text that should not
-be parsed or evaluated or modified in any way.
-Expressions are included as-is in a sql statement.</p>
-</div>
-
 
 <!-- Clas Attributes -->
 <div class="panel panel-info">
@@ -176,19 +170,6 @@ Expressions are included as-is in a sql statement.</p>
 		
 			
 		
-			
-		
-			
-		
-			
-			
-			<li class="label label-danger label-annotations">
-				displayname
-				
-				: Expression
-				
-			</li>
-			&nbsp;
 			
 		
 			
@@ -215,7 +196,7 @@ Expressions are included as-is in a sql statement.</p>
 			<li class="label label-danger label-annotations">
 				accessors
 				
-				: true
+				: false
 				
 			</li>
 			&nbsp;
@@ -277,14 +258,11 @@ Expressions are included as-is in a sql statement.</p>
 	
 	<tr>
 		<td align="right" valign="top" width="1%">
-			<code>string</code>
+			<code>any</code>
 		</td>
 		<td>
-			<strong><a href="Expression.html#sql()">sql</A></strong>
+			<strong><a href="AutoDiscover.html#grammar()">grammar</A></strong>
 			<br>
-			
-			<!-- only grab the first sentence of the hint -->
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The raw sql value.
 			
 			<br><br>
 			<ul>
@@ -327,33 +305,65 @@ Expressions are included as-is in a sql statement.</p>
 		</td>
 	</tr>
 	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="AutoDiscover.html#wirebox()">wirebox</A></strong>
+			<br>
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+				<li class="label label-default label-annotations">inject = wirebox</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
 	</tr>
 </table>
 
 
-
-	
-	
-	<!-- ======== CONSTRUCTOR SUMMARY ======== -->
-
-	<a name="constructor_summary"><!-- --></a>
-	<table class="table table-bordered table-hover">
-		<tr class="info">
-			<th align="left" colspan="2">
-				<strong>Constructor Summary</strong>
-			</th>
-		</tr>
-		<tr>
-			
-			<td>
-				<strong><a href="Expression.html#init()">init</A></strong>(string sql)
-				<br>
-				
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Create a new Expression wrapping up some sql.
-				
-			</td>
-		</tr>
-	</table>
 
 
 
@@ -374,10 +384,10 @@ Expressions are included as-is in a sql statement.</p>
 	
 	<tr>
 		<td align="right" valign="top" width="1%">
-			<code>string</code>
+			<code>any</code>
 		</td>
 		<td>
-			<strong><a href="Expression.html#getSql()">getSql</A></strong>()
+			<strong><a href="AutoDiscover.html#autoDiscoverGrammar()">autoDiscoverGrammar</A></strong>()
 			<br>
 			
 		</td>
@@ -390,7 +400,7 @@ Expressions are included as-is in a sql statement.</p>
 			<code>any</code>
 		</td>
 		<td>
-			<strong><a href="Expression.html#setSql()">setSql</A></strong>(string sql)
+			<strong><a href="AutoDiscover.html#onMissingMethod()">onMissingMethod</A></strong>([any missingMethodName], [any missingMethodArguments])
 			<br>
 			
 		</td>
@@ -433,35 +443,6 @@ Expressions are included as-is in a sql statement.</p>
 
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 
-	<a name="constructor_detail"><!-- --></a>
-	<table class="table table-bordered">
-		<tr class="info">
-			<th colspan="1" align="left">
-				<strong>Constructor Detail</strong>
-			</th>
-		</tr>
-	</table>
-
-	<a name="init()"><!-- --></a><h3>
-	init</h3>
-	<kbd>public <strong>init</strong>(string sql)</kbd>
-
-	<br><br>
-
-	
-	<p>Create a new Expression wrapping up some sql.</p>
-	
-
-	
-	<dl>
-		<dt><strong>Parameters:</strong></dt>
-		
-			<dd><code>sql</code> - The sql string to wrap up.</dd>
-		
-	</dl>
-	
-	<hr>
-
 
 <!-- ============ PROPERTY DETAIL ========== -->
 
@@ -476,18 +457,16 @@ Expressions are included as-is in a sql statement.</p>
 
 	
 		
-		<a name="sql()"><!-- --></a>
-		<h3>sql</h3>
+		<a name="grammar()"><!-- --></a>
+		<h3>grammar</h3>
 
 		<kbd>
-			property string
-			<strong>sql</strong>
+			property any
+			<strong>grammar</strong>
 			
 		</kbd>
 
 		<br><br>
-		
-			<p>The raw sql value</p>
 		
 
 		<dl>
@@ -507,6 +486,54 @@ Expressions are included as-is in a sql statement.</p>
 		
 			
 			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="wirebox()"><!-- --></a>
+		<h3>wirebox</h3>
+
+		<kbd>
+			property any
+			<strong>wirebox</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+			<dd><code>inject</code> - wirebox</dd>
 			
 		
 			
@@ -543,13 +570,13 @@ Expressions are included as-is in a sql statement.</p>
 
 
 	
-	<a name="getSql()"><!-- --></a>
+	<a name="autoDiscoverGrammar()"><!-- --></a>
 	<h3>
-		getSql
+		autoDiscoverGrammar
 		
 	</h3>
 
-	<kbd>public string <strong>getSql</strong>()</kbd>
+	<kbd>public any <strong>autoDiscoverGrammar</strong>()</kbd>
 
 	<br><br>
 
@@ -575,13 +602,13 @@ Expressions are included as-is in a sql statement.</p>
 	<hr>
 
 	
-	<a name="setSql()"><!-- --></a>
+	<a name="onMissingMethod()"><!-- --></a>
 	<h3>
-		setSql
+		onMissingMethod
 		
 	</h3>
 
-	<kbd>public any <strong>setSql</strong>(string sql)</kbd>
+	<kbd>public any <strong>onMissingMethod</strong>([any missingMethodName], [any missingMethodArguments])</kbd>
 
 	<br><br>
 
@@ -601,7 +628,9 @@ Expressions are included as-is in a sql statement.</p>
 		<dl>
 		<dt><strong>Parameters:</strong></dt>
 		
-		<dd><code>sql</code></dd>
+		<dd><code>missingMethodName</code></dd>
+		
+		<dd><code>missingMethodArguments</code></dd>
 		
 		</dl>
 	

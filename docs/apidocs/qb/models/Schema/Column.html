@@ -1,0 +1,3166 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Column</title>
+	<meta name="keywords" content="qb.models.Schema.concurrent.Callable interface">
+	<!-- common assets -->
+	
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel ="stylesheet" type="text/css" href="../../../bootstrap/css/bootstrap.min.css">
+<link rel ="stylesheet" type="text/css" href="../../../stylesheet.css">
+	
+<link href='https://fonts.googleapis.com/css?family=Ubuntu:400,300,300italic,400italic,700,700italic|Ubuntu+Mono' rel='stylesheet' type='text/css' />
+	
+<script src="../../../bootstrap/js/jquery-2.1.0.min.js" type="text/javascript"></script>
+<script src="../../../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+
+<script>
+$(document).ready(function() {
+	// Global Tool Tip Settings
+	$( '[title]' ).tooltip({
+		 animation: 'slide',
+		 delay: { show: 250, hide: 250 }
+	});
+});
+</script>
+	<!-- syntax highlighter -->
+	<link type="text/css" rel="stylesheet" href="../../../highlighter/styles/shCoreDefault.css">
+	<script src="../../../highlighter/scripts/shCore.js"></script>
+	<script src="../../../highlighter/scripts/shBrushColdFusion.js"></script>
+	<script src="../../../highlighter/scripts/shBrushXml.js"></script>
+	<script src="../../../highlighter/scripts/shBrushSql.js"></script>
+	<script src="../../../highlighter/scripts/shBrushJScript.js"></script>
+	<script src="../../../highlighter/scripts/shBrushJava.js"></script>
+	<script src="../../../highlighter/scripts/shBrushCss.js"></script>
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+
+<body class="withNavbar">
+
+
+
+
+
+
+<!-- ========= START OF NAVBAR ======= -->
+<a name="navbar_top"></a>
+<a href="#skip-navbar_top" title="skip navigation links"></a>	
+
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+	<div class="container-fluid">
+    
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#class-navigation">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="#"><strong>qb</strong></a>
+		</div>
+
+	    <div class="collapse navbar-collapse" id="class-navigation">
+	    	<ul class="nav navbar-nav">
+				
+					
+					<li><a href="../../../overview-summary.html"><i class="glyphicon glyphicon-plane"></i> overview</a></li>
+					
+				
+
+				
+					<li><a href="package-summary.html"><i class="glyphicon glyphicon-folder-open"></i> &nbsp;package</a></li>
+				
+
+			  	
+					<li class="dropdown active">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-file"></i> class <b class="caret"></b></a>
+
+						<ul class="dropdown-menu">
+							<li><a href="#class">Class Definition</a></li>
+							<li><a href="#constructor_summary">Constructor Summary</a></li>
+							<li><a href="#constructor_detail">Constructor Detail</a></li>
+							<li><a href="#inherited_methods">Inherited Methods</a></li>
+							<li><a href="#method_summary">Method Summary</a></li>
+							<li><a href="#method_detail">Method Detail</a></li>
+							<li><a href="#property_summary">Property Summary</a></li>
+							<li><a href="#property_detail">Property Detail</a></li>
+							
+						</ul>
+					</li>
+				
+	      	</ul>
+
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="../../../index.html?qb/models/Schema/Column.html" target="_top">
+					<i class="glyphicon glyphicon-fullscreen"></i> Frames
+					</a>
+				</li>
+			</ul>
+	    </div>
+
+	</div>
+</nav>	
+
+<a name="skip-navbar_top"></a>
+<!-- ========= END OF NAVBAR ========= -->
+
+<!-- ======== start of class data ======== -->
+<a name="class"><!-- --></a>
+
+<!-- Package -->
+<div class="pull-right">
+	<a href="package-summary.html" title="Package: qb.models.Schema"><span class="label label-success">qb.models.Schema</span></a>
+</div>
+
+<h2>
+
+
+Class
+
+ Column</h2>
+
+
+
+
+
+
+
+
+	
+		
+	
+	
+
+	
+		
+		
+			
+		
+	
+	
+
+
+<!-- Inheritance Tree-->
+<pre style="background:white">lucee.Component
+    <img src="../../../resources/inherit.gif" alt="extended by ">qb.models.Schema.Column
+</pre>
+
+
+
+	
+	
+
+
+
+
+
+
+
+<div id="class-hint">
+	<p>Represents a column in a create or alter sql schema.</p>
+</div>
+
+
+<!-- Clas Attributes -->
+<div class="panel panel-info">
+	<div class="panel-heading"><strong>Class Attributes:</strong></div>
+		<div class="panel-body">
+		
+		
+			
+		
+			
+		
+			
+		
+			
+			
+			<li class="label label-danger label-annotations">
+				synchronized
+				
+				: false
+				
+			</li>
+			&nbsp;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+			
+			<li class="label label-danger label-annotations">
+				accessors
+				
+				: true
+				
+			</li>
+			&nbsp;
+			
+		
+			
+		
+			
+			
+			<li class="label label-danger label-annotations">
+				persistent
+				
+				: false
+				
+			</li>
+			&nbsp;
+			
+		
+			
+		
+			
+		
+		
+	</div>
+</div>
+
+
+
+
+<!-- ========== METHOD SUMMARY =========== -->
+
+<a name="property_summary"><!-- --></a>
+<table class="table table-bordered table-hover">
+	<tr class="info">
+		<th align="left" colspan="5">
+			<strong>Property Summary</strong>
+		</th>
+	</tr>
+	<tr class="info">
+		<th align="left">
+			<strong>type</strong>
+		</th>
+		<th align="left">
+			<strong>property</strong>
+		</th>
+		<th align="left">
+			<strong>default</strong>
+		</th>
+		<th align="left">
+			<strong>serializable</strong>
+		</th>
+		<th align="left">
+			<strong>required</strong>
+		</th>
+	</tr>
+
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#autoIncrement()">autoIncrement</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Whether the column is auto incremented.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+				<code>false</code>
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#blueprint()">blueprint</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Reference to the owning blueprint.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#comment()">comment</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A comment for the column.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#default()">default</A></strong>
+			<br>
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#length()">length</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The column length.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+				<code>255</code>
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#name()">name</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The column name.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#nullable()">nullable</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Whether the column value can be null.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+				<code>false</code>
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#precision()">precision</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The precision for the column.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#type()">type</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The schema builder type.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#unique()">unique</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Whether the column is unique.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+				<code>false</code>
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#unsigned()">unsigned</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Whether the column value is only unsigned.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+				<code>false</code>
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#values()">values</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The possible values for the column.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	</tr>
+</table>
+
+
+
+	
+	
+	<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+	<a name="constructor_summary"><!-- --></a>
+	<table class="table table-bordered table-hover">
+		<tr class="info">
+			<th align="left" colspan="2">
+				<strong>Constructor Summary</strong>
+			</th>
+		</tr>
+		<tr>
+			
+			<td>
+				<strong><a href="Column.html#init()">init</A></strong>([any blueprint])
+				<br>
+				
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Create a new column representation.
+				
+			</td>
+		</tr>
+	</table>
+
+
+
+
+
+<!-- ========== METHOD SUMMARY =========== -->
+
+<a name="method_summary"><!-- --></a>
+<table class="table table-bordered table-hover">
+	<tr class="info">
+		<th align="left" colspan="2">
+			<strong>Method Summary</strong>
+		</th>
+	</tr>
+
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#comment()">comment</A></strong>([any comment])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Attach a comment to the column.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#default()">default</A></strong>([any value])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets a default value for the column.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getAutoIncrement()">getAutoIncrement</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getBlueprint()">getBlueprint</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getComment()">getComment</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getDefault()">getDefault</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getLength()">getLength</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getName()">getName</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getNullable()">getNullable</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getPrecision()">getPrecision</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getType()">getType</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getUnique()">getUnique</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getUnsigned()">getUnsigned</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#getValues()">getValues</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#nullable()">nullable</A></strong>()
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the column to allow null values.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#primaryKey()">primaryKey</A></strong>([any indexName])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds the column as a primary key for the table.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#references()">references</A></strong>([any column])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a foreign key constraint for the column.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setAutoIncrement()">setAutoIncrement</A></strong>(any autoIncrement)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setBlueprint()">setBlueprint</A></strong>(any blueprint)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setComment()">setComment</A></strong>(any comment)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setDefault()">setDefault</A></strong>(any default)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setLength()">setLength</A></strong>(any length)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setName()">setName</A></strong>(any name)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setNullable()">setNullable</A></strong>(any nullable)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setPrecision()">setPrecision</A></strong>(any precision)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setType()">setType</A></strong>(any type)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setUnique()">setUnique</A></strong>(any unique)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setUnsigned()">setUnsigned</A></strong>(any unsigned)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#setValues()">setValues</A></strong>(any values)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#unique()">unique</A></strong>()
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the column to have the UNIQUE constraint.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="Column.html#unsigned()">unsigned</A></strong>()
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sets the column as unsigned.
+			
+		</td>
+	</tr>
+	
+</table>
+
+
+
+<a name="inherited_methods"><!-- --></a>
+
+
+	
+
+	
+
+	&nbsp;
+	<a name="methods_inherited_from_class_lucee.Component"><!-- --></a>
+	<table class="table table-hover table-bordered">
+		<tr class="info">
+			<th align="left">
+				<strong>Methods inherited from class <kbd>lucee.Component</kbd></strong>
+			</th>
+		</tr>
+		<tr>
+			<td>
+				
+				
+				
+
+				
+					<span class="label label-warning"><em>None</em></span>
+				
+			</td>
+		</tr>
+	</table>
+
+
+<hr>
+
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+	<a name="constructor_detail"><!-- --></a>
+	<table class="table table-bordered">
+		<tr class="info">
+			<th colspan="1" align="left">
+				<strong>Constructor Detail</strong>
+			</th>
+		</tr>
+	</table>
+
+	<a name="init()"><!-- --></a><h3>
+	init</h3>
+	<kbd>public <strong>init</strong>([any blueprint])</kbd>
+
+	<br><br>
+
+	
+	<p>Create a new column representation.</p>
+	
+
+	
+	<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+			<dd><code>blueprint</code> - The blueprint object creating this column.</dd>
+		
+	</dl>
+	
+	<hr>
+
+
+<!-- ============ PROPERTY DETAIL ========== -->
+
+	<a name="property_detail"><!-- --></a>
+	<table class="table table-bordered">
+		<tr class="info">
+			<th colspan="1" align="left">
+				<strong>Property Detail</strong>
+			</th>
+		</tr>
+	</table>
+
+	
+		
+		<a name="autoIncrement()"><!-- --></a>
+		<h3>autoIncrement</h3>
+
+		<kbd>
+			property any
+			<strong>autoIncrement</strong>
+			
+			= [false]
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>Whether the column is auto incremented.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="blueprint()"><!-- --></a>
+		<h3>blueprint</h3>
+
+		<kbd>
+			property any
+			<strong>blueprint</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>Reference to the owning blueprint.
+This allows methods to add commands to the schema builder as needed.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="comment()"><!-- --></a>
+		<h3>comment</h3>
+
+		<kbd>
+			property any
+			<strong>comment</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>A comment for the column.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="default()"><!-- --></a>
+		<h3>default</h3>
+
+		<kbd>
+			property any
+			<strong>default</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="length()"><!-- --></a>
+		<h3>length</h3>
+
+		<kbd>
+			property any
+			<strong>length</strong>
+			
+			= [255]
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>The column length.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="name()"><!-- --></a>
+		<h3>name</h3>
+
+		<kbd>
+			property any
+			<strong>name</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>The column name.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="nullable()"><!-- --></a>
+		<h3>nullable</h3>
+
+		<kbd>
+			property any
+			<strong>nullable</strong>
+			
+			= [false]
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>Whether the column value can be null.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="precision()"><!-- --></a>
+		<h3>precision</h3>
+
+		<kbd>
+			property any
+			<strong>precision</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>The precision for the column.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="type()"><!-- --></a>
+		<h3>type</h3>
+
+		<kbd>
+			property any
+			<strong>type</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>The schema builder type.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="unique()"><!-- --></a>
+		<h3>unique</h3>
+
+		<kbd>
+			property any
+			<strong>unique</strong>
+			
+			= [false]
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>Whether the column is unique.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="unsigned()"><!-- --></a>
+		<h3>unsigned</h3>
+
+		<kbd>
+			property any
+			<strong>unsigned</strong>
+			
+			= [false]
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>Whether the column value is only unsigned.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="values()"><!-- --></a>
+		<h3>values</h3>
+
+		<kbd>
+			property any
+			<strong>values</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>The possible values for the column.
+Used mainly by the ENUM type.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+
+
+
+
+
+
+
+
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<a name="method_detail"><!-- --></a>
+<table class="table table-bordered">
+	<tr class="info">
+		<th colspan="1" align="left">
+			<strong>Method Detail</strong>
+		</th>
+	</tr>
+</table>
+
+
+	
+	<a name="comment()"><!-- --></a>
+	<h3>
+		comment
+		
+	</h3>
+
+	<kbd>public any <strong>comment</strong>([any comment])</kbd>
+
+	<br><br>
+
+	
+		<p>Attach a comment to the column.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>comment</code> - The comment text.</dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="default()"><!-- --></a>
+	<h3>
+		default
+		
+	</h3>
+
+	<kbd>public any <strong>default</strong>([any value])</kbd>
+
+	<br><br>
+
+	
+		<p>Sets a default value for the column.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>value</code> - The default value.</dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getAutoIncrement()"><!-- --></a>
+	<h3>
+		getAutoIncrement
+		
+	</h3>
+
+	<kbd>public string <strong>getAutoIncrement</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getBlueprint()"><!-- --></a>
+	<h3>
+		getBlueprint
+		
+	</h3>
+
+	<kbd>public string <strong>getBlueprint</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getComment()"><!-- --></a>
+	<h3>
+		getComment
+		
+	</h3>
+
+	<kbd>public string <strong>getComment</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getDefault()"><!-- --></a>
+	<h3>
+		getDefault
+		
+	</h3>
+
+	<kbd>public string <strong>getDefault</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getLength()"><!-- --></a>
+	<h3>
+		getLength
+		
+	</h3>
+
+	<kbd>public string <strong>getLength</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getName()"><!-- --></a>
+	<h3>
+		getName
+		
+	</h3>
+
+	<kbd>public string <strong>getName</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getNullable()"><!-- --></a>
+	<h3>
+		getNullable
+		
+	</h3>
+
+	<kbd>public string <strong>getNullable</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getPrecision()"><!-- --></a>
+	<h3>
+		getPrecision
+		
+	</h3>
+
+	<kbd>public string <strong>getPrecision</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getType()"><!-- --></a>
+	<h3>
+		getType
+		
+	</h3>
+
+	<kbd>public string <strong>getType</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getUnique()"><!-- --></a>
+	<h3>
+		getUnique
+		
+	</h3>
+
+	<kbd>public string <strong>getUnique</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getUnsigned()"><!-- --></a>
+	<h3>
+		getUnsigned
+		
+	</h3>
+
+	<kbd>public string <strong>getUnsigned</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getValues()"><!-- --></a>
+	<h3>
+		getValues
+		
+	</h3>
+
+	<kbd>public string <strong>getValues</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="nullable()"><!-- --></a>
+	<h3>
+		nullable
+		
+	</h3>
+
+	<kbd>public any <strong>nullable</strong>()</kbd>
+
+	<br><br>
+
+	
+		<p>Sets the column to allow null values.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="primaryKey()"><!-- --></a>
+	<h3>
+		primaryKey
+		
+	</h3>
+
+	<kbd>public any <strong>primaryKey</strong>([any indexName])</kbd>
+
+	<br><br>
+
+	
+		<p>Adds the column as a primary key for the table.
+If omitted, the indexName is derived from the table name and column name.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>indexName</code> - Optional. The name to use for the primary key constraint.</dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="references()"><!-- --></a>
+	<h3>
+		references
+		
+	</h3>
+
+	<kbd>public any <strong>references</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+		<p>Creates a foreign key constraint for the column.
+Additional configuration of the constraint is done by
+calling methods on the returned TableIndex instance.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code> - The column name referenced on the related table.</dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setAutoIncrement()"><!-- --></a>
+	<h3>
+		setAutoIncrement
+		
+	</h3>
+
+	<kbd>public any <strong>setAutoIncrement</strong>(any autoIncrement)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>autoIncrement</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setBlueprint()"><!-- --></a>
+	<h3>
+		setBlueprint
+		
+	</h3>
+
+	<kbd>public any <strong>setBlueprint</strong>(any blueprint)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setComment()"><!-- --></a>
+	<h3>
+		setComment
+		
+	</h3>
+
+	<kbd>public any <strong>setComment</strong>(any comment)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>comment</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setDefault()"><!-- --></a>
+	<h3>
+		setDefault
+		
+	</h3>
+
+	<kbd>public any <strong>setDefault</strong>(any default)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>default</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setLength()"><!-- --></a>
+	<h3>
+		setLength
+		
+	</h3>
+
+	<kbd>public any <strong>setLength</strong>(any length)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>length</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setName()"><!-- --></a>
+	<h3>
+		setName
+		
+	</h3>
+
+	<kbd>public any <strong>setName</strong>(any name)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>name</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setNullable()"><!-- --></a>
+	<h3>
+		setNullable
+		
+	</h3>
+
+	<kbd>public any <strong>setNullable</strong>(any nullable)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>nullable</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setPrecision()"><!-- --></a>
+	<h3>
+		setPrecision
+		
+	</h3>
+
+	<kbd>public any <strong>setPrecision</strong>(any precision)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>precision</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setType()"><!-- --></a>
+	<h3>
+		setType
+		
+	</h3>
+
+	<kbd>public any <strong>setType</strong>(any type)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>type</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setUnique()"><!-- --></a>
+	<h3>
+		setUnique
+		
+	</h3>
+
+	<kbd>public any <strong>setUnique</strong>(any unique)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>unique</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setUnsigned()"><!-- --></a>
+	<h3>
+		setUnsigned
+		
+	</h3>
+
+	<kbd>public any <strong>setUnsigned</strong>(any unsigned)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>unsigned</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setValues()"><!-- --></a>
+	<h3>
+		setValues
+		
+	</h3>
+
+	<kbd>public any <strong>setValues</strong>(any values)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>values</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="unique()"><!-- --></a>
+	<h3>
+		unique
+		
+	</h3>
+
+	<kbd>public any <strong>unique</strong>()</kbd>
+
+	<br><br>
+
+	
+		<p>Sets the column to have the UNIQUE constraint.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="unsigned()"><!-- --></a>
+	<h3>
+		unsigned
+		
+	</h3>
+
+	<kbd>public any <strong>unsigned</strong>()</kbd>
+
+	<br><br>
+
+	
+		<p>Sets the column as unsigned.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+
+
+
+</body>
+</html>
+

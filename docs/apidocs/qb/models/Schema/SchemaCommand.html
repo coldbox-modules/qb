@@ -3,8 +3,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>Expression</title>
-	<meta name="keywords" content="qb.models.Query.concurrent.Callable interface">
+	<title>SchemaCommand</title>
+	<meta name="keywords" content="qb.models.Schema.concurrent.Callable interface">
 	<!-- common assets -->
 	
 
@@ -96,7 +96,7 @@ $(document).ready(function() {
 	      	</ul>
 
 			<ul class="nav navbar-nav navbar-right">
-				<li><a href="../../../index.html?qb/models/Query/Expression.html" target="_top">
+				<li><a href="../../../index.html?qb/models/Schema/SchemaCommand.html" target="_top">
 					<i class="glyphicon glyphicon-fullscreen"></i> Frames
 					</a>
 				</li>
@@ -114,7 +114,7 @@ $(document).ready(function() {
 
 <!-- Package -->
 <div class="pull-right">
-	<a href="package-summary.html" title="Package: qb.models.Query"><span class="label label-success">qb.models.Query</span></a>
+	<a href="package-summary.html" title="Package: qb.models.Schema"><span class="label label-success">qb.models.Schema</span></a>
 </div>
 
 <h2>
@@ -122,7 +122,7 @@ $(document).ready(function() {
 
 Class
 
- Expression</h2>
+ SchemaCommand</h2>
 
 
 
@@ -147,7 +147,7 @@ Class
 
 <!-- Inheritance Tree-->
 <pre style="background:white">lucee.Component
-    <img src="../../../resources/inherit.gif" alt="extended by ">qb.models.Query.Expression
+    <img src="../../../resources/inherit.gif" alt="extended by ">qb.models.Schema.SchemaCommand
 </pre>
 
 
@@ -161,12 +161,6 @@ Class
 
 
 
-<div id="class-hint">
-	<p>Expression is a simple wrapper around text that should not
-be parsed or evaluated or modified in any way.
-Expressions are included as-is in a sql statement.</p>
-</div>
-
 
 <!-- Clas Attributes -->
 <div class="panel panel-info">
@@ -176,19 +170,6 @@ Expressions are included as-is in a sql statement.</p>
 		
 			
 		
-			
-		
-			
-		
-			
-			
-			<li class="label label-danger label-annotations">
-				displayname
-				
-				: Expression
-				
-			</li>
-			&nbsp;
 			
 		
 			
@@ -277,14 +258,62 @@ Expressions are included as-is in a sql statement.</p>
 	
 	<tr>
 		<td align="right" valign="top" width="1%">
-			<code>string</code>
+			<code>any</code>
 		</td>
 		<td>
-			<strong><a href="Expression.html#sql()">sql</A></strong>
+			<strong><a href="SchemaCommand.html#parameters()">parameters</A></strong>
 			<br>
 			
-			<!-- only grab the first sentence of the hint -->
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The raw sql value.
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="SchemaCommand.html#type()">type</A></strong>
+			<br>
 			
 			<br><br>
 			<ul>
@@ -346,10 +375,8 @@ Expressions are included as-is in a sql statement.</p>
 		<tr>
 			
 			<td>
-				<strong><a href="Expression.html#init()">init</A></strong>(string sql)
+				<strong><a href="SchemaCommand.html#init()">init</A></strong>(any type, [any parameters='[runtime expression]'])
 				<br>
-				
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Create a new Expression wrapping up some sql.
 				
 			</td>
 		</tr>
@@ -377,7 +404,20 @@ Expressions are included as-is in a sql statement.</p>
 			<code>string</code>
 		</td>
 		<td>
-			<strong><a href="Expression.html#getSql()">getSql</A></strong>()
+			<strong><a href="SchemaCommand.html#getParameters()">getParameters</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="SchemaCommand.html#getType()">getType</A></strong>()
 			<br>
 			
 		</td>
@@ -390,7 +430,20 @@ Expressions are included as-is in a sql statement.</p>
 			<code>any</code>
 		</td>
 		<td>
-			<strong><a href="Expression.html#setSql()">setSql</A></strong>(string sql)
+			<strong><a href="SchemaCommand.html#setParameters()">setParameters</A></strong>(any parameters)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="SchemaCommand.html#setType()">setType</A></strong>(any type)
 			<br>
 			
 		</td>
@@ -444,19 +497,21 @@ Expressions are included as-is in a sql statement.</p>
 
 	<a name="init()"><!-- --></a><h3>
 	init</h3>
-	<kbd>public <strong>init</strong>(string sql)</kbd>
+	<kbd>public <strong>init</strong>(any type, [any parameters='[runtime expression]'])</kbd>
 
 	<br><br>
 
 	
-	<p>Create a new Expression wrapping up some sql.</p>
+	<p></p>
 	
 
 	
 	<dl>
 		<dt><strong>Parameters:</strong></dt>
 		
-			<dd><code>sql</code> - The sql string to wrap up.</dd>
+			<dd><code>type</code></dd>
+		
+			<dd><code>parameters</code></dd>
 		
 	</dl>
 	
@@ -476,18 +531,60 @@ Expressions are included as-is in a sql statement.</p>
 
 	
 		
-		<a name="sql()"><!-- --></a>
-		<h3>sql</h3>
+		<a name="parameters()"><!-- --></a>
+		<h3>parameters</h3>
 
 		<kbd>
-			property string
-			<strong>sql</strong>
+			property any
+			<strong>parameters</strong>
 			
 		</kbd>
 
 		<br><br>
 		
-			<p>The raw sql value</p>
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="type()"><!-- --></a>
+		<h3>type</h3>
+
+		<kbd>
+			property any
+			<strong>type</strong>
+			
+		</kbd>
+
+		<br><br>
 		
 
 		<dl>
@@ -543,13 +640,13 @@ Expressions are included as-is in a sql statement.</p>
 
 
 	
-	<a name="getSql()"><!-- --></a>
+	<a name="getParameters()"><!-- --></a>
 	<h3>
-		getSql
+		getParameters
 		
 	</h3>
 
-	<kbd>public string <strong>getSql</strong>()</kbd>
+	<kbd>public string <strong>getParameters</strong>()</kbd>
 
 	<br><br>
 
@@ -575,13 +672,45 @@ Expressions are included as-is in a sql statement.</p>
 	<hr>
 
 	
-	<a name="setSql()"><!-- --></a>
+	<a name="getType()"><!-- --></a>
 	<h3>
-		setSql
+		getType
 		
 	</h3>
 
-	<kbd>public any <strong>setSql</strong>(string sql)</kbd>
+	<kbd>public string <strong>getType</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setParameters()"><!-- --></a>
+	<h3>
+		setParameters
+		
+	</h3>
+
+	<kbd>public any <strong>setParameters</strong>(any parameters)</kbd>
 
 	<br><br>
 
@@ -601,7 +730,46 @@ Expressions are included as-is in a sql statement.</p>
 		<dl>
 		<dt><strong>Parameters:</strong></dt>
 		
-		<dd><code>sql</code></dd>
+		<dd><code>parameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setType()"><!-- --></a>
+	<h3>
+		setType
+		
+	</h3>
+
+	<kbd>public any <strong>setType</strong>(any type)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>type</code></dd>
 		
 		</dl>
 	

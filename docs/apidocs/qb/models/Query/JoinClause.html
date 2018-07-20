@@ -155,7 +155,7 @@ Class
 
 <!-- Inheritance Tree-->
 <pre style="background:white">lucee.Component
-    <img src="../../../resources/inherit.gif" alt="extended by "><a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">qb.models.Query.Builder</a>
+    <img src="../../../resources/inherit.gif" alt="extended by "><a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">qb.models.Query.QueryBuilder</a>
       <img src="../../../resources/inherit.gif" alt="extended by ">qb.models.Query.JoinClause
 </pre>
 
@@ -190,9 +190,9 @@ Class
 			
 			
 			<li class="label label-danger label-annotations">
-				displayname 
+				displayname
 				
-				: JoinClause		
+				: JoinClause
 				
 			</li>
 			&nbsp;
@@ -201,9 +201,9 @@ Class
 			
 			
 			<li class="label label-danger label-annotations">
-				synchronized 
+				synchronized
 				
-				: false		
+				: false
 				
 			</li>
 			&nbsp;
@@ -220,9 +220,9 @@ Class
 			
 			
 			<li class="label label-danger label-annotations">
-				accessors 
+				accessors
 				
-				: true		
+				: true
 				
 			</li>
 			&nbsp;
@@ -233,9 +233,9 @@ Class
 			
 			
 			<li class="label label-danger label-annotations">
-				persistent 
+				persistent
 				
-				: false		
+				: false
 				
 			</li>
 			&nbsp;
@@ -284,10 +284,10 @@ Class
 	
 	<tr>
 		<td align="right" valign="top" width="1%">
-			<code><a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a></code>
+			<code><a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">QueryBuilder</a></code>
 		</td>
 		<td>
-			<strong><a href="JoinClause.html#parentQuery()">parentQuery</A></strong> 
+			<strong><a href="JoinClause.html#parentQuery()">parentQuery</A></strong>
 			<br>
 			
 			<!-- only grab the first sentence of the hint -->
@@ -341,7 +341,7 @@ Class
 			<code>string</code>
 		</td>
 		<td>
-			<strong><a href="JoinClause.html#table()">table</A></strong> 
+			<strong><a href="JoinClause.html#table()">table</A></strong>
 			<br>
 			
 			<!-- only grab the first sentence of the hint -->
@@ -395,7 +395,7 @@ Class
 			<code>string</code>
 		</td>
 		<td>
-			<strong><a href="JoinClause.html#type()">type</A></strong> 
+			<strong><a href="JoinClause.html#type()">type</A></strong>
 			<br>
 			
 			<!-- only grab the first sentence of the hint -->
@@ -461,7 +461,7 @@ Class
 		<tr>
 			
 			<td>
-				<strong><a href="JoinClause.html#init()">init</A></strong>(<a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a> parentQuery, string type, string table)
+				<strong><a href="JoinClause.html#init()">init</A></strong>(<a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">QueryBuilder</a> parentQuery, string type, string table)
 				<br>
 				
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Creates a basic join clause.
@@ -528,7 +528,7 @@ Class
 	
 	<tr>
 		<td align="right" valign="top" width="1%">
-			<code><a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a></code>
+			<code>qb.models.Query.Builder</code>
 		</td>
 		<td>
 			<strong><a href="JoinClause.html#newQuery()">newQuery</A></strong>()
@@ -576,7 +576,7 @@ Class
 			<code>any</code>
 		</td>
 		<td>
-			<strong><a href="JoinClause.html#setParentQuery()">setParentQuery</A></strong>(<a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a> parentQuery)
+			<strong><a href="JoinClause.html#setParentQuery()">setParentQuery</A></strong>(<a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">QueryBuilder</a> parentQuery)
 			<br>
 			
 		</td>
@@ -620,11 +620,11 @@ Class
 	
 
 	&nbsp;
-	<a name="methods_inherited_from_class_qb.models.Query.Builder"><!-- --></a>
+	<a name="methods_inherited_from_class_qb.models.Query.QueryBuilder"><!-- --></a>
 	<table class="table table-hover table-bordered">
 		<tr class="info">
 			<th align="left">
-				<strong>Methods inherited from class <kbd><a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">qb.models.Query.Builder</a></kbd></strong>
+				<strong>Methods inherited from class <kbd><a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">qb.models.Query.QueryBuilder</a></kbd></strong>
 			</th>
 		</tr>
 		<tr>
@@ -956,6 +956,24 @@ Class
 				
 					
 					
+					
+						
+					
+					
+					
+					
+				
+					
+					
+				
+					
+					
+					
+						
+					
+					
+					
+					
 				
 					
 					
@@ -1635,9 +1653,18 @@ Class
 					
 					
 				
+					
+					
+					
+						
+					
+					
+					
+					
 				
+
 				
-					<a href="../../../qb/models/Query/Builder.html#addBindings()">addBindings</a>, <a href="../../../qb/models/Query/Builder.html#addNestedWhereQuery()">addNestedWhereQuery</a>, <a href="../../../qb/models/Query/Builder.html#addSelect()">addSelect</a>, <a href="../../../qb/models/Query/Builder.html#addWhereExistsQuery()">addWhereExistsQuery</a>, <a href="../../../qb/models/Query/Builder.html#aggregateQuery()">aggregateQuery</a>, <a href="../../../qb/models/Query/Builder.html#clearBindings()">clearBindings</a>, <a href="../../../qb/models/Query/Builder.html#count()">count</a>, <a href="../../../qb/models/Query/Builder.html#crossJoin()">crossJoin</a>, <a href="../../../qb/models/Query/Builder.html#delete()">delete</a>, <a href="../../../qb/models/Query/Builder.html#distinct()">distinct</a>, <a href="../../../qb/models/Query/Builder.html#exists()">exists</a>, <a href="../../../qb/models/Query/Builder.html#find()">find</a>, <a href="../../../qb/models/Query/Builder.html#first()">first</a>, <a href="../../../qb/models/Query/Builder.html#forNestedWhere()">forNestedWhere</a>, <a href="../../../qb/models/Query/Builder.html#forPage()">forPage</a>, <a href="../../../qb/models/Query/Builder.html#from()">from</a>, <a href="../../../qb/models/Query/Builder.html#get()">get</a>, <a href="../../../qb/models/Query/Builder.html#getAggregate()">getAggregate</a>, <a href="../../../qb/models/Query/Builder.html#getBindings()">getBindings</a>, <a href="../../../qb/models/Query/Builder.html#getColumns()">getColumns</a>, <a href="../../../qb/models/Query/Builder.html#getDistinct()">getDistinct</a>, <a href="../../../qb/models/Query/Builder.html#getFrom()">getFrom</a>, <a href="../../../qb/models/Query/Builder.html#getGrammar()">getGrammar</a>, <a href="../../../qb/models/Query/Builder.html#getGroups()">getGroups</a>, <a href="../../../qb/models/Query/Builder.html#getHavings()">getHavings</a>, <a href="../../../qb/models/Query/Builder.html#getJoins()">getJoins</a>, <a href="../../../qb/models/Query/Builder.html#getLimitValue()">getLimitValue</a>, <a href="../../../qb/models/Query/Builder.html#getOffsetValue()">getOffsetValue</a>, <a href="../../../qb/models/Query/Builder.html#getOrders()">getOrders</a>, <a href="../../../qb/models/Query/Builder.html#getRawBindings()">getRawBindings</a>, <a href="../../../qb/models/Query/Builder.html#getReturnFormat()">getReturnFormat</a>, <a href="../../../qb/models/Query/Builder.html#getUtils()">getUtils</a>, <a href="../../../qb/models/Query/Builder.html#getWheres()">getWheres</a>, <a href="../../../qb/models/Query/Builder.html#groupBy()">groupBy</a>, <a href="../../../qb/models/Query/Builder.html#having()">having</a>, <a href="../../../qb/models/Query/Builder.html#implode()">implode</a>, <a href="../../../qb/models/Query/Builder.html#insert()">insert</a>, <a href="../../../qb/models/Query/Builder.html#isInvalidCombinator()">isInvalidCombinator</a>, <a href="../../../qb/models/Query/Builder.html#isInvalidOperator()">isInvalidOperator</a>, <a href="../../../qb/models/Query/Builder.html#isVariadicFunction()">isVariadicFunction</a>, <a href="../../../qb/models/Query/Builder.html#join()">join</a>, <a href="../../../qb/models/Query/Builder.html#joinWhere()">joinWhere</a>, <a href="../../../qb/models/Query/Builder.html#leftJoin()">leftJoin</a>, <a href="../../../qb/models/Query/Builder.html#limit()">limit</a>, <a href="../../../qb/models/Query/Builder.html#max()">max</a>, <a href="../../../qb/models/Query/Builder.html#min()">min</a>, <a href="../../../qb/models/Query/Builder.html#normalizeListArgumentsToArray()">normalizeListArgumentsToArray</a>, <a href="../../../qb/models/Query/Builder.html#normalizeToArray()">normalizeToArray</a>, <a href="../../../qb/models/Query/Builder.html#normalizeVariadicArgumentsToArray()">normalizeVariadicArgumentsToArray</a>, <a href="../../../qb/models/Query/Builder.html#offset()">offset</a>, <a href="../../../qb/models/Query/Builder.html#onMissingMethod()">onMissingMethod</a>, <a href="../../../qb/models/Query/Builder.html#orderBy()">orderBy</a>, <a href="../../../qb/models/Query/Builder.html#orWhere()">orWhere</a>, <a href="../../../qb/models/Query/Builder.html#orWhereBetween()">orWhereBetween</a>, <a href="../../../qb/models/Query/Builder.html#orWhereColumn()">orWhereColumn</a>, <a href="../../../qb/models/Query/Builder.html#orWhereExists()">orWhereExists</a>, <a href="../../../qb/models/Query/Builder.html#orWhereIn()">orWhereIn</a>, <a href="../../../qb/models/Query/Builder.html#orWhereNotBetween()">orWhereNotBetween</a>, <a href="../../../qb/models/Query/Builder.html#orWhereNotExists()">orWhereNotExists</a>, <a href="../../../qb/models/Query/Builder.html#orWhereNotIn()">orWhereNotIn</a>, <a href="../../../qb/models/Query/Builder.html#orWhereNotNull()">orWhereNotNull</a>, <a href="../../../qb/models/Query/Builder.html#orWhereNull()">orWhereNull</a>, <a href="../../../qb/models/Query/Builder.html#orWhereRaw()">orWhereRaw</a>, <a href="../../../qb/models/Query/Builder.html#raw()">raw</a>, <a href="../../../qb/models/Query/Builder.html#rightJoin()">rightJoin</a>, <a href="../../../qb/models/Query/Builder.html#run()">run</a>, <a href="../../../qb/models/Query/Builder.html#runQuery()">runQuery</a>, <a href="../../../qb/models/Query/Builder.html#select()">select</a>, <a href="../../../qb/models/Query/Builder.html#selectRaw()">selectRaw</a>, <a href="../../../qb/models/Query/Builder.html#setAggregate()">setAggregate</a>, <a href="../../../qb/models/Query/Builder.html#setColumns()">setColumns</a>, <a href="../../../qb/models/Query/Builder.html#setDefaultValues()">setDefaultValues</a>, <a href="../../../qb/models/Query/Builder.html#setDistinct()">setDistinct</a>, <a href="../../../qb/models/Query/Builder.html#setFrom()">setFrom</a>, <a href="../../../qb/models/Query/Builder.html#setGrammar()">setGrammar</a>, <a href="../../../qb/models/Query/Builder.html#setGroups()">setGroups</a>, <a href="../../../qb/models/Query/Builder.html#setHavings()">setHavings</a>, <a href="../../../qb/models/Query/Builder.html#setJoins()">setJoins</a>, <a href="../../../qb/models/Query/Builder.html#setLimitValue()">setLimitValue</a>, <a href="../../../qb/models/Query/Builder.html#setOffsetValue()">setOffsetValue</a>, <a href="../../../qb/models/Query/Builder.html#setOrders()">setOrders</a>, <a href="../../../qb/models/Query/Builder.html#setReturnFormat()">setReturnFormat</a>, <a href="../../../qb/models/Query/Builder.html#setUtils()">setUtils</a>, <a href="../../../qb/models/Query/Builder.html#setWheres()">setWheres</a>, <a href="../../../qb/models/Query/Builder.html#sum()">sum</a>, <a href="../../../qb/models/Query/Builder.html#table()">table</a>, <a href="../../../qb/models/Query/Builder.html#take()">take</a>, <a href="../../../qb/models/Query/Builder.html#tap()">tap</a>, <a href="../../../qb/models/Query/Builder.html#toSQL()">toSQL</a>, <a href="../../../qb/models/Query/Builder.html#update()">update</a>, <a href="../../../qb/models/Query/Builder.html#updateOrInsert()">updateOrInsert</a>, <a href="../../../qb/models/Query/Builder.html#value()">value</a>, <a href="../../../qb/models/Query/Builder.html#values()">values</a>, <a href="../../../qb/models/Query/Builder.html#when()">when</a>, <a href="../../../qb/models/Query/Builder.html#where()">where</a>, <a href="../../../qb/models/Query/Builder.html#whereBetween()">whereBetween</a>, <a href="../../../qb/models/Query/Builder.html#whereColumn()">whereColumn</a>, <a href="../../../qb/models/Query/Builder.html#whereExists()">whereExists</a>, <a href="../../../qb/models/Query/Builder.html#whereIn()">whereIn</a>, <a href="../../../qb/models/Query/Builder.html#whereInSub()">whereInSub</a>, <a href="../../../qb/models/Query/Builder.html#whereNested()">whereNested</a>, <a href="../../../qb/models/Query/Builder.html#whereNotBetween()">whereNotBetween</a>, <a href="../../../qb/models/Query/Builder.html#whereNotExists()">whereNotExists</a>, <a href="../../../qb/models/Query/Builder.html#whereNotIn()">whereNotIn</a>, <a href="../../../qb/models/Query/Builder.html#whereNotNull()">whereNotNull</a>, <a href="../../../qb/models/Query/Builder.html#whereNull()">whereNull</a>, <a href="../../../qb/models/Query/Builder.html#whereRaw()">whereRaw</a>, <a href="../../../qb/models/Query/Builder.html#whereSub()">whereSub</a>, <a href="../../../qb/models/Query/Builder.html#withAggregate()">withAggregate</a>, <a href="../../../qb/models/Query/Builder.html#withColumns()">withColumns</a>, <a href="../../../qb/models/Query/Builder.html#withReturnFormat()">withReturnFormat</a>
+					<a href="../../../qb/models/Query/QueryBuilder.html#addBindings()">addBindings</a>, <a href="../../../qb/models/Query/QueryBuilder.html#addNestedWhereQuery()">addNestedWhereQuery</a>, <a href="../../../qb/models/Query/QueryBuilder.html#addSelect()">addSelect</a>, <a href="../../../qb/models/Query/QueryBuilder.html#addWhereExistsQuery()">addWhereExistsQuery</a>, <a href="../../../qb/models/Query/QueryBuilder.html#aggregateQuery()">aggregateQuery</a>, <a href="../../../qb/models/Query/QueryBuilder.html#andWhere()">andWhere</a>, <a href="../../../qb/models/Query/QueryBuilder.html#clearBindings()">clearBindings</a>, <a href="../../../qb/models/Query/QueryBuilder.html#count()">count</a>, <a href="../../../qb/models/Query/QueryBuilder.html#crossJoin()">crossJoin</a>, <a href="../../../qb/models/Query/QueryBuilder.html#delete()">delete</a>, <a href="../../../qb/models/Query/QueryBuilder.html#distinct()">distinct</a>, <a href="../../../qb/models/Query/QueryBuilder.html#exists()">exists</a>, <a href="../../../qb/models/Query/QueryBuilder.html#find()">find</a>, <a href="../../../qb/models/Query/QueryBuilder.html#first()">first</a>, <a href="../../../qb/models/Query/QueryBuilder.html#forNestedWhere()">forNestedWhere</a>, <a href="../../../qb/models/Query/QueryBuilder.html#forPage()">forPage</a>, <a href="../../../qb/models/Query/QueryBuilder.html#from()">from</a>, <a href="../../../qb/models/Query/QueryBuilder.html#get()">get</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getAggregate()">getAggregate</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getBindings()">getBindings</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getColumns()">getColumns</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getDistinct()">getDistinct</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getFrom()">getFrom</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getGrammar()">getGrammar</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getGroups()">getGroups</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getHavings()">getHavings</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getJoins()">getJoins</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getLimitValue()">getLimitValue</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getOffsetValue()">getOffsetValue</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getOrders()">getOrders</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getRawBindings()">getRawBindings</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getReturnFormat()">getReturnFormat</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getUtils()">getUtils</a>, <a href="../../../qb/models/Query/QueryBuilder.html#getWheres()">getWheres</a>, <a href="../../../qb/models/Query/QueryBuilder.html#groupBy()">groupBy</a>, <a href="../../../qb/models/Query/QueryBuilder.html#having()">having</a>, <a href="../../../qb/models/Query/QueryBuilder.html#implode()">implode</a>, <a href="../../../qb/models/Query/QueryBuilder.html#insert()">insert</a>, <a href="../../../qb/models/Query/QueryBuilder.html#isInvalidCombinator()">isInvalidCombinator</a>, <a href="../../../qb/models/Query/QueryBuilder.html#isInvalidOperator()">isInvalidOperator</a>, <a href="../../../qb/models/Query/QueryBuilder.html#isVariadicFunction()">isVariadicFunction</a>, <a href="../../../qb/models/Query/QueryBuilder.html#join()">join</a>, <a href="../../../qb/models/Query/QueryBuilder.html#joinWhere()">joinWhere</a>, <a href="../../../qb/models/Query/QueryBuilder.html#last()">last</a>, <a href="../../../qb/models/Query/QueryBuilder.html#leftJoin()">leftJoin</a>, <a href="../../../qb/models/Query/QueryBuilder.html#limit()">limit</a>, <a href="../../../qb/models/Query/QueryBuilder.html#max()">max</a>, <a href="../../../qb/models/Query/QueryBuilder.html#min()">min</a>, <a href="../../../qb/models/Query/QueryBuilder.html#normalizeListArgumentsToArray()">normalizeListArgumentsToArray</a>, <a href="../../../qb/models/Query/QueryBuilder.html#normalizeToArray()">normalizeToArray</a>, <a href="../../../qb/models/Query/QueryBuilder.html#normalizeVariadicArgumentsToArray()">normalizeVariadicArgumentsToArray</a>, <a href="../../../qb/models/Query/QueryBuilder.html#offset()">offset</a>, <a href="../../../qb/models/Query/QueryBuilder.html#onMissingMethod()">onMissingMethod</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orderBy()">orderBy</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhere()">orWhere</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereBetween()">orWhereBetween</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereColumn()">orWhereColumn</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereExists()">orWhereExists</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereIn()">orWhereIn</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereNotBetween()">orWhereNotBetween</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereNotExists()">orWhereNotExists</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereNotIn()">orWhereNotIn</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereNotNull()">orWhereNotNull</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereNull()">orWhereNull</a>, <a href="../../../qb/models/Query/QueryBuilder.html#orWhereRaw()">orWhereRaw</a>, <a href="../../../qb/models/Query/QueryBuilder.html#raw()">raw</a>, <a href="../../../qb/models/Query/QueryBuilder.html#rightJoin()">rightJoin</a>, <a href="../../../qb/models/Query/QueryBuilder.html#run()">run</a>, <a href="../../../qb/models/Query/QueryBuilder.html#runQuery()">runQuery</a>, <a href="../../../qb/models/Query/QueryBuilder.html#select()">select</a>, <a href="../../../qb/models/Query/QueryBuilder.html#selectRaw()">selectRaw</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setAggregate()">setAggregate</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setColumns()">setColumns</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setDefaultValues()">setDefaultValues</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setDistinct()">setDistinct</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setFrom()">setFrom</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setGrammar()">setGrammar</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setGroups()">setGroups</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setHavings()">setHavings</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setJoins()">setJoins</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setLimitValue()">setLimitValue</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setOffsetValue()">setOffsetValue</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setOrders()">setOrders</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setReturnFormat()">setReturnFormat</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setUtils()">setUtils</a>, <a href="../../../qb/models/Query/QueryBuilder.html#setWheres()">setWheres</a>, <a href="../../../qb/models/Query/QueryBuilder.html#subSelect()">subSelect</a>, <a href="../../../qb/models/Query/QueryBuilder.html#sum()">sum</a>, <a href="../../../qb/models/Query/QueryBuilder.html#table()">table</a>, <a href="../../../qb/models/Query/QueryBuilder.html#take()">take</a>, <a href="../../../qb/models/Query/QueryBuilder.html#tap()">tap</a>, <a href="../../../qb/models/Query/QueryBuilder.html#toSQL()">toSQL</a>, <a href="../../../qb/models/Query/QueryBuilder.html#update()">update</a>, <a href="../../../qb/models/Query/QueryBuilder.html#updateOrInsert()">updateOrInsert</a>, <a href="../../../qb/models/Query/QueryBuilder.html#value()">value</a>, <a href="../../../qb/models/Query/QueryBuilder.html#values()">values</a>, <a href="../../../qb/models/Query/QueryBuilder.html#when()">when</a>, <a href="../../../qb/models/Query/QueryBuilder.html#where()">where</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereBetween()">whereBetween</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereColumn()">whereColumn</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereExists()">whereExists</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereIn()">whereIn</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereInSub()">whereInSub</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereNested()">whereNested</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereNotBetween()">whereNotBetween</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereNotExists()">whereNotExists</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereNotIn()">whereNotIn</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereNotNull()">whereNotNull</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereNull()">whereNull</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereRaw()">whereRaw</a>, <a href="../../../qb/models/Query/QueryBuilder.html#whereSub()">whereSub</a>, <a href="../../../qb/models/Query/QueryBuilder.html#withAggregate()">withAggregate</a>, <a href="../../../qb/models/Query/QueryBuilder.html#withColumns()">withColumns</a>, <a href="../../../qb/models/Query/QueryBuilder.html#withReturnFormat()">withReturnFormat</a>
 				
 			</td>
 		</tr>
@@ -1660,7 +1687,7 @@ Class
 				
 				
 				
-				
+
 				
 					<span class="label label-warning"><em>None</em></span>
 				
@@ -1684,7 +1711,7 @@ Class
 
 	<a name="init()"><!-- --></a><h3>
 	init</h3>
-	<kbd>public <strong>init</strong>(<a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a> parentQuery, string type, string table)</kbd>
+	<kbd>public <strong>init</strong>(<a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">QueryBuilder</a> parentQuery, string type, string table)</kbd>
 
 	<br><br>
 
@@ -1724,7 +1751,7 @@ Class
 		<h3>parentQuery</h3>
 
 		<kbd>
-			property <a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a> 
+			property <a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">QueryBuilder</a>
 			<strong>parentQuery</strong>
 			
 		</kbd>
@@ -1770,7 +1797,7 @@ Class
 		<h3>table</h3>
 
 		<kbd>
-			property string 
+			property string
 			<strong>table</strong>
 			
 		</kbd>
@@ -1816,7 +1843,7 @@ Class
 		<h3>type</h3>
 
 		<kbd>
-			property string 
+			property string
 			<strong>type</strong>
 			
 		</kbd>
@@ -1880,20 +1907,27 @@ Class
 
 	
 	<a name="getParentQuery()"><!-- --></a>
-	<h3>getParentQuery</h3>
-	
+	<h3>
+		getParentQuery
+		
+	</h3>
+
 	<kbd>public string <strong>getParentQuery</strong>()</kbd>
-	
+
 	<br><br>
 
 	
 
 	
+
+	
 		
 		
 	
 
 	
+	
+
 	
 
 	
@@ -1905,20 +1939,27 @@ Class
 
 	
 	<a name="getTable()"><!-- --></a>
-	<h3>getTable</h3>
-	
+	<h3>
+		getTable
+		
+	</h3>
+
 	<kbd>public string <strong>getTable</strong>()</kbd>
-	
+
 	<br><br>
 
 	
 
 	
+
+	
 		
 		
 	
 
 	
+	
+
 	
 
 	
@@ -1930,20 +1971,27 @@ Class
 
 	
 	<a name="getType()"><!-- --></a>
-	<h3>getType</h3>
-	
+	<h3>
+		getType
+		
+	</h3>
+
 	<kbd>public string <strong>getType</strong>()</kbd>
-	
+
 	<br><br>
 
 	
 
 	
+
+	
 		
 		
 	
 
 	
+	
+
 	
 
 	
@@ -1955,14 +2003,19 @@ Class
 
 	
 	<a name="newQuery()"><!-- --></a>
-	<h3>newQuery</h3>
-	
-	<kbd>public <a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a> <strong>newQuery</strong>()</kbd>
-	
+	<h3>
+		newQuery
+		
+	</h3>
+
+	<kbd>public qb.models.Query.Builder <strong>newQuery</strong>()</kbd>
+
 	<br><br>
 
 	
 		<p>Returns a new Join Clause based off of the current join clause.</p>
+	
+
 	
 
 	
@@ -1976,10 +2029,10 @@ Class
 			<dt><strong>Overrides:</strong></dt>
 			<dd>
 			<code>
-			<a href="../../../qb/models/Query/Builder.html#newQuery()">newQuery</a></code>
+			<a href="../../../qb/models/Query/QueryBuilder.html#newQuery()">newQuery</a></code>
 			in class
 			<code>
-				<a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a>
+				<a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">QueryBuilder</a>
 			</code>
 			</dd>
 		</dl>
@@ -1994,19 +2047,26 @@ Class
 		</dl>
 	
 
+	
+
 	</dl>
 	<hr>
 
 	
 	<a name="on()"><!-- --></a>
-	<h3>on</h3>
-	
+	<h3>
+		on
+		
+	</h3>
+
 	<kbd>public <a href="../../../qb/models/Query/JoinClause.html" title="class in qb.models.Query">JoinClause</a> <strong>on</strong>(any first, [any operator], [any second], [any combinator='and'])</kbd>
-	
+
 	<br><br>
 
 	
 		<p>Add a column condition to the join statement.</p>
+	
+
 	
 
 	
@@ -2039,19 +2099,26 @@ Class
 		</dl>
 	
 
+	
+
 	</dl>
 	<hr>
 
 	
 	<a name="orOn()"><!-- --></a>
-	<h3>orOn</h3>
-	
+	<h3>
+		orOn
+		
+	</h3>
+
 	<kbd>public <a href="../../../qb/models/Query/JoinClause.html" title="class in qb.models.Query">JoinClause</a> <strong>orOn</strong>(any first, [any operator], [any second])</kbd>
-	
+
 	<br><br>
 
 	
 		<p>Add an or column condition to the join statement.</p>
+	
+
 	
 
 	
@@ -2082,16 +2149,23 @@ Class
 		</dl>
 	
 
+	
+
 	</dl>
 	<hr>
 
 	
 	<a name="setParentQuery()"><!-- --></a>
-	<h3>setParentQuery</h3>
-	
-	<kbd>public any <strong>setParentQuery</strong>(<a href="../../../qb/models/Query/Builder.html" title="class in qb.models.Query">Builder</a> parentQuery)</kbd>
-	
+	<h3>
+		setParentQuery
+		
+	</h3>
+
+	<kbd>public any <strong>setParentQuery</strong>(<a href="../../../qb/models/Query/QueryBuilder.html" title="class in qb.models.Query">QueryBuilder</a> parentQuery)</kbd>
+
 	<br><br>
+
+	
 
 	
 
@@ -2114,16 +2188,23 @@ Class
 
 	
 
+	
+
 	</dl>
 	<hr>
 
 	
 	<a name="setTable()"><!-- --></a>
-	<h3>setTable</h3>
-	
+	<h3>
+		setTable
+		
+	</h3>
+
 	<kbd>public any <strong>setTable</strong>(string table)</kbd>
-	
+
 	<br><br>
+
+	
 
 	
 
@@ -2146,16 +2227,23 @@ Class
 
 	
 
+	
+
 	</dl>
 	<hr>
 
 	
 	<a name="setType()"><!-- --></a>
-	<h3>setType</h3>
-	
+	<h3>
+		setType
+		
+	</h3>
+
 	<kbd>public any <strong>setType</strong>(string type)</kbd>
-	
+
 	<br><br>
+
+	
 
 	
 
@@ -2174,6 +2262,8 @@ Class
 		<dd><code>type</code></dd>
 		
 		</dl>
+	
+
 	
 
 	

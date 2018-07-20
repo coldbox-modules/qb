@@ -1,0 +1,6444 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>BaseGrammar</title>
+	<meta name="keywords" content="qb.models.Grammars.concurrent.Callable interface">
+	<!-- common assets -->
+	
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel ="stylesheet" type="text/css" href="../../../bootstrap/css/bootstrap.min.css">
+<link rel ="stylesheet" type="text/css" href="../../../stylesheet.css">
+	
+<link href='https://fonts.googleapis.com/css?family=Ubuntu:400,300,300italic,400italic,700,700italic|Ubuntu+Mono' rel='stylesheet' type='text/css' />
+	
+<script src="../../../bootstrap/js/jquery-2.1.0.min.js" type="text/javascript"></script>
+<script src="../../../bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+
+<script>
+$(document).ready(function() {
+	// Global Tool Tip Settings
+	$( '[title]' ).tooltip({
+		 animation: 'slide',
+		 delay: { show: 250, hide: 250 }
+	});
+});
+</script>
+	<!-- syntax highlighter -->
+	<link type="text/css" rel="stylesheet" href="../../../highlighter/styles/shCoreDefault.css">
+	<script src="../../../highlighter/scripts/shCore.js"></script>
+	<script src="../../../highlighter/scripts/shBrushColdFusion.js"></script>
+	<script src="../../../highlighter/scripts/shBrushXml.js"></script>
+	<script src="../../../highlighter/scripts/shBrushSql.js"></script>
+	<script src="../../../highlighter/scripts/shBrushJScript.js"></script>
+	<script src="../../../highlighter/scripts/shBrushJava.js"></script>
+	<script src="../../../highlighter/scripts/shBrushCss.js"></script>
+	<script type="text/javascript">SyntaxHighlighter.all();</script>
+</head>
+
+<body class="withNavbar">
+
+
+
+
+
+
+<!-- ========= START OF NAVBAR ======= -->
+<a name="navbar_top"></a>
+<a href="#skip-navbar_top" title="skip navigation links"></a>	
+
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+	<div class="container-fluid">
+    
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#class-navigation">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="#"><strong>qb</strong></a>
+		</div>
+
+	    <div class="collapse navbar-collapse" id="class-navigation">
+	    	<ul class="nav navbar-nav">
+				
+					
+					<li><a href="../../../overview-summary.html"><i class="glyphicon glyphicon-plane"></i> overview</a></li>
+					
+				
+
+				
+					<li><a href="package-summary.html"><i class="glyphicon glyphicon-folder-open"></i> &nbsp;package</a></li>
+				
+
+			  	
+					<li class="dropdown active">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-file"></i> class <b class="caret"></b></a>
+
+						<ul class="dropdown-menu">
+							<li><a href="#class">Class Definition</a></li>
+							<li><a href="#constructor_summary">Constructor Summary</a></li>
+							<li><a href="#constructor_detail">Constructor Detail</a></li>
+							<li><a href="#inherited_methods">Inherited Methods</a></li>
+							<li><a href="#method_summary">Method Summary</a></li>
+							<li><a href="#method_detail">Method Detail</a></li>
+							<li><a href="#property_summary">Property Summary</a></li>
+							<li><a href="#property_detail">Property Detail</a></li>
+							
+						</ul>
+					</li>
+				
+	      	</ul>
+
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="../../../index.html?qb/models/Grammars/BaseGrammar.html" target="_top">
+					<i class="glyphicon glyphicon-fullscreen"></i> Frames
+					</a>
+				</li>
+			</ul>
+	    </div>
+
+	</div>
+</nav>	
+
+<a name="skip-navbar_top"></a>
+<!-- ========= END OF NAVBAR ========= -->
+
+<!-- ======== start of class data ======== -->
+<a name="class"><!-- --></a>
+
+<!-- Package -->
+<div class="pull-right">
+	<a href="package-summary.html" title="Package: qb.models.Grammars"><span class="label label-success">qb.models.Grammars</span></a>
+</div>
+
+<h2>
+
+
+Class
+
+ BaseGrammar</h2>
+
+
+
+
+
+
+
+
+	
+		
+	
+	
+
+	
+		
+		
+			
+		
+	
+	
+
+
+<!-- Inheritance Tree-->
+<pre style="background:white">lucee.Component
+    <img src="../../../resources/inherit.gif" alt="extended by ">qb.models.Grammars.BaseGrammar
+</pre>
+
+
+
+	
+	
+
+
+
+<div class="panel panel-default">
+	<div class="panel-heading"><strong>Direct Known Subclasses:</strong></div>
+  	<div class="panel-body">
+	
+		
+		<a href="../../../qb/models/Grammars/MSSQLGrammar.html" title="class in qb.models.Grammars">MSSQLGrammar</a>
+	
+		,
+		<a href="../../../qb/models/Grammars/MySQLGrammar.html" title="class in qb.models.Grammars">MySQLGrammar</a>
+	
+		,
+		<a href="../../../qb/models/Grammars/OracleGrammar.html" title="class in qb.models.Grammars">OracleGrammar</a>
+	
+		,
+		<a href="../../../qb/models/Grammars/PostgresGrammar.html" title="class in qb.models.Grammars">PostgresGrammar</a>
+	
+	</div>
+</div>
+
+
+
+
+
+<div id="class-hint">
+	<p>Grammar represents a platform to run sql on.
+This is the Base Grammar that other grammars can extend to modify
+the generated sql for their specific platforms.</p>
+</div>
+
+
+<!-- Clas Attributes -->
+<div class="panel panel-info">
+	<div class="panel-heading"><strong>Class Attributes:</strong></div>
+		<div class="panel-body">
+		
+		
+			
+		
+			
+		
+			
+		
+			
+			
+			<li class="label label-danger label-annotations">
+				displayname
+				
+				: Grammar
+				
+			</li>
+			&nbsp;
+			
+		
+			
+			
+			<li class="label label-danger label-annotations">
+				synchronized
+				
+				: false
+				
+			</li>
+			&nbsp;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+			
+			<li class="label label-danger label-annotations">
+				accessors
+				
+				: true
+				
+			</li>
+			&nbsp;
+			
+		
+			
+		
+			
+			
+			<li class="label label-danger label-annotations">
+				persistent
+				
+				: false
+				
+			</li>
+			&nbsp;
+			
+		
+			
+		
+			
+		
+		
+	</div>
+</div>
+
+
+
+
+<!-- ========== METHOD SUMMARY =========== -->
+
+<a name="property_summary"><!-- --></a>
+<table class="table table-bordered table-hover">
+	<tr class="info">
+		<th align="left" colspan="5">
+			<strong>Property Summary</strong>
+		</th>
+	</tr>
+	<tr class="info">
+		<th align="left">
+			<strong>type</strong>
+		</th>
+		<th align="left">
+			<strong>property</strong>
+		</th>
+		<th align="left">
+			<strong>default</strong>
+		</th>
+		<th align="left">
+			<strong>serializable</strong>
+		</th>
+		<th align="left">
+			<strong>required</strong>
+		</th>
+	</tr>
+
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#interceptorService()">interceptorService</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ColdBox Interceptor Service to announce pre- and post- interception points.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#tablePrefix()">tablePrefix</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Global table prefix for the grammar.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#utils()">utils</A></strong>
+			<br>
+			
+			<!-- only grab the first sentence of the hint -->
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Query utilities shared across multiple models.
+			
+			<br><br>
+			<ul>
+			
+				
+			
+				
+				<li class="label label-default label-annotations">access = public</li>
+				
+			
+				
+			
+				
+			
+				
+				<li class="label label-default label-annotations">returntype = any</li>
+				
+			
+				
+			
+				
+			
+				
+			
+			</ul>
+
+		</td>
+		<td align="right" valign="top" width="1%">
+			
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				true
+			</code>
+		</td>
+		<td align="right" valign="top" width="1%">
+			<code>
+				false
+			</code>
+		</td>
+	</tr>
+	
+	</tr>
+</table>
+
+
+
+	
+	
+	<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+	<a name="constructor_summary"><!-- --></a>
+	<table class="table table-bordered table-hover">
+		<tr class="info">
+			<th align="left" colspan="2">
+				<strong>Constructor Summary</strong>
+			</th>
+		</tr>
+		<tr>
+			
+			<td>
+				<strong><a href="BaseGrammar.html#init()">init</A></strong>([qb.models.Grammars.queryutils utils='[runtime expression]'])
+				<br>
+				
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Creates a new basic Query Grammar.
+				
+			</td>
+		</tr>
+	</table>
+
+
+
+
+
+<!-- ========== METHOD SUMMARY =========== -->
+
+<a name="method_summary"><!-- --></a>
+<table class="table table-bordered table-hover">
+	<tr class="info">
+		<th align="left" colspan="2">
+			<strong>Method Summary</strong>
+		</th>
+	</tr>
+
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileAddColumn()">compileAddColumn</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileAddComment()">compileAddComment</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileAddConstraint()">compileAddConstraint</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileAddIndex()">compileAddIndex</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileAddType()">compileAddType</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileAggregate()">compileAggregate</A></strong>(qb.models.Grammars.querybuilder query, struct aggregate)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compile a Builder's query into an aggregate select string.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileColumnExists()">compileColumnExists</A></strong>([any table], [any column], [any scehma=''])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileColumns()">compileColumns</A></strong>(qb.models.Grammars.querybuilder query, array columns)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the columns portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileCreate()">compileCreate</A></strong>(any blueprint)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileCreateBody()">compileCreateBody</A></strong>([any blueprint])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileCreateColumn()">compileCreateColumn</A></strong>([any column], [any blueprint])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileCreateColumns()">compileCreateColumns</A></strong>(any blueprint)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileCreateIndexes()">compileCreateIndexes</A></strong>([any blueprint])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileDelete()">compileDelete</A></strong>(qb.models.Grammars.querybuilder query)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compile a Builder's query into a delete string.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileDisableForeignKeyConstraints()">compileDisableForeignKeyConstraints</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileDrop()">compileDrop</A></strong>(any blueprint)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileDropAllObjects()">compileDropAllObjects</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileDropColumn()">compileDropColumn</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileDropConstraint()">compileDropConstraint</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileDropForeignKey()">compileDropForeignKey</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileEnableForeignKeyConstraints()">compileEnableForeignKeyConstraints</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileFrom()">compileFrom</A></strong>(qb.models.Grammars.querybuilder query, string from)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the table portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileGroups()">compileGroups</A></strong>(qb.models.Grammars.querybuilder query, array groups)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the group by portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileHaving()">compileHaving</A></strong>(struct having)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a single having clause.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileHavings()">compileHavings</A></strong>(qb.models.Grammars.querybuilder query, array havings)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the having portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileInsert()">compileInsert</A></strong>(qb.models.Grammars.querybuilder query, array columns, array values)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compile a Builder's query into an insert string.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileJoins()">compileJoins</A></strong>(qb.models.Grammars.querybuilder query, array joins)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the joins portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileLimitValue()">compileLimitValue</A></strong>(qb.models.Grammars.querybuilder query, [any limitValue])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the limit portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileModifyColumn()">compileModifyColumn</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileOffsetValue()">compileOffsetValue</A></strong>(qb.models.Grammars.querybuilder query, [any offsetValue])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the offset portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileOrders()">compileOrders</A></strong>(qb.models.Grammars.querybuilder query, array orders)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the order by portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileRaw()">compileRaw</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileRenameColumn()">compileRenameColumn</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileRenameConstraint()">compileRenameConstraint</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileRenameTable()">compileRenameTable</A></strong>([any blueprint], [any commandParameters])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileSelect()">compileSelect</A></strong>(qb.models.Grammars.querybuilder query)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compile a Builder's query into a sql string.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileTableExists()">compileTableExists</A></strong>([any tableName], [any schemaName=''])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileUpdate()">compileUpdate</A></strong>(qb.models.Grammars.querybuilder query, array columns)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compile a Builder's query into an update string.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#compileWheres()">compileWheres</A></strong>(qb.models.Grammars.querybuilder query, [array wheres='[runtime expression]'])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles the where portion of a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#concatenate()">concatenate</A></strong>(array sql)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns an array of sql concatenated together with empty spaces.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#generateAutoIncrement()">generateAutoIncrement</A></strong>([any column], [any blueprint])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#generateComment()">generateComment</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#generateDefault()">generateDefault</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#generateIfExists()">generateIfExists</A></strong>([any blueprint])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#generateNullConstraint()">generateNullConstraint</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#generateType()">generateType</A></strong>([any column], [any blueprint])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#generateUniqueConstraint()">generateUniqueConstraint</A></strong>([any column], [any blueprint])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#getInterceptorService()">getInterceptorService</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#getTablePrefix()">getTablePrefix</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#getUtils()">getUtils</A></strong>()
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#indexBasic()">indexBasic</A></strong>([any index], [any blueprint])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#indexCheck()">indexCheck</A></strong>([any index])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#indexForeign()">indexForeign</A></strong>([any index])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#indexPrimary()">indexPrimary</A></strong>([any index])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#indexUnique()">indexUnique</A></strong>([any index])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#modifyUnsigned()">modifyUnsigned</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#removeLeadingCombinator()">removeLeadingCombinator</A></strong>(string whereList)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Removes the leading "AND" or "OR" from a sql fragment.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#runQuery()">runQuery</A></strong>([any sql], [any bindings], [any options], [any returnObject='query'])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Runs a query through `queryExecute`.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#setInterceptorService()">setInterceptorService</A></strong>(any interceptorService)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#setTablePrefix()">setTablePrefix</A></strong>(string tablePrefix)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#setUtils()">setUtils</A></strong>(any utils)
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#tryPostInterceptor()">tryPostInterceptor</A></strong>([any data])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This method exists because the API for InterceptorService differs between ColdBox and CommandBox.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#tryPreInterceptor()">tryPreInterceptor</A></strong>([any data])
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This method exists because the API for InterceptorService differs between ColdBox and CommandBox.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeBigInteger()">typeBigInteger</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeBit()">typeBit</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeBoolean()">typeBoolean</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeChar()">typeChar</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeDate()">typeDate</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeDatetime()">typeDatetime</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeDecimal()">typeDecimal</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeEnum()">typeEnum</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeFloat()">typeFloat</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeInteger()">typeInteger</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeJson()">typeJson</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeLongText()">typeLongText</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeMediumInteger()">typeMediumInteger</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeMediumText()">typeMediumText</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeSmallInteger()">typeSmallInteger</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeString()">typeString</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeText()">typeText</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeTime()">typeTime</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeTimestamp()">typeTimestamp</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>any</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#typeTinyInteger()">typeTinyInteger</A></strong>([any column])
+			<br>
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereBasic()">whereBasic</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a basic where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereBetween()">whereBetween</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a between where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereColumn()">whereColumn</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a column where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereExists()">whereExists</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles an exists where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereIn()">whereIn</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles an in where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereInSub()">whereInSub</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a in subselect where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereNested()">whereNested</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a nested where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereNotBetween()">whereNotBetween</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a not between where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereNotExists()">whereNotExists</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a not exists where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereNotIn()">whereNotIn</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a not in where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereNotInSub()">whereNotInSub</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a not in subselect where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereNotNull()">whereNotNull</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a not null where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereNull()">whereNull</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a null where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereRaw()">whereRaw</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a raw where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>private&nbsp;string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#whereSub()">whereSub</A></strong>(qb.models.Grammars.querybuilder query, struct where)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Compiles a subselect where statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#wrapAlias()">wrapAlias</A></strong>(any value)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parses and wraps a value from the Builder for use in a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#wrapColumn()">wrapColumn</A></strong>(any column)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parses and wraps a column from the Builder for use in a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#wrapTable()">wrapTable</A></strong>(any table)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parses and wraps a table from the Builder for use in a sql statement.
+			
+		</td>
+	</tr>
+	
+	
+	
+	<tr>
+		<td align="right" valign="top" width="1%">
+			<code>string</code>
+		</td>
+		<td>
+			<strong><a href="BaseGrammar.html#wrapValue()">wrapValue</A></strong>(any value)
+			<br>
+			
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parses and wraps a value from the Builder for use in a sql statement.
+			
+		</td>
+	</tr>
+	
+</table>
+
+
+
+<a name="inherited_methods"><!-- --></a>
+
+
+	
+
+	
+
+	&nbsp;
+	<a name="methods_inherited_from_class_lucee.Component"><!-- --></a>
+	<table class="table table-hover table-bordered">
+		<tr class="info">
+			<th align="left">
+				<strong>Methods inherited from class <kbd>lucee.Component</kbd></strong>
+			</th>
+		</tr>
+		<tr>
+			<td>
+				
+				
+				
+
+				
+					<span class="label label-warning"><em>None</em></span>
+				
+			</td>
+		</tr>
+	</table>
+
+
+<hr>
+
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+	<a name="constructor_detail"><!-- --></a>
+	<table class="table table-bordered">
+		<tr class="info">
+			<th colspan="1" align="left">
+				<strong>Constructor Detail</strong>
+			</th>
+		</tr>
+	</table>
+
+	<a name="init()"><!-- --></a><h3>
+	init</h3>
+	<kbd>public <strong>init</strong>([qb.models.Grammars.queryutils utils='[runtime expression]'])</kbd>
+
+	<br><br>
+
+	
+	<p>Creates a new basic Query Grammar.</p>
+	
+
+	
+	<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+			<dd><code>utils</code> - A collection of query utilities. Default: qb.models.Query.QueryUtils</dd>
+		
+	</dl>
+	
+	<hr>
+
+
+<!-- ============ PROPERTY DETAIL ========== -->
+
+	<a name="property_detail"><!-- --></a>
+	<table class="table table-bordered">
+		<tr class="info">
+			<th colspan="1" align="left">
+				<strong>Property Detail</strong>
+			</th>
+		</tr>
+	</table>
+
+	
+		
+		<a name="interceptorService()"><!-- --></a>
+		<h3>interceptorService</h3>
+
+		<kbd>
+			property any
+			<strong>interceptorService</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>ColdBox Interceptor Service to announce pre- and post- interception points
+This is not injected since we need to determine if we are in CommandBox or ColdBox first.
+This is handled in the ModuleConfig file</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="tablePrefix()"><!-- --></a>
+		<h3>tablePrefix</h3>
+
+		<kbd>
+			property string
+			<strong>tablePrefix</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>Global table prefix for the grammar.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+		
+		<a name="utils()"><!-- --></a>
+		<h3>utils</h3>
+
+		<kbd>
+			property any
+			<strong>utils</strong>
+			
+		</kbd>
+
+		<br><br>
+		
+			<p>Query utilities shared across multiple models.</p>
+		
+
+		<dl>
+		<dt><strong>Attributes:</strong></dt>
+		
+			
+		
+			
+			<dd><code>access</code> - public</dd>
+			
+		
+			
+			<dd><code>required</code> - false</dd>
+			
+		
+			
+		
+			
+			<dd><code>returntype</code> - any</dd>
+			
+		
+			
+		
+			
+		
+			
+			<dd><code>serializable</code> - true</dd>
+			
+		
+		</dl>
+
+		<hr>
+	
+
+
+
+
+
+
+
+
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<a name="method_detail"><!-- --></a>
+<table class="table table-bordered">
+	<tr class="info">
+		<th colspan="1" align="left">
+			<strong>Method Detail</strong>
+		</th>
+	</tr>
+</table>
+
+
+	
+	<a name="compileAddColumn()"><!-- --></a>
+	<h3>
+		compileAddColumn
+		
+	</h3>
+
+	<kbd>public any <strong>compileAddColumn</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileAddComment()"><!-- --></a>
+	<h3>
+		compileAddComment
+		
+	</h3>
+
+	<kbd>public any <strong>compileAddComment</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileAddConstraint()"><!-- --></a>
+	<h3>
+		compileAddConstraint
+		
+	</h3>
+
+	<kbd>public any <strong>compileAddConstraint</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileAddIndex()"><!-- --></a>
+	<h3>
+		compileAddIndex
+		
+	</h3>
+
+	<kbd>public any <strong>compileAddIndex</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileAddType()"><!-- --></a>
+	<h3>
+		compileAddType
+		
+	</h3>
+
+	<kbd>public any <strong>compileAddType</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileAggregate()"><!-- --></a>
+	<h3>
+		compileAggregate
+		
+	</h3>
+
+	<kbd>private string <strong>compileAggregate</strong>(qb.models.Grammars.querybuilder query, struct aggregate)</kbd>
+
+	<br><br>
+
+	
+		<p>Compile a Builder's query into an aggregate select string.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>aggregate</code> - The aggregate query to execute.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileColumnExists()"><!-- --></a>
+	<h3>
+		compileColumnExists
+		
+	</h3>
+
+	<kbd>public any <strong>compileColumnExists</strong>([any table], [any column], [any scehma=''])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>table</code></dd>
+		
+		<dd><code>column</code></dd>
+		
+		<dd><code>scehma</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileColumns()"><!-- --></a>
+	<h3>
+		compileColumns
+		
+	</h3>
+
+	<kbd>private string <strong>compileColumns</strong>(qb.models.Grammars.querybuilder query, array columns)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the columns portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>columns</code> - The selected columns.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileCreate()"><!-- --></a>
+	<h3>
+		compileCreate
+		
+	</h3>
+
+	<kbd>public any <strong>compileCreate</strong>(any blueprint)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileCreateBody()"><!-- --></a>
+	<h3>
+		compileCreateBody
+		
+	</h3>
+
+	<kbd>public any <strong>compileCreateBody</strong>([any blueprint])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileCreateColumn()"><!-- --></a>
+	<h3>
+		compileCreateColumn
+		
+	</h3>
+
+	<kbd>public any <strong>compileCreateColumn</strong>([any column], [any blueprint])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileCreateColumns()"><!-- --></a>
+	<h3>
+		compileCreateColumns
+		
+	</h3>
+
+	<kbd>public any <strong>compileCreateColumns</strong>(any blueprint)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileCreateIndexes()"><!-- --></a>
+	<h3>
+		compileCreateIndexes
+		
+	</h3>
+
+	<kbd>public any <strong>compileCreateIndexes</strong>([any blueprint])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileDelete()"><!-- --></a>
+	<h3>
+		compileDelete
+		
+	</h3>
+
+	<kbd>public string <strong>compileDelete</strong>(qb.models.Grammars.querybuilder query)</kbd>
+
+	<br><br>
+
+	
+		<p>Compile a Builder's query into a delete string.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileDisableForeignKeyConstraints()"><!-- --></a>
+	<h3>
+		compileDisableForeignKeyConstraints
+		
+	</h3>
+
+	<kbd>public any <strong>compileDisableForeignKeyConstraints</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileDrop()"><!-- --></a>
+	<h3>
+		compileDrop
+		
+	</h3>
+
+	<kbd>public any <strong>compileDrop</strong>(any blueprint)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileDropAllObjects()"><!-- --></a>
+	<h3>
+		compileDropAllObjects
+		
+	</h3>
+
+	<kbd>public any <strong>compileDropAllObjects</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileDropColumn()"><!-- --></a>
+	<h3>
+		compileDropColumn
+		
+	</h3>
+
+	<kbd>public any <strong>compileDropColumn</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileDropConstraint()"><!-- --></a>
+	<h3>
+		compileDropConstraint
+		
+	</h3>
+
+	<kbd>public any <strong>compileDropConstraint</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileDropForeignKey()"><!-- --></a>
+	<h3>
+		compileDropForeignKey
+		
+	</h3>
+
+	<kbd>public any <strong>compileDropForeignKey</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileEnableForeignKeyConstraints()"><!-- --></a>
+	<h3>
+		compileEnableForeignKeyConstraints
+		
+	</h3>
+
+	<kbd>public any <strong>compileEnableForeignKeyConstraints</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileFrom()"><!-- --></a>
+	<h3>
+		compileFrom
+		
+	</h3>
+
+	<kbd>private string <strong>compileFrom</strong>(qb.models.Grammars.querybuilder query, string from)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the table portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>from</code> - The selected table.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileGroups()"><!-- --></a>
+	<h3>
+		compileGroups
+		
+	</h3>
+
+	<kbd>private string <strong>compileGroups</strong>(qb.models.Grammars.querybuilder query, array groups)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the group by portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>groups</code></dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileHaving()"><!-- --></a>
+	<h3>
+		compileHaving
+		
+	</h3>
+
+	<kbd>private string <strong>compileHaving</strong>(struct having)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a single having clause.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>having</code> - The having clauses.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileHavings()"><!-- --></a>
+	<h3>
+		compileHavings
+		
+	</h3>
+
+	<kbd>private string <strong>compileHavings</strong>(qb.models.Grammars.querybuilder query, array havings)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the having portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>havings</code> - The having clauses.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileInsert()"><!-- --></a>
+	<h3>
+		compileInsert
+		
+	</h3>
+
+	<kbd>public string <strong>compileInsert</strong>(qb.models.Grammars.querybuilder query, array columns, array values)</kbd>
+
+	<br><br>
+
+	
+		<p>Compile a Builder's query into an insert string.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>columns</code> - The array of columns into which to insert.</dd>
+		
+		<dd><code>values</code> - The array of values to insert.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileJoins()"><!-- --></a>
+	<h3>
+		compileJoins
+		
+	</h3>
+
+	<kbd>private string <strong>compileJoins</strong>(qb.models.Grammars.querybuilder query, array joins)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the joins portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>joins</code> - The selected joins.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileLimitValue()"><!-- --></a>
+	<h3>
+		compileLimitValue
+		
+	</h3>
+
+	<kbd>private string <strong>compileLimitValue</strong>(qb.models.Grammars.querybuilder query, [any limitValue])</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the limit portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>limitValue</code> - The limit clauses.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileModifyColumn()"><!-- --></a>
+	<h3>
+		compileModifyColumn
+		
+	</h3>
+
+	<kbd>public any <strong>compileModifyColumn</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileOffsetValue()"><!-- --></a>
+	<h3>
+		compileOffsetValue
+		
+	</h3>
+
+	<kbd>private string <strong>compileOffsetValue</strong>(qb.models.Grammars.querybuilder query, [any offsetValue])</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the offset portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>offsetValue</code> - The offset value.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileOrders()"><!-- --></a>
+	<h3>
+		compileOrders
+		
+	</h3>
+
+	<kbd>private string <strong>compileOrders</strong>(qb.models.Grammars.querybuilder query, array orders)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the order by portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>orders</code> - The where clauses.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileRaw()"><!-- --></a>
+	<h3>
+		compileRaw
+		
+	</h3>
+
+	<kbd>public any <strong>compileRaw</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileRenameColumn()"><!-- --></a>
+	<h3>
+		compileRenameColumn
+		
+	</h3>
+
+	<kbd>public any <strong>compileRenameColumn</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileRenameConstraint()"><!-- --></a>
+	<h3>
+		compileRenameConstraint
+		
+	</h3>
+
+	<kbd>public any <strong>compileRenameConstraint</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileRenameTable()"><!-- --></a>
+	<h3>
+		compileRenameTable
+		
+	</h3>
+
+	<kbd>public any <strong>compileRenameTable</strong>([any blueprint], [any commandParameters])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		<dd><code>commandParameters</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileSelect()"><!-- --></a>
+	<h3>
+		compileSelect
+		
+	</h3>
+
+	<kbd>public string <strong>compileSelect</strong>(qb.models.Grammars.querybuilder query)</kbd>
+
+	<br><br>
+
+	
+		<p>Compile a Builder's query into a sql string.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileTableExists()"><!-- --></a>
+	<h3>
+		compileTableExists
+		
+	</h3>
+
+	<kbd>public any <strong>compileTableExists</strong>([any tableName], [any schemaName=''])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>tableName</code></dd>
+		
+		<dd><code>schemaName</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileUpdate()"><!-- --></a>
+	<h3>
+		compileUpdate
+		
+	</h3>
+
+	<kbd>public string <strong>compileUpdate</strong>(qb.models.Grammars.querybuilder query, array columns)</kbd>
+
+	<br><br>
+
+	
+		<p>Compile a Builder's query into an update string.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>columns</code> - The array of columns into which to insert.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="compileWheres()"><!-- --></a>
+	<h3>
+		compileWheres
+		
+	</h3>
+
+	<kbd>private string <strong>compileWheres</strong>(qb.models.Grammars.querybuilder query, [array wheres='[runtime expression]'])</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles the where portion of a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>wheres</code> - The where clauses.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="concatenate()"><!-- --></a>
+	<h3>
+		concatenate
+		
+	</h3>
+
+	<kbd>private string <strong>concatenate</strong>(array sql)</kbd>
+
+	<br><br>
+
+	
+		<p>Returns an array of sql concatenated together with empty spaces.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>sql</code> - An array of sql fragments.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="generateAutoIncrement()"><!-- --></a>
+	<h3>
+		generateAutoIncrement
+		
+	</h3>
+
+	<kbd>public any <strong>generateAutoIncrement</strong>([any column], [any blueprint])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="generateComment()"><!-- --></a>
+	<h3>
+		generateComment
+		
+	</h3>
+
+	<kbd>public any <strong>generateComment</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="generateDefault()"><!-- --></a>
+	<h3>
+		generateDefault
+		
+	</h3>
+
+	<kbd>public any <strong>generateDefault</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="generateIfExists()"><!-- --></a>
+	<h3>
+		generateIfExists
+		
+	</h3>
+
+	<kbd>public any <strong>generateIfExists</strong>([any blueprint])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="generateNullConstraint()"><!-- --></a>
+	<h3>
+		generateNullConstraint
+		
+	</h3>
+
+	<kbd>public any <strong>generateNullConstraint</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="generateType()"><!-- --></a>
+	<h3>
+		generateType
+		
+	</h3>
+
+	<kbd>public any <strong>generateType</strong>([any column], [any blueprint])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="generateUniqueConstraint()"><!-- --></a>
+	<h3>
+		generateUniqueConstraint
+		
+	</h3>
+
+	<kbd>public any <strong>generateUniqueConstraint</strong>([any column], [any blueprint])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getInterceptorService()"><!-- --></a>
+	<h3>
+		getInterceptorService
+		
+	</h3>
+
+	<kbd>public string <strong>getInterceptorService</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getTablePrefix()"><!-- --></a>
+	<h3>
+		getTablePrefix
+		
+	</h3>
+
+	<kbd>public string <strong>getTablePrefix</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="getUtils()"><!-- --></a>
+	<h3>
+		getUtils
+		
+	</h3>
+
+	<kbd>public string <strong>getUtils</strong>()</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="indexBasic()"><!-- --></a>
+	<h3>
+		indexBasic
+		
+	</h3>
+
+	<kbd>public any <strong>indexBasic</strong>([any index], [any blueprint])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>index</code></dd>
+		
+		<dd><code>blueprint</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="indexCheck()"><!-- --></a>
+	<h3>
+		indexCheck
+		
+	</h3>
+
+	<kbd>public any <strong>indexCheck</strong>([any index])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>index</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="indexForeign()"><!-- --></a>
+	<h3>
+		indexForeign
+		
+	</h3>
+
+	<kbd>public any <strong>indexForeign</strong>([any index])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>index</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="indexPrimary()"><!-- --></a>
+	<h3>
+		indexPrimary
+		
+	</h3>
+
+	<kbd>public any <strong>indexPrimary</strong>([any index])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>index</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="indexUnique()"><!-- --></a>
+	<h3>
+		indexUnique
+		
+	</h3>
+
+	<kbd>public any <strong>indexUnique</strong>([any index])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>index</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="modifyUnsigned()"><!-- --></a>
+	<h3>
+		modifyUnsigned
+		
+	</h3>
+
+	<kbd>public any <strong>modifyUnsigned</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="removeLeadingCombinator()"><!-- --></a>
+	<h3>
+		removeLeadingCombinator
+		
+	</h3>
+
+	<kbd>private string <strong>removeLeadingCombinator</strong>(string whereList)</kbd>
+
+	<br><br>
+
+	
+		<p>Removes the leading "AND" or "OR" from a sql fragment.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>whereList</code> - The sql fragment</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string;</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="runQuery()"><!-- --></a>
+	<h3>
+		runQuery
+		
+	</h3>
+
+	<kbd>public any <strong>runQuery</strong>([any sql], [any bindings], [any options], [any returnObject='query'])</kbd>
+
+	<br><br>
+
+	
+		<p>Runs a query through `queryExecute`.
+This function exists so that platform-specific grammars can override it if needed.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>sql</code> - The sql string to execute.</dd>
+		
+		<dd><code>bindings</code> - The bindings to apply to the query.</dd>
+		
+		<dd><code>options</code> - Any options to pass to `queryExecute`. Default: {}.</dd>
+		
+		<dd><code>returnObject</code></dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>any</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setInterceptorService()"><!-- --></a>
+	<h3>
+		setInterceptorService
+		
+	</h3>
+
+	<kbd>public any <strong>setInterceptorService</strong>(any interceptorService)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>interceptorService</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setTablePrefix()"><!-- --></a>
+	<h3>
+		setTablePrefix
+		
+	</h3>
+
+	<kbd>public any <strong>setTablePrefix</strong>(string tablePrefix)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>tablePrefix</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="setUtils()"><!-- --></a>
+	<h3>
+		setUtils
+		
+	</h3>
+
+	<kbd>public any <strong>setUtils</strong>(any utils)</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>utils</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="tryPostInterceptor()"><!-- --></a>
+	<h3>
+		tryPostInterceptor
+		
+	</h3>
+
+	<kbd>private any <strong>tryPostInterceptor</strong>([any data])</kbd>
+
+	<br><br>
+
+	
+		<p>This method exists because the API for InterceptorService differs between ColdBox and CommandBox</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>data</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="tryPreInterceptor()"><!-- --></a>
+	<h3>
+		tryPreInterceptor
+		
+	</h3>
+
+	<kbd>private any <strong>tryPreInterceptor</strong>([any data])</kbd>
+
+	<br><br>
+
+	
+		<p>This method exists because the API for InterceptorService differs between ColdBox and CommandBox</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>data</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeBigInteger()"><!-- --></a>
+	<h3>
+		typeBigInteger
+		
+	</h3>
+
+	<kbd>public any <strong>typeBigInteger</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeBit()"><!-- --></a>
+	<h3>
+		typeBit
+		
+	</h3>
+
+	<kbd>public any <strong>typeBit</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeBoolean()"><!-- --></a>
+	<h3>
+		typeBoolean
+		
+	</h3>
+
+	<kbd>public any <strong>typeBoolean</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeChar()"><!-- --></a>
+	<h3>
+		typeChar
+		
+	</h3>
+
+	<kbd>public any <strong>typeChar</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeDate()"><!-- --></a>
+	<h3>
+		typeDate
+		
+	</h3>
+
+	<kbd>public any <strong>typeDate</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeDatetime()"><!-- --></a>
+	<h3>
+		typeDatetime
+		
+	</h3>
+
+	<kbd>public any <strong>typeDatetime</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeDecimal()"><!-- --></a>
+	<h3>
+		typeDecimal
+		
+	</h3>
+
+	<kbd>public any <strong>typeDecimal</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeEnum()"><!-- --></a>
+	<h3>
+		typeEnum
+		
+	</h3>
+
+	<kbd>public any <strong>typeEnum</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeFloat()"><!-- --></a>
+	<h3>
+		typeFloat
+		
+	</h3>
+
+	<kbd>public any <strong>typeFloat</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeInteger()"><!-- --></a>
+	<h3>
+		typeInteger
+		
+	</h3>
+
+	<kbd>public any <strong>typeInteger</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeJson()"><!-- --></a>
+	<h3>
+		typeJson
+		
+	</h3>
+
+	<kbd>public any <strong>typeJson</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeLongText()"><!-- --></a>
+	<h3>
+		typeLongText
+		
+	</h3>
+
+	<kbd>public any <strong>typeLongText</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeMediumInteger()"><!-- --></a>
+	<h3>
+		typeMediumInteger
+		
+	</h3>
+
+	<kbd>public any <strong>typeMediumInteger</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeMediumText()"><!-- --></a>
+	<h3>
+		typeMediumText
+		
+	</h3>
+
+	<kbd>public any <strong>typeMediumText</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeSmallInteger()"><!-- --></a>
+	<h3>
+		typeSmallInteger
+		
+	</h3>
+
+	<kbd>public any <strong>typeSmallInteger</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeString()"><!-- --></a>
+	<h3>
+		typeString
+		
+	</h3>
+
+	<kbd>public any <strong>typeString</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeText()"><!-- --></a>
+	<h3>
+		typeText
+		
+	</h3>
+
+	<kbd>public any <strong>typeText</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeTime()"><!-- --></a>
+	<h3>
+		typeTime
+		
+	</h3>
+
+	<kbd>public any <strong>typeTime</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeTimestamp()"><!-- --></a>
+	<h3>
+		typeTimestamp
+		
+	</h3>
+
+	<kbd>public any <strong>typeTimestamp</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="typeTinyInteger()"><!-- --></a>
+	<h3>
+		typeTinyInteger
+		
+	</h3>
+
+	<kbd>public any <strong>typeTinyInteger</strong>([any column])</kbd>
+
+	<br><br>
+
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code></dd>
+		
+		</dl>
+	
+
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereBasic()"><!-- --></a>
+	<h3>
+		whereBasic
+		
+	</h3>
+
+	<kbd>private string <strong>whereBasic</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a basic where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereBetween()"><!-- --></a>
+	<h3>
+		whereBetween
+		
+	</h3>
+
+	<kbd>private string <strong>whereBetween</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a between where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereColumn()"><!-- --></a>
+	<h3>
+		whereColumn
+		
+	</h3>
+
+	<kbd>private string <strong>whereColumn</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a column where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereExists()"><!-- --></a>
+	<h3>
+		whereExists
+		
+	</h3>
+
+	<kbd>private string <strong>whereExists</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles an exists where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereIn()"><!-- --></a>
+	<h3>
+		whereIn
+		
+	</h3>
+
+	<kbd>private string <strong>whereIn</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles an in where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereInSub()"><!-- --></a>
+	<h3>
+		whereInSub
+		
+	</h3>
+
+	<kbd>private string <strong>whereInSub</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a in subselect where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereNested()"><!-- --></a>
+	<h3>
+		whereNested
+		
+	</h3>
+
+	<kbd>private string <strong>whereNested</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a nested where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereNotBetween()"><!-- --></a>
+	<h3>
+		whereNotBetween
+		
+	</h3>
+
+	<kbd>private string <strong>whereNotBetween</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a not between where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereNotExists()"><!-- --></a>
+	<h3>
+		whereNotExists
+		
+	</h3>
+
+	<kbd>private string <strong>whereNotExists</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a not exists where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereNotIn()"><!-- --></a>
+	<h3>
+		whereNotIn
+		
+	</h3>
+
+	<kbd>private string <strong>whereNotIn</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a not in where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereNotInSub()"><!-- --></a>
+	<h3>
+		whereNotInSub
+		
+	</h3>
+
+	<kbd>private string <strong>whereNotInSub</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a not in subselect where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereNotNull()"><!-- --></a>
+	<h3>
+		whereNotNull
+		
+	</h3>
+
+	<kbd>private string <strong>whereNotNull</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a not null where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereNull()"><!-- --></a>
+	<h3>
+		whereNull
+		
+	</h3>
+
+	<kbd>private string <strong>whereNull</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a null where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereRaw()"><!-- --></a>
+	<h3>
+		whereRaw
+		
+	</h3>
+
+	<kbd>private string <strong>whereRaw</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a raw where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="whereSub()"><!-- --></a>
+	<h3>
+		whereSub
+		
+	</h3>
+
+	<kbd>private string <strong>whereSub</strong>(qb.models.Grammars.querybuilder query, struct where)</kbd>
+
+	<br><br>
+
+	
+		<p>Compiles a subselect where statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>query</code> - The Builder instance.</dd>
+		
+		<dd><code>where</code> - The where clause to compile.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="wrapAlias()"><!-- --></a>
+	<h3>
+		wrapAlias
+		
+	</h3>
+
+	<kbd>public string <strong>wrapAlias</strong>(any value)</kbd>
+
+	<br><br>
+
+	
+		<p>Parses and wraps a value from the Builder for use in a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>value</code></dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="wrapColumn()"><!-- --></a>
+	<h3>
+		wrapColumn
+		
+	</h3>
+
+	<kbd>public string <strong>wrapColumn</strong>(any column)</kbd>
+
+	<br><br>
+
+	
+		<p>Parses and wraps a column from the Builder for use in a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>column</code> - The column to parse and wrap.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="wrapTable()"><!-- --></a>
+	<h3>
+		wrapTable
+		
+	</h3>
+
+	<kbd>public string <strong>wrapTable</strong>(any table)</kbd>
+
+	<br><br>
+
+	
+		<p>Parses and wraps a table from the Builder for use in a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>table</code> - The table to parse and wrap.</dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+	
+	<a name="wrapValue()"><!-- --></a>
+	<h3>
+		wrapValue
+		
+	</h3>
+
+	<kbd>public string <strong>wrapValue</strong>(any value)</kbd>
+
+	<br><br>
+
+	
+		<p>Parses and wraps a value from the Builder for use in a sql statement.</p>
+	
+
+	
+
+	
+		
+		
+	
+
+	
+	
+
+	
+		<dl>
+		<dt><strong>Parameters:</strong></dt>
+		
+		<dd><code>value</code></dd>
+		
+		</dl>
+	
+
+	
+		<dl>
+			<dt><strong>Returns:</strong></dt>
+			<dd>string</dd>
+		</dl>
+	
+
+	
+
+	</dl>
+	<hr>
+
+
+
+
+</body>
+</html>
+

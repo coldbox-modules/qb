@@ -8,6 +8,7 @@ cache:
     - "$HOME/.CommandBox/server/"
 env:
   matrix:
+    - ENGINE=adobe@2018
     - ENGINE=adobe@2016
     - ENGINE=adobe@11
     - ENGINE=lucee@5

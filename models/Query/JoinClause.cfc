@@ -108,7 +108,7 @@ component
     *
     * @return qb.models.Builder.JoinClause
     */
-    public Builder function newQuery() {
+    public QueryBuilder function newQuery() {
         return new qb.models.Query.JoinClause(
             parentQuery = getParentQuery(),
             type = getType(),

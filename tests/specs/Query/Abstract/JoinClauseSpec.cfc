@@ -139,6 +139,27 @@ component extends="testbox.system.BaseSpec" {
                         expect( binding.cfsqltype ).toBe( "cf_sql_varchar" );
                     } );
                 } );
+
+                describe( "newQuery()", function() {
+                    it( "creates a new JoinClause instance", function() {
+                        expect( join.newQuery() ).toBeInstanceOf( "qb.models.Query.JoinClause" );
+                    } );
+
+                    it( "binds the parent query", function() {
+                        var newJoin = join.newQuery();
+                        expect( newJoin.getParentQuery() ).toBe( join.getParentQuery() );
+                    } );
+
+                    it( "binds the type", function() {
+                        var newJoin = join.newQuery();
+                        expect( newJoin.getType() ).toBe( join.getType() );
+                    } );
+
+                    it( "binds the table", function() {
+                        var newJoin = join.newQuery();
+                        expect( newJoin.getTable() ).toBe( join.getTable() );
+                    } );
+                } );
             } );
         } );
     }

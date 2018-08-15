@@ -298,11 +298,11 @@ component displayname="QueryBuilder" accessors="true" {
     /**
     * Sets the FROM table of the query.
     *
-    * @from The name of the table to from which the query is based.
+    * @from The name of the table or a Expression object from which the query is based.
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function from( required string from ) {
+    public QueryBuilder function from( required any from ) {
         variables.from = arguments.from;
         return this;
     }
@@ -311,13 +311,58 @@ component displayname="QueryBuilder" accessors="true" {
     * Sets the FROM table of the query.
     * Alias for `from`
     *
-    * @table The name of the table to from which the query is based.
+    * @table The name of the table or a Expression object from which the query is based.
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function table( required string table ) {
+    public QueryBuilder function table( required any table ) {
         variables.from = arguments.table;
         return this;
+    }
+
+    /** 
+    * Sets the FROM table of the query using a string. This allows you to specify table hints, etc.
+    *
+    * @from The string to use as the table.
+    * @bindings Any bindings to use for the string.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function fromRaw( required string from, array bindings=[] ) {
+        // add the bindings required by the table
+        if ( ! arrayIsEmpty( arguments.bindings ) ) {
+            addBindings( arguments.bindings.map( function( value ) {
+                return utils.extractBinding( value );
+            } ), "join" );
+        }
+
+        return this.from(raw(arguments.from));
+    }
+
+    /**
+    * Sets the FROM table of the query using a derived table.
+    *
+    * @alias The alias for the derived table
+    * @input Either a QueryBuilder instance or a closure to define the derived query.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function fromSub( required string alias, required any input ) {
+        var qb = arguments.input;
+
+        // since we have a callback, we generate a new query object and pass it into the callback
+        if( isClosure(qb) ){
+            var subquery = newQuery();
+            qb(subquery);
+            // replace the original query builder with the results of the sub-query
+            qb = subquery;
+        }
+
+        // merge bindings
+        mergeBindings(qb);
+
+        // generate the derived table SQL
+        return this.fromRaw('(' & qb.toSQL() & ') as ' & getGrammar().wrapAlias(arguments.alias));
     }
 
     /*******************************************************************************\
@@ -331,7 +376,7 @@ component displayname="QueryBuilder" accessors="true" {
     * For complex joins, a closure can be passed to `first`.
     * This allows multiple `on` and `where` conditions to be applied to the join.
     *
-    * @table The table to join to the query.
+    * @table The table/expression to join to the query.
     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
     * @operator The boolean operator for the join clause. Default: "=".
     * @second The second column in the join's `on` statement.
@@ -341,7 +386,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function join(
-        required string table,
+        required any table,
         required any first,
         string operator = "=",
         string second,
@@ -379,7 +424,7 @@ component displayname="QueryBuilder" accessors="true" {
     * For complex joins, a closure can be passed to `first`.
     * This allows multiple `on` and `where` conditions to be applied to the join.
     *
-    * @table The table to join to the query.
+    * @table The table/expression to join to the query.
     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
     * @operator The boolean operator for the join clause. Default: "=".
     * @second The second column in the join's `on` statement.
@@ -388,7 +433,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function leftJoin(
-        required string table,
+        required any table,
         string first,
         string operator,
         string second,
@@ -405,7 +450,7 @@ component displayname="QueryBuilder" accessors="true" {
     * For complex joins, a closure can be passed to `first`.
     * This allows multiple `on` and `where` conditions to be applied to the join.
     *
-    * @table The table to join to the query.
+    * @table The table/expression to join to the query.
     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
     * @operator The boolean operator for the join clause. Default: "=".
     * @second The second column in the join's `on` statement.
@@ -414,7 +459,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function rightJoin(
-        required string table,
+        required any table,
         string first,
         string operator,
         string second,
@@ -431,7 +476,7 @@ component displayname="QueryBuilder" accessors="true" {
     * For complex joins, a closure can be passed to `first`.
     * This allows multiple `on` and `where` conditions to be applied to the join.
     *
-    * @table The table to join to the query.
+    * @table The table/expression to join to the query.
     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
     * @operator The boolean operator for the join clause. Default: "=".
     * @second The second column in the join's `on` statement.
@@ -439,7 +484,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function crossJoin(
-        required string table,
+        required any table,
         any first,
         string operator,
         any second
@@ -457,6 +502,277 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+    * Adds an INNER JOIN to another table using a raw string.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The expression to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @type The type of the join. Default: "inner".  Passing this as an argument is discouraged for readability.  Use the dedicated methods like `leftJoin` and `rightJoin` where possible.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function joinRaw(
+        required string table,
+        required any first,
+        string operator = "=",
+        string second,
+        string type = "inner",
+        boolean where = false
+    ) {
+        // use the raw SQL
+        arguments.table = raw(arguments.table);
+
+        return join(argumentCollection=arguments);
+    }
+
+    /**
+    * Adds a LEFT JOIN to another table using a raw string.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The expression to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function leftJoinRaw(
+        required string table,
+        string first,
+        string operator,
+        string second,
+        boolean where
+    ) {
+        arguments.type = "left";
+        return joinRaw( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a RIGHT JOIN to another table using a raw string.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The /expression to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function rightJoinRaw(
+        required string table,
+        string first,
+        string operator,
+        string second,
+        boolean where
+    ) {
+        arguments.type = "right";
+        return joinRaw( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a CROSS JOIN to another table using a raw string.
+    *
+    * For simple joins, this joins one table to another in a cross join.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @table The /expression to join to the query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function crossJoinRaw(
+        required string table,
+        any first,
+        string operator,
+        any second
+    ) {
+        if ( ! isNull( arguments.first ) ) {
+            arguments.type = "cross";
+            return joinRaw( argumentCollection = arguments );
+        }
+
+        // create the table reference
+        arguments.table = raw(arguments.table);
+
+        variables.joins.append(
+            new qb.models.Query.JoinClause( this, "cross", table )
+        );
+
+        return this;
+    }
+
+    /**
+    * Adds an INNER JOIN from a derived table to another table.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @alias The alias for the derived table
+    * @input Either a QueryBuilder instance or a closure to define the derived query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @type The type of the join. Default: "inner".  Passing this as an argument is discouraged for readability.  Use the dedicated methods like `leftJoin` and `rightJoin` where possible.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function joinSub(
+        required string alias,
+        required any input,
+        required any first,
+        string operator = "=",
+        string second,
+        string type = "inner",
+        boolean where = false
+    ) {
+        var qb = arguments.input;
+
+        // since we have a callback, we generate a new query object and pass it into the callback
+        if( isClosure(qb) ){
+            var subquery = newQuery();
+            qb(subquery);
+            // replace the original query builder with the results of the sub-query
+            qb = subquery;
+        }
+
+        // create the table reference
+        arguments.table = '(' & qb.toSQL() & ') as ' & getGrammar().wrapAlias(arguments.alias);
+
+        // merge bindings
+        mergeBindings(qb);
+
+        // remove the non-standard arguments
+        structDelete(arguments, "input");
+        structDelete(arguments, "alias");
+
+        return joinRaw(argumentCollection=arguments);
+    }
+
+    /**
+    * Adds a LEFT JOIN from a derived table to another table.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @alias The alias for the derived table
+    * @input Either a QueryBuilder instance or a closure to define the derived query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function leftJoinSub(
+        required any alias,
+        required any input,
+        string first,
+        string operator,
+        string second,
+        boolean where
+    ) {
+        arguments.type = "left";
+        return joinSub( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a RIGHT JOIN from a derived table to another table.
+    *
+    * For simple joins, this specifies a column on which to join the two tables.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @alias The alias for the derived table
+    * @input Either a QueryBuilder instance or a closure to define the derived query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function rightJoinSub(
+        required any alias,
+        required any input,
+        string first,
+        string operator,
+        string second,
+        boolean where
+    ) {
+        arguments.type = "right";
+        return joinSub( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a CROSS JOIN from a derived table to another table.
+    *
+    * For simple joins, this joins one table to another in a cross join.
+    * For complex joins, a closure can be passed to `first`.
+    * This allows multiple `on` and `where` conditions to be applied to the join.
+    *
+    * @alias The alias for the derived table
+    * @input Either a QueryBuilder instance or a closure to define the derived query.
+    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+    * @operator The boolean operator for the join clause. Default: "=".
+    * @second The second column in the join's `on` statement.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function crossJoinSub(
+        required any alias,
+        required any input,
+        any first,
+        string operator,
+        any second
+    ) {
+        if ( ! isNull( arguments.first ) ) {
+            arguments.type = "cross";
+            return joinSub( argumentCollection = arguments );
+        }
+        var qb = arguments.input;
+
+        // since we have a callback, we generate a new query object and pass it into the callback
+        if( isClosure(qb) ){
+            var subquery = newQuery();
+            qb(subquery);
+            // replace the original query builder with the results of the sub-query
+            qb = subquery;
+        }
+
+        // create the table reference
+        var table = raw('(' & qb.toSQL() & ') as ' & getGrammar().wrapAlias(arguments.alias));
+
+        // merge bindings
+        mergeBindings(qb);
+
+        arrayAppend(variables.joins,
+            new qb.models.Query.JoinClause( this, "cross", table )
+        );
+
+        return this;
+    }
+
+    /**
     * Adds a JOIN to another table based on a `WHERE` clause instead of an `ON` clause.
     *
     * `where` clauses introduce parameters and parameter bindings
@@ -466,7 +782,7 @@ component displayname="QueryBuilder" accessors="true" {
     * For complex joins, a closure can be passed to `first`.
     * This allows multiple `on` and `where` conditions to be applied to the join.
     *
-    * @table The table to join to the query.
+    * @table The table/expression to join to the query.
     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
     * @operator The boolean operator for the join clause. Default: "=".
     * @second The second column in the join's `on` statement.
@@ -475,7 +791,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function joinWhere(
-        required string table,
+        required any table,
         required any first,
         string operator,
         string second,
@@ -1570,6 +1886,25 @@ component displayname="QueryBuilder" accessors="true" {
         newBindings.each( function( binding ) {
             variables.bindings[ type ].append( binding );
         } );
+
+        return this;
+    }
+
+    /** MOD: New method
+    * Merges bindings from a derived/sub-query
+    *
+    * @query The query to merge the bindings.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function mergeBindings(
+        required QueryBuilder input
+    ) {
+        var bindings = input.getRawBindings();
+
+        for( var type in variables.bindings ){
+            variables.bindings[ type ].append( bindings[ type ], true);
+        }
 
         return this;
     }

@@ -59,6 +59,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS""";
     }
 
+    function fromRaw() {
+        return "SELECT * FROM Test (nolock)";
+    }
+
+    function fromDerivedTable() {
+        return {
+            sql = "SELECT * FROM (SELECT ""ID"", ""NAME"" FROM ""USERS"" WHERE ""AGE"" >= ?) as ""U""",
+            bindings = [21]
+        };
+    }
+
     function table() {
         return "SELECT * FROM ""USERS""";
     }
@@ -246,6 +257,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID""";
     }
 
+    function innerJoinRaw() {
+        return "SELECT * FROM ""USERS"" INNER JOIN contacts (nolock) ON ""USERS"".""ID"" = ""CONTACTS"".""ID""";
+    }
+
     function innerJoinShorthand() {
         return "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID""";
     }
@@ -265,12 +280,24 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS"" LEFT JOIN ""ORDERS"" ON ""USERS"".""ID"" = ""ORDERS"".""USER_ID""";
     }
 
+    function leftJoinRaw() {
+        return "SELECT * FROM ""USERS"" LEFT JOIN contacts (nolock) ON ""USERS"".""ID"" = ""CONTACTS"".""ID""";
+    }
+
     function rightJoin() {
         return "SELECT * FROM ""ORDERS"" RIGHT JOIN ""USERS"" ON ""ORDERS"".""USER_ID"" = ""USERS"".""ID""";
     }
 
+    function rightJoinRaw() {
+        return "SELECT * FROM ""USERS"" RIGHT JOIN contacts (nolock) ON ""USERS"".""ID"" = ""CONTACTS"".""ID""";
+    }
+
     function crossJoin() {
         return "SELECT * FROM ""SIZES"" CROSS JOIN ""COLORS""";
+    }
+
+    function crossJoinRaw() {
+        return "SELECT * FROM ""USERS"" CROSS JOIN contacts (nolock)";
     }
 
     function complexJoin() {
@@ -320,6 +347,34 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     function joinWithOrWhereNotIn() {
         return {
             sql = "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" OR ""CONTACTS"".""ID"" NOT IN (?, ?, ?)",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function joinSub() {
+        return {
+            sql = 'SELECT * FROM "USERS" AS "U" INNER JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) as "C" ON "U"."ID" = "C"."ID"',
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function leftJoinSub() {
+        return {
+            sql = 'SELECT * FROM "USERS" AS "U" LEFT JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) as "C" ON "U"."ID" = "C"."ID"',
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function rightJoinSub() {
+        return {
+            sql = 'SELECT * FROM "USERS" AS "U" RIGHT JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) as "C" ON "U"."ID" = "C"."ID"',
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function crossJoinSub() {
+        return {
+            sql = 'SELECT * FROM "USERS" AS "U" CROSS JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) as "C"',
             bindings = [ 1, 2, 3 ]
         };
     }

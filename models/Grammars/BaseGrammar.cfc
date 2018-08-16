@@ -30,7 +30,7 @@ component displayname="Grammar" accessors="true" {
     * The different components of a select statement in the order of compilation.
     */
     variables.selectComponents = [
-        "aggregate", "columns", "from", "joins", "wheres",
+        "commonTables", "aggregate", "columns", "from", "joins", "wheres",
         "groups", "havings", "orders", "limitValue", "offsetValue"
     ];
 
@@ -125,6 +125,64 @@ component displayname="Grammar" accessors="true" {
         }
 
         return trim( concatenate( sql ) );
+    }
+
+    /**
+    * Compiles the Common Table Expressions (CTEs).
+    *
+    * @query The Builder instance.
+    * @columns The selected columns.
+    *
+    * @return string
+    */
+    private string function compileCommonTables(
+        required QueryBuilder query,
+        required array commonTables
+    ) {
+        return getCommonTableExpressionSQL(arguments.query, arguments.commonTables);
+    }
+
+    /**
+    * Compiles the Common Table Expressions (CTEs).
+    *
+    * @query                      The Builder instance.
+    * @columns                    The selected columns.
+    * @supportsRecursiveKeyword   Determines if the current grammar requires the RECURSIVE keyword if any CTEs are recursive.
+    *
+    * @return string
+    */
+    private string function getCommonTableExpressionSQL(
+        required query,
+        required array commonTables,
+        boolean supportsRecursiveKeyword=true
+    ) {
+        if ( arguments.commonTables.isEmpty() ) {
+            return "";
+        }
+
+        var hasRecursion = false;
+
+        var sql = arguments.commonTables.map(function (commonTable){
+            var sql = arguments.commonTable.query.toSQL();
+
+            // generate the optional column definition
+            var columns = arguments.commonTable.columns.map(function (value){
+                return wrapColumn(arguments.value);
+            }).toList();
+
+            // we need to track if any of the CTEs are recursive
+            if( arguments.commonTable.recursive ){
+                hasRecursion = true;
+            }
+
+            return wrapColumn(arguments.commonTable.name) & (len(columns) ? " " & columns : "") & " AS (" & sql & ")";
+        });
+
+        /*
+            Most implementations of CTE require the RECURSIVE keyword if *any* single CTE uses recursive,
+            but some grammars, like SQL Server, does not support the keyword (as it's not necessary).
+        */
+        return trim( "WITH " &  (arguments.supportsRecursiveKeyword && hasRecursion ? "RECURSIVE " : "") & sql.toList(', ') );
     }
 
     /**

@@ -532,8 +532,10 @@ component displayname="Grammar" accessors="true" {
         }
         
         var sql = arguments.unions.map(function (union){
-           var sql = arguments.union.query.toSQL();
-
+            /*
+             * No queries being unioned to the origin query can contain an ORDER BY clause, only the outer-most
+             * QueryBuilder instance can actually have a defined orderBy().
+             */
             if( arguments.union.query.getOrders().len() ){
                 throw(
                     type = "OrderByNotAllowed",
@@ -541,6 +543,8 @@ component displayname="Grammar" accessors="true" {
                     detail = "A QueryBuilder instance used in a UNION statement is cannot have any ORDER BY clause, as this is not allowed by SQL. Only the outer most query is allowed to specify an ORDER BY clause which will be used on the unioned queries."
                 );
             }
+
+           var sql = arguments.union.query.toSQL();
 
             return "UNION " & (arguments.union.all ? "ALL " : "") & sql;
         });

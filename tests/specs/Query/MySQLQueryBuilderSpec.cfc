@@ -431,28 +431,28 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function commonTableExpression() {
         return {
-            sql='WITH `UsersCTE` AS (SELECT `users`.`id`, `contacts`.`balance`, `users`.`name` FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
+            sql='WITH `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
             bindings= [ 25, 1, 2 ]
         };
     }
 
     function commonTableExpressionWithRecursive() {
         return {
-            sql='WITH RECURSIVE `UsersCTE` AS (SELECT `users`.`id`, `contacts`.`balance`, `users`.`name` FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
+            sql='WITH RECURSIVE `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
             bindings= [ 25, 1, 2 ]
         };
     }
 
     function commonTableExpressionMultipleCTEsWithRecursive() {
         return {
-            sql='WITH RECURSIVE `UsersCTE` AS (SELECT `users`.`id`, `contacts`.`balance`, `users`.`name` FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?), `OrderCTE` AS (SELECT * FROM `orders` WHERE `created` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
+            sql='WITH RECURSIVE `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?), `OrderCTE` AS (SELECT * FROM `orders` WHERE `created` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
             bindings= [ 25, "2018-04-30", 1, 2 ]
         };
     }
 
     function commonTableExpressionBindingOrder() {
         return {
-            sql='WITH RECURSIVE `OrderCTE` AS (SELECT * FROM `orders` WHERE `created` > ?), `UsersCTE` AS (SELECT `users`.`id`, `contacts`.`balance`, `users`.`name` FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
+            sql='WITH RECURSIVE `OrderCTE` AS (SELECT * FROM `orders` WHERE `created` > ?), `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
             bindings= [ "2018-04-30", 25, 1, 2 ]
         };
     }

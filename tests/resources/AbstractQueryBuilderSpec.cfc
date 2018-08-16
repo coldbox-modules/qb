@@ -784,7 +784,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .with("UsersCTE", function (q){
                                     q
-                                        .select( "users.id", "users.name", "contacts.balance" )
+                                        .select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
@@ -799,7 +799,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can create CTE from QueryBuilder instance", function() {
                         testCase( function( builder ) {
                             var cte = getBuilder()
-                                .select( "users.id", "users.name", "contacts.balance" )
+                                .select( "*" )
                                 .from( "users" )
                                 .join( "contacts", "users.id", "contacts.id" )
                                 .where( "users.age", ">", 25 )
@@ -820,7 +820,7 @@ component extends="testbox.system.BaseSpec" {
                                 .whereNotIn("user.id", [1, 2])
                                 .with("UsersCTE", function (q){
                                     q
-                                        .select( "users.id", "users.name", "contacts.balance" )
+                                        .select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
@@ -835,7 +835,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .withRecursive("UsersCTE", function (q){
                                     q
-                                        .select( "users.id", "users.name", "contacts.balance" )
+                                        .select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
@@ -852,7 +852,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .withRecursive("UsersCTE", function (q){
                                     q
-                                        .select( "users.id", "users.name", "contacts.balance" )
+                                        .select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
@@ -883,7 +883,7 @@ component extends="testbox.system.BaseSpec" {
                                 })
                                 .withRecursive("UsersCTE", function (q){
                                     q
-                                        .select( "users.id", "users.name", "contacts.balance" )
+                                        .select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )

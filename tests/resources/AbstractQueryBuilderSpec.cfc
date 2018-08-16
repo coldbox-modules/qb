@@ -976,6 +976,153 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
+                describe( "unions", function() {
+                    it( "can union multiple statements using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .union(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 2 )
+                                    ;
+                                })
+                                .union(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 3 )
+                                    ;
+                                })
+                            ;
+                        }, union() );
+                    } );
+
+                    it( "can union multiple statements using a QueryBuilder instance", function() {
+                        testCase( function( builder ) {
+                            var union2 = getBuilder().select("name").from("users").where( "id", 2 );
+                            var union3 = getBuilder().select("name").from("users").where( "id", 3 );
+                            
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .union(union2)
+                                .union(union3)
+                            ;
+                        }, union() );
+                    } );
+
+                    it( "union can contain order by on main query only", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .union(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 2 )
+                                    ;
+                                })
+                                .union(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 3 )
+                                    ;
+                                })
+                                .orderBy("name")
+                            ;
+                        }, unionOrderBy() );
+                    } );
+
+                    it( "union query cannot contain orderBy", function() {
+                        var builder = getBuilder();
+
+                        builder
+                            .select("name")
+                            .from( "users" )
+                            .where( "id", 1 )
+                            .union(function (q){
+                                q
+                                    .select("name")
+                                    .from("users")
+                                    .where( "id", 2 )
+                                    .orderBy("name")
+                                ;
+                            })
+                            .union(function (q){
+                                q
+                                    .select("name")
+                                    .from("users")
+                                    .where( "id", 3 )
+                                ;
+                            })
+                            .orderBy("name")
+                        ;
+
+
+                        try {
+                            var statements = builder.toSql();
+                        }
+                        catch ( any e ) {
+                            // Darn ACF nests the exception message. 😠
+                            if ( e.message == "An exception occurred while calling the function map." ) {
+                                expect( e.detail ).toBe( "The ORDER BY clause is not allowed in a UNION statement." );
+                            }
+                            else {
+                                expect( e.message ).toBe( "The ORDER BY clause is not allowed in a UNION statement." );
+                            }
+                            return;
+                        }
+                        fail( "Should have caught an exception, but didn't." );
+                    } );
+
+                    it( "can union all multiple statements using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .unionAll(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 2 )
+                                    ;
+                                })
+                                .unionAll(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 3 )
+                                    ;
+                                })
+                            ;
+                        }, unionAll() );
+                    } );
+
+                    it( "can union all multiple statements using a QueryBuilder instance", function() {
+                        testCase( function( builder ) {
+                            var union2 = getBuilder().select("name").from("users").where( "id", 2 );
+                            var union3 = getBuilder().select("name").from("users").where( "id", 3 );
+                            
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .unionAll(union2)
+                                .unionAll(union3)
+                            ;
+                        }, unionAll() );
+                    } );
+                } );
+
                 describe( "limits", function() {
                     it( "can limit the record set returned", function() {
                         testCase( function( builder ) {

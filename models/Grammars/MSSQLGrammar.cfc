@@ -5,7 +5,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
     */
     variables.selectComponents = [
         "aggregate", "columns", "from", "joins", "wheres",
-        "groups", "havings", "orders", "offsetValue", "limitValue"
+        "groups", "havings", "unions", "orders", "offsetValue", "limitValue"
     ];
 
     /**

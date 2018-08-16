@@ -78,6 +78,12 @@ component displayname="QueryBuilder" accessors="true" {
     property name="havings" type="array";
 
     /**
+    * An array of UNION statements.
+    * @default []
+    */
+    property name="unions" type="array";
+
+    /**
     * An array of ORDER BY statements.
     * @default []
     */
@@ -121,6 +127,7 @@ component displayname="QueryBuilder" accessors="true" {
         "select" = [],
         "join" = [],
         "where" = [],
+        "union" = [],
         "insert" = [],
         "update" = []
     };
@@ -168,6 +175,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.groups = [];
         variables.havings = [];
         variables.orders = [];
+        variables.unions = [];
     }
 
     /**********************************************************************************************\
@@ -1575,6 +1583,47 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    /*******************************************************************************\
+    |         UNION functions                                                       |
+    \*******************************************************************************/
+
+    /**
+    * Add a UNION statement to the SQL.
+    *
+    * @input    Either a QueryBuilder instance or a closure to define the derived query.
+    * @all Determines if UNION statement should be a "UNION ALL".  Passing this as an argument is discouraged.  Use the dedicated `unionAll` where possible.
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function union(required any input, boolean all=false) {
+        var qb = arguments.input;
+
+        // since we have a callback, we generate a new query object and pass it into the callback
+        if( isClosure(qb) ){
+            var subquery = newQuery();
+            qb(subquery);
+            // replace the original query builder with the results of the sub-query
+            qb = subquery;
+        }
+
+        // track the union statement
+        variables.unions.append({query=qb, all=arguments.all});
+
+        // track the bindings for the CTE
+        addBindings( qb.getBindings(), "union" );
+
+        return this;
+    }
+
+    /**
+    * Add a UNION ALL statement to the SQL.
+    *
+    * @input Either a QueryBuilder instance or a closure to define the derived query.
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function unionAll(required any input) {
+        return union(arguments.input, true);
+    }
+
     /**
     * Sets the limit value for the query.
     *
@@ -1825,7 +1874,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return array of bindings
     */
     public array function getBindings() {
-        var bindingOrder = [ "update", "insert", "select", "join", "where" ];
+        var bindingOrder = [ "update", "insert", "select", "join", "where", "union" ];
 
         var flatBindings = [];
         for ( var key in bindingOrder ) {
@@ -1855,7 +1904,7 @@ component displayname="QueryBuilder" accessors="true" {
         arguments.only = isArray( arguments.only ) ? arguments.only : [ arguments.only ];
         arguments.except = isArray( arguments.except ) ? arguments.except : [ arguments.except ];
         if ( arguments.only.isEmpty() ) {
-            arguments.only = [ "select", "join", "where", "insert", "update" ];
+            arguments.only = [ "select", "join", "where", "union", "insert", "update" ];
         }
 
         for ( var bindingType in arguments.only ) {

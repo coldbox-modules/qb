@@ -4,9 +4,31 @@ component extends="qb.models.Grammars.BaseGrammar" {
     * The different components of a select statement in the order of compilation.
     */
     variables.selectComponents = [
-        "aggregate", "columns", "from", "joins", "wheres",
+        "commonTables", "aggregate", "columns", "from", "joins", "wheres",
         "groups", "havings", "unions", "orders", "offsetValue", "limitValue"
     ];
+
+    /**
+    * Compiles the Common Table Expressions (CTEs).
+    *
+    * @query The Builder instance.
+    * @columns The selected columns.
+    *
+    * @return string
+    */
+    private string function compileCommonTables(
+        required query,
+        required array commonTables
+    ) {
+        var results = getCommonTableExpressionSQL(
+            query=arguments.query,
+            commonTables=arguments.commonTables,
+            supportsRecursiveKeyword=false
+        );
+
+        // the semi-colon can avoid some issues with the JDBC drivers
+        return (results.len() ? ";" : "") & results;
+    }
 
     /**
     * Compiles the columns portion of a sql statement.

@@ -34,6 +34,25 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     /**
+    * Compiles the Common Table Expressions (CTEs).
+    *
+    * @query The Builder instance.
+    * @columns The selected columns.
+    *
+    * @return string
+    */
+    private string function compileCommonTables(
+        required query,
+        required array commonTables
+    ) {
+        return getCommonTableExpressionSQL(
+            query=arguments.query,
+            commonTables=arguments.commonTables,
+            supportsRecursiveKeyword=false
+        );
+    }
+
+    /**
     * Compile a Builder's query into an insert string.
     *
     * @query The Builder instance.

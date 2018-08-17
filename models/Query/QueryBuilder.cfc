@@ -90,6 +90,12 @@ component displayname="QueryBuilder" accessors="true" {
     property name="orders" type="array";
 
     /**
+    * An array of COMMON TABLE EXPRESSION (CTE) statements.
+    * @default []
+    */
+    property name="commonTables" type="array";
+
+    /**
     * The LIMIT value, if any.
     */
     property name="limitValue" type="numeric";
@@ -124,6 +130,7 @@ component displayname="QueryBuilder" accessors="true" {
     * so we can serialize them in the correct order.
     */
     variables.bindings = {
+        "commonTables" = [],
         "select" = [],
         "join" = [],
         "where" = [],
@@ -167,6 +174,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return void
     */
     private void function setDefaultValues() {
+        variables.commonTables = [];
         variables.distinct = false;
         variables.aggregate = {};
         variables.columns = [ "*" ];
@@ -1623,6 +1631,52 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function unionAll(required any input) {
         return union(arguments.input, true);
     }
+    
+    /*******************************************************************************\
+    |         CTE functions                                                         |
+    \*******************************************************************************/
+
+    /**
+    * Adds a new COMMON TABLE EXPRESSION (CTE) to the SQL.
+    *
+    * @alias       The name of the CTE.
+    * @input       Either a QueryBuilder instance or a closure to define the derived query.
+    * @columns     An optional array containing the columns to include in the CTE.
+    * @recursive   Determines if CTE statement should be a recursive CTE.  Passing this as an argument is discouraged.  Use the dedicated `withRecursive` where possible.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function with(required string name, required any input, array columns=[], boolean recursive=false) {
+        var qb = arguments.input;
+
+        // since we have a callback, we generate a new query object and pass it into the callback
+        if( isClosure(qb) ){
+            var subquery = newQuery();
+            qb(subquery);
+            // replace the original query builder with the results of the sub-query
+            qb = subquery;
+        }
+
+        // track the union statement
+        arrayAppend(variables.commonTables, {name=arguments.name, query=qb, columns=arguments.columns, recursive=arguments.recursive});
+
+        // track the bindings for the CTE
+        addBindings( qb.getBindings(), "commonTables" );
+
+        return this;
+    }
+
+    /**
+    * Adds a new recursive COMMON TABLE EXPRESSION (CTE) to the SQL.
+    *
+    * @alias       The name of the CTE.
+    * @input       Either a QueryBuilder instance or a closure to define the derived query.
+    * @columns     An optional array containing the columns to include in the CTE.
+    */
+    public QueryBuilder function withRecursive(required string name, required any input, array columns=[]) {
+        arguments.recursive = true;
+        return with(argumentCollection=arguments);
+    }
 
     /**
     * Sets the limit value for the query.
@@ -1874,7 +1928,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return array of bindings
     */
     public array function getBindings() {
-        var bindingOrder = [ "update", "insert", "select", "join", "where", "union" ];
+        var bindingOrder = [ "commonTables", "update", "insert", "select", "join", "where", "union" ];
 
         var flatBindings = [];
         for ( var key in bindingOrder ) {
@@ -1904,7 +1958,7 @@ component displayname="QueryBuilder" accessors="true" {
         arguments.only = isArray( arguments.only ) ? arguments.only : [ arguments.only ];
         arguments.except = isArray( arguments.except ) ? arguments.except : [ arguments.except ];
         if ( arguments.only.isEmpty() ) {
-            arguments.only = [ "select", "join", "where", "union", "insert", "update" ];
+            arguments.only = [ "commonTables", "select", "join", "where", "union", "insert", "update" ];
         }
 
         for ( var bindingType in arguments.only ) {

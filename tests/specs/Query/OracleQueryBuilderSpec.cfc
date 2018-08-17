@@ -505,6 +505,34 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function commonTableExpression() {
+        return {
+            sql='WITH "USERSCTE" AS (SELECT * FROM "USERS" INNER JOIN "CONTACTS" ON "USERS"."ID" = "CONTACTS"."ID" WHERE "USERS"."AGE" > ?) SELECT * FROM "USERSCTE" WHERE "USER"."ID" NOT IN (?, ?)',
+            bindings= [ 25, 1, 2 ]
+        };
+    }
+
+    function commonTableExpressionWithRecursive() {
+        return {
+            sql='WITH "USERSCTE" AS (SELECT * FROM "USERS" INNER JOIN "CONTACTS" ON "USERS"."ID" = "CONTACTS"."ID" WHERE "USERS"."AGE" > ?) SELECT * FROM "USERSCTE" WHERE "USER"."ID" NOT IN (?, ?)',
+            bindings= [ 25, 1, 2 ]
+        };
+    }
+
+    function commonTableExpressionMultipleCTEsWithRecursive() {
+        return {
+            sql='WITH "USERSCTE" AS (SELECT * FROM "USERS" INNER JOIN "CONTACTS" ON "USERS"."ID" = "CONTACTS"."ID" WHERE "USERS"."AGE" > ?), "ORDERCTE" AS (SELECT * FROM "ORDERS" WHERE "CREATED" > ?) SELECT * FROM "USERSCTE" WHERE "USER"."ID" NOT IN (?, ?)',
+            bindings= [ 25, "2018-04-30", 1, 2 ]
+        };
+    }
+
+    function commonTableExpressionBindingOrder() {
+        return {
+            sql='WITH "ORDERCTE" AS (SELECT * FROM "ORDERS" WHERE "CREATED" > ?), "USERSCTE" AS (SELECT * FROM "USERS" INNER JOIN "CONTACTS" ON "USERS"."ID" = "CONTACTS"."ID" WHERE "USERS"."AGE" > ?) SELECT * FROM "USERSCTE" WHERE "USER"."ID" NOT IN (?, ?)',
+            bindings= [ "2018-04-30", 25, 1, 2 ]
+        };
+    }
+
     function limit() {
         return "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" <= 3";
     }

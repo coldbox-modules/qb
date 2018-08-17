@@ -429,6 +429,27 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""users"" ORDER BY ""last_name"" ASC, ""age"" DESC, ""favorite_color"" ASC";
     }
 
+    function union() {
+        return {
+            sql = "SELECT ""name"" FROM ""users"" WHERE ""id"" = ? UNION SELECT ""name"" FROM ""users"" WHERE ""id"" = ? UNION SELECT ""name"" FROM ""users"" WHERE ""id"" = ?",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function unionOrderBy() {
+        return {
+            sql = "SELECT ""name"" FROM ""users"" WHERE ""id"" = ? UNION SELECT ""name"" FROM ""users"" WHERE ""id"" = ? UNION SELECT ""name"" FROM ""users"" WHERE ""id"" = ? ORDER BY ""name"" ASC",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function unionAll() {
+        return {
+            sql = "SELECT ""name"" FROM ""users"" WHERE ""id"" = ? UNION ALL SELECT ""name"" FROM ""users"" WHERE ""id"" = ? UNION ALL SELECT ""name"" FROM ""users"" WHERE ""id"" = ?",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
     function limit() {
         return "SELECT * FROM ""users"" LIMIT 3";
     }

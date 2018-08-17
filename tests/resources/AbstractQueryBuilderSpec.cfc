@@ -110,10 +110,50 @@ component extends="testbox.system.BaseSpec" {
                         }, from() );
                     } );
 
+                    it( "can specify a Expression object as the input for from", function() {
+                        testCase( function( builder ) {
+                            builder.from( builder.raw("Test (nolock)") );
+                        }, fromRaw() );
+                    } );
+
                     it( "can use `table` as an alias for from", function() {
                         testCase( function( builder ) {
                             builder.table( "users" );
                         }, table() );
+                    } );
+
+                    it( "can specify a Expression object as the input for table", function() {
+                        testCase( function( builder ) {
+                            builder.table( builder.raw("Test (nolock)") );
+                        }, fromRaw() );
+                    } );
+
+                    it( "can specify the table to select from as a string using fromRaw", function() {
+                        testCase( function( builder ) {
+                            builder.fromRaw( "Test (nolock)" );
+                        }, fromRaw() );
+                    } );
+
+                    it( "can add bindings to fromRaw", function() {
+                        testCase( function( builder ) {
+                            builder.fromRaw( "Test (nolock)", [1, 2, 3] );
+                        }, {sql: fromRaw(), bindings: [1, 2, 3]} );
+                    } );
+
+                    it( "can specify the table using fromSub as QueryBuilder", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id", "name").from("users").where( "age", ">=", "21" );
+
+                            builder.fromSub( "u", derivedTable );
+                        }, fromDerivedTable() );
+                    } );
+
+                    it( "can specify the table using fromSub as a closure", function() {
+                        testCase( function( builder ) {
+                            builder.fromSub( "u", function (q){
+                                q.select("id", "name").from("users").where( "age", ">=", "21" );
+                            } );
+                        }, fromDerivedTable() );
                     } );
                 } );
 
@@ -411,6 +451,18 @@ component extends="testbox.system.BaseSpec" {
                         }, innerJoin() );
                     } );
 
+                    it( "can inner join on table as expression", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).join( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                        }, innerJoinRaw() );
+                    } );
+
+                    it( "can inner join on raw sql", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).joinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                        }, innerJoinRaw() );
+                    } );
+
                     it( "can inner join using the shorthand", function() {
                         testCase( function( builder ) {
                             builder.from( "users" ).join( "contacts", "users.id", "contacts.id" );
@@ -438,16 +490,52 @@ component extends="testbox.system.BaseSpec" {
                         }, leftJoin() );
                     } );
 
+                    it( "can left join on table as expression", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).leftJoin( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                        }, leftJoinRaw() );
+                    } );
+
+                    it( "can left join on raw sql", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).leftJoinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                        }, leftJoinRaw() );
+                    } );
+
                     it( "can right join", function() {
                         testCase( function( builder ) {
                             builder.from( "orders" ).rightJoin( "users", "orders.user_id", "users.id" );
                         }, rightJoin() );
                     } );
 
+                    it( "can right join on table as expression", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).rightJoin( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                        }, rightJoinRaw() );
+                    } );
+
+                    it( "can right join on raw sql", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).rightJoinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                        }, rightJoinRaw() );
+                    } );
+
                     it( "can cross join", function() {
                         testCase( function( builder ) {
                             builder.from( "sizes" ).crossJoin( "colors" );
                         }, crossJoin() );
+                    } );
+
+                    it( "can cross join on table as expression", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).crossJoin( builder.raw("contacts (nolock)") );
+                        }, crossJoinRaw() );
+                    } );
+
+                    it( "can cross join on raw sql", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).crossJoinRaw( "contacts (nolock)");
+                        }, crossJoinRaw() );
                     } );
 
                     it( "can accept a callback for complex joins", function() {
@@ -548,6 +636,116 @@ component extends="testbox.system.BaseSpec" {
                                         .orWhereNotIn( "contacts.id", [ 1, 2, 3 ] );
                                 } );
                         }, joinWithOrWhereNotIn() );
+                    } );
+
+                    it( "can inner join to a derived table with joinSub using a QueryBuilder object", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .joinSub( "c", derivedTable, "u.id", "=", "c.id");
+                        }, joinSub() );
+                    } );
+
+                    it( "can inner join to a derived table with joinSub using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .joinSub( "c", function (qb){
+                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                                }, "u.id", "=", "c.id");
+                        }, joinSub() );
+                    } );
+
+                    it( "can inner join to a derived table with joinSub using the shorthand", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .joinSub( "c", derivedTable, "u.id", "c.id");
+                        }, joinSub() );
+                    } );
+
+                    it( "can left join to a derived table with joinSub using a QueryBuilder object", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .leftJoinSub( "c", derivedTable, "u.id", "=", "c.id");
+                        }, leftJoinSub() );
+                    } );
+
+                    it( "can left join to a derived table with joinSub using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .leftJoinSub( "c", function (qb){
+                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                                }, "u.id", "=", "c.id");
+                        }, leftJoinSub() );
+                    } );
+
+                    it( "can left join to a derived table with joinSub using the shorthand", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .leftJoinSub( "c", derivedTable, "u.id", "c.id");
+                        }, leftJoinSub() );
+                    } );
+
+                    it( "can right join to a derived table with joinSub using a QueryBuilder object", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .rightJoinSub( "c", derivedTable, "u.id", "=", "c.id");
+                        }, rightJoinSub() );
+                    } );
+
+                    it( "can right join to a derived table with joinSub using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .rightJoinSub( "c", function (qb){
+                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                                }, "u.id", "=", "c.id");
+                        }, rightJoinSub() );
+                    } );
+
+                    it( "can right join to a derived table with joinSub using the shorthand", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .rightJoinSub( "c", derivedTable, "u.id", "c.id");
+                        }, rightJoinSub() );
+                    } );
+
+                    it( "can cross join to a derived table with joinSub using a QueryBuilder object", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .crossJoinSub( "c", derivedTable);
+                        }, crossJoinSub() );
+                    } );
+
+                    it( "can cross join to a derived table with joinSub using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .crossJoinSub( "c", function (qb){
+                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                                });
+                        }, crossJoinSub() );
                     } );
                 } );
 

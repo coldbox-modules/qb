@@ -156,7 +156,7 @@ component displayname="Grammar" accessors="true" {
     */
     private string function compileFrom(
         required QueryBuilder query,
-        required string from
+        required any from
     ) {
         return "FROM " & wrapTable( from );
     }
@@ -708,6 +708,11 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     public string function wrapTable( required any table ) {
+        // if we have a raw expression, just return it as-is
+        if ( isInstanceOf( arguments.table, "qb.models.Query.Expression" ) ) {
+            return arguments.table.getSql();
+        }
+
         var alias = "";
         if ( table.findNoCase( " as " ) > 0 ) {
             var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );

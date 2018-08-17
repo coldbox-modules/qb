@@ -429,6 +429,27 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS"" ORDER BY ""LAST_NAME"" ASC, ""AGE"" DESC, ""FAVORITE_COLOR"" ASC";
     }
 
+    function union() {
+        return {
+            sql = "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ?",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function unionOrderBy() {
+        return {
+            sql = "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? ORDER BY ""NAME"" ASC",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function unionAll() {
+        return {
+            sql = "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION ALL SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION ALL SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ?",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
     function limit() {
         return "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" <= 3";
     }

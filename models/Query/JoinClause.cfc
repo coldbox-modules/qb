@@ -20,7 +20,7 @@ component
     /**
     * The table to join.
     */
-    property name="table" type="string";
+    property name="table" type="any";
 
     /**
     * Valid join types for join clauses.
@@ -42,7 +42,7 @@ component
     public JoinClause function init(
         required QueryBuilder parentQuery,
         required string type,
-        required string table
+        required any table
     ) {
         var typeIsValid = false;
         for ( var validType in variables.types ) {
@@ -108,7 +108,7 @@ component
     *
     * @return qb.models.Builder.JoinClause
     */
-    public Builder function newQuery() {
+    public QueryBuilder function newQuery() {
         return new qb.models.Query.JoinClause(
             parentQuery = getParentQuery(),
             type = getType(),

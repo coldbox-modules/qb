@@ -59,6 +59,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM `users`";
     }
 
+    function fromRaw() {
+        return "SELECT * FROM Test (nolock)";
+    }
+
+    function fromDerivedTable() {
+        return {
+            sql = "SELECT * FROM (SELECT `id`, `name` FROM `users` WHERE `age` >= ?) as ""u""",
+            bindings = [21]
+        };
+    }
+
     function table() {
         return "SELECT * FROM `users`";
     }
@@ -246,6 +257,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id`";
     }
 
+    function innerJoinRaw() {
+        return "SELECT * FROM `users` INNER JOIN contacts (nolock) ON `users`.`id` = `contacts`.`id`";
+    }
+
     function innerJoinShorthand() {
         return "SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id`";
     }
@@ -265,12 +280,24 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id`";
     }
 
+    function leftJoinRaw() {
+        return "SELECT * FROM `users` LEFT JOIN contacts (nolock) ON `users`.`id` = `contacts`.`id`";
+    }
+
     function rightJoin() {
         return "SELECT * FROM `orders` RIGHT JOIN `users` ON `orders`.`user_id` = `users`.`id`";
     }
 
+    function rightJoinRaw() {
+        return "SELECT * FROM `users` RIGHT JOIN contacts (nolock) ON `users`.`id` = `contacts`.`id`";
+    }
+
     function crossJoin() {
         return "SELECT * FROM `sizes` CROSS JOIN `colors`";
+    }
+
+    function crossJoinRaw() {
+        return "SELECT * FROM `users` CROSS JOIN contacts (nolock)";
     }
 
     function complexJoin() {
@@ -320,6 +347,34 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     function joinWithOrWhereNotIn() {
         return {
             sql = "SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` OR `contacts`.`id` NOT IN (?, ?, ?)",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function joinSub() {
+        return {
+            sql = 'SELECT * FROM `users` AS `u` INNER JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) as "c" ON `u`.`id` = `c`.`id`',
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function leftJoinSub() {
+        return {
+            sql = 'SELECT * FROM `users` AS `u` LEFT JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) as "c" ON `u`.`id` = `c`.`id`',
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function rightJoinSub() {
+        return {
+            sql = 'SELECT * FROM `users` AS `u` RIGHT JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) as "c" ON `u`.`id` = `c`.`id`',
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function crossJoinSub() {
+        return {
+            sql = 'SELECT * FROM `users` AS `u` CROSS JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) as "c"',
             bindings = [ 1, 2, 3 ]
         };
     }
@@ -427,6 +482,55 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function orderByListPipeDelimitedWithDefaultDirection() {
         return "SELECT * FROM `users` ORDER BY `last_name` ASC, `age` DESC, `favorite_color` ASC";
+    }
+
+    function union() {
+        return {
+            sql = "SELECT `name` FROM `users` WHERE `id` = ? UNION SELECT `name` FROM `users` WHERE `id` = ? UNION SELECT `name` FROM `users` WHERE `id` = ?",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function unionOrderBy() {
+        return {
+            sql = "SELECT `name` FROM `users` WHERE `id` = ? UNION SELECT `name` FROM `users` WHERE `id` = ? UNION SELECT `name` FROM `users` WHERE `id` = ? ORDER BY `name` ASC",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+
+    function unionAll() {
+        return {
+            sql = "SELECT `name` FROM `users` WHERE `id` = ? UNION ALL SELECT `name` FROM `users` WHERE `id` = ? UNION ALL SELECT `name` FROM `users` WHERE `id` = ?",
+            bindings = [ 1, 2, 3 ]
+        };
+    }
+    
+    function commonTableExpression() {
+        return {
+            sql='WITH `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
+            bindings= [ 25, 1, 2 ]
+        };
+    }
+
+    function commonTableExpressionWithRecursive() {
+        return {
+            sql='WITH RECURSIVE `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
+            bindings= [ 25, 1, 2 ]
+        };
+    }
+
+    function commonTableExpressionMultipleCTEsWithRecursive() {
+        return {
+            sql='WITH RECURSIVE `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?), `OrderCTE` AS (SELECT * FROM `orders` WHERE `created` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
+            bindings= [ 25, "2018-04-30", 1, 2 ]
+        };
+    }
+
+    function commonTableExpressionBindingOrder() {
+        return {
+            sql='WITH RECURSIVE `OrderCTE` AS (SELECT * FROM `orders` WHERE `created` > ?), `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)',
+            bindings= [ "2018-04-30", 25, 1, 2 ]
+        };
     }
 
     function limit() {

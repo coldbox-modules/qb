@@ -110,10 +110,50 @@ component extends="testbox.system.BaseSpec" {
                         }, from() );
                     } );
 
+                    it( "can specify a Expression object as the input for from", function() {
+                        testCase( function( builder ) {
+                            builder.from( builder.raw("Test (nolock)") );
+                        }, fromRaw() );
+                    } );
+
                     it( "can use `table` as an alias for from", function() {
                         testCase( function( builder ) {
                             builder.table( "users" );
                         }, table() );
+                    } );
+
+                    it( "can specify a Expression object as the input for table", function() {
+                        testCase( function( builder ) {
+                            builder.table( builder.raw("Test (nolock)") );
+                        }, fromRaw() );
+                    } );
+
+                    it( "can specify the table to select from as a string using fromRaw", function() {
+                        testCase( function( builder ) {
+                            builder.fromRaw( "Test (nolock)" );
+                        }, fromRaw() );
+                    } );
+
+                    it( "can add bindings to fromRaw", function() {
+                        testCase( function( builder ) {
+                            builder.fromRaw( "Test (nolock)", [1, 2, 3] );
+                        }, {sql: fromRaw(), bindings: [1, 2, 3]} );
+                    } );
+
+                    it( "can specify the table using fromSub as QueryBuilder", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id", "name").from("users").where( "age", ">=", "21" );
+
+                            builder.fromSub( "u", derivedTable );
+                        }, fromDerivedTable() );
+                    } );
+
+                    it( "can specify the table using fromSub as a closure", function() {
+                        testCase( function( builder ) {
+                            builder.fromSub( "u", function (q){
+                                q.select("id", "name").from("users").where( "age", ">=", "21" );
+                            } );
+                        }, fromDerivedTable() );
                     } );
                 } );
 
@@ -411,6 +451,18 @@ component extends="testbox.system.BaseSpec" {
                         }, innerJoin() );
                     } );
 
+                    it( "can inner join on table as expression", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).join( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                        }, innerJoinRaw() );
+                    } );
+
+                    it( "can inner join on raw sql", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).joinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                        }, innerJoinRaw() );
+                    } );
+
                     it( "can inner join using the shorthand", function() {
                         testCase( function( builder ) {
                             builder.from( "users" ).join( "contacts", "users.id", "contacts.id" );
@@ -438,16 +490,52 @@ component extends="testbox.system.BaseSpec" {
                         }, leftJoin() );
                     } );
 
+                    it( "can left join on table as expression", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).leftJoin( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                        }, leftJoinRaw() );
+                    } );
+
+                    it( "can left join on raw sql", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).leftJoinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                        }, leftJoinRaw() );
+                    } );
+
                     it( "can right join", function() {
                         testCase( function( builder ) {
                             builder.from( "orders" ).rightJoin( "users", "orders.user_id", "users.id" );
                         }, rightJoin() );
                     } );
 
+                    it( "can right join on table as expression", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).rightJoin( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                        }, rightJoinRaw() );
+                    } );
+
+                    it( "can right join on raw sql", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).rightJoinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                        }, rightJoinRaw() );
+                    } );
+
                     it( "can cross join", function() {
                         testCase( function( builder ) {
                             builder.from( "sizes" ).crossJoin( "colors" );
                         }, crossJoin() );
+                    } );
+
+                    it( "can cross join on table as expression", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).crossJoin( builder.raw("contacts (nolock)") );
+                        }, crossJoinRaw() );
+                    } );
+
+                    it( "can cross join on raw sql", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).crossJoinRaw( "contacts (nolock)");
+                        }, crossJoinRaw() );
                     } );
 
                     it( "can accept a callback for complex joins", function() {
@@ -548,6 +636,116 @@ component extends="testbox.system.BaseSpec" {
                                         .orWhereNotIn( "contacts.id", [ 1, 2, 3 ] );
                                 } );
                         }, joinWithOrWhereNotIn() );
+                    } );
+
+                    it( "can inner join to a derived table with joinSub using a QueryBuilder object", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .joinSub( "c", derivedTable, "u.id", "=", "c.id");
+                        }, joinSub() );
+                    } );
+
+                    it( "can inner join to a derived table with joinSub using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .joinSub( "c", function (qb){
+                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                                }, "u.id", "=", "c.id");
+                        }, joinSub() );
+                    } );
+
+                    it( "can inner join to a derived table with joinSub using the shorthand", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .joinSub( "c", derivedTable, "u.id", "c.id");
+                        }, joinSub() );
+                    } );
+
+                    it( "can left join to a derived table with joinSub using a QueryBuilder object", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .leftJoinSub( "c", derivedTable, "u.id", "=", "c.id");
+                        }, leftJoinSub() );
+                    } );
+
+                    it( "can left join to a derived table with joinSub using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .leftJoinSub( "c", function (qb){
+                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                                }, "u.id", "=", "c.id");
+                        }, leftJoinSub() );
+                    } );
+
+                    it( "can left join to a derived table with joinSub using the shorthand", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .leftJoinSub( "c", derivedTable, "u.id", "c.id");
+                        }, leftJoinSub() );
+                    } );
+
+                    it( "can right join to a derived table with joinSub using a QueryBuilder object", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .rightJoinSub( "c", derivedTable, "u.id", "=", "c.id");
+                        }, rightJoinSub() );
+                    } );
+
+                    it( "can right join to a derived table with joinSub using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .rightJoinSub( "c", function (qb){
+                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                                }, "u.id", "=", "c.id");
+                        }, rightJoinSub() );
+                    } );
+
+                    it( "can right join to a derived table with joinSub using the shorthand", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .rightJoinSub( "c", derivedTable, "u.id", "c.id");
+                        }, rightJoinSub() );
+                    } );
+
+                    it( "can cross join to a derived table with joinSub using a QueryBuilder object", function() {
+                        testCase( function( builder ) {
+                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+
+                            builder
+                                .from( "users as u" )
+                                .crossJoinSub( "c", derivedTable);
+                        }, crossJoinSub() );
+                    } );
+
+                    it( "can cross join to a derived table with joinSub using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .crossJoinSub( "c", function (qb){
+                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                                });
+                        }, crossJoinSub() );
                     } );
                 } );
 
@@ -775,6 +973,269 @@ component extends="testbox.system.BaseSpec" {
                                 }, orderByListPipeDelimitedWithDefaultDirection() );
                             } );
                         } );
+                    } );
+                } );
+
+                describe( "unions", function() {
+                    it( "can union multiple statements using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .union(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 2 )
+                                    ;
+                                })
+                                .union(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 3 )
+                                    ;
+                                })
+                            ;
+                        }, union() );
+                    } );
+
+                    it( "can union multiple statements using a QueryBuilder instance", function() {
+                        testCase( function( builder ) {
+                            var union2 = getBuilder().select("name").from("users").where( "id", 2 );
+                            var union3 = getBuilder().select("name").from("users").where( "id", 3 );
+                            
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .union(union2)
+                                .union(union3)
+                            ;
+                        }, union() );
+                    } );
+
+                    it( "union can contain order by on main query only", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .union(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 2 )
+                                    ;
+                                })
+                                .union(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 3 )
+                                    ;
+                                })
+                                .orderBy("name")
+                            ;
+                        }, unionOrderBy() );
+                    } );
+
+                    it( "union query cannot contain orderBy", function() {
+                        var builder = getBuilder();
+
+                        builder
+                            .select("name")
+                            .from( "users" )
+                            .where( "id", 1 )
+                            .union(function (q){
+                                q
+                                    .select("name")
+                                    .from("users")
+                                    .where( "id", 2 )
+                                    .orderBy("name")
+                                ;
+                            })
+                            .union(function (q){
+                                q
+                                    .select("name")
+                                    .from("users")
+                                    .where( "id", 3 )
+                                ;
+                            })
+                            .orderBy("name")
+                        ;
+
+
+                        try {
+                            var statements = builder.toSql();
+                        }
+                        catch ( any e ) {
+                            // Darn ACF nests the exception message. 😠
+                            if ( e.message == "An exception occurred while calling the function map." ) {
+                                expect( e.detail ).toBe( "The ORDER BY clause is not allowed in a UNION statement." );
+                            }
+                            else {
+                                expect( e.message ).toBe( "The ORDER BY clause is not allowed in a UNION statement." );
+                            }
+                            return;
+                        }
+                        fail( "Should have caught an exception, but didn't." );
+                    } );
+
+                    it( "can union all multiple statements using a closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .unionAll(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 2 )
+                                    ;
+                                })
+                                .unionAll(function (q){
+                                    q
+                                        .select("name")
+                                        .from("users")
+                                        .where( "id", 3 )
+                                    ;
+                                })
+                            ;
+                        }, unionAll() );
+                    } );
+
+                    it( "can union all multiple statements using a QueryBuilder instance", function() {
+                        testCase( function( builder ) {
+                            var union2 = getBuilder().select("name").from("users").where( "id", 2 );
+                            var union3 = getBuilder().select("name").from("users").where( "id", 3 );
+                            
+                            builder
+                                .select("name")
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .unionAll(union2)
+                                .unionAll(union3)
+                            ;
+                        }, unionAll() );
+                    }) ;
+                } );
+
+                describe( "common table expressions (i.e. CTEs)", function() {
+                    it( "can create CTE from closure", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .with("UsersCTE", function (q){
+                                    q
+                                        .select( "*" )
+                                        .from( "users" )
+                                        .join( "contacts", "users.id", "contacts.id" )
+                                        .where( "users.age", ">", 25 )
+                                    ;
+                                })
+                                .from( "UsersCTE" )
+                                .whereNotIn("user.id", [1, 2])
+                            ;
+                        }, commonTableExpression() );
+                    } );
+
+                    it( "can create CTE from QueryBuilder instance", function() {
+                        testCase( function( builder ) {
+                            var cte = getBuilder()
+                                .select( "*" )
+                                .from( "users" )
+                                .join( "contacts", "users.id", "contacts.id" )
+                                .where( "users.age", ">", 25 )
+                            ;
+
+                            builder
+                                .with("UsersCTE", cte)
+                                .from( "UsersCTE" )
+                                .whereNotIn("user.id", [1, 2])
+                            ;
+                        }, commonTableExpression() );
+                    } );
+
+                    it( "can correctly bind parameters regardless of order", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "UsersCTE" )
+                                .whereNotIn("user.id", [1, 2])
+                                .with("UsersCTE", function (q){
+                                    q
+                                        .select( "*" )
+                                        .from( "users" )
+                                        .join( "contacts", "users.id", "contacts.id" )
+                                        .where( "users.age", ">", 25 )
+                                    ;
+                                })
+                            ;
+                        }, commonTableExpression() );
+                    } );
+
+                    it( "can create recursive CTE", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .withRecursive("UsersCTE", function (q){
+                                    q
+                                        .select( "*" )
+                                        .from( "users" )
+                                        .join( "contacts", "users.id", "contacts.id" )
+                                        .where( "users.age", ">", 25 )
+                                    ;
+                                })
+                                .from( "UsersCTE" )
+                                .whereNotIn("user.id", [1, 2])
+                            ;
+                        }, commonTableExpressionWithRecursive() );
+                    } );
+
+                    it( "can create multiple CTEs where the second CTE is not recursive", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .withRecursive("UsersCTE", function (q){
+                                    q
+                                        .select( "*" )
+                                        .from( "users" )
+                                        .join( "contacts", "users.id", "contacts.id" )
+                                        .where( "users.age", ">", 25 )
+                                    ;
+                                })
+                                .with("OrderCTE", function (q){
+                                    q
+                                        .from( "orders" )
+                                        .where( "created", ">", "2018-04-30" )
+                                    ;
+                                })
+                                .from( "UsersCTE" )
+                                .whereNotIn("user.id", [1, 2])
+                            ;
+                        }, commonTableExpressionMultipleCTEsWithRecursive() );
+                    } );
+
+                    it( "can create bindings in the correct order", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "UsersCTE" )
+                                .whereNotIn("user.id", [1, 2])
+                                .with("OrderCTE", function (q){
+                                    q
+                                        .from( "orders" )
+                                        .where( "created", ">", "2018-04-30" )
+                                    ;
+                                })
+                                .withRecursive("UsersCTE", function (q){
+                                    q
+                                        .select( "*" )
+                                        .from( "users" )
+                                        .join( "contacts", "users.id", "contacts.id" )
+                                        .where( "users.age", ">", 25 )
+                                    ;
+                                })
+                            ;
+                        }, commonTableExpressionBindingOrder() );
                     } );
                 } );
 

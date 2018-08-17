@@ -30,8 +30,8 @@ component displayname="Grammar" accessors="true" {
     * The different components of a select statement in the order of compilation.
     */
     variables.selectComponents = [
-        "aggregate", "columns", "from", "joins", "wheres",
-        "groups", "havings", "orders", "limitValue", "offsetValue"
+        "commonTables", "aggregate", "columns", "from", "joins", "wheres",
+        "groups", "havings", "unions", "orders", "limitValue", "offsetValue"
     ];
 
     /**
@@ -128,6 +128,64 @@ component displayname="Grammar" accessors="true" {
     }
 
     /**
+    * Compiles the Common Table Expressions (CTEs).
+    *
+    * @query The Builder instance.
+    * @columns The selected columns.
+    *
+    * @return string
+    */
+    private string function compileCommonTables(
+        required QueryBuilder query,
+        required array commonTables
+    ) {
+        return getCommonTableExpressionSQL(arguments.query, arguments.commonTables);
+    }
+
+    /**
+    * Compiles the Common Table Expressions (CTEs).
+    *
+    * @query                      The Builder instance.
+    * @columns                    The selected columns.
+    * @supportsRecursiveKeyword   Determines if the current grammar requires the RECURSIVE keyword if any CTEs are recursive.
+    *
+    * @return string
+    */
+    private string function getCommonTableExpressionSQL(
+        required query,
+        required array commonTables,
+        boolean supportsRecursiveKeyword=true
+    ) {
+        if ( arguments.commonTables.isEmpty() ) {
+            return "";
+        }
+
+        var hasRecursion = false;
+
+        var sql = arguments.commonTables.map(function (commonTable){
+            var sql = arguments.commonTable.query.toSQL();
+
+            // generate the optional column definition
+            var columns = arguments.commonTable.columns.map(function (value){
+                return wrapColumn(arguments.value);
+            }).toList();
+
+            // we need to track if any of the CTEs are recursive
+            if( arguments.commonTable.recursive ){
+                hasRecursion = true;
+            }
+
+            return wrapColumn(arguments.commonTable.name) & (len(columns) ? " " & columns : "") & " AS (" & sql & ")";
+        });
+
+        /*
+            Most implementations of CTE require the RECURSIVE keyword if *any* single CTE uses recursive,
+            but some grammars, like SQL Server, does not support the keyword (as it's not necessary).
+        */
+        return trim( "WITH " &  (arguments.supportsRecursiveKeyword && hasRecursion ? "RECURSIVE " : "") & sql.toList(', ') );
+    }
+
+    /**
     * Compiles the columns portion of a sql statement.
     *
     * @query The Builder instance.
@@ -156,7 +214,7 @@ component displayname="Grammar" accessors="true" {
     */
     private string function compileFrom(
         required QueryBuilder query,
-        required string from
+        required any from
     ) {
         return "FROM " & wrapTable( from );
     }
@@ -517,6 +575,41 @@ component displayname="Grammar" accessors="true" {
         return trim( "#having.combinator# #wrapColumn( having.column )# #having.operator# #placeholder#" );
     }
 
+
+    /**
+    * Compiles the UNION portion of a sql statement.
+    *
+    * @query The Builder instance.
+    * @orders The union clauses.
+    *
+    * @return string
+    */
+    private string function compileUnions( required QueryBuilder query, required array unions ) {
+        if ( arguments.unions.isEmpty() ) {
+            return "";
+        }
+        
+        var sql = arguments.unions.map(function (union){
+            /*
+             * No queries being unioned to the origin query can contain an ORDER BY clause, only the outer-most
+             * QueryBuilder instance can actually have a defined orderBy().
+             */
+            if( arguments.union.query.getOrders().len() ){
+                throw(
+                    type = "OrderByNotAllowed",
+                    message = "The ORDER BY clause is not allowed in a UNION statement.",
+                    detail = "A QueryBuilder instance used in a UNION statement is cannot have any ORDER BY clause, as this is not allowed by SQL. Only the outer most query is allowed to specify an ORDER BY clause which will be used on the unioned queries."
+                );
+            }
+
+           var sql = arguments.union.query.toSQL();
+
+            return "UNION " & (arguments.union.all ? "ALL " : "") & sql;
+        });
+
+        return trim( arrayToList(sql, ' ') );
+    }
+
     /**
     * Compiles the order by portion of a sql statement.
     *
@@ -673,6 +766,11 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     public string function wrapTable( required any table ) {
+        // if we have a raw expression, just return it as-is
+        if ( isInstanceOf( arguments.table, "qb.models.Query.Expression" ) ) {
+            return arguments.table.getSql();
+        }
+
         var alias = "";
         if ( table.findNoCase( " as " ) > 0 ) {
             var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );

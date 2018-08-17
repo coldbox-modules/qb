@@ -1631,7 +1631,6 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function unionAll(required any input) {
         return union(arguments.input, true);
     }
-
     
     /*******************************************************************************\
     |         CTE functions                                                         |
@@ -1678,7 +1677,6 @@ component displayname="QueryBuilder" accessors="true" {
         arguments.recursive = true;
         return with(argumentCollection=arguments);
     }
-
 
     /**
     * Sets the limit value for the query.

@@ -1,4 +1,27 @@
 # v5.7.0
+## 18 Aug 2018 — 05:10:01 UTC
+
+### chore
+
++ __README:__ Remove emoji until ForgeBox can handle it again ([70f2d45](https://github.com/coldbox-modules/qb/commit/70f2d4545a6f9d7418b09b3b4caf218fb6c6deab))
++ __Changelog:__ Fix Changelog to rerun build ([2b6aaa3](https://github.com/coldbox-modules/qb/commit/2b6aaa3f848a77f57497ba56a9f9860ae44aea27))
+
+### feat
+
++ __QueryBuilder:__ Add support for Common Table Expressions ([3e10da6](https://github.com/coldbox-modules/qb/commit/3e10da635f0b70443b83521791af2a7c6e99a4c7))
++ __QueryBuilder:__ Derived and Sub Tables ([b3f0461](https://github.com/coldbox-modules/qb/commit/b3f0461f4b0a50e0614dca529983b8f1e823fca5))
++ __QueryBuilder:__ Unions ([59028a8](https://github.com/coldbox-modules/qb/commit/59028a8d63a314ddd7f640706272a58dde948d0b))
+
+### fix
+
++ __QueryBuilder:__ Fix JoinClause return value ([5d113c7](https://github.com/coldbox-modules/qb/commit/5d113c7e9dc8c125d0caeb0ed27fb36deb5da8cd))
+
+### other
+
++ __\*:__ Updated API Docs ([399293f](https://github.com/coldbox-modules/qb/commit/399293ff4e7301cec8e19da4466deb6cc9dbd3f5))
+
+
+# v5.7.0
 ## 18 Aug 2018 — 04:28:41 UTC
 
 ### feat

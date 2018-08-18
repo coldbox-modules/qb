@@ -1,3 +1,36 @@
+# v5.7.0
+## 18 Aug 2018 — 04:28:41 UTC
+
+### feat
+
++ __QueryBuilder:__ Add support for Common Table Expressions
+
+Add CTE support for the `with CTE AS (...)` syntax ([3e10da6](https://github.com/coldbox-modules/qb/commit/3e10da635f0b70443b83521791af2a7c6e99a4c7))
++ __QueryBuilder:__ Derived and Sub Tables
+
+* Fixed JoinClause.newQuery() to expect QueryBuilder object as return value
+* Added support for derived tables
+* Added derived table support
+* Added fromRaw() method, which allows you to raw SQL "from" statements
+* Added fromSub() to support derived tables
+* Added joinRaw(), leftJoinRaw(), rightJoinRaw() and crossJoinRaw() for defining the raw SQL
+* Added the joinSub(), leftJoinSub(), rightJoinSub() and crossJoinSub() for joining to a derived table
+* Added mergeBindings() which is used for merging bindings from another QueryBuilder instance
+ ([b3f0461](https://github.com/coldbox-modules/qb/commit/b3f0461f4b0a50e0614dca529983b8f1e823fca5))
++ __QueryBuilder:__ Unions
+
+* Fixed JoinClause.newQuery() to expect QueryBuilder object as return value
+* Added support for UNION/UNION ALL
+* Union statement is not created until after ORDER BY validation
+ ([59028a8](https://github.com/coldbox-modules/qb/commit/59028a8d63a314ddd7f640706272a58dde948d0b))
+
+### fix
+
++ __QueryBuilder:__ Fix JoinClause return value
+
+ Fixed JoinClause.newQuery() to expect QueryBuilder object as return value (#48) ([5d113c7](https://github.com/coldbox-modules/qb/commit/5d113c7e9dc8c125d0caeb0ed27fb36deb5da8cd))
+
+
 # v5.8.0
 ## 17 Aug 2018 — 21:33:47 UTC
 
@@ -76,7 +109,8 @@ to detect the grammar.
 
 Full QueryBuilder and SchemaBuilder support for all four database grammars
 (MSSQL, MySQL, Oracle, and Postgres).
-Revamped test suite to have consistent grammar test coverage. ([733dae3](https://github.com/coldbox-modules/qb/commit/733dae3498814f49a829b604799824e9f755bb85))
+Revamped test suite to have consistent grammar test coverage.
+ ([733dae3](https://github.com/coldbox-modules/qb/commit/733dae3498814f49a829b604799824e9f755bb85))
 + __SchemaBuilder:__ Add dropAllObjects action. (#31)
 
 compileDropAllObjects needs to be implemented in every Grammar.
@@ -90,7 +124,8 @@ currently exists. ([c3e23b5](https://github.com/coldbox-modules/qb/commit/c3e23b
  Fixed JoinClause.newQuery() to expect QueryBuilder object as return value (#48) ([5d113c7](https://github.com/coldbox-modules/qb/commit/5d113c7e9dc8c125d0caeb0ed27fb36deb5da8cd))
 + __Column:__ Explicitly name default constraint for MSSQL
 
-* update MSSQL for DEFAULT constraint ([288bd66](https://github.com/coldbox-modules/qb/commit/288bd663350cca34bcbada43548a7de56e5309dd))
+* update MSSQL for DEFAULT constraint
+ ([288bd66](https://github.com/coldbox-modules/qb/commit/288bd663350cca34bcbada43548a7de56e5309dd))
 + __PostgresGrammar:__ Fix typo in getAllTableNames
  ([91caf6a](https://github.com/coldbox-modules/qb/commit/91caf6a467fa585fdeef26e08171b59ff71b59e1))
 + __SchemaBuilder:__ Fix dropping foreign keys in MySQL
@@ -288,7 +323,8 @@ Affected debugging and things like `updateOrInsert` where the `update` call is p
  ([92dd7ad](https://github.com/coldbox-modules/qb/commit/92dd7ad30f99c2b19a5515d5692883ddff2600e2))
 + __\*:__ Fix exists method to work across engines
 
-Use the `withReturnFormat( "array" )` to get around inconsistencies with queries across CFML engines. ([17afdfa](https://github.com/coldbox-modules/qb/commit/17afdfa87f15911a51067390a287f4b7c4dc3f63))
+Use the `withReturnFormat( "array" )` to get around inconsistencies with queries across CFML engines.
+ ([17afdfa](https://github.com/coldbox-modules/qb/commit/17afdfa87f15911a51067390a287f4b7c4dc3f63))
 + __\*:__ Normalize line endings and trim whitespace at the end of lines
  ([bf4ecc7](https://github.com/coldbox-modules/qb/commit/bf4ecc7d09a8653c0e4df6edd1f2fc0f6d220cb2))
 + __\*:__ Allow lists to be passed in to `whereIn`

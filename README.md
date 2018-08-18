@@ -78,14 +78,3 @@ https://gist.github.com/elpete/80d641b98025f16059f6476561d88202
 ## Full Docs
 
 You can browse the full documentation at https://qb.ortusbooks.com
-
-## Contributors
-
-Thanks goes to these wonderful people ([emoji key](https://github.com/kentcdodds/all-contributors#emoji-key)):
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-| [<img src="https://avatars2.githubusercontent.com/u/2583646?v=3" width="100px;"/><br /><sub>Eric Peterson</sub>](https://github.com/elpete)<br />[💻](https://github.com/coldbox-modules/qb/commits?author=elpete "Code") [📖](https://github.com/coldbox-modules/qb/commits?author=elpete "Documentation") | [<img src="https://avatars2.githubusercontent.com/u/148847?v=3" width="100px;"/><br /><sub>John Whish</sub>](http://www.aliaspooryorik.com/blog/)<br />[💬](#question-aliaspooryorik "Answering Questions") [💻](https://github.com/coldbox-modules/qb/commits?author=aliaspooryorik "Code") | [<img src="https://avatars0.githubusercontent.com/u/5429291?v=3" width="100px;"/><br /><sub>Dan Murphy</sub>](https://github.com/murphydan)<br />[🐛](https://github.com/coldbox-modules/qb/issues?q=author%3Amurphydan "Bug reports") [💻](https://github.com/coldbox-modules/qb/commits?author=murphydan "Code") | [<img src="https://avatars3.githubusercontent.com/u/1346234?v=3" width="100px;"/><br /><sub>Tim Brown</sub>](https://github.com/timmaybrown)<br />[💻](https://github.com/coldbox-modules/qb/commits?author=timmaybrown "Code") | [<img src="https://avatars0.githubusercontent.com/u/23514337?v=4" width="100px;"/><br /><sub>BluewaterSolutions</sub>](https://github.com/BluewaterSolutions)<br />[🐛](https://github.com/coldbox-modules/qb/issues?q=author%3ABluewaterSolutions "Bug reports") [💻](https://github.com/coldbox-modules/qb/commits?author=BluewaterSolutions "Code") [📖](https://github.com/coldbox-modules/qb/commits?author=BluewaterSolutions "Documentation") | [<img src="https://avatars1.githubusercontent.com/u/3632399?v=4" width="100px;"/><br /><sub>Tony Junkes</sub>](http://tonyjunkes.com)<br />[📝](#blog-tonyjunkes "Blogposts") [📖](https://github.com/coldbox-modules/qb/commits?author=tonyjunkes "Documentation") |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/kentcdodds/all-contributors) specification. Contributions of any kind welcome!

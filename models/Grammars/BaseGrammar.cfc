@@ -46,6 +46,8 @@ component displayname="Grammar" accessors="true" {
     ) {
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
+        // This is overwritten by WireBox, if it exists
+        variables.interceptorService = new qb.models.compat.NullInterceptorService();
         return this;
     }
 
@@ -75,10 +77,6 @@ component displayname="Grammar" accessors="true" {
     * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
     */
     private function tryPreInterceptor( data ) {
-        if ( isNull( variables.interceptorService ) ) {
-            return;
-        }
-
         if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
             variables.interceptorService.announceInterception( "preQBExecute", data );
             return;
@@ -92,10 +90,6 @@ component displayname="Grammar" accessors="true" {
     * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
     */
     private function tryPostInterceptor( data ) {
-        if ( isNull( variables.interceptorService ) ) {
-            return;
-        }
-
         if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
             variables.interceptorService.announceInterception( "postQBExecute", data );
             return;
@@ -588,7 +582,7 @@ component displayname="Grammar" accessors="true" {
         if ( arguments.unions.isEmpty() ) {
             return "";
         }
-        
+
         var sql = arguments.unions.map(function (union){
             /*
              * No queries being unioned to the origin query can contain an ORDER BY clause, only the outer-most

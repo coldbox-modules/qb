@@ -17,6 +17,12 @@ component displayname="Grammar" accessors="true" {
     property name="interceptorService";
 
     /**
+    * LogBox logger to log out SQL and bindings.
+    * If this is not a ColdBox application, a NullLogger will be created in the constructor.
+    */
+    property name="log" inject="logbox:logger:{this}";
+
+    /**
     * Query utilities shared across multiple models.
     */
     property name="utils";
@@ -46,8 +52,9 @@ component displayname="Grammar" accessors="true" {
     ) {
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
-        // This is overwritten by WireBox, if it exists
+        // These are overwritten by WireBox, if it exists.
         variables.interceptorService = new qb.models.compat.NullInterceptorService();
+        variables.log = new qb.models.compat.NullLogger();
         return this;
     }
 
@@ -66,6 +73,7 @@ component displayname="Grammar" accessors="true" {
         var data = duplicate( arguments );
         tryPreInterceptor( data );
         structAppend( options, { result = "local.result" }, true );
+        log.debug( "Executing sql: #sql#", "With bindings: #serializeJSON( bindings )#" );
         var q = queryExecute( sql, bindings, options );
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
         data.result = local.result;

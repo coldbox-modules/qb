@@ -208,6 +208,14 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "SMALLINT";
     }
 
+    function typeUnicodeString( column ) {
+        return typeString( argumentCollection = arguments );
+    }
+
+    function typeUnicodeText( column ) {
+        return typeText( argumentCollection = arguments );
+    }
+
     function typeTinyInteger( column ) {
         if ( column.getAutoIncrement() ) {
             return "SERIAL";

@@ -223,7 +223,7 @@ component accessors="true" {
     }
 
     function uuid( name ) {
-        return char( name, 35 );
+        return char( name, 36 );
     }
 
 

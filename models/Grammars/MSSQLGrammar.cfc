@@ -242,11 +242,11 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     function typeJson( column ) {
-        return "NTEXT";
+        return "NVARCHAR(MAX)";
     }
 
     function typeLongText( column ) {
-        return "NTEXT";
+        return "NVARCHAR(MAX)";
     }
 
     function typeMediumInteger( column ) {
@@ -258,7 +258,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     function typeMediumText( column ) {
-        return "NTEXT";
+        return "NVARCHAR(MAX)";
     }
 
     function typeSmallInteger( column ) {
@@ -274,7 +274,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     function typeText( column ) {
-        return "NTEXT";
+        return "NVARCHAR(MAX)";
     }
 
     function typeTimestamp( column ) {

@@ -101,11 +101,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function json() {
-        return [ "CREATE TABLE [users] ([personalizations] NTEXT NOT NULL)" ];
+        return [ "CREATE TABLE [users] ([personalizations] NVARCHAR(MAX) NOT NULL)" ];
     }
 
     function longText() {
-        return [ "CREATE TABLE [posts] ([body] NTEXT NOT NULL)" ];
+        return [ "CREATE TABLE [posts] ([body] NVARCHAR(MAX) NOT NULL)" ];
     }
 
     function mediumIncrements() {
@@ -121,7 +121,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function mediumText() {
-        return [ "CREATE TABLE [posts] ([body] NTEXT NOT NULL)" ];
+        return [ "CREATE TABLE [posts] ([body] NVARCHAR(MAX) NOT NULL)" ];
     }
 
     function morphs() {
@@ -157,7 +157,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function text() {
-        return [ "CREATE TABLE [posts] ([body] NTEXT NOT NULL)" ];
+        return [ "CREATE TABLE [posts] ([body] NVARCHAR(MAX) NOT NULL)" ];
     }
 
     function time() {
@@ -345,12 +345,12 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function modifyColumn() {
-        return [ "ALTER TABLE [users] ALTER COLUMN [name] NTEXT NOT NULL" ];
+        return [ "ALTER TABLE [users] ALTER COLUMN [name] NVARCHAR(MAX) NOT NULL" ];
     }
 
     function modifyMultipleColumns() {
         return [
-            "ALTER TABLE [users] ALTER COLUMN [name] NTEXT NOT NULL",
+            "ALTER TABLE [users] ALTER COLUMN [name] NVARCHAR(MAX) NOT NULL",
             "ALTER TABLE [users] ALTER COLUMN [purchased_date] DATETIME2"
         ];
     }

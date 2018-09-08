@@ -263,7 +263,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function uuid() {
-        return [ "CREATE TABLE ""USERS"" (""ID"" CHAR(35) NOT NULL)" ];
+        return [ "CREATE TABLE ""USERS"" (""ID"" CHAR(36) NOT NULL)" ];
     }
 
     function comment() {
@@ -278,7 +278,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function nullable() {
-        return [ "CREATE TABLE ""USERS"" (""ID"" CHAR(35))" ];
+        return [ "CREATE TABLE ""USERS"" (""ID"" CHAR(36))" ];
     }
 
     function unsigned() {

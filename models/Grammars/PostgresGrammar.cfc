@@ -47,7 +47,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
             "ALTER COLUMN",
             wrapColumn( commandParameters.to.getName() ),
             "TYPE",
-            ucase( commandParameters.to.getType() ) & ",",
+            generateType( commandParameters.to, blueprint ) & ",",
             "ALTER COLUMN",
             wrapColumn( commandParameters.to.getName() ),
             commandParameters.to.getNullable() ? "DROP" : "SET",

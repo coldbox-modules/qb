@@ -11,8 +11,8 @@ component extends="testbox.system.BaseSpec" {
             it( "can create a simple table", function() {
                 testCase( function( schema ) {
                     return schema.create( "users", function( table ) {
-                        table.string( "username" );
-                        table.string( "password" );
+                        table.unicodeString( "username" );
+                        table.unicodeString( "password" );
                     }, {}, false );
                 }, simpleTable() );
             } );
@@ -21,10 +21,10 @@ component extends="testbox.system.BaseSpec" {
                 testCase( function( schema ) {
                     return schema.create( "users", function( table ) {
                         table.increments( "id" );
-                        table.string( "username" );
-                        table.string( "first_name" );
-                        table.string( "last_name" );
-                        table.string( "password", 100 );
+                        table.unicodeString( "username" );
+                        table.unicodeString( "first_name" );
+                        table.unicodeString( "last_name" );
+                        table.unicodeString( "password", 100 );
                         table.unsignedInteger( "country_id" ).references( "id" ).onTable( "countries" ).onDelete( "cascade" );
                         table.timestamp( "created_date" ).setDefault( "CURRENT_TIMESTAMP" );
                         table.timestamp( "modified_date" ).setDefault( "CURRENT_TIMESTAMP" );
@@ -225,6 +225,14 @@ component extends="testbox.system.BaseSpec" {
                     }, longText() );
                 } );
 
+                it( "unicodeLongText", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.unicodeLongText( "body" );
+                        }, {}, false );
+                    }, unicodeLongText() );
+                } );
+
                 it( "mediumIncrements", function() {
                     testCase( function( schema ) {
                         return schema.create( "users", function( table ) {
@@ -313,6 +321,15 @@ component extends="testbox.system.BaseSpec" {
                     }, string() );
                 } );
 
+               it( "string (unicode)", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "users", function( table ) {
+                            table.unicodeString( "username" );
+                        }, {}, false );
+                    }, unicodeString() );
+                } );
+
+
                 it( "string (with length)", function() {
                     testCase( function( schema ) {
                         return schema.create( "users", function( table ) {
@@ -327,6 +344,14 @@ component extends="testbox.system.BaseSpec" {
                             table.text( "body" );
                         }, {}, false );
                     }, text() );
+                } );
+
+                 it( "text (unicode)", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.unicodeText( "body" );
+                        }, {}, false );
+                    }, unicodeText() );
                 } );
 
                 it( "time", function() {
@@ -498,7 +523,7 @@ component extends="testbox.system.BaseSpec" {
                         it( "unique (off of column)", function() {
                             testCase( function( schema ) {
                                 return schema.create( "users", function( table ) {
-                                    table.string( "username" ).unique();
+                                    table.unicodeString( "username" ).unique();
                                 }, {}, false );
                             }, columnUnique() );
                         } );
@@ -506,7 +531,7 @@ component extends="testbox.system.BaseSpec" {
                         it( "unique (off of table)", function() {
                             testCase( function( schema ) {
                                 return schema.create( "users", function( table ) {
-                                    table.string( "username" );
+                                    table.unicodeString( "username" );
                                     table.unique( "username" );
                                 }, {}, false );
                             }, tableUnique() );
@@ -515,7 +540,7 @@ component extends="testbox.system.BaseSpec" {
                         it( "unique (overriding constaint name)", function() {
                             testCase( function( schema ) {
                                 return schema.create( "users", function( table ) {
-                                    table.string( "username" );
+                                    table.unicodeString( "username" );
                                     table.unique( "username", "unq_uname" );
                                 }, {}, false );
                             }, uniqueOverridingName() );
@@ -524,8 +549,8 @@ component extends="testbox.system.BaseSpec" {
                         it( "unique (multiple columns)", function() {
                             testCase( function( schema ) {
                                 return schema.create( "users", function( table ) {
-                                    table.string( "first_name" );
-                                    table.string( "last_name" );
+                                    table.unicodeString( "first_name" );
+                                    table.unicodeString( "last_name" );
                                     table.unique( [ "first_name", "last_name" ] );
                                 }, {}, false );
                             }, uniqueMultipleColumns() );
@@ -597,8 +622,8 @@ component extends="testbox.system.BaseSpec" {
                     it( "composite index", function() {
                         testCase( function( schema ) {
                             return schema.create( "users", function( table ) {
-                                table.string( "first_name" );
-                                table.string( "last_name" );
+                                table.unicodeString( "first_name" );
+                                table.unicodeString( "last_name" );
                                 table.index( [ "first_name", "last_name" ] );
                             }, {}, false );
                         }, compositeIndex() );
@@ -607,8 +632,8 @@ component extends="testbox.system.BaseSpec" {
                     it( "override index name", function() {
                         testCase( function( schema ) {
                             return schema.create( "users", function( table ) {
-                                table.string( "first_name" );
-                                table.string( "last_name" );
+                                table.unicodeString( "first_name" );
+                                table.unicodeString( "last_name" );
                                 table.index( [ "first_name", "last_name" ], "index_full_name" );
                             }, {}, false );
                         }, overrideIndexName() );
@@ -636,8 +661,8 @@ component extends="testbox.system.BaseSpec" {
                     it( "composite primary key", function() {
                         testCase( function( schema ) {
                             return schema.create( "users", function( table ) {
-                                table.string( "first_name" );
-                                table.string( "last_name" );
+                                table.unicodeString( "first_name" );
+                                table.unicodeString( "last_name" );
                                 table.primaryKey( [ "first_name", "last_name" ] );
                             }, {}, false );
                         }, compositePrimaryKey() );
@@ -646,8 +671,8 @@ component extends="testbox.system.BaseSpec" {
                     it( "override primary key index name", function() {
                         testCase( function( schema ) {
                             return schema.create( "users", function( table ) {
-                                table.string( "first_name" );
-                                table.string( "last_name" );
+                                table.unicodeString( "first_name" );
+                                table.unicodeString( "last_name" );
                                 table.primaryKey( [ "first_name", "last_name" ], "pk_full_name" );
                             }, {}, false );
                         }, overridePrimaryKeyIndexName() );
@@ -724,7 +749,7 @@ component extends="testbox.system.BaseSpec" {
                 it( "renames a column", function() {
                     testCase( function( schema ) {
                         return schema.alter( "users", function( table ) {
-                            table.renameColumn( "name", table.string( "username" ) );
+                            table.renameColumn( "name", table.unicodeString( "username" ) );
                         }, {}, false );
                     }, renameColumn() );
                 } );
@@ -732,7 +757,7 @@ component extends="testbox.system.BaseSpec" {
                 it( "renames multiple columns", function() {
                     testCase( function( schema ) {
                         return schema.alter( "users", function( table ) {
-                            table.renameColumn( "name", table.string( "username" ) );
+                            table.renameColumn( "name", table.unicodeString( "username" ) );
                             table.renameColumn( "purchase_date", table.timestamp( "purchased_at" ).nullable() );
                         }, {}, false );
                     }, renameMultipleColumns() );
@@ -743,7 +768,7 @@ component extends="testbox.system.BaseSpec" {
                 it( "modifies a column", function() {
                     testCase( function( schema ) {
                         return schema.alter( "users", function( table ) {
-                            table.modifyColumn( "name", table.text( "name" ) );
+                            table.modifyColumn( "name", table.unicodeText( "name" ) );
                         }, {}, false );
                     }, modifyColumn() );
                 } );
@@ -751,7 +776,7 @@ component extends="testbox.system.BaseSpec" {
                 it( "modifies multiple columns", function() {
                     testCase( function( schema ) {
                         return schema.alter( "users", function( table ) {
-                            table.modifyColumn( "name", table.text( "name" ) );
+                            table.modifyColumn( "name", table.unicodeText( "name" ) );
                             table.modifyColumn( "purchase_date", table.timestamp( "purchased_date" ).nullable() );
                         }, {}, false );
                     }, modifyMultipleColumns() );
@@ -782,7 +807,7 @@ component extends="testbox.system.BaseSpec" {
                     return schema.alter( "users", function( table ) {
                         table.dropColumn( "is_active" );
                         table.addColumn( table.enum( "tshirt_size", [ "S", "M", "L", "XL", "XXL" ] ) );
-                        table.renameColumn( "name", table.string( "username" ) );
+                        table.renameColumn( "name", table.unicodeString( "username" ) );
                         table.modifyColumn( "purchase_date", table.timestamp( "purchase_date" ).nullable() );
                         table.addConstraint( table.unique( "username" ) );
                         table.addConstraint( table.unique( "email" ) );

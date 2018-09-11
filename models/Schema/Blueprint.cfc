@@ -106,6 +106,11 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function unicodeLongText( name ) {
+        arguments.type = "unicodeLongText";
+        return appendColumn( argumentCollection = arguments);
+    }
+
     function mediumIncrements( name, indexName ) {
         arguments.autoIncrement = true;
         arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
@@ -120,6 +125,11 @@ component accessors="true" {
 
     function mediumText( name ) {
         arguments.type = "mediumText";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function unicodeMediumText( name ) {
+        arguments.type = "unicodeMediumText";
         return appendColumn( argumentCollection = arguments );
     }
 
@@ -170,8 +180,21 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+     function unicodeString( name, length ) {
+        arguments.type = "unicodeString";
+        if ( isNull( arguments.length ) ) {
+            arguments.length = getSchemaBuilder().getDefaultStringLength();
+        }
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function text( name ) {
         arguments.type = "text";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function unicodeText( name ) {
+        arguments.type = "unicodeText";
         return appendColumn( argumentCollection = arguments );
     }
 

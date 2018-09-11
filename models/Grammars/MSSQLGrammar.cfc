@@ -246,6 +246,10 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     function typeLongText( column ) {
+        return "VARCHAR(MAX)";
+    }
+
+    function typeUnicodeLongText( column ) {
         return "NVARCHAR(MAX)";
     }
 
@@ -258,6 +262,10 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     function typeMediumText( column ) {
+        return "VARCHAR(MAX)";
+    }
+
+    function typeUnicodeMediumText( column ) {
         return "NVARCHAR(MAX)";
     }
 
@@ -269,11 +277,11 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "SMALLINT";
     }
 
-    function typeString( column ) {
-        return "NVARCHAR(#column.getLength()#)";
+    function typeText( column ) {
+        return "VARCHAR(MAX)";
     }
 
-    function typeText( column ) {
+    function typeUnicodeText( column ) {
         return "NVARCHAR(MAX)";
     }
 

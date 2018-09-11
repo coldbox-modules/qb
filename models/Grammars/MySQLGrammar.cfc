@@ -79,10 +79,6 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return super.generateDefault( column );
     }
 
-    function typeString( column ) {
-        return "NVARCHAR(#column.getLength()#)";
-    }
-
     function typeChar( column ) {
         return "NCHAR(#column.getLength()#)";
     }

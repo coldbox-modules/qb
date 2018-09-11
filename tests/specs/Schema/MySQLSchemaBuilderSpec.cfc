@@ -110,6 +110,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE `posts` (`body` TEXT NOT NULL)" ];
     }
 
+     function UnicodeLongText() {
+        return [ "CREATE TABLE `posts` (`body` TEXT NOT NULL)" ];
+    }
+
     function mediumIncrements() {
         return [ "CREATE TABLE `users` (`id` MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT, CONSTRAINT `pk_users_id` PRIMARY KEY (`id`))" ];
     }
@@ -127,11 +131,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function morphs() {
-        return [ "CREATE TABLE `tags` (`taggable_id` INTEGER UNSIGNED NOT NULL, `taggable_type` NVARCHAR(255) NOT NULL, INDEX `taggable_index` (`taggable_id`, `taggable_type`))" ];
+        return [ "CREATE TABLE `tags` (`taggable_id` INTEGER UNSIGNED NOT NULL, `taggable_type` VARCHAR(255) NOT NULL, INDEX `taggable_index` (`taggable_id`, `taggable_type`))" ];
     }
 
     function nullableMorphs() {
-        return [ "CREATE TABLE `tags` (`taggable_id` INTEGER UNSIGNED, `taggable_type` NVARCHAR(255), INDEX `taggable_index` (`taggable_id`, `taggable_type`))" ];
+        return [ "CREATE TABLE `tags` (`taggable_id` INTEGER UNSIGNED, `taggable_type` VARCHAR(255), INDEX `taggable_index` (`taggable_id`, `taggable_type`))" ];
     }
 
     function raw() {
@@ -151,14 +155,22 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function string() {
-        return [ "CREATE TABLE `users` (`username` NVARCHAR(255) NOT NULL)" ];
+        return [ "CREATE TABLE `users` (`username` VARCHAR(255) NOT NULL)" ];
     }
 
     function stringWithLength() {
-        return [ "CREATE TABLE `users` (`password` NVARCHAR(50) NOT NULL)" ];
+        return [ "CREATE TABLE `users` (`password` VARCHAR(50) NOT NULL)" ];
+    }
+
+    function unicodeString() {
+        return [ "CREATE TABLE `users` (`username` NVARCHAR(255) NOT NULL)" ];
     }
 
     function text() {
+        return [ "CREATE TABLE `posts` (`body` TEXT NOT NULL)" ];
+    }
+
+    function unicodeText() {
         return [ "CREATE TABLE `posts` (`body` TEXT NOT NULL)" ];
     }
 
@@ -300,11 +312,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function columnPrimaryKey() {
-        return [ "CREATE TABLE `users` (`uuid` NVARCHAR(255) NOT NULL, CONSTRAINT `pk_users_uuid` PRIMARY KEY (`uuid`))" ];
+        return [ "CREATE TABLE `users` (`uuid` VARCHAR(255) NOT NULL, CONSTRAINT `pk_users_uuid` PRIMARY KEY (`uuid`))" ];
     }
 
     function tablePrimaryKey() {
-        return [ "CREATE TABLE `users` (`uuid` NVARCHAR(255) NOT NULL, CONSTRAINT `pk_users_uuid` PRIMARY KEY (`uuid`))" ];
+        return [ "CREATE TABLE `users` (`uuid` VARCHAR(255) NOT NULL, CONSTRAINT `pk_users_uuid` PRIMARY KEY (`uuid`))" ];
     }
 
     function compositePrimaryKey() {

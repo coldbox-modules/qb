@@ -316,6 +316,10 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "CLOB";
     }
 
+    function typeUnicodeLongText( column ) {
+        return "CLOB";
+    }
+
     function typeMediumInteger( column ) {
         var precision = isNull( column.getPrecision() ) ? 7 : column.getPrecision();
         return "NUMBER(#precision#, 0)";
@@ -334,7 +338,15 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "VARCHAR2(#column.getLength()#)";
     }
 
+    function typeUnicodeString( column ) {
+        return "VARCHAR2(#column.getLength()#)";
+    }
+
     function typeText( column ) {
+        return "CLOB";
+    }
+
+    function typeUnicodeText( column ) {
         return "CLOB";
     }
 

@@ -47,7 +47,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
             "ALTER COLUMN",
             wrapColumn( commandParameters.to.getName() ),
             "TYPE",
-            ucase( commandParameters.to.getType() ) & ",",
+            generateType( commandParameters.to, blueprint ) & ",",
             "ALTER COLUMN",
             wrapColumn( commandParameters.to.getName() ),
             commandParameters.to.getNullable() ? "DROP" : "SET",
@@ -206,6 +206,14 @@ component extends="qb.models.Grammars.BaseGrammar" {
         }
 
         return "SMALLINT";
+    }
+
+    function typeUnicodeString( column ) {
+        return typeString( argumentCollection = arguments );
+    }
+
+    function typeUnicodeText( column ) {
+        return typeText( argumentCollection = arguments );
     }
 
     function typeTinyInteger( column ) {

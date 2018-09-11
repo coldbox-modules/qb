@@ -111,6 +111,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" ];
     }
 
+    function unicodeLongText() {
+        return longText();
+    }
+
     function mediumIncrements() {
         return [ "CREATE TABLE ""users"" (""id"" SERIAL NOT NULL, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" ];
     }
@@ -161,12 +165,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL)" ];
     }
 
+    function unicodeString() {
+        return string();
+    }
+
     function stringWithLength() {
         return [ "CREATE TABLE ""users"" (""password"" VARCHAR(50) NOT NULL)" ];
     }
 
     function text() {
         return [ "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" ];
+    }
+
+    function unicodeText() {
+        return text();
     }
 
     function time() {

@@ -120,6 +120,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""POSTS"" (""BODY"" CLOB NOT NULL)" ];
     }
 
+    function unicodeLongText() {
+        return longText();
+    }
+
     function mediumIncrements() {
         return [
             "CREATE TABLE ""USERS"" (""ID"" NUMBER(7, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
@@ -178,12 +182,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL)" ];
     }
 
+    function unicodeString() {
+        return string();
+    }
+
     function stringWithLength() {
         return [ "CREATE TABLE ""USERS"" (""PASSWORD"" VARCHAR2(50) NOT NULL)" ];
     }
 
     function text() {
         return [ "CREATE TABLE ""POSTS"" (""BODY"" CLOB NOT NULL)" ];
+    }
+
+    function unicodeText() {
+        return text();
     }
 
     function time() {

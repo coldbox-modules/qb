@@ -1159,6 +1159,10 @@ component displayname="Grammar" accessors="true" {
         return "TEXT";
     }
 
+    function typeUnicodeLongText( column ) {
+        return "TEXT";
+    }
+
     function typeMediumInteger( column ) {
         return arrayToList( arrayFilter( [
             "MEDIUMINT",
@@ -1169,6 +1173,10 @@ component displayname="Grammar" accessors="true" {
     }
 
     function typeMediumText( column ) {
+        return "TEXT";
+    }
+
+    function typeUnicodeMediumText( column ) {
         return "TEXT";
     }
 
@@ -1185,8 +1193,16 @@ component displayname="Grammar" accessors="true" {
         return "VARCHAR(#column.getLength()#)";
     }
 
+    function typeUnicodeString( column ) {
+        return "NVARCHAR(#column.getLength()#)";
+    }
+
     function typeText( column ) {
         return "TEXT";
+    }
+
+    function typeUnicodeText( column ) {
+         return "TEXT";
     }
 
     function typeTime( column ) {

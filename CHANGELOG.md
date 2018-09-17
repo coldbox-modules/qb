@@ -1,3 +1,30 @@
+# v5.8.0
+## 17 Sep 2018 — 19:23:06 UTC
+
+### feat
+
++ __SchemaBuilder:__ Add unicode text functions ([1a5207e](https://github.com/coldbox-modules/qb/commit/1a5207e2fabda5305d3abd9584539d33b4d29ef3))
++ __Logging:__ Add debug logging for query sql and bindings. ([2928feb](https://github.com/coldbox-modules/qb/commit/2928feba712e92fd643570132721d6e4b17caa41))
+
+### fix
+
++ __SchemaBuilder:__ Update UUID length to 36 characters ([2569f82](https://github.com/coldbox-modules/qb/commit/2569f82dd30ce22b1127bb9bf2923666e932faa1))
++ __MSSQLGrammar:__ Replace NTEXT with NVARCHAR(MAX) ([936b01d](https://github.com/coldbox-modules/qb/commit/936b01d4edd99365e1dc8821876879a580c013fd))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([91e7ece](https://github.com/coldbox-modules/qb/commit/91e7ece5b6063d5e509430f736f9f6ee45663d69))
+
+### perf
+
++ __QueryBuilder:__ Remove isInstanceOf for performance benefits ([33fe75c](https://github.com/coldbox-modules/qb/commit/33fe75c98f7deff321bcf218dd0210aced6a5455))
+
+### refactor
+
++ __InterceptorService:__ Use a null interceptor service in the constructor ([5f3a3ec](https://github.com/coldbox-modules/qb/commit/5f3a3ecc4884d815d05e3fde4d0ccbf1a3c8a0e0))
+
+
 # v5.7.0
 ## 18 Aug 2018 — 05:10:01 UTC
 

@@ -1,3 +1,16 @@
+# v5.8.1
+## 17 Sep 2018 — 21:14:15 UTC
+
+### fix
+
++ __SchemaBuilder:__ Fix incorrect column name for hasTable and hasColumn ([292bc2a](https://github.com/coldbox-modules/qb/commit/292bc2a8017759bbb4526fd414361692060a66a7))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([70b9b0f](https://github.com/coldbox-modules/qb/commit/70b9b0f6281ba7102845b66578afe759c8ea7437))
+
+
 # v5.8.0
 ## 17 Sep 2018 — 19:23:06 UTC
 

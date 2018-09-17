@@ -1307,7 +1307,7 @@ component displayname="Grammar" accessors="true" {
     function compileTableExists( tableName, schemaName = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_name" )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( "schema_name" )# = ?";
+            sql &= " AND #wrapColumn( "table_schema" )# = ?";
         }
         return sql;
     }
@@ -1315,7 +1315,7 @@ component displayname="Grammar" accessors="true" {
     function compileColumnExists( table, column, scehma = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "information_schema.columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
         if ( scehma != "" ) {
-            sql &= " AND #wrapColumn( "schema_name" )# = ?";
+            sql &= " AND #wrapColumn( "table_schema" )# = ?";
         }
         return sql;
     }

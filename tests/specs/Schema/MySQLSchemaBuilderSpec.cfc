@@ -419,7 +419,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasTableInSchema() {
-        return [ "SELECT 1 FROM `information_schema`.`tables` WHERE `table_name` = ? AND `schema_name` = ?" ];
+        return [ "SELECT 1 FROM `information_schema`.`tables` WHERE `table_name` = ? AND `table_schema` = ?" ];
     }
 
     function hasColumn() {
@@ -427,7 +427,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasColumnInSchema() {
-        return [ "SELECT 1 FROM `information_schema`.`columns` WHERE `table_name` = ? AND `column_name` = ? AND `schema_name` = ?" ];
+        return [ "SELECT 1 FROM `information_schema`.`columns` WHERE `table_name` = ? AND `column_name` = ? AND `table_schema` = ?" ];
     }
 
     private function getBuilder( mockGrammar ) {

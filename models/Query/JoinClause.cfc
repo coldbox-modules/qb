@@ -116,4 +116,14 @@ component
         );
     }
 
+    /**
+     * Returns whether the object is a JoinClause.
+     * This exists because isInstanceOf is super slow!
+     *
+     * @returns boolean
+     */
+    public boolean function isJoin() {
+        return true;
+    }
+
 }

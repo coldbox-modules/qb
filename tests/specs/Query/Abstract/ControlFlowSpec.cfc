@@ -116,11 +116,10 @@ component extends="testbox.system.BaseSpec" {
 
     private function getBuilder() {
         var grammar = getMockBox()
-            .createMock( "qb.models.Grammars.BaseGrammar" );
-        var queryUtils = getMockBox()
-            .createMock( "qb.models.Query.QueryUtils" );
+            .createMock( "qb.models.Grammars.BaseGrammar" )
+            .init();
         var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" )
-            .init( grammar, queryUtils );
+            .init( grammar );
         return builder;
     }
 

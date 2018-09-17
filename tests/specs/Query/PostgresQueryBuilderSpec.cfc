@@ -504,7 +504,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             bindings = [ 1, 2, 3 ]
         };
     }
-    
+
     function commonTableExpression() {
         return {
             sql='WITH "UsersCTE" AS (SELECT * FROM "users" INNER JOIN "contacts" ON "users"."id" = "contacts"."id" WHERE "users"."age" > ?) SELECT * FROM "UsersCTE" WHERE "user"."id" NOT IN (?, ?)',
@@ -626,11 +626,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     private function getBuilder() {
         variables.grammar = getMockBox()
-            .createMock( "qb.models.Grammars.PostgresGrammar" );
-        var queryUtils = getMockBox()
-            .createMock( "qb.models.Query.QueryUtils" );
+            .createMock( "qb.models.Grammars.PostgresGrammar" )
+            .init();
         var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" )
-            .init( grammar, queryUtils );
+            .init( grammar );
         return builder;
     }
 

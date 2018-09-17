@@ -336,7 +336,7 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
-    /** 
+    /**
     * Sets the FROM table of the query using a string. This allows you to specify table hints, etc.
     *
     * @from The string to use as the table.
@@ -1631,7 +1631,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function unionAll(required any input) {
         return union(arguments.input, true);
     }
-    
+
     /*******************************************************************************\
     |         CTE functions                                                         |
     \*******************************************************************************/
@@ -2279,6 +2279,16 @@ component displayname="QueryBuilder" accessors="true" {
     /*******************************************************************************\
     |                               utility functions                               |
     \*******************************************************************************/
+
+    /**
+     * Returns whether the object is a JoinClause.
+     * This exists because isInstanceOf is super slow!
+     *
+     * @returns boolean
+     */
+    public boolean function isJoin() {
+        return false;
+    }
 
     /**
     * Creates a new query using the same Grammar and QueryUtils.

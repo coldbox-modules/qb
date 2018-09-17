@@ -61,7 +61,9 @@ component displayname="QueryUtils" {
     * @return boolean
     */
     public boolean function isExpression( required any value ) {
-        return isInstanceOf( arguments.value, "qb.models.Query.Expression" );
+        return ! isSimpleValue( arguments.value ) &&
+            ! isArray( arguments.value ) &&
+            structKeyExists( arguments.value, "isExpression" );
     }
 
     /**
@@ -72,7 +74,9 @@ component displayname="QueryUtils" {
     * @return boolean
     */
     public boolean function isNotExpression( required any value ) {
-        return ! isInstanceOf( arguments.value, "qb.models.Query.Expression" );
+        return isSimpleValue( arguments.value ) ||
+            isArray( arguments.value ) ||
+            ! structKeyExists( arguments.value, "isExpression" );
     }
 
     /**

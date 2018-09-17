@@ -10,6 +10,8 @@ component displayname="Expression" accessors="true" {
     */
     property name="sql" type="string" default="";
 
+    this.isExpression = true;
+
     /**
     * Create a new Expression wrapping up some sql.
     *

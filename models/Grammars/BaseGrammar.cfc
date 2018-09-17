@@ -272,8 +272,7 @@ component displayname="Grammar" accessors="true" {
         }
 
         var whereList = wheresArray.toList( " " );
-        var conjunction = isInstanceOf( query, "qb.models.Query.JoinClause" ) ?
-            "ON" : "WHERE";
+        var conjunction = query.isJoin() ? "ON" : "WHERE";
 
         return trim( "#conjunction# #removeLeadingCombinator( whereList )#" );
     }
@@ -298,7 +297,7 @@ component displayname="Grammar" accessors="true" {
 
         var placeholder = "?";
 
-        if ( isInstanceOf( where.value, "qb.models.Query.Expression" ) ) {
+        if ( variables.utils.isExpression( where.value ) ) {
             placeholder = where.value.getSql();
         }
 
@@ -473,7 +472,7 @@ component displayname="Grammar" accessors="true" {
         required struct where
     ) {
         var placeholderString = where.values.map( function( value ) {
-            return isInstanceOf( value, "qb.models.Query.Expression" ) ? value.getSql() : "?";
+            return variables.utils.isExpression( value ) ? value.getSql() : "?";
         } ).toList( ", " );
         if ( placeholderString == "" ) {
             return "0 = 1";
@@ -494,7 +493,7 @@ component displayname="Grammar" accessors="true" {
         required struct where
     ) {
         var placeholderString = where.values.map( function( value ) {
-            return isInstanceOf( value, "qb.models.Query.Expression" ) ? value.getSql() : "?";
+            return variables.utils.isExpression( value ) ? value.getSql() : "?";
         } ).toList( ", " );
         if ( placeholderString == "" ) {
             return "1 = 1";
@@ -572,7 +571,7 @@ component displayname="Grammar" accessors="true" {
     * @return string
     */
     private string function compileHaving( required struct having ) {
-        var placeholder = isInstanceOf( having.value, "qb.models.Query.Expression" ) ?
+        var placeholder = variables.utils.isExpression( having.value ) ?
             having.value.getSQL() : "?";
         return trim( "#having.combinator# #wrapColumn( having.column )# #having.operator# #placeholder#" );
     }
@@ -769,7 +768,7 @@ component displayname="Grammar" accessors="true" {
     */
     public string function wrapTable( required any table ) {
         // if we have a raw expression, just return it as-is
-        if ( isInstanceOf( arguments.table, "qb.models.Query.Expression" ) ) {
+        if ( variables.utils.isExpression( arguments.table ) ) {
             return arguments.table.getSql();
         }
 

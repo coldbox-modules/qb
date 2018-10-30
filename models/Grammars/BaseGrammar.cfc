@@ -879,8 +879,9 @@ component displayname="Grammar" accessors="true" {
         if ( utils.isExpression( column ) ) {
             return column.getSql();
         }
-
-        if ( isInstanceOf( column, "qb.models.Schema.TableIndex" ) ) {
+        
+        //using structKeyExists instead of isInstanceOf( column, "qb.models.Schema.TableIndex" ) because its slow
+        if ( structKeyExists( column, "setColumns" ) ) {
             throw(
                 type = "InvalidColumn",
                 message = "Recieved a TableIndex instead of a Column when trying to create a Column.",

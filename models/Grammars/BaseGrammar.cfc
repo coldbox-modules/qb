@@ -880,8 +880,12 @@ component displayname="Grammar" accessors="true" {
             return column.getSql();
         }
         
-        //using structKeyExists instead of isInstanceOf( column, "qb.models.Schema.TableIndex" ) because its slow
-        if ( structKeyExists( column, "setColumns" ) ) {
+        try {
+            if (!column.isColumn()) {
+                throw(message="Not a Column");
+            }
+        } catch(any e) {
+            //exception happens when isColumn returns false or is not a method on the column object
             throw(
                 type = "InvalidColumn",
                 message = "Recieved a TableIndex instead of a Column when trying to create a Column.",

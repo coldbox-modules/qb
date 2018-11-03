@@ -162,5 +162,12 @@ component accessors="true" {
         setUnique( true );
         return this;
     }
+    
+    /**
+    * @returns true if the object is a column
+    */
+    function isColumn() {
+        return true;
+    }
 
 }

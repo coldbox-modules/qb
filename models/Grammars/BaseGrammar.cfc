@@ -879,8 +879,13 @@ component displayname="Grammar" accessors="true" {
         if ( utils.isExpression( column ) ) {
             return column.getSql();
         }
-
-        if ( isInstanceOf( column, "qb.models.Schema.TableIndex" ) ) {
+        
+        try {
+            if (!column.isColumn()) {
+                throw(message="Not a Column");
+            }
+        } catch(any e) {
+            //exception happens when isColumn returns false or is not a method on the column object
             throw(
                 type = "InvalidColumn",
                 message = "Recieved a TableIndex instead of a Column when trying to create a Column.",

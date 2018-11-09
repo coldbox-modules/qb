@@ -965,7 +965,7 @@ component displayname="QueryBuilder" accessors="true" {
         arguments.values = normalizeToArray( arguments.values );
         var nonNullValues = [];
         arrayEach( arguments.values, function( element,index ) {
-            if( len( element ) ){
+            if( arrayLen( element ) ){
                 nonNullValues.append( element );
             }
         });

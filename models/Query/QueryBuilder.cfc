@@ -963,16 +963,21 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         arguments.values = normalizeToArray( arguments.values );
-
+        var nonNullValues =[]
+        arrayEach(arguments.values, function(element,index) {
+            if( len( element ) ){
+                nonNullValues.append(element);
+            }
+        });
         var type = negate ? "notIn" : "in";
         variables.wheres.append( {
             type = type,
             column = arguments.column,
-            values = arguments.values,
+            values = nonNullValues,
             combinator = arguments.combinator
         } );
 
-        var bindings = values
+        var bindings = nonNullValues
             .filter( utils.isNotExpression )
             .map( function( value ) {
                 return utils.extractBinding( value );

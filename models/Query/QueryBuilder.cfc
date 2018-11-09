@@ -963,10 +963,10 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         arguments.values = normalizeToArray( arguments.values );
-        var nonNullValues =[]
-        arrayEach(arguments.values, function(element,index) {
+        var nonNullValues = [];
+        arrayEach( arguments.values, function( element,index ) {
             if( len( element ) ){
-                nonNullValues.append(element);
+                nonNullValues.append( element );
             }
         });
         var type = negate ? "notIn" : "in";

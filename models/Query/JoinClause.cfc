@@ -72,7 +72,8 @@ component
     * @first The name of the first column with which to join. A closure can be passed to create nested join statements.
     * @operator The join operator to use.
     * @second The name of the second column with which to join.
-    * @combinator The combinator to use between joins.
+	* @combinator The combinator to use between joins.
+	* @joinWhere Sets if the value of `second` should be interpreted as a column or a value.
     *
     * @return qb.models.Query.JoinClause
     */
@@ -80,12 +81,17 @@ component
         required first,
         operator,
         second,
-        combinator = "and"
+		combinator = "and",
+		boolean joinWhere = false
     ) {
         if ( isClosure( first ) ) {
             return whereNested( first, combinator );
         }
-
+		if( joinWhere ) {
+			arguments.column = first;
+			arguments.value = second;
+			return where( argumentCollection = arguments );
+		}
         return whereColumn( argumentCollection = arguments );
     }
 

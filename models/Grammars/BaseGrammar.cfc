@@ -1167,6 +1167,10 @@ component displayname="Grammar" accessors="true" {
         return "TEXT";
     }
 
+    function typeUUID( column ) {
+        return typeChar( column, 36 );
+    }
+
     function typeMediumInteger( column ) {
         return arrayToList( arrayFilter( [
             "MEDIUMINT",

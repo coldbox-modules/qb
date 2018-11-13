@@ -220,6 +220,10 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "DATETIME2";
     }
 
+    function typeUUID( column ) {
+        return "uniqueidentifier";
+    }
+
     function typeEnum( column, blueprint ) {
         blueprint.appendIndex(
             type = "check",

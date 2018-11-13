@@ -246,7 +246,9 @@ component accessors="true" {
     }
 
     function uuid( name ) {
-        return char( name, 36 );
+        arguments.type = "UUID";
+        arguments.length = 36;
+        return appendColumn( argumentCollection = arguments );
     }
 
 

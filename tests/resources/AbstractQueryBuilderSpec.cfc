@@ -1005,7 +1005,7 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             var union2 = getBuilder().select("name").from("users").where( "id", 2 );
                             var union3 = getBuilder().select("name").from("users").where( "id", 3 );
-                            
+
                             builder
                                 .select("name")
                                 .from( "users" )
@@ -1111,7 +1111,7 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             var union2 = getBuilder().select("name").from("users").where( "id", 2 );
                             var union3 = getBuilder().select("name").from("users").where( "id", 3 );
-                            
+
                             builder
                                 .select("name")
                                 .from( "users" )
@@ -1302,6 +1302,15 @@ component extends="testbox.system.BaseSpec" {
                             { "email" = "baz", "name" = "bleh" }
                         ], toSql = true );
                     }, batchInsert() );
+                } );
+
+                it( "can insert with returning", function() {
+                    testCase( function( builder ) {
+                        return builder.from( "users" ).returning( "id" ).insert( values = {
+                            "email" = "foo",
+                            "name" = "bar"
+                        }, toSql = true );
+                    }, returning() );
                 } );
             } );
 

@@ -9,6 +9,33 @@ component extends="qb.models.Grammars.BaseGrammar" {
     ];
 
     /**
+    * Compile a Builder's query into an insert string.
+    *
+    * @query The Builder instance.
+    * @columns The array of columns into which to insert.
+    * @values The array of values to insert.
+    *
+    * @return string
+    */
+    public string function compileInsert(
+        required query,
+        required array columns,
+        required array values
+    ) {
+        var columnsString = columns.map( wrapColumn ).toList( ", " );
+        var returningColumns = query.getReturning().map( function( column ) {
+            return "INSERTED." & wrapColumn( column );
+        } ).toList( ", " );
+        var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
+        var placeholderString = values.map( function( valueArray ) {
+            return "(" & valueArray.map( function() {
+                return "?";
+            } ).toList( ", " ) & ")";
+        } ).toList( ", ");
+        return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#)#returningClause# VALUES #placeholderString#" );
+    }
+
+    /**
     * Compiles the Common Table Expressions (CTEs).
     *
     * @query The Builder instance.

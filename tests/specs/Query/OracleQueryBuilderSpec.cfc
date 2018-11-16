@@ -578,6 +578,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function returning() {
+        return {
+            sql = "INSERT ALL INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?) SELECT 1 FROM dual",
+            bindings = [ "foo", "bar" ]
+        };
+    }
+
     function updateAllRecords() {
         return {
             sql = "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""NAME"" = ?",

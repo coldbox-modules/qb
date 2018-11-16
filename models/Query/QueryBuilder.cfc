@@ -106,6 +106,12 @@ component displayname="QueryBuilder" accessors="true" {
     property name="offsetValue" type="numeric";
 
     /**
+    * An array of columns to return from an insert statement.
+    * @default []
+    */
+    property name="returning" type="array";
+
+    /**
     * The list of allowed operators in join and where statements.
     */
     variables.operators = [
@@ -184,6 +190,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.havings = [];
         variables.orders = [];
         variables.unions = [];
+        variables.returning = [];
     }
 
     /**********************************************************************************************\
@@ -1830,6 +1837,13 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         return runQuery( sql, options, "result" );
+    }
+
+    function returning( required any columns ) {
+        variables.returning = isArray( arguments.columns ) ?
+            arguments.columns :
+            listToArray( arguments.columns );
+        return this;
     }
 
     /**

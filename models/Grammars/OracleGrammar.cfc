@@ -276,6 +276,18 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "";
     }
 
+    function wrapDefaultType( column ) {
+        switch ( column.getType() ) {
+            case "boolean":
+                return column.getDefault() ? 1 : 0;
+            case "char":
+            case "string":
+                return "'#column.getDefault()#'";
+            default:
+                return column.getDefault();
+        }
+    }
+
     function typeBigInteger( column ) {
         var precision = isNull( column.getPrecision() ) ? 19 : column.getPrecision();
         return "NUMBER(#precision#, 0)";

@@ -102,6 +102,18 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return super.generateDefault( column );
     }
 
+    function wrapDefaultType( column ) {
+        switch ( column.getType() ) {
+            case "boolean":
+                return column.getDefault() ? 1 : 0;
+            case "char":
+            case "string":
+                return "'#column.getDefault()#'";
+            default:
+                return column.getDefault();
+        }
+    }
+
     function typeChar( column ) {
         return "NCHAR(#column.getLength()#)";
     }

@@ -252,8 +252,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
-    function default() {
+    function defaultForChar() {
         return [ "CREATE TABLE ""users"" (""active"" CHAR(1) NOT NULL DEFAULT 'Y')" ];
+    }
+
+    function defaultForBoolean() {
+        return [ "CREATE TABLE ""users"" (""active"" BOOLEAN NOT NULL DEFAULT TRUE)" ];
+    }
+
+    function defaultForNumber() {
+        return [ "CREATE TABLE ""users"" (""experience"" INTEGER NOT NULL DEFAULT 100)" ];
+    }
+
+    function defaultForString() {
+        return [ "CREATE TABLE ""users"" (""country"" VARCHAR(255) NOT NULL DEFAULT 'USA')" ];
     }
 
     function nullable() {

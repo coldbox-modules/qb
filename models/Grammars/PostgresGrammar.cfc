@@ -42,6 +42,18 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "";
     }
 
+    function wrapDefaultType( column ) {
+        switch ( column.getType() ) {
+            case "boolean":
+                return uCase( column.getDefault() );
+            case "char":
+            case "string":
+                return "'#column.getDefault()#'";
+            default:
+                return column.getDefault();
+        }
+    }
+
     /*=======================================
     =            Blueprint: Drop            =
     =======================================*/

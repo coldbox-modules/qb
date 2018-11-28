@@ -924,7 +924,10 @@ component displayname="Grammar" accessors="true" {
     }
 
     function generateDefault( column ) {
-        return column.getDefault() != "" ? "DEFAULT #column.getDefault()#" : "";
+        if ( column.getDefault() == "" ) {
+            return "";
+        }
+        return "DEFAULT #wrapDefaultType( column )#";
     }
 
     function generateComment( column ) {

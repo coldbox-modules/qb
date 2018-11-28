@@ -492,12 +492,36 @@ component extends="testbox.system.BaseSpec" {
                     }, comment() );
                 } );
 
-                it( "default", function() {
+                it( "default for char", function() {
                     testCase( function( schema ) {
                         return schema.create( "users", function( table ) {
-                            table.char( "active" ).default( "'Y'" );
+                            table.char( "active" ).default( "Y" );
                         }, {}, false );
-                    }, default() );
+                    }, defaultForChar() );
+                } );
+
+                it( "default for boolean", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "users", function( table ) {
+                            table.boolean( "active" ).default( true );
+                        }, {}, false );
+                    }, defaultForBoolean() );
+                } );
+
+                it( "default for number", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "users", function( table ) {
+                            table.integer( "experience" ).default( 100 );
+                        }, {}, false );
+                    }, defaultForNumber() );
+                } );
+
+                it( "default for string", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "users", function( table ) {
+                            table.string( "country" ).default( "USA" );
+                        }, {}, false );
+                    }, defaultForString() );
                 } );
 
                 it( "nullable", function() {

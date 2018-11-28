@@ -580,8 +580,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function returning() {
         return {
-            sql = "INSERT INTO `users` (`email`, `name`) VALUES (?, ?)",
-            bindings = [ "foo", "bar" ]
+            exception = "UnsupportedOperation"
         };
     }
 

@@ -62,6 +62,13 @@ component extends="qb.models.Grammars.BaseGrammar" {
     * @return string
     */
     public string function compileInsert( required QueryBuilder query, required array columns, required array values ) {
+        if ( ! query.getReturning().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support a RETURNING clause"
+            );
+        }
+
         var columnsString = columns.map( wrapColumn ).toList( ", " );
 
         var placeholderString = values.map( function( valueArray ) {

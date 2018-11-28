@@ -991,6 +991,25 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+    * Adds a WHERE IN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+    * @values The values with which to constrain the column. An expression (`builder.raw()`) can be passed as any of the values as well.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for IN, True for NOT IN. Default: false.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereIn(
+        column,
+        values,
+        combinator = "and",
+        negate = false
+    ) {
+        return whereIn( argumentCollection = arguments );
+    }
+
+    /**
     * Adds a WHERE IN clause to the query using a subselect.  To call this using the public api, pass a closure to `whereIn` as the second argument (`values`).
     *
     * @column The name of the column with which to constrain the query.
@@ -1139,6 +1158,20 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+    * Adds a WHERE clause to the query comparing two columns
+    *
+    * @first The name of the first column to compare.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `second` left null as a shortcut for equals (e.g. whereColumn( "columnA", "columnB" ) == where( "column", "=", "columnB" ) ).
+    * @second The name of the second column to compare.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereColumn( required first, operator, second, string combinator = "and" ) {
+        return whereColumn( argumentCollection = arguments );
+    }
+
+    /**
     * Adds a OR WHERE clause to the query comparing two columns
     *
     * @first The name of the first column to compare.
@@ -1196,6 +1229,23 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+    * Adds a WHERE EXISTS clause to the query.
+    *
+    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for EXISTS, True for NOT EXISTS. Default: false.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereExists(
+        callback,
+        combinator = "and",
+        negate = false
+    ) {
+        return whereExists( argumentCollection = arguments );
+    }
+
+    /**
     * Adds an OR WHERE EXISTS clause to the query.
     *
     * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
@@ -1219,6 +1269,18 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereNotExists( callback, combinator = "and" ) {
         arguments.negate = true;
         return whereExists( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a WHERE NOT EXISTS clause to the query.
+    *
+    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereNotExists( callback, combinator = "and" ) {
+        return whereNotExists( argumentCollection = arguments );
     }
 
     /**
@@ -1302,6 +1364,19 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+    * Adds a WHERE NULL clause to the query.
+    *
+    * @column The name of the column to check if it is NULL.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for NULL, True for NOT NULL. Default: false.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereNull( column, combinator = "and", negate = false ) {
+        return whereNull( argumentCollection = arguments );
+    }
+
+    /**
     * Adds an OR WHERE NULL clause to the query.
     *
     * @column The name of the column to check if it is NULL.
@@ -1325,6 +1400,18 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereNotNull( column, combinator = "and" ) {
         arguments.negate = true;
         return whereNull( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a WHERE NOT NULL clause to the query.
+    *
+    * @column The name of the column to check if it is NULL.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereNotNull( column, combinator = "and" ) {
+        return whereNotNull( argumentCollection = arguments );
     }
 
     /**
@@ -1375,6 +1462,27 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+    * Adds a WHERE BETWEEN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @start The beginning value of the BETWEEN statement.
+    * @end The end value of the BETWEEN statement.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for BETWEEN, True for NOT BETWEEN. Default: false.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereBetween(
+        column,
+        start,
+        end,
+        combinator = "and",
+        negate = false
+    ) {
+        return whereBetween( argumentCollection = arguments );
+    }
+
+    /**
     * Adds a OR WHERE BETWEEN clause to the query.
     *
     * @column The name of the column with which to constrain the query.
@@ -1402,6 +1510,20 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereNotBetween( column, start, end, combinator ) {
         arguments.negate = true;
         return whereBetween( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a WHERE NOT BETWEEN clause to the query.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @start The beginning value of the BETWEEN statement.
+    * @end The end value of the BETWEEN statement.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereNotBetween( column, start, end, combinator ) {
+        return whereNotBetween( argumentCollection = arguments );
     }
 
     /**

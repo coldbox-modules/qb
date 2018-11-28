@@ -578,6 +578,12 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function returning() {
+        return {
+            exception = "UnsupportedOperation"
+        };
+    }
+
     function updateAllRecords() {
         return {
             sql = "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""NAME"" = ?",

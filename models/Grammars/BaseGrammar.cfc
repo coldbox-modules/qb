@@ -78,7 +78,7 @@ component displayname="Grammar" accessors="true" {
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
         data.result = local.result;
         tryPostInterceptor( data );
-        return returnObject == "result" ? local.result : q;
+        return returnObject == "query" ? q : { result = local.result, query = q };
     }
 
     /**
@@ -879,7 +879,7 @@ component displayname="Grammar" accessors="true" {
         if ( utils.isExpression( column ) ) {
             return column.getSql();
         }
-        
+
         try {
             if (!column.isColumn()) {
                 throw(message="Not a Column");

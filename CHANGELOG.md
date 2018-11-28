@@ -1,3 +1,32 @@
+# v6.0.0
+## 28 Nov 2018 — 05:10:44 UTC
+
+### BREAKING
+
++ __SchemaBuilder:__ Use uniqueidentifier for MSSQL uuid() ([1b2d456](https://github.com/coldbox-modules/qb/commit/1b2d456decd2080730901604064f46294a01f03f))
+
+### feat
+
++ __QueryBuilder:__ Add returning functionality for compatible grammars ([7b12b02](https://github.com/coldbox-modules/qb/commit/7b12b021ea3d96d382761ac8a931885430ced3d0))
+
+### fix
+
++ __SchemaBuilder:__ Default values respect column types ([ae2fc4b](https://github.com/coldbox-modules/qb/commit/ae2fc4b8e11a9dc05d525604c375155b93753a77))
++ __SchemaBuilder:__ Wrap enum values in single quotes
+ ([89b58c4](https://github.com/coldbox-modules/qb/commit/89b58c4f251bf6322439c7fb5b992684fdc9882a))
++ __QueryBuilder:__ Add missing `andWhere` methods
+ ([7273ce4](https://github.com/coldbox-modules/qb/commit/7273ce40345a682d419cf2e6463cf07f684fa2d4))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([9747153](https://github.com/coldbox-modules/qb/commit/9747153a4fdef98e681a8acd9f0ece7b35e592fb))
+
+### perf
+
++ __SchemaBuilder:__ Removed case of isInstanceOf because it is slow ([2d65d03](https://github.com/coldbox-modules/qb/commit/2d65d0398113a735bdbd3b2acb55f4d2281d12fd))
+
+
 # v5.8.1
 ## 17 Sep 2018 — 21:14:15 UTC
 

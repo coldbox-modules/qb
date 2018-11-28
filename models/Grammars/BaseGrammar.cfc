@@ -1137,7 +1137,7 @@ component displayname="Grammar" accessors="true" {
 
     function typeEnum( column ) {
         var values = column.getValues().map( function ( value ) {
-            return wrapValue( value );
+            return "'#value#'";
         } ).toList( ", " );
         return "ENUM(#values#)";
     }

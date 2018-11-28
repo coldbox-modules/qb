@@ -70,7 +70,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TABLE `employees` (`tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL)"
+            "CREATE TABLE `employees` (`tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL)"
         ];
     }
 
@@ -371,13 +371,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function addColumn() {
         return [
-            "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL"
+            "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL"
         ];
     }
 
     function addMultiple() {
         return [
-            "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL",
+            "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL",
             "ALTER TABLE `users` ADD `is_active` TINYINT(1) NOT NULL"
         ];
     }
@@ -385,7 +385,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function complicatedModify() {
         return [
             "ALTER TABLE `users` DROP COLUMN `is_active`",
-            "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL",
+            "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL",
             "ALTER TABLE `users` CHANGE `name` `username` NVARCHAR(255) NOT NULL",
             "ALTER TABLE `users` CHANGE `purchase_date` `purchase_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
             "ALTER TABLE `users` ADD CONSTRAINT `unq_users_username` UNIQUE (`username`)",

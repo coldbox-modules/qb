@@ -1,3 +1,16 @@
+# v6.0.1
+## 29 Nov 2018 — 22:51:44 UTC
+
+### other
+
++ __\*:__ Updated API Docs
+ ([1ee2608](https://github.com/coldbox-modules/qb/commit/1ee2608bb7e12f163057ad232709d6cbf5095f70))
+
+### perf
+
++ __SchemaBuilder:__ Replace duplicate() with structCopy() ([d0237c8](https://github.com/coldbox-modules/qb/commit/d0237c8ad4e030c25efdf0aa56f6dc0df8774921))
+
+
 # v6.0.0
 ## 28 Nov 2018 — 05:10:44 UTC
 

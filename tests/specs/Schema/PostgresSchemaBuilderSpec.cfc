@@ -252,8 +252,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
-    function default() {
+    function defaultForChar() {
         return [ "CREATE TABLE ""users"" (""active"" CHAR(1) NOT NULL DEFAULT 'Y')" ];
+    }
+
+    function defaultForBoolean() {
+        return [ "CREATE TABLE ""users"" (""active"" BOOLEAN NOT NULL DEFAULT TRUE)" ];
+    }
+
+    function defaultForNumber() {
+        return [ "CREATE TABLE ""users"" (""experience"" INTEGER NOT NULL DEFAULT 100)" ];
+    }
+
+    function defaultForString() {
+        return [ "CREATE TABLE ""users"" (""country"" VARCHAR(255) NOT NULL DEFAULT 'USA')" ];
     }
 
     function nullable() {
@@ -439,7 +451,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasTableInSchema() {
-        return [ "SELECT 1 FROM ""information_schema"".""tables"" WHERE ""table_name"" = ? AND ""schema_name"" = ?" ];
+        return [ "SELECT 1 FROM ""information_schema"".""tables"" WHERE ""table_name"" = ? AND ""table_schema"" = ?" ];
     }
 
     function hasColumn() {
@@ -447,7 +459,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasColumnInSchema() {
-        return [ "SELECT 1 FROM ""information_schema"".""columns"" WHERE ""table_name"" = ? AND ""column_name"" = ? AND ""schema_name"" = ?" ];
+        return [ "SELECT 1 FROM ""information_schema"".""columns"" WHERE ""table_name"" = ? AND ""column_name"" = ? AND ""table_schema"" = ?" ];
     }
 
     private function getBuilder( mockGrammar ) {

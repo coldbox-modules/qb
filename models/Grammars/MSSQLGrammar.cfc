@@ -9,6 +9,33 @@ component extends="qb.models.Grammars.BaseGrammar" {
     ];
 
     /**
+    * Compile a Builder's query into an insert string.
+    *
+    * @query The Builder instance.
+    * @columns The array of columns into which to insert.
+    * @values The array of values to insert.
+    *
+    * @return string
+    */
+    public string function compileInsert(
+        required query,
+        required array columns,
+        required array values
+    ) {
+        var columnsString = columns.map( wrapColumn ).toList( ", " );
+        var returningColumns = query.getReturning().map( function( column ) {
+            return "INSERTED." & wrapColumn( column );
+        } ).toList( ", " );
+        var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
+        var placeholderString = values.map( function( valueArray ) {
+            return "(" & valueArray.map( function() {
+                return "?";
+            } ).toList( ", " ) & ")";
+        } ).toList( ", ");
+        return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#)#returningClause# VALUES #placeholderString#" );
+    }
+
+    /**
     * Compiles the Common Table Expressions (CTEs).
     *
     * @query The Builder instance.
@@ -162,7 +189,21 @@ component extends="qb.models.Grammars.BaseGrammar" {
     }
 
     function generateDefault( column, blueprint ) {
-        return column.getDefault() != "" ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #column.getDefault()#" : "";
+        return column.getDefault() != "" ?
+            "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" :
+            "";
+    }
+
+    function wrapDefaultType( column ) {
+        switch ( column.getType() ) {
+            case "boolean":
+                return column.getDefault() ? 1 : 0;
+            case "char":
+            case "string":
+                return "'#column.getDefault()#'";
+            default:
+                return column.getDefault();
+        }
     }
 
     function generateComment( column ) {

@@ -64,6 +64,29 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return tables;
     }
 
+    /**
+    * Compile a Builder's query into an insert string.
+    *
+    * @query The Builder instance.
+    * @columns The array of columns into which to insert.
+    * @values The array of values to insert.
+    *
+    * @return string
+    */
+    public string function compileInsert(
+        required QueryBuilder query,
+        required array columns,
+        required array values
+    ) {
+        if ( ! query.getReturning().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support a RETURNING clause"
+            );
+        }
+        return super.compileInsert( argumentCollection = arguments );
+    }
+
     function compileDisableForeignKeyConstraints() {
         return "SET FOREIGN_KEY_CHECKS=0";
     }
@@ -77,6 +100,18 @@ component extends="qb.models.Grammars.BaseGrammar" {
             column.setDefault( "CURRENT_TIMESTAMP" );
         }
         return super.generateDefault( column );
+    }
+
+    function wrapDefaultType( column ) {
+        switch ( column.getType() ) {
+            case "boolean":
+                return column.getDefault() ? 1 : 0;
+            case "char":
+            case "string":
+                return "'#column.getDefault()#'";
+            default:
+                return column.getDefault();
+        }
     }
 
     function typeChar( column ) {

@@ -70,7 +70,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TABLE `employees` (`tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL)"
+            "CREATE TABLE `employees` (`tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL)"
         ];
     }
 
@@ -244,8 +244,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
-    function default() {
+    function defaultForChar() {
         return [ "CREATE TABLE `users` (`active` NCHAR(1) NOT NULL DEFAULT 'Y')" ];
+    }
+
+    function defaultForBoolean() {
+        return [ "CREATE TABLE `users` (`active` TINYINT(1) NOT NULL DEFAULT 1)" ];
+    }
+
+    function defaultForNumber() {
+        return [ "CREATE TABLE `users` (`experience` INTEGER NOT NULL DEFAULT 100)" ];
+    }
+
+    function defaultForString() {
+        return [ "CREATE TABLE `users` (`country` VARCHAR(255) NOT NULL DEFAULT 'USA')" ];
     }
 
     function nullable() {
@@ -371,13 +383,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function addColumn() {
         return [
-            "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL"
+            "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL"
         ];
     }
 
     function addMultiple() {
         return [
-            "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL",
+            "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL",
             "ALTER TABLE `users` ADD `is_active` TINYINT(1) NOT NULL"
         ];
     }
@@ -385,7 +397,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function complicatedModify() {
         return [
             "ALTER TABLE `users` DROP COLUMN `is_active`",
-            "ALTER TABLE `users` ADD `tshirt_size` ENUM(`S`, `M`, `L`, `XL`, `XXL`) NOT NULL",
+            "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL",
             "ALTER TABLE `users` CHANGE `name` `username` NVARCHAR(255) NOT NULL",
             "ALTER TABLE `users` CHANGE `purchase_date` `purchase_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
             "ALTER TABLE `users` ADD CONSTRAINT `unq_users_username` UNIQUE (`username`)",
@@ -419,7 +431,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasTableInSchema() {
-        return [ "SELECT 1 FROM `information_schema`.`tables` WHERE `table_name` = ? AND `schema_name` = ?" ];
+        return [ "SELECT 1 FROM `information_schema`.`tables` WHERE `table_name` = ? AND `table_schema` = ?" ];
     }
 
     function hasColumn() {
@@ -427,7 +439,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasColumnInSchema() {
-        return [ "SELECT 1 FROM `information_schema`.`columns` WHERE `table_name` = ? AND `column_name` = ? AND `schema_name` = ?" ];
+        return [ "SELECT 1 FROM `information_schema`.`columns` WHERE `table_name` = ? AND `column_name` = ? AND `table_schema` = ?" ];
     }
 
     private function getBuilder( mockGrammar ) {

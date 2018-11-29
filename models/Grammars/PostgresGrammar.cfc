@@ -1,5 +1,24 @@
 component extends="qb.models.Grammars.BaseGrammar" {
 
+    /**
+    * Compile a Builder's query into an insert string.
+    *
+    * @query The Builder instance.
+    * @columns The array of columns into which to insert.
+    * @values The array of values to insert.
+    *
+    * @return string
+    */
+    public string function compileInsert(
+        required query,
+        required array columns,
+        required array values
+    ) {
+        var returningColumns = query.getReturning().map( wrapColumn ).toList( ", " );
+        var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+        return super.compileInsert( argumentCollection = arguments ) & returningClause;
+    }
+
     /*===================================
     =              Schema               =
     ===================================*/
@@ -21,6 +40,18 @@ component extends="qb.models.Grammars.BaseGrammar" {
             blueprint.addCommand( "addComment", { table = blueprint.getTable(), column = column } );
         }
         return "";
+    }
+
+    function wrapDefaultType( column ) {
+        switch ( column.getType() ) {
+            case "boolean":
+                return uCase( column.getDefault() );
+            case "char":
+            case "string":
+                return "'#column.getDefault()#'";
+            default:
+                return column.getDefault();
+        }
     }
 
     /*=======================================

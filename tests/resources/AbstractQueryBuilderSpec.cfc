@@ -1005,7 +1005,7 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             var union2 = getBuilder().select("name").from("users").where( "id", 2 );
                             var union3 = getBuilder().select("name").from("users").where( "id", 3 );
-                            
+
                             builder
                                 .select("name")
                                 .from( "users" )
@@ -1111,7 +1111,7 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             var union2 = getBuilder().select("name").from("users").where( "id", 2 );
                             var union3 = getBuilder().select("name").from("users").where( "id", 3 );
-                            
+
                             builder
                                 .select("name")
                                 .from( "users" )
@@ -1303,6 +1303,15 @@ component extends="testbox.system.BaseSpec" {
                         ], toSql = true );
                     }, batchInsert() );
                 } );
+
+                it( "can insert with returning", function() {
+                    testCase( function( builder ) {
+                        return builder.from( "users" ).returning( "id" ).insert( values = {
+                            "email" = "foo",
+                            "name" = "bar"
+                        }, toSql = true );
+                    }, returning() );
+                } );
             } );
 
             describe( "update statements", function() {
@@ -1379,24 +1388,33 @@ component extends="testbox.system.BaseSpec" {
     }
 
     private function testCase( callback, expected ) {
-        var builder = getBuilder();
-        var sql = callback( builder );
-        if ( ! isNull( sql ) ) {
-            if ( ! isSimpleValue( sql ) ) {
-                sql = sql.toSQL();
+        try {
+            var builder = getBuilder();
+            var sql = callback( builder );
+            if ( ! isNull( sql ) ) {
+                if ( ! isSimpleValue( sql ) ) {
+                    sql = sql.toSQL();
+                }
             }
+            else {
+                sql = builder.toSQL();
+            }
+            if ( isSimpleValue( expected ) ) {
+                expected = {
+                    sql = expected,
+                    bindings = []
+                };
+            }
+            expect( sql ).toBeWithCase( expected.sql );
+            expect( getTestBindings( builder ) ).toBe( expected.bindings );
         }
-        else {
-            sql = builder.toSQL();
+        catch ( any e ) {
+            if ( structKeyExists( expected, "exception" ) ) {
+                expect( e.type ).toBe( expected.exception );
+                return;
+            }
+            rethrow;
         }
-        if ( isSimpleValue( expected ) ) {
-            expected = {
-                sql = expected,
-                bindings = []
-            };
-        }
-        expect( sql ).toBeWithCase( expected.sql );
-        expect( getTestBindings( builder ) ).toBe( expected.bindings );
     }
 
     private function getBuilder() {

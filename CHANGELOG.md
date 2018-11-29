@@ -1,3 +1,72 @@
+# v6.0.0
+## 28 Nov 2018 — 05:10:44 UTC
+
+### BREAKING
+
++ __SchemaBuilder:__ Use uniqueidentifier for MSSQL uuid() ([1b2d456](https://github.com/coldbox-modules/qb/commit/1b2d456decd2080730901604064f46294a01f03f))
+
+### feat
+
++ __QueryBuilder:__ Add returning functionality for compatible grammars ([7b12b02](https://github.com/coldbox-modules/qb/commit/7b12b021ea3d96d382761ac8a931885430ced3d0))
+
+### fix
+
++ __SchemaBuilder:__ Default values respect column types ([ae2fc4b](https://github.com/coldbox-modules/qb/commit/ae2fc4b8e11a9dc05d525604c375155b93753a77))
++ __SchemaBuilder:__ Wrap enum values in single quotes
+ ([89b58c4](https://github.com/coldbox-modules/qb/commit/89b58c4f251bf6322439c7fb5b992684fdc9882a))
++ __QueryBuilder:__ Add missing `andWhere` methods
+ ([7273ce4](https://github.com/coldbox-modules/qb/commit/7273ce40345a682d419cf2e6463cf07f684fa2d4))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([9747153](https://github.com/coldbox-modules/qb/commit/9747153a4fdef98e681a8acd9f0ece7b35e592fb))
+
+### perf
+
++ __SchemaBuilder:__ Removed case of isInstanceOf because it is slow ([2d65d03](https://github.com/coldbox-modules/qb/commit/2d65d0398113a735bdbd3b2acb55f4d2281d12fd))
+
+
+# v5.8.1
+## 17 Sep 2018 — 21:14:15 UTC
+
+### fix
+
++ __SchemaBuilder:__ Fix incorrect column name for hasTable and hasColumn ([292bc2a](https://github.com/coldbox-modules/qb/commit/292bc2a8017759bbb4526fd414361692060a66a7))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([70b9b0f](https://github.com/coldbox-modules/qb/commit/70b9b0f6281ba7102845b66578afe759c8ea7437))
+
+
+# v5.8.0
+## 17 Sep 2018 — 19:23:06 UTC
+
+### feat
+
++ __SchemaBuilder:__ Add unicode text functions ([1a5207e](https://github.com/coldbox-modules/qb/commit/1a5207e2fabda5305d3abd9584539d33b4d29ef3))
++ __Logging:__ Add debug logging for query sql and bindings. ([2928feb](https://github.com/coldbox-modules/qb/commit/2928feba712e92fd643570132721d6e4b17caa41))
+
+### fix
+
++ __SchemaBuilder:__ Update UUID length to 36 characters ([2569f82](https://github.com/coldbox-modules/qb/commit/2569f82dd30ce22b1127bb9bf2923666e932faa1))
++ __MSSQLGrammar:__ Replace NTEXT with NVARCHAR(MAX) ([936b01d](https://github.com/coldbox-modules/qb/commit/936b01d4edd99365e1dc8821876879a580c013fd))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([91e7ece](https://github.com/coldbox-modules/qb/commit/91e7ece5b6063d5e509430f736f9f6ee45663d69))
+
+### perf
+
++ __QueryBuilder:__ Remove isInstanceOf for performance benefits ([33fe75c](https://github.com/coldbox-modules/qb/commit/33fe75c98f7deff321bcf218dd0210aced6a5455))
+
+### refactor
+
++ __InterceptorService:__ Use a null interceptor service in the constructor ([5f3a3ec](https://github.com/coldbox-modules/qb/commit/5f3a3ecc4884d815d05e3fde4d0ccbf1a3c8a0e0))
+
+
 # v5.7.0
 ## 18 Aug 2018 — 05:10:01 UTC
 

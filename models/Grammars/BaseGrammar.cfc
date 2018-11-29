@@ -78,7 +78,7 @@ component displayname="Grammar" accessors="true" {
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
         data.result = local.result;
         tryPostInterceptor( data );
-        return returnObject == "result" ? local.result : q;
+        return returnObject == "query" ? q : { result = local.result, query = q };
     }
 
     /**
@@ -879,7 +879,7 @@ component displayname="Grammar" accessors="true" {
         if ( utils.isExpression( column ) ) {
             return column.getSql();
         }
-        
+
         try {
             if (!column.isColumn()) {
                 throw(message="Not a Column");
@@ -924,7 +924,10 @@ component displayname="Grammar" accessors="true" {
     }
 
     function generateDefault( column ) {
-        return column.getDefault() != "" ? "DEFAULT #column.getDefault()#" : "";
+        if ( column.getDefault() == "" ) {
+            return "";
+        }
+        return "DEFAULT #wrapDefaultType( column )#";
     }
 
     function generateComment( column ) {
@@ -1137,7 +1140,7 @@ component displayname="Grammar" accessors="true" {
 
     function typeEnum( column ) {
         var values = column.getValues().map( function ( value ) {
-            return wrapValue( value );
+            return "'#value#'";
         } ).toList( ", " );
         return "ENUM(#values#)";
     }
@@ -1316,7 +1319,7 @@ component displayname="Grammar" accessors="true" {
     function compileTableExists( tableName, schemaName = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_name" )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( "schema_name" )# = ?";
+            sql &= " AND #wrapColumn( "table_schema" )# = ?";
         }
         return sql;
     }
@@ -1324,7 +1327,7 @@ component displayname="Grammar" accessors="true" {
     function compileColumnExists( table, column, scehma = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "information_schema.columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
         if ( scehma != "" ) {
-            sql &= " AND #wrapColumn( "schema_name" )# = ?";
+            sql &= " AND #wrapColumn( "table_schema" )# = ?";
         }
         return sql;
     }

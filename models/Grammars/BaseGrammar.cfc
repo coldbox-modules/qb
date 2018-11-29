@@ -70,7 +70,7 @@ component displayname="Grammar" accessors="true" {
     */
     public any function runQuery( sql, bindings, options, returnObject = "query" ) {
         local.result = "";
-        var data = duplicate( arguments );
+        var data = structCopy ( arguments );
         tryPreInterceptor( data );
         structAppend( options, { result = "local.result" }, true );
         log.debug( "Executing sql: #sql#", "With bindings: #serializeJSON( bindings )#" );
@@ -263,7 +263,7 @@ component displayname="Grammar" accessors="true" {
 
         for ( var where in arguments.wheres ) {
             var whereFunc = variables[ "where#where.type#" ];
-            var sql = uCase( where.combinator ) & " " & whereFunc( query, duplicate( where ) );
+            var sql = uCase( where.combinator ) & " " & whereFunc( query, structCopy( where ) );
             wheresArray.append( sql );
         }
 

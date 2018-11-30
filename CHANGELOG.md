@@ -1,3 +1,16 @@
+# v6.0.2
+## 30 Nov 2018 — 13:41:18 UTC
+
+### fix
+
++ __BaseGrammar:__ Fix for when the query object is null ([efb3917](https://github.com/coldbox-modules/qb/commit/efb3917caebedcbca0cdc0905a8b3a613bcbf79f))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([2d011ca](https://github.com/coldbox-modules/qb/commit/2d011ca8b8c3e93c5c3fe9b0c2f5cb7de281f373))
+
+
 # v6.0.1
 ## 29 Nov 2018 — 22:51:44 UTC
 

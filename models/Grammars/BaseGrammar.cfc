@@ -70,7 +70,7 @@ component displayname="Grammar" accessors="true" {
     */
     public any function runQuery( sql, bindings, options, returnObject = "query" ) {
         local.result = "";
-        var data = structCopy ( arguments );
+        var data = structCopy( arguments );
         tryPreInterceptor( data );
         structAppend( options, { result = "local.result" }, true );
         log.debug( "Executing sql: #sql#", "With bindings: #serializeJSON( bindings )#" );
@@ -78,7 +78,9 @@ component displayname="Grammar" accessors="true" {
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
         data.result = local.result;
         tryPostInterceptor( data );
-        return returnObject == "query" ? q : { result = local.result, query = q };
+        return returnObject == "query" ?
+            ( isNull( q ) ? javacast( "null", "" ) : q ) :
+            { result = local.result, query = ( isNull( q ) ? javacast( "null", "" ) : q ) };
     }
 
     /**

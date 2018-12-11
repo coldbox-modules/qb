@@ -1,3 +1,17 @@
+# v6.0.3
+## 11 Dec 2018 — 22:33:30 UTC
+
+### other
+
++ __\*:__ Updated API Docs
+ ([7a96e5e](https://github.com/coldbox-modules/qb/commit/7a96e5e5f8589ec548d7f166940f686d264e43ba))
+
+### perf
+
++ __BaseGrammar:__ Remove the need for duplicate or structCopy calls
+ ([89ea9fc](https://github.com/coldbox-modules/qb/commit/89ea9fc441aff7ed283aa60b0fb30c5cbde13f13))
+
+
 # v6.0.2
 ## 30 Nov 2018 — 13:41:18 UTC
 

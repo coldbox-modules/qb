@@ -70,11 +70,16 @@ component displayname="Grammar" accessors="true" {
     */
     public any function runQuery( sql, bindings, options, returnObject = "query" ) {
         local.result = "";
-        var data = structCopy( arguments );
+        var data = {
+            sql = arguments.sql,
+            bindings = arguments.bindings,
+            options = arguments.options,
+            returnObject = arguments.returnObject
+        };
         tryPreInterceptor( data );
-        structAppend( options, { result = "local.result" }, true );
-        log.debug( "Executing sql: #sql#", "With bindings: #serializeJSON( bindings )#" );
-        var q = queryExecute( sql, bindings, options );
+        structAppend( data.options, { result = "local.result" }, true );
+        log.debug( "Executing sql: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
+        var q = queryExecute( data.sql, data.bindings, data.options );
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
         data.result = local.result;
         tryPostInterceptor( data );
@@ -265,7 +270,8 @@ component displayname="Grammar" accessors="true" {
 
         for ( var where in arguments.wheres ) {
             var whereFunc = variables[ "where#where.type#" ];
-            var sql = uCase( where.combinator ) & " " & whereFunc( query, structCopy( where ) );
+            // TODO: needs help
+            var sql = uCase( where.combinator ) & " " & whereFunc( query, where );
             wheresArray.append( sql );
         }
 
@@ -295,15 +301,12 @@ component displayname="Grammar" accessors="true" {
             return;
         }
 
-        where.column = wrapColumn( where.column );
-
         var placeholder = "?";
-
         if ( variables.utils.isExpression( where.value ) ) {
             placeholder = where.value.getSql();
         }
 
-        return trim( "#where.column# #uCase( where.operator )# #placeholder#" );
+        return trim( "#wrapColumn( where.column )# #uCase( where.operator )# #placeholder#" );
     }
 
     /**

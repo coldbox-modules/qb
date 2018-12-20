@@ -7,10 +7,7 @@ component extends="testbox.system.BaseSpec" {
                     var builder = getBuilder();
                     builder.setReturnFormat( "query" );
                     var expectedQuery = queryNew( "id", "integer", [ { id = 1 } ] );
-                    builder.$( "runQuery" ).$args(
-                        sql = "SELECT ""id"" FROM ""users""",
-                        options = {}
-                    ).$results( expectedQuery );
+                    builder.$( "runQuery", expectedQuery );
 
                     var results = builder.select( "id" ).from( "users" ).get();
 
@@ -21,7 +18,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT ""id"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
 
@@ -32,11 +30,13 @@ component extends="testbox.system.BaseSpec" {
                     var expectedNormalQuery = queryNew( "id,name,age", "integer,varchar,integer", [ { id = 1, name = "foo", age = 24 } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT ""id"", ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedGetQuery );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT * FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedNormalQuery );
 
                     expect( builder.from( "users" ).get( [ "id", "name" ] ) )
@@ -49,11 +49,13 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 2, "runQuery should have been called twice" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT ""id"", ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                     expect( runQueryLog[ 2 ] ).toBe( {
                         sql = "SELECT * FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
 
@@ -63,7 +65,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     expect( builder.from( "users" ).get( "name" ) )
@@ -74,7 +77,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
 
@@ -84,7 +88,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     builder.select( "id" ).from( "users" );
@@ -99,7 +104,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).whereName( "foo" ).first();
@@ -113,7 +119,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
             } );
@@ -124,7 +131,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" }, { id = 2, name = "test" } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT * FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).last();
@@ -141,7 +149,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id = 1, name = "foo" } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).find( 1 );
@@ -155,7 +164,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
             } );
@@ -166,7 +176,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).value( "name" );
@@ -178,7 +189,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
             } );
@@ -189,7 +201,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" }, { name = "bar" } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).values( "name" );
@@ -201,7 +214,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
             } );
@@ -216,7 +230,8 @@ component extends="testbox.system.BaseSpec" {
                     ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).implode( "name" );
@@ -228,7 +243,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
 
@@ -241,7 +257,8 @@ component extends="testbox.system.BaseSpec" {
                     ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).implode( "name", "-" );
@@ -253,7 +270,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT ""name"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
             } );
@@ -267,7 +285,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedCount } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).count();
@@ -279,7 +298,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
 
@@ -289,7 +309,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedCount } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).count( "name" );
@@ -301,7 +322,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
                 } );
 
@@ -310,7 +332,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = 1 } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     builder.select( [ "id", "name" ] ).from( "users" );
@@ -324,7 +347,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = 1 } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     builder.from( "users" ).count();
@@ -340,7 +364,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedMax } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT MAX(""age"") AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).max( "age" );
@@ -352,7 +377,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT MAX(""age"") AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
@@ -366,7 +392,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedMin } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT MIN(""age"") AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).min( "age" );
@@ -378,7 +405,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT MIN(""age"") AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
@@ -392,7 +420,8 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate = expectedSum } ] );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT SUM(""answers"") AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     ).$results( expectedQuery );
 
                     var results = builder.from( "users" ).sum( "answers" );
@@ -404,7 +433,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT SUM(""answers"") AS ""aggregate"" FROM ""users""",
-                        options = {}
+                        options = {},
+                        clearExcept = []
                     } );
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
@@ -437,7 +467,8 @@ component extends="testbox.system.BaseSpec" {
                 var expectedQuery = queryNew( "id", "integer", data );
                 builder.$( "runQuery" ).$args(
                     sql = "SELECT ""id"" FROM ""users""",
-                    options = {}
+                    options = {},
+                    clearExcept = []
                 ).$results( expectedQuery );
 
                 var results = builder.select( "id" ).from( "users" ).get();
@@ -448,7 +479,8 @@ component extends="testbox.system.BaseSpec" {
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                 expect( runQueryLog[ 1 ] ).toBe( {
                     sql = "SELECT ""id"" FROM ""users""",
-                    options = {}
+                    options = {},
+                    clearExcept = []
                 } );
             } );
 
@@ -459,7 +491,8 @@ component extends="testbox.system.BaseSpec" {
                 var expectedQuery = queryNew( "id", "integer", data );
                 builder.$( "runQuery" ).$args(
                     sql = "SELECT ""id"" FROM ""users""",
-                    options = {}
+                    options = {},
+                    clearExcept = []
                 ).$results( expectedQuery );
 
                 var results = builder.select( "id" ).from( "users" ).get();
@@ -470,7 +503,8 @@ component extends="testbox.system.BaseSpec" {
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                 expect( runQueryLog[ 1 ] ).toBe( {
                     sql = "SELECT ""id"" FROM ""users""",
-                    options = {}
+                    options = {},
+                    clearExcept = []
                 } );
             } );
 
@@ -481,7 +515,8 @@ component extends="testbox.system.BaseSpec" {
                 var expectedQuery = queryNew( "id", "integer", data );
                 builder.$( "runQuery" ).$args(
                     sql = "SELECT ""id"" FROM ""users""",
-                    options = {}
+                    options = {},
+                    clearExcept = []
                 ).$results( expectedQuery );
 
                 var results = builder.select( "id" ).from( "users" ).get();
@@ -492,7 +527,8 @@ component extends="testbox.system.BaseSpec" {
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                 expect( runQueryLog[ 1 ] ).toBe( {
                     sql = "SELECT ""id"" FROM ""users""",
-                    options = {}
+                    options = {},
+                    clearExcept = []
                 } );
             } );
 
@@ -510,7 +546,8 @@ component extends="testbox.system.BaseSpec" {
                 var expectedQuery = queryNew( "id", "integer", data );
                 builder.$( "runQuery" ).$args(
                     sql = "SELECT ""id"" FROM ""users""",
-                    options = {}
+                    options = {},
+                    clearExcept = []
                 ).$results( expectedQuery );
 
                 var results = builder.select( "id" ).from( "users" ).get();
@@ -521,7 +558,8 @@ component extends="testbox.system.BaseSpec" {
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                 expect( runQueryLog[ 1 ] ).toBe( {
                     sql = "SELECT ""id"" FROM ""users""",
-                    options = {}
+                    options = {},
+                    clearExcept = []
                 } );
             } );
         } );

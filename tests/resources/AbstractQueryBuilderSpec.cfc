@@ -1340,7 +1340,7 @@ component extends="testbox.system.BaseSpec" {
             describe( "updateOrInsert statements", function() {
                 it( "inserts a new record when the where clause does not bring back any records", function() {
                     testCase( function( builder ) {
-                        builder.$( "exists", false );
+                        grammar.$( "runQuery", queryNew( "id", "varchar", [] ) );
                         return builder.from( "users" )
                             .where( "email", "foo" )
                             .updateOrInsert(
@@ -1352,7 +1352,8 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "updates an existing record when the where clause brings back at least one record", function() {
                     testCase( function( builder ) {
-                        builder.$( "exists", true );
+                        grammar.$( "runQuery", queryNew( "id", "varchar", [ { "id" = 1 } ] ) );
+                        // builder.$( "exists", true );
                         return builder.from( "users" )
                             .where( "email", "foo" )
                             .updateOrInsert(

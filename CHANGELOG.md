@@ -1,3 +1,16 @@
+# v6.0.4
+## 20 Dec 2018 — 01:57:03 UTC
+
+### fix
+
++ __QueryBuilder:__ Correctly keep where bindings for updateOrInsert ([fa9fab6](https://github.com/coldbox-modules/qb/commit/fa9fab65afdc2aef546c9db504d7cf21f323d723))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([37e8ab3](https://github.com/coldbox-modules/qb/commit/37e8ab31feabe794f5c889e32d5a7756a7012e45))
+
+
 # v6.0.3
 ## 11 Dec 2018 — 22:33:30 UTC
 

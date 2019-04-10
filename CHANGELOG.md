@@ -1,3 +1,16 @@
+# v6.1.0
+## 10 Apr 2019 — 17:56:24 UTC
+
+### feat
+
++ __QueryBuilder:__ Add a columnFormatter option ([984da75](https://github.com/coldbox-modules/qb/commit/984da75c8ab9a1bf8384b58fb882baa516bf79fd))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([727c61c](https://github.com/coldbox-modules/qb/commit/727c61c9311490f6c0d4f3aded2c3fe4d1e39fe0))
+
+
 # v6.0.4
 ## 20 Dec 2018 — 01:57:03 UTC
 

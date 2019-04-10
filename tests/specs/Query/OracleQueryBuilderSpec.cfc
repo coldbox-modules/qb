@@ -65,7 +65,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function fromDerivedTable() {
         return {
-            sql = "SELECT * FROM (SELECT ""ID"", ""NAME"" FROM ""USERS"" WHERE ""AGE"" >= ?) as ""U""",
+            sql = "SELECT * FROM (SELECT ""ID"", ""NAME"" FROM ""USERS"" WHERE ""AGE"" >= ?) AS ""U""",
             bindings = [21]
         };
     }
@@ -353,28 +353,28 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function joinSub() {
         return {
-            sql = 'SELECT * FROM "USERS" AS "U" INNER JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) as "C" ON "U"."ID" = "C"."ID"',
+            sql = 'SELECT * FROM "USERS" AS "U" INNER JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) AS "C" ON "U"."ID" = "C"."ID"',
             bindings = [ 1, 2, 3 ]
         };
     }
 
     function leftJoinSub() {
         return {
-            sql = 'SELECT * FROM "USERS" AS "U" LEFT JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) as "C" ON "U"."ID" = "C"."ID"',
+            sql = 'SELECT * FROM "USERS" AS "U" LEFT JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) AS "C" ON "U"."ID" = "C"."ID"',
             bindings = [ 1, 2, 3 ]
         };
     }
 
     function rightJoinSub() {
         return {
-            sql = 'SELECT * FROM "USERS" AS "U" RIGHT JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) as "C" ON "U"."ID" = "C"."ID"',
+            sql = 'SELECT * FROM "USERS" AS "U" RIGHT JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) AS "C" ON "U"."ID" = "C"."ID"',
             bindings = [ 1, 2, 3 ]
         };
     }
 
     function crossJoinSub() {
         return {
-            sql = 'SELECT * FROM "USERS" AS "U" CROSS JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) as "C"',
+            sql = 'SELECT * FROM "USERS" AS "U" CROSS JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) AS "C"',
             bindings = [ 1, 2, 3 ]
         };
     }

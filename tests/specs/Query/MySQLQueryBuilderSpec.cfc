@@ -45,12 +45,12 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function subSelect() {
-        return "SELECT `name`, ( SELECT MAX(updated_date) FROM `posts` WHERE `posts`.`user_id` = `users`.`id` ) AS ""latestUpdatedDate"" FROM `users`";
+        return "SELECT `name`, ( SELECT MAX(updated_date) FROM `posts` WHERE `posts`.`user_id` = `users`.`id` ) AS `latestUpdatedDate` FROM `users`";
     }
 
     function subSelectWithBindings() {
         return {
-            sql = "SELECT `name`, ( SELECT MAX(updated_date) FROM `posts` WHERE `posts`.`user_id` = ? ) AS ""latestUpdatedDate"" FROM `users`",
+            sql = "SELECT `name`, ( SELECT MAX(updated_date) FROM `posts` WHERE `posts`.`user_id` = ? ) AS `latestUpdatedDate` FROM `users`",
             bindings = [ 1 ]
         };
     }
@@ -65,7 +65,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function fromDerivedTable() {
         return {
-            sql = "SELECT * FROM (SELECT `id`, `name` FROM `users` WHERE `age` >= ?) as ""u""",
+            sql = "SELECT * FROM (SELECT `id`, `name` FROM `users` WHERE `age` >= ?) AS `u`",
             bindings = [21]
         };
     }
@@ -353,28 +353,28 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function joinSub() {
         return {
-            sql = 'SELECT * FROM `users` AS `u` INNER JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) as "c" ON `u`.`id` = `c`.`id`',
+            sql = 'SELECT * FROM `users` AS `u` INNER JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) AS `c` ON `u`.`id` = `c`.`id`',
             bindings = [ 1, 2, 3 ]
         };
     }
 
     function leftJoinSub() {
         return {
-            sql = 'SELECT * FROM `users` AS `u` LEFT JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) as "c" ON `u`.`id` = `c`.`id`',
+            sql = 'SELECT * FROM `users` AS `u` LEFT JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) AS `c` ON `u`.`id` = `c`.`id`',
             bindings = [ 1, 2, 3 ]
         };
     }
 
     function rightJoinSub() {
         return {
-            sql = 'SELECT * FROM `users` AS `u` RIGHT JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) as "c" ON `u`.`id` = `c`.`id`',
+            sql = 'SELECT * FROM `users` AS `u` RIGHT JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) AS `c` ON `u`.`id` = `c`.`id`',
             bindings = [ 1, 2, 3 ]
         };
     }
 
     function crossJoinSub() {
         return {
-            sql = 'SELECT * FROM `users` AS `u` CROSS JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) as "c"',
+            sql = 'SELECT * FROM `users` AS `u` CROSS JOIN (SELECT `id` FROM `contacts` WHERE `id` NOT IN (?, ?, ?)) AS `c`',
             bindings = [ 1, 2, 3 ]
         };
     }

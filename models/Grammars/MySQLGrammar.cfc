@@ -22,7 +22,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
     * @return string
     */
     public string function wrapAlias( required any value ) {
-        return """#value#""";
+        return "`#value#`";
     }
 
     function compileRenameTable( blueprint, commandParameters ) {

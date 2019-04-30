@@ -1,3 +1,16 @@
+# v6.2.1
+## 30 Apr 2019 — 18:55:17 UTC
+
+### fix
+
++ __QueryBuilder:__ Revery using array returntype where available ([d4fea1d](https://github.com/coldbox-modules/qb/commit/d4fea1db48f2e859994ad5a9608f51188a94d8c4))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([b1e240b](https://github.com/coldbox-modules/qb/commit/b1e240be91b6d3c7a252282f7378cefa06335dd9))
+
+
 # v6.2.0
 ## 30 Apr 2019 — 01:25:18 UTC
 

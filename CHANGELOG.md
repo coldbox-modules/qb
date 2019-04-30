@@ -1,3 +1,17 @@
+# v6.2.0
+## 30 Apr 2019 — 01:25:18 UTC
+
+### feat
+
++ __QueryBuilder:__ Use array returntype where available
+ ([2c45627](https://github.com/coldbox-modules/qb/commit/2c4562744bffaff7464a77d130992ba20ed3d8c0))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([d61b361](https://github.com/coldbox-modules/qb/commit/d61b3617601cd1ea9bc71845c952c481c796c8c3))
+
+
 # v6.1.0
 ## 10 Apr 2019 — 17:56:24 UTC
 

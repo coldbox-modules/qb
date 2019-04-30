@@ -27,6 +27,13 @@ component displayname="QueryBuilder" accessors="true" {
     property name="returnFormat";
 
     /**
+    * returnFormatType string
+    * Used to take advantage of Lucee's native support.
+    * @default "array"
+    */
+    property name="returnFormatType";
+
+    /**
     * columnFormatter callback
     * If provided, each column is passed to it before being added to the query.
     * Provides a hook for libraries like Quick to influence columns names.
@@ -2416,7 +2423,7 @@ component displayname="QueryBuilder" accessors="true" {
             return;
         }
 
-        if ( isQuery( q ) ) {
+        if ( isQuery( q ) || isArray( q ) ) {
             return returnFormat( q );
         }
 
@@ -2443,6 +2450,9 @@ component displayname="QueryBuilder" accessors="true" {
         string returnObject = "query",
         any clearExcept = []
     ) {
+        if ( variables.returnFormatType != "" ) {
+            options[ "returntype" ] = variables.returnFormatType;
+        }
         var result = grammar.runQuery( sql, getBindings(), options, returnObject );
         clearBindings( except = arguments.clearExcept );
         if ( ! isNull( result ) ) {
@@ -2509,11 +2519,16 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function setReturnFormat( required any format ) {
+        variables.returnFormatType = "";
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
         }
         else if ( arguments.format == "array" ) {
+            variables.returnFormatType = "array";
             variables.returnFormat = function( q ) {
+                if ( isArray( q ) ) {
+                    return q;
+                }
                 return getUtils().queryToArrayOfStructs( q );
             };
         }

@@ -1,3 +1,16 @@
+# v6.3.0
+## 03 May 2019 — 15:59:35 UTC
+
+### feat
+
++ __Subselect:__ Allow passing query objects to subselect ([d2fb971](https://github.com/coldbox-modules/qb/commit/d2fb971a78fa5722e7b7cea0a505da3ac5bd5ddb))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([7b99db5](https://github.com/coldbox-modules/qb/commit/7b99db5dc65d689e8c3a99ca0890066853c15710))
+
+
 # v6.2.1
 ## 30 Apr 2019 — 18:55:17 UTC
 

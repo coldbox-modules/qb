@@ -89,6 +89,18 @@ component extends="testbox.system.BaseSpec" {
                         }, subSelect() );
                     } );
 
+                    it( "can take a query object in a sub-selects", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .select( "name" )
+                                .subSelect( "latestUpdatedDate", builder.newQuery()
+                                    .from( "posts" )
+                                    .selectRaw( "MAX(updated_date)" )
+                                    .whereColumn( "posts.user_id", "users.id" ) );
+                        }, subSelectQueryObject() );
+                    } );
+
                     it( "can execute sub-selects with bindings", function() {
                         testCase( function( builder ) {
                             builder
@@ -1410,7 +1422,7 @@ component extends="testbox.system.BaseSpec" {
             expect( getTestBindings( builder ) ).toBe( expected.bindings );
         }
         catch ( any e ) {
-            if ( structKeyExists( expected, "exception" ) ) {
+            if ( ! isSimpleValue( expected ) && structKeyExists( expected, "exception" ) ) {
                 expect( e.type ).toBe( expected.exception );
                 return;
             }

@@ -260,7 +260,7 @@ component displayname="QueryBuilder" accessors="true" {
     * Adds a sub-select to the query.
     *
     * @alias The alias for the sub-select
-    * @callback The callback to configure the sub-select.
+    * @callback The callback or query to configure the sub-select.
     *
     * @returns qb.models.Query.QueryBuilder
     */
@@ -268,8 +268,11 @@ component displayname="QueryBuilder" accessors="true" {
         required string alias,
         required any callback
     ) {
-        var subselect = newQuery();
-        callback( subselect );
+        var subselect = callback;
+        if ( isClosure( callback ) ) {
+            subselect = newQuery();
+            callback( subselect );
+        }
         return selectRaw(
             "( #subselect.toSQL()# ) AS #getGrammar().wrapAlias( alias )#",
             subselect.getBindings()

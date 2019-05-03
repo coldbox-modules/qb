@@ -48,6 +48,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"" ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""";
     }
 
+    function subSelectQueryObject() {
+        return "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"" ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""";
+    }
+
     function subSelectWithBindings() {
         return {
             sql = "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ? ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""",

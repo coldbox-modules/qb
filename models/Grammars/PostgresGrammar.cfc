@@ -139,6 +139,14 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return tables;
     }
 
+    function compileTableExists( tableName, schemaName = "" ) {
+        var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_name" )# = ?";
+        if ( schemaName != "" ) {
+            sql &= " AND #wrapColumn( "table_catalog" )# = ?";
+        }
+        return sql;
+    }
+
     /*========================================
     =            Blueprint: Alter            =
     ========================================*/

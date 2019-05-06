@@ -1,3 +1,17 @@
+# v6.3.2
+## 06 May 2019 — 21:09:24 UTC
+
+### fix
+
++ __PostgresGrammar:__ Only drop tables in the current schema
+ ([0866f9a](https://github.com/coldbox-modules/qb/commit/0866f9aecbbb8df8bacfcbec93a208099df7fad3))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([3d5cb30](https://github.com/coldbox-modules/qb/commit/3d5cb303c0b8ff0aee284ab50684a166931dcb56))
+
+
 # v6.3.1
 ## 06 May 2019 — 19:50:34 UTC
 

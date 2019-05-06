@@ -1,3 +1,17 @@
+# v6.3.1
+## 06 May 2019 — 19:50:34 UTC
+
+### fix
+
++ __PostgresGrammar:__ Use correct detection of tables in schemas
+ ([10408a1](https://github.com/coldbox-modules/qb/commit/10408a1a33cfd39124302f4b80ebe4ad5fd6c044))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([46bc62f](https://github.com/coldbox-modules/qb/commit/46bc62ffe31def111789c77772602be202f70bde))
+
+
 # v6.3.0
 ## 03 May 2019 — 15:59:35 UTC
 

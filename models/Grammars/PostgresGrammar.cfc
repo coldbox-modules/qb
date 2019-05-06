@@ -115,8 +115,8 @@ component extends="qb.models.Grammars.BaseGrammar" {
         return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( commandParameters.name )#";
     }
 
-    function compileDropAllObjects( options ) {
-        var tables = getAllTableNames( options );
+    function compileDropAllObjects( options, schema = "" ) {
+        var tables = getAllTableNames( options, schema );
         var tableList = arrayToList( arrayMap( tables, function( table ) {
             return wrapTable( table );
         } ), ", " );
@@ -125,13 +125,14 @@ component extends="qb.models.Grammars.BaseGrammar" {
         ], function( sql ) { return sql != ""; } );
     }
 
-    function getAllTableNames( options ) {
-        var tablesQuery = runQuery(
-            "SELECT ""table_name"" FROM ""information_schema"".""tables"" WHERE ""table_schema"" = 'public'",
-            {},
-            options,
-            "query"
-        );
+    function getAllTableNames( options, schema = "" ) {
+        var sql = "SELECT #wrapColumn( "table_name" )# FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_schema" )# = 'public'";
+        var args = [];
+        if ( schema != "" ) {
+            sql &= " AND #wrapColumn( "table_catalog" )# = ?";
+            args.append( schema );
+        }
+        var tablesQuery = runQuery( sql, args, options, "query" );
         var tables = [];
         for ( var table in tablesQuery ) {
             arrayAppend( tables, table[ "table_name" ] );

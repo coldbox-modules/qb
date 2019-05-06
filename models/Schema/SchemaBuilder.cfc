@@ -195,8 +195,8 @@ component accessors="true" singleton {
      *
      * @returns The array of executed statements.
      */
-    function dropAllObjects( options = {}, execute = true ) {
-        var statements = getGrammar().compileDropAllObjects( options );
+    function dropAllObjects( options = {}, execute = true, schema = "" ) {
+        var statements = getGrammar().compileDropAllObjects( options, schema );
         if ( execute ) {
             statements.each( function( statement ) {
                 getGrammar().runQuery( statement, [], options, "result" );

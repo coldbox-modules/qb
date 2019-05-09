@@ -1,3 +1,17 @@
+# v6.3.3
+## 09 May 2019 — 19:51:30 UTC
+
+### chore
+
++ __APIDocs:__ Don't nest API docs
+ ([dc6bde8](https://github.com/coldbox-modules/qb/commit/dc6bde85cc0335d1818bfd25b641c56c246bc004))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([3be8bc2](https://github.com/coldbox-modules/qb/commit/3be8bc23bbeba6f521c564d0078dcef9c0311a25))
+
+
 # v6.3.2
 ## 06 May 2019 — 21:09:24 UTC
 

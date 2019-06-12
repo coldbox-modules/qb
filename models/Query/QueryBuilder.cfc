@@ -2661,7 +2661,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return boolean
     */
     private boolean function isInvalidOperator( required string operator ) {
-        return ! arrayContains( operators, operator );
+        return ! arrayContains( variables.operators, lcase( arguments.operator ) );
     }
 
     /**
@@ -2672,12 +2672,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return boolean
     */
     private boolean function isInvalidCombinator( required string combinator ) {
-        for ( var validCombinator in variables.combinators ) {
-            if ( validCombinator == arguments.combinator ) {
-                return false;
-            }
-        }
-        return true;
+        return ! arrayContains( variables.combinators, ucase( arguments.combinator ) );
     }
 
     /**

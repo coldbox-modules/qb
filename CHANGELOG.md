@@ -1,3 +1,16 @@
+# v6.3.4
+## 12 Jun 2019 — 04:52:37 UTC
+
+### fix
+
++ __QueryBuilder:__ Make operator and combinator checks case-insensitive ([a90b944](https://github.com/coldbox-modules/qb/commit/a90b94460f179d65070797f34c24ae4841038679))
+
+### other
+
++ __\*:__ Updated API Docs
+ ([fd68bcd](https://github.com/coldbox-modules/qb/commit/fd68bcd9f39e8c9d7b41dd4e6243464e85903d4b))
+
+
 # v6.3.3
 ## 09 May 2019 — 19:51:30 UTC
 

@@ -2024,7 +2024,7 @@ component displayname="QueryBuilder" accessors="true" {
             }
         }
 
-        var sql = getGrammar().compileUpdate( this, arguments.values );
+        var sql = getGrammar().compileUpdate( this, updateArray, arguments.values );
 
         if ( toSql ) {
             return sql;

@@ -705,10 +705,11 @@ component displayname="Grammar" accessors="true" {
     */
     public string function compileUpdate(
         required QueryBuilder query,
-        required array columns
+        required struct updateMap
     ) {
-        var updateList = columns.map( function( column ) {
-            return "#wrapColumn( column )# = ?";
+        var updateList = updateMap.keyArray().map( function( column ) {
+            var value = updateMap[ column ];
+            return "#wrapColumn( column )# = #utils.isExpression( value ) ? value.getSql() : '?'#";
         } ).toList( ", " );
 
         return trim( "UPDATE #wrapTable( query.getFrom() )# SET #updateList# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#" );

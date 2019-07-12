@@ -2017,11 +2017,14 @@ component displayname="QueryBuilder" accessors="true" {
         var updateArray = values.keyArray().map( applyColumnFormatter );
         updateArray.sort( "textnocase" );
 
-        addBindings( updateArray.map( function( column ) {
-            return getUtils().extractBinding( values[ column ] );
-        } ), "update" );
+        for ( var column in updateArray ) {
+            var value = arguments.values[ column ];
+            if ( ! getUtils().isExpression( value ) ) {
+                addBindings( getUtils().extractBinding( value ), "update" );
+            }
+        }
 
-        var sql = getGrammar().compileUpdate( this, updateArray );
+        var sql = getGrammar().compileUpdate( this, arguments.values );
 
         if ( toSql ) {
             return sql;

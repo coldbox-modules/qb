@@ -1,3 +1,11 @@
+# v6.4.0
+## 12 Jul 2019 — 03:46:03 UTC
+
+### feat
+
++ __QueryBuilder:__ Allow raw values in updates ([5f287b9](https://github.com/coldbox-modules/qb/commit/5f287b91f502b537a5b5177a290e096e62033dc9))
+
+
 # v6.3.4
 ## 12 Jun 2019 — 04:52:37 UTC
 

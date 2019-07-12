@@ -602,6 +602,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function updateWithRaw() {
+        return {
+            sql = "UPDATE ""HITS"" SET ""COUNT"" = count + 1 WHERE ""PAGE"" = ?",
+            bindings = [ "someUrl" ]
+        };
+    }
+
     function updateOrInsertNotExists() {
         return {
             sql = "INSERT ALL INTO ""USERS"" (""NAME"") VALUES (?) SELECT 1 FROM dual",

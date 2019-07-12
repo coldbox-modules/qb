@@ -1347,6 +1347,16 @@ component extends="testbox.system.BaseSpec" {
                             }, toSql = true );
                     }, updateWithWhere() );
                 } );
+
+                it( "can use an expression in an update", function() {
+                    testCase( function( builder ) {
+                        return builder.from( "hits" )
+                            .where( "page", "someUrl" )
+                            .update( values = {
+                                "count" = builder.raw( "count + 1" )
+                            }, toSql = true );
+                    }, updateWithRaw() );
+                } );
             } );
 
             describe( "updateOrInsert statements", function() {

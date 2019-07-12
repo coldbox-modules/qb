@@ -162,10 +162,12 @@ component extends="qb.models.Grammars.BaseGrammar" {
     */
     public string function compileUpdate(
         required query,
-        required array columns
+        required array columns,
+        required struct updateMap
     ) {
         var updateList = columns.map( function( column ) {
-            return "#wrapColumn( column )# = ?";
+            var value = updateMap[ column ];
+            return "#wrapColumn( column )# = #utils.isExpression( value ) ? value.getSql() : '?'#";
         } ).toList( ", " );
 
         return arrayToList( arrayFilter( [

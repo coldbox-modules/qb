@@ -14,7 +14,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
     */
     public any function runQuery( sql, bindings, options ) {
         var result = super.runQuery( argumentCollection = arguments );
-        if ( result.recordCount > 0 ) {
+        if ( isQuery( result ) && result.recordCount > 0 ) {
             return utils.queryRemoveColumns( result, "QB_RN" );
         }
         return result;

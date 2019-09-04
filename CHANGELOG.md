@@ -1,3 +1,19 @@
+# v6.4.1
+## 04 Sep 2019 — 21:14:02 UTC
+
+### build
+
++ __travis:__ Use openjdk for builds
+ ([061e9d0](https://github.com/coldbox-modules/qb/commit/061e9d04af878af363a113dc6866d11cdec4f366))
+
+### fix
+
++ __namespaces:__ Fix for ACF 11 namespaces
+ ([784855c](https://github.com/coldbox-modules/qb/commit/784855cee789bc28e5d5ff40342a741e46c8255b))
++ __OracleGrammar:__ Fix for removing generated columns from insert and updates
+ ([f4ab485](https://github.com/coldbox-modules/qb/commit/f4ab4852d8edb88bd59418f99105a80edd4e701c))
+
+
 # v6.4.0
 ## 12 Jul 2019 — 03:46:03 UTC
 

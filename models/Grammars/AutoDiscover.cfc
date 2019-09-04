@@ -1,4 +1,4 @@
-component {
+component singleton {
 
     property name="wirebox" inject="wirebox";
     property name="grammar";

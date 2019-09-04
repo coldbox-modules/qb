@@ -1,6 +1,6 @@
 import qb.models.Query.QueryBuilder;
 
-component extends="qb.models.Grammars.BaseGrammar" {
+component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**
     * Runs a query through `queryExecute`.

@@ -1,4 +1,4 @@
-component extends="qb.models.Grammars.BaseGrammar" {
+component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**
     * The different components of a select statement in the order of compilation.

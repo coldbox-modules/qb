@@ -4,7 +4,7 @@
 * This is the Base Grammar that other grammars can extend to modify
 * the generated sql for their specific platforms.
 */
-component displayname="Grammar" accessors="true" {
+component displayname="Grammar" accessors="true" singleton {
 
     /**
     * ColdBox Interceptor Service to announce pre- and post- interception points

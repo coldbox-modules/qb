@@ -85,5 +85,23 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( result.columnList ).toBe( "id" );
             } );
         } );
+
+        describe( "clone()", function() {
+            it( "clones the query preserving the grammar and avoiding duplicate()", function() {
+                var queryOne = new qb.models.Query.QueryBuilder();
+                queryOne.from( "foo" ).select( [ "one", "two" ] ).where( "bar", "baz" );
+                var queryTwo = queryOne.clone();
+                expect( queryTwo.getFrom() ).toBe( "foo" );
+                expect( queryTwo.getColumns() ).toBe( [ "one", "two" ] );
+                expect( queryTwo.getWheres() ).toBe( [
+                    { column = "bar", combinator = "and", operator = "=", value = "baz", type = "basic" }
+                ] );
+                expect( queryTwo.getRawBindings().where ).toBe( [
+                    { value = "baz", cfsqltype = "cf_sql_varchar", null = false, list = false }
+                ] );
+                queryTwo.from( "another" );
+                expect( queryOne.getFrom() ).toBe( "foo" );
+            } );
+        } );
     }
 }

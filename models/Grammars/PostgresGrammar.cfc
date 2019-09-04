@@ -1,4 +1,4 @@
-component extends="qb.models.Grammars.BaseGrammar" {
+component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**
     * Compile a Builder's query into an insert string.

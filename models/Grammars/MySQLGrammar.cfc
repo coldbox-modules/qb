@@ -1,4 +1,4 @@
-component extends="qb.models.Grammars.BaseGrammar" {
+component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**
     * Parses and wraps a value from the Builder for use in a sql statement.

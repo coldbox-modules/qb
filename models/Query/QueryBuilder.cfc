@@ -2477,8 +2477,31 @@ component displayname="QueryBuilder" accessors="true" {
         return new qb.models.Query.QueryBuilder(
             grammar = getGrammar(),
             utils = getUtils(),
-            returnFormat = getReturnFormat()
+            returnFormat = getReturnFormat(),
+            columnFormatter = isNull( getColumnFormatter() ) ?
+                javacast( "null", "" ) :
+                getColumnFormatter()
         );
+    }
+
+    public qb.models.Query.QueryBuilder function clone() {
+        var clonedQuery = newQuery();
+        clonedQuery.setDistinct( this.getDistinct() );
+        clonedQuery.setAggregate( this.getAggregate() );
+        clonedQuery.setColumns( this.getColumns() );
+        clonedQuery.setFrom( this.getFrom() );
+        clonedQuery.setJoins( this.getJoins() );
+        clonedQuery.setWheres( this.getWheres() );
+        clonedQuery.setGroups( this.getGroups() );
+        clonedQuery.setHavings( this.getHavings() );
+        clonedQuery.setUnions( this.getUnions() );
+        clonedQuery.setOrders( this.getOrders() );
+        clonedQuery.setCommonTables( this.getCommonTables() );
+        clonedQuery.setLimitValue( this.getLimitValue() );
+        clonedQuery.setOffsetValue( this.getOffsetValue() );
+        clonedQuery.setReturning( this.getReturning() );
+        clonedQuery.mergeBindings( this );
+        return clonedQuery;
     }
 
     /**

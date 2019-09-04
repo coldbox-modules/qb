@@ -74,7 +74,7 @@ component extends="qb.models.Grammars.BaseGrammar" {
     * @return string
     */
     public string function compileInsert(
-        required QueryBuilder query,
+        required qb.models.Query.QueryBuilder query,
         required array columns,
         required array values
     ) {

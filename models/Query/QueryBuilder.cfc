@@ -1,6 +1,3 @@
-import qb.models.Query.QueryBuilder;
-import qb.models.Grammars.BaseGrammar;
-
 /**
 * Query Builder for fluently creating SQL queries.
 */

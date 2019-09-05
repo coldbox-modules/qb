@@ -106,7 +106,9 @@ component displayname="QueryUtils" {
         required query q,
         required string columns
     ) {
-        var columnList = q.columnList;
+        var columnList = getMetadata( q ).map( function( column ) {
+            return column.name;
+        } ).toList( "," );
         for ( var c in arguments.columns.listToArray() ) {
             var columnPosition = listFindNoCase( columnList, c );
             if ( columnPosition != 0 ) {

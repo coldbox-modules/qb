@@ -1,3 +1,17 @@
+# v6.5.0
+## 05 Sep 2019 — 18:45:38 UTC
+
+### feat
+
++ __QueryBuilder:__ Add a performant clone method
+ ([f1b367a](https://github.com/coldbox-modules/qb/commit/f1b367aca2912119ab98986d1e4716effd62b93e))
+
+### fix
+
++ __Utils:__ Preserve column casing when removing columns
+ ([433df5d](https://github.com/coldbox-modules/qb/commit/433df5dd4194a6832a135a1f5d68525fc02fd4d3))
+
+
 # v6.4.1
 ## 04 Sep 2019 — 21:14:02 UTC
 

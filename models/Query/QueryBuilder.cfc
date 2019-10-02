@@ -12,7 +12,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
     * Query utilities shared across multiple models.
     */
-    property name="utils";
+    property name="utils" inject="QueryUtils@qb";
 
     /**
     * returnFormat callback
@@ -30,6 +30,13 @@ component displayname="QueryBuilder" accessors="true" {
     * @default Identity
     */
     property name="columnFormatter";
+
+
+    /**
+     * A struct of default options for the query builder.
+     * These options will be merged with any options passed.
+     */
+    property name="defaultOptions";
 
     /******************** Query Properties ********************/
 
@@ -170,7 +177,8 @@ component displayname="QueryBuilder" accessors="true" {
         grammar = new qb.models.Grammars.BaseGrammar(),
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
-        columnFormatter
+        columnFormatter,
+        defaultOptions = {}
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
@@ -182,6 +190,7 @@ component displayname="QueryBuilder" accessors="true" {
             };
         }
         setColumnFormatter( arguments.columnFormatter );
+        setDefaultOptions( arguments.defaultOptions );
 
         setDefaultValues();
 
@@ -1964,7 +1973,7 @@ component displayname="QueryBuilder" accessors="true" {
             return sql;
         }
 
-        return runQuery( sql, options, "result" );
+        return runQuery( sql, arguments.options, "result" );
     }
 
     function returning( required any columns ) {
@@ -2007,7 +2016,7 @@ component displayname="QueryBuilder" accessors="true" {
             return sql;
         }
 
-        return runQuery( sql, options, "result" );
+        return runQuery( sql, arguments.options, "result" );
     }
 
     /**
@@ -2061,7 +2070,7 @@ component displayname="QueryBuilder" accessors="true" {
             return sql;
         }
 
-        return runQuery( sql, options, "result" );
+        return runQuery( sql, arguments.options, "result" );
     }
 
     /*******************************************************************************\
@@ -2426,7 +2435,8 @@ component displayname="QueryBuilder" accessors="true" {
         string returnObject = "query",
         any clearExcept = []
     ) {
-        var result = grammar.runQuery( sql, getBindings(), options, returnObject );
+        structAppend( arguments.options, getDefaultOptions() );
+        var result = grammar.runQuery( sql, getBindings(), arguments.options, returnObject );
         clearBindings( except = arguments.clearExcept );
         if ( ! isNull( result ) ) {
             return result;

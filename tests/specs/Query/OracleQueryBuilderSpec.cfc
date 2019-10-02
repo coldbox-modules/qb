@@ -582,6 +582,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertWithRaw() {
+        return {
+            sql = "INSERT ALL INTO ""USERS"" (""CREATED_DATE"", ""EMAIL"") VALUES (now(), ?) SELECT 1 FROM dual",
+            bindings = [ "john@example.com" ]
+        };
+    }
+
     function returning() {
         return {
             exception = "UnsupportedOperation"

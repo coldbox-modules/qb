@@ -582,6 +582,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertWithRaw() {
+        return {
+            sql = "INSERT INTO ""users"" (""created_date"", ""email"") VALUES (now(), ?)",
+            bindings = [ "john@example.com" ]
+        };
+    }
+
     function returning() {
         return {
             sql = "INSERT INTO ""users"" (""email"", ""name"") VALUES (?, ?) RETURNING ""id""",

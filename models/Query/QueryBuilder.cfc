@@ -147,6 +147,7 @@ component displayname="QueryBuilder" accessors="true" {
         "where" = [],
         "union" = [],
         "insert" = [],
+        "insertRaw" = [],
         "update" = []
     };
 
@@ -1966,17 +1967,23 @@ component displayname="QueryBuilder" accessors="true" {
 
         var columns = values[ 1 ].keyArray().map( applyColumnFormatter );
         columns.sort( "textnocase" );
-        var bindings = values.map( function( valueArray ) {
+        var newBindings = values.map( function( value ) {
             return columns.map( function( column ) {
-                return getUtils().extractBinding( valueArray[ column ] );
+                return getUtils().extractBinding( value[ column ] );
             } );
         } );
-        addBindings( bindings.reduce( function( allBindings, bindingsArray ) {
-            allBindings.append( bindingsArray, true /* merge */ );
-            return allBindings;
-        }, [] ), "insert" );
 
-        var sql = getGrammar().compileInsert( this, columns, bindings );
+        newBindings.each( function( bindingsArray ) {
+            bindingsArray.each( function( binding ) {
+                if ( getUtils().isNotExpression( binding ) ) {
+                    addBindings( binding, "insert" );
+                } else {
+                    addBindings( binding, "insertRaw" );
+                }
+            } );
+        } );
+
+        var sql = getGrammar().compileInsert( this, columns, newBindings );
 
         clearBindings( except = "insert" );
 

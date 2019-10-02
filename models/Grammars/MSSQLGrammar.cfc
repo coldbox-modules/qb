@@ -28,8 +28,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         } ).toList( ", " );
         var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
         var placeholderString = values.map( function( valueArray ) {
-            return "(" & valueArray.map( function() {
-                return "?";
+            return "(" & valueArray.map( function( item ) {
+                if ( getUtils().isExpression( item ) ) {
+                    return item.getSQL();
+                } else {
+                    return "?";
+                }
             } ).toList( ", " ) & ")";
         } ).toList( ", ");
         return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#)#returningClause# VALUES #placeholderString#" );

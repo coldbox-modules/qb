@@ -13,6 +13,9 @@ component displayname="QueryUtils" {
     public struct function extractBinding( required any value ) {
         var binding = "";
         if ( isStruct( value ) ) {
+            if ( structKeyExists( value, "isExpression" ) && value.isExpression == true ) {
+                return value;
+            }
             binding = value;
         }
         else {

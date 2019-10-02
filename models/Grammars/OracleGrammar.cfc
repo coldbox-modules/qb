@@ -72,8 +72,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var columnsString = columns.map( wrapColumn ).toList( ", " );
 
         var placeholderString = values.map( function( valueArray ) {
-            return "INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES (" & valueArray.map( function() {
-                return "?";
+            return "INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES (" & valueArray.map( function( item ) {
+                if ( getUtils().isExpression( item ) ) {
+                    return item.getSQL();
+                } else {
+                    return "?";
+                }
             } ).toList( ", " ) & ")";
         } ).toList( " ");
         return trim( "INSERT ALL #placeholderString# SELECT 1 FROM dual" );

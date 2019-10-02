@@ -685,8 +685,12 @@ component displayname="Grammar" accessors="true" singleton {
         var columnsString = columns.map( wrapColumn ).toList( ", " );
 
         var placeholderString = values.map( function( valueArray ) {
-            return "(" & valueArray.map( function() {
-                return "?";
+            return "(" & valueArray.map( function( item ) {
+                if ( getUtils().isExpression( item ) ) {
+                    return item.getSQL();
+                } else {
+                    return "?";
+                }
             } ).toList( ", " ) & ")";
         } ).toList( ", ");
         return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES #placeholderString#" );

@@ -1324,6 +1324,15 @@ component extends="testbox.system.BaseSpec" {
                         }, toSql = true );
                     }, returning() );
                 } );
+
+                it( "can insert with raw values", function() {
+                    testCase( function( builder ) {
+                        return builder.from( "users" ).insert( values = {
+                            "email" = "john@example.com",
+                            "created_date" = builder.raw( "now()" )
+                        }, toSql = true );
+                    }, insertWithRaw() );
+                } );
             } );
 
             describe( "update statements", function() {
@@ -1446,7 +1455,11 @@ component extends="testbox.system.BaseSpec" {
 
     private array function getTestBindings( builder ) {
         return builder.getBindings().map( function( binding ) {
-            return binding.value;
+            if ( builder.getUtils().isExpression( binding ) ) {
+                return binding.getSQL();
+            } else {
+                return binding.value;
+            }
         } );
     }
 

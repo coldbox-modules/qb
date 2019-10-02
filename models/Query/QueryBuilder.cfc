@@ -235,19 +235,10 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function select( any columns = "*" ) {
-        // This block is necessary for ACF 10.
-        // It can't be extracted to a function because
-        // the arguments struct doesn't get passed correctly.
-        var args = {};
-        var count = structCount( arguments );
-        for ( var arg in arguments ) {
-            args[ count ] = arguments[ arg ];
-            count--;
-        }
-
-        variables.columns = normalizeToArray( argumentCollection = args ).map( function( column ) {
-            return applyColumnFormatter( column );
-        } );
+        variables.columns = normalizeToArray( arguments.columns )
+            .map( function( column ) {
+                return applyColumnFormatter( column );
+            } );
         if ( variables.columns.isEmpty() ) {
             variables.columns = [ "*" ];
         }
@@ -291,21 +282,13 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function addSelect( required any columns ) {
-        // This block is necessary for ACF 10.
-        // It can't be extracted to a function because
-        // the arguments struct doesn't get passed correctly.
-        var args = {};
-        var count = structCount( arguments );
-        for ( var arg in arguments ) {
-            args[ count ] = arguments[ arg ];
-            count--;
-        }
-
         if ( variables.columns.isEmpty() ||
             ( variables.columns.len() == 1 && isSimpleValue( variables.columns[ 1 ] ) && variables.columns[ 1 ] == "*" ) ) {
             variables.columns = [];
         }
-        var newColumns = normalizeToArray( argumentCollection = args ).map( applyColumnFormatter );
+        var newColumns = normalizeToArray( arguments.columns ).map( function( column ) {
+            return applyColumnFormatter( column );
+        } );
         arrayAppend( variables.columns, newColumns, true );
         return this;
     }
@@ -1569,21 +1552,11 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function groupBy() {
-        // This block is necessary for ACF 10.
-        // It can't be extracted to a function because
-        // the arguments struct doesn't get passed correctly.
-        var args = {};
-        var count = 1;
-        for ( var arg in arguments ) {
-            args[ count ] = arguments[ arg ];
-            count++;
-        }
-
-        var groupBys = normalizeToArray( argumentCollection = args );
-        groupBys.each( function( groupBy ) {
+    public QueryBuilder function groupBy( required groups ) {
+        var groupBys = normalizeToArray( arguments.groups );
+        for ( var groupBy in groupBys ) {
             variables.groups.append( applyColumnFormatter( groupBy ) );
-        } );
+        }
         return this;
     }
 
@@ -2624,63 +2597,18 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return array
     */
-    private array function normalizeToArray() {
-        if ( isVariadicFunction( args = arguments ) ) {
-            return normalizeVariadicArgumentsToArray( args = arguments );
+    private array function normalizeToArray( required listOrArray ) {
+        if ( isArray( arguments.listOrArray ) ) {
+            return arguments.listOrArray;
         }
 
-        var arg = arguments[ 1 ];
-        if ( getUtils().isExpression( arg ) ) {
-            return [ arg ];
+        if ( getUtils().isExpression( arguments.listOrArray ) ) {
+            return [ arguments.listOrArray ];
         }
 
-        if ( ! isArray( arg ) ) {
-            return normalizeListArgumentsToArray( arg );
-        }
-
-        return arg;
-    }
-
-    /**
-    * Returns true if the arguments passed constitute a variadic function.
-    *
-    * @args The arguments of another function.
-    *
-    * @return boolean
-    */
-    private boolean function isVariadicFunction( required struct args ) {
-        return structCount( args ) > 1;
-    }
-
-    /**
-    * Converts a variadic list of arguments to an array.
-    *
-    * @args The arguments of another function.
-    *
-    * @return array
-    */
-    private array function normalizeVariadicArgumentsToArray( required struct args ) {
-        var normalizedArgs = [];
-        for ( var arg in arguments.args ) {
-            arrayAppend( normalizedArgs, arguments.args[ arg ] );
-        }
-        return normalizedArgs;
-    }
-
-    /**
-    * Converts a list of arguments to an array.
-    *
-    * @list A list containing multiple arguments.
-    *
-    * @return array
-    */
-    private array function normalizeListArgumentsToArray( required string list ) {
-        var listAsArray = listToArray( arguments.list );
-        var items = [];
-        for ( var item in listAsArray ) {
-            arrayAppend( items, trim( item ) );
-        }
-        return items;
+        var cfArray = [];
+        cfArray.append( arguments.listOrArray.split( ",\s*" ), true );
+        return cfArray;
     }
 
     /**

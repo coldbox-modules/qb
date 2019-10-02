@@ -26,11 +26,6 @@ component extends="testbox.system.BaseSpec" {
                         query.select( [ "::some_column::", "::another_column::" ] );
                         expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );
                     } );
-
-                    it( "using variadic parameters", function() {
-                        query.select( "::some_column::", "::another_column::" );
-                        expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );
-                    } );
                 } );
             } );
 
@@ -53,11 +48,6 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "using an array", function() {
                         query.addSelect( [ "::another_column::", "::yet_another_column::" ] );
-                        expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::", "::yet_another_column::" ] );
-                    } );
-
-                    it( "using variadic parameters", function() {
-                        query.addSelect( "::another_column::", "::yet_another_column::" );
                         expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::", "::yet_another_column::" ] );
                     } );
                 } );

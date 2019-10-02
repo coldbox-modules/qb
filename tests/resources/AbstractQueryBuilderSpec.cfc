@@ -16,12 +16,6 @@ component extends="testbox.system.BaseSpec" {
                         }, selectSpecificColumn() );
                     } );
 
-                    it( "can select multiple columns using variadic parameters", function() {
-                        testCase( function( builder ) {
-                            builder.select( "id", "name" ).from( "users" );
-                        }, selectMultipleVariadic() );
-                    } );
-
                     it( "can select multiple columns using an array", function() {
                         testCase( function( builder ) {
                             builder.select( [ "name", builder.raw( "COUNT(*)" ) ] ).from( "users" );
@@ -46,7 +40,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can select distinct records", function() {
                         testCase( function( builder ) {
-                            builder.distinct().select( "foo", "bar" ).from( "users" );
+                            builder.distinct().select( [ "foo", "bar" ] ).from( "users" );
                         }, selectDistinct() );
                     } );
 
@@ -154,7 +148,10 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can specify the table using fromSub as QueryBuilder", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id", "name").from("users").where( "age", ">=", "21" );
+                            var derivedTable = getBuilder()
+                                .select( [ "id", "name" ] )
+                                .from( "users" )
+                                .where( "age", ">=", "21" );
 
                             builder.fromSub( "u", derivedTable );
                         }, fromDerivedTable() );
@@ -163,7 +160,9 @@ component extends="testbox.system.BaseSpec" {
                     it( "can specify the table using fromSub as a closure", function() {
                         testCase( function( builder ) {
                             builder.fromSub( "u", function (q){
-                                q.select("id", "name").from("users").where( "age", ">=", "21" );
+                                q.select( [ "id", "name" ] )
+                                    .from( "users" )
+                                    .where( "age", ">=", "21" );
                             } );
                         }, fromDerivedTable() );
                     } );

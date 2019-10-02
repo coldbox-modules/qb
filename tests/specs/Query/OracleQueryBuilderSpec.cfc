@@ -8,10 +8,6 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT ""NAME"" FROM ""USERS""";
     }
 
-    function selectMultipleVariadic() {
-        return "SELECT ""ID"", ""NAME"" FROM ""USERS""";
-    }
-
     function selectMultipleArray() {
         return "SELECT ""NAME"", COUNT(*) FROM ""USERS""";
     }

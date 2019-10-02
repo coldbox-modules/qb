@@ -1,7 +1,7 @@
 /**
 * A collection of query utilities shared across multiple models
 */
-component displayname="QueryUtils" {
+component displayname="QueryUtils" singleton {
 
     /**
     * Extract a binding from a value.

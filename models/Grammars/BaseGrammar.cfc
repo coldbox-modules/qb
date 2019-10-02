@@ -8,10 +8,8 @@ component displayname="Grammar" accessors="true" singleton {
 
     /**
     * ColdBox Interceptor Service to announce pre- and post- interception points
-    * This is not injected since we need to determine if we are in CommandBox or ColdBox first.
-    * This is handled in the ModuleConfig file
     */
-    property name="interceptorService";
+    property name="interceptorService" inject="box:interceptorService";
 
     /**
     * LogBox logger to log out SQL and bindings.

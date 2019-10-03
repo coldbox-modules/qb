@@ -1381,6 +1381,28 @@ component extends="testbox.system.BaseSpec" {
                             }, toSql = true );
                     }, updateWithRaw() );
                 } );
+
+                it( "can add incrementally with addUpdate", function() {
+                    testCase( function( builder ) {
+                        return builder.from( "users" )
+                            .whereId( 1 )
+                            .addUpdate( {
+                                "email" = "foo",
+                                "name" = "bar"
+                            } )
+                            .when( true, function( q ) {
+                                q.addUpdate( {
+                                    "foo": "yes"
+                                } );
+                            } )
+                            .when( false, function( q ) {
+                                q.addUpdate( {
+                                    "bar": "no"
+                                } );
+                            } )
+                            .update( toSql = true );
+                    }, addUpdate() );
+                } );
             } );
 
             describe( "updateOrInsert statements", function() {

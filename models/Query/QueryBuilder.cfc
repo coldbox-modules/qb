@@ -124,6 +124,12 @@ component displayname="QueryBuilder" accessors="true" {
     property name="returning" type="array";
 
     /**
+    * An array of columns to return from an insert statement.
+    * @default []
+    */
+    property name="updates" type="struct";
+
+    /**
     * The list of allowed operators in join and where statements.
     */
     variables.operators = [
@@ -214,6 +220,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.orders = [];
         variables.unions = [];
         variables.returning = [];
+        variables.updates = {};
     }
 
     /**********************************************************************************************\
@@ -2037,10 +2044,11 @@ component displayname="QueryBuilder" accessors="true" {
     * @return query
     */
     public any function update(
-        required struct values,
+        struct values = {},
         struct options = {},
         boolean toSql = false
     ) {
+        structAppend( arguments.values, variables.updates );
         var updateArray = values.keyArray().map( applyColumnFormatter );
         updateArray.sort( "textnocase" );
 
@@ -2058,6 +2066,18 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         return runQuery( sql, arguments.options, "result" );
+    }
+
+    /**
+     * Adds values to later update
+     *
+     * @values A struct of values to update
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    function addUpdate( required struct values ) {
+        structAppend( variables.updates, arguments.values, true );
+        return this;
     }
 
     /**

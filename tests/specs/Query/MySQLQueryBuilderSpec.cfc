@@ -623,6 +623,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function addUpdate() {
+        return {
+            sql = "UPDATE `users` SET `email` = ?, `foo` = ?, `name` = ? WHERE `Id` = ?",
+            bindings = [ "foo", "yes", "bar", 1 ]
+        };
+    }
+
     function updateOrInsertNotExists() {
         return {
             sql = "INSERT INTO `users` (`name`) VALUES (?)",

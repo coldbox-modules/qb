@@ -453,6 +453,14 @@ component extends="testbox.system.BaseSpec" {
                             }, whereInSubselect() );
                         } );
                     } );
+
+                    describe( "where like", function() {
+                        it( "can add like statements using a shortcut method", function() {
+                            testCase( function( builder ) {
+                                builder.from( "users" ).whereLike( "username", "Jo%" );
+                            }, whereLike() );
+                        } );
+                    } );
                 } );
 
                 describe( "joins", function() {

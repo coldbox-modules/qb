@@ -1547,6 +1547,47 @@ component displayname="QueryBuilder" accessors="true" {
         return whereBetween( argumentCollection = arguments );
     }
 
+    /**
+    * Adds a WHERE LIKE clause to the query.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function whereLike( column, value, string combinator = "and" ) {
+        arguments.operator = "like";
+        return where( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a WHERE LIKE clause to the query.
+    * Alias for `whereLike`
+    *
+    * @column The name of the column with which to constrain the query.
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andWhereLike( column, value ) {
+        arguments.combinator = "and";
+        return whereLike( argumentCollection = arguments );
+    }
+
+    /**
+    * Adds a WHERE LIKE clause to the query using the `OR` combinator.
+    *
+    * @column The name of the column with which to constrain the query.
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function orWhereLike( column, value ) {
+        arguments.combinator = "or";
+        return whereLike( argumentCollection = arguments );
+    }
+
     /*******************************************************************************\
     |         GROUP BY / HAVING / ORDER BY / LIMIT / OFFSET clause functions        |
     \*******************************************************************************/

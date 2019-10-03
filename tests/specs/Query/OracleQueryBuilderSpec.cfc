@@ -253,6 +253,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function whereLike() {
+        return {
+            sql = "SELECT * FROM ""USERS"" WHERE ""USERNAME"" LIKE ?",
+            bindings = [ "Jo%" ]
+        };
+    }
+
     function innerJoin() {
         return "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID""";
     }

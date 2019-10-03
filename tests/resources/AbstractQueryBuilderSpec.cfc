@@ -302,6 +302,20 @@ component extends="testbox.system.BaseSpec" {
                                     } );
                             }, whereSubSelect() );
                         } );
+
+                        it( "can configure a where with a builder instance", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .where( "email", "foo" )
+                                    .orWhere( "id", "=", builder.newQuery()
+                                        .select( builder.raw( "MAX(id)" ) )
+                                        .from( "users" )
+                                        .where( "email", "bar" )
+                                    );
+                            }, whereBuilderInstance() );
+                        } );
                     } );
 
                     describe( "where exists", function() {
@@ -358,6 +372,20 @@ component extends="testbox.system.BaseSpec" {
                                     } );
                             }, orWhereNotExists() );
                         } );
+
+                        it( "can add a where exists clause using a builder instance", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "orders" )
+                                    .whereExists(
+                                        builder.newQuery()
+                                            .select( builder.raw( 1 ) )
+                                            .from( "products" )
+                                            .whereColumn( "products.id", "=", "orders.id" )
+                                    );
+                            }, whereExistsBuilderInstance() );
+                        } );
                     } );
 
                     describe( "where null", function() {
@@ -392,6 +420,31 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhereNotNull( "id" );
                             }, orWhereNotNull() );
                         } );
+
+                        it( "can add a where null with a subselect", function() {
+                            testCase( function( builder ) {
+                                builder.select( "*" )
+                                    .from( "users" )
+                                    .whereNull( function( q ) {
+                                        q.selectRaw( "MAX(created_date)" )
+                                            .from( "logins" )
+                                            .whereColumn( "logins.user_id", "users.id" );
+                                    } );
+                            }, whereNullSubselect() );
+                        } );
+
+                        it( "can add a where null with a builder instance", function() {
+                            testCase( function( builder ) {
+                                builder.select( "*" )
+                                    .from( "users" )
+                                    .whereNull(
+                                        builder.newQuery()
+                                            .selectRaw( "MAX(created_date)" )
+                                            .from( "logins" )
+                                            .whereColumn( "logins.user_id", "users.id" )
+                                    );
+                            }, whereNullSubquery() );
+                        } );
                     } );
 
                     describe( "where between", function() {
@@ -405,6 +458,66 @@ component extends="testbox.system.BaseSpec" {
                             testCase( function( builder ) {
                                 builder.select( "*" ).from( "users" ).whereNotBetween( "id", 1, 2 );
                             }, whereNotBetween() );
+                        } );
+
+                        it( "can add where between statements using closures", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "id",
+                                        function( q ) {
+                                            q.select( q.raw( "MIN(id)" ) )
+                                                .from( "users" )
+                                                .where( "email", "bar" );
+                                        },
+                                        function( q ) {
+                                            q.select( q.raw( "MAX(id)" ) )
+                                                .from( "users" )
+                                                .where( "email", "bar" );
+                                        }
+                                    );
+                            }, whereBetweenClosures() );
+                        } );
+
+                        it( "can add where between statements using builder instances", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "id",
+                                        builder.newQuery()
+                                            .select( builder.raw( "MIN(id)" ) )
+                                            .from( "users" )
+                                            .where( "email", "bar" ),
+                                        builder.newQuery()
+                                            .select( builder.raw( "MAX(id)" ) )
+                                            .from( "users" )
+                                            .where( "email", "bar" )
+                                    );
+                            }, whereBetweenBuilderInstances() );
+                        } );
+
+                        it( "can add where between statements using both closures and builder instances", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "id",
+                                        function( q ) {
+                                            q.select( q.raw( "MIN(id)" ) )
+                                                .from( "users" )
+                                                .where( "email", "bar" );
+                                        },
+                                        builder.newQuery()
+                                            .select( builder.raw( "MAX(id)" ) )
+                                            .from( "users" )
+                                            .where( "email", "bar" )
+                                    );
+                            }, whereBetweenMixed() );
                         } );
                     } );
 
@@ -451,6 +564,18 @@ component extends="testbox.system.BaseSpec" {
                                     q.select( "id" ).from( "users" ).where( "age", ">", 25 );
                                 } );
                             }, whereInSubselect() );
+                        } );
+
+                        it( "handles builder instances in 'in' statements", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .from( "users" )
+                                    .whereIn( "id", builder.newQuery()
+                                        .select( "id" )
+                                        .from( "users" )
+                                        .where( "age", ">", 25 )
+                                    );
+                            }, whereInBuilderInstance() );
                         } );
                     } );
 
@@ -501,6 +626,23 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder.from( "users" ).joinWhere( "contacts", "contacts.balance", "<", 100 );
                         }, joinWithWhere() );
+                    } );
+
+                    it( "can join with a callback", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).join( "contacts", function( j ) {
+                                j.on( "users.id", "=", "contacts.id" );
+                            } );
+                        }, innerJoinCallback() );
+                    } );
+
+                    it( "can join with a standalone join clause", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).join(
+                                builder.newJoin( "contacts" )
+                                    .on( "users.id", "=", "contacts.id" )
+                            );
+                        }, innerJoinWithJoinInstance() );
                     } );
 
                     it( "can left join", function() {
@@ -847,6 +989,26 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder.from( "users" ).orderBy( builder.raw( "DATE(created_at)" ) );
                         }, orderByRaw() );
+                    } );
+
+                    it( "can order by a subselect", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderBy( function( q ) {
+                                q.selectRaw( "MAX(created_date)" )
+                                    .from( "logins" )
+                                    .whereColumn( "users.id", "logins.user_id" );
+                            } );
+                        }, orderBySubselect() );
+                    } );
+
+                    it( "can order by a builder instance", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderBy( builder.newQuery()
+                                .selectRaw( "MAX(created_date)" )
+                                .from( "logins" )
+                                .whereColumn( "users.id", "logins.user_id" )
+                            );
+                        }, orderByBuilderInstance() );
                     } );
 
                     describe( "can accept an array for the column argument", function() {

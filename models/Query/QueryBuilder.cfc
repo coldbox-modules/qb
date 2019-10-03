@@ -129,6 +129,8 @@ component displayname="QueryBuilder" accessors="true" {
     */
     property name="updates" type="struct";
 
+    this.isBuilder = true;
+
     /**
     * The list of allowed operators in join and where statements.
     */
@@ -409,6 +411,25 @@ component displayname="QueryBuilder" accessors="true" {
     \*******************************************************************************/
 
     /**
+     * Creates a new join clause and returns it to use later.
+     *
+     * @table The table name to join to.
+     * @type The type of join to perform.
+     *
+     * @returns qb.models.Query.JoinClause
+     */
+    public JoinClause function newJoin(
+        required any table,
+        string type = "inner"
+    ) {
+        return new qb.models.Query.JoinClause(
+            parentQuery = this,
+            type = arguments.type,
+            table = arguments.table
+        );
+    }
+
+    /**
     * Adds an INNER JOIN to another table.
     *
     * For simple joins, this specifies a column on which to join the two tables.
@@ -426,12 +447,18 @@ component displayname="QueryBuilder" accessors="true" {
     */
     public QueryBuilder function join(
         required any table,
-        required any first,
+        any first,
         string operator = "=",
         string second,
         string type = "inner",
         boolean where = false
     ) {
+        if ( getUtils().isBuilder( arguments.table ) ) {
+            variables.joins.append( arguments.table );
+            addBindings( arguments.table.getBindings(), "join" );
+            return this;
+        }
+
         var join = new qb.models.Query.JoinClause(
             parentQuery = this,
             type = arguments.type,
@@ -442,16 +469,16 @@ component displayname="QueryBuilder" accessors="true" {
             first( join );
             variables.joins.append( join );
             addBindings( join.getBindings(), "join" );
+            return this;
         }
-        else {
-            var method = where ? "where" : "on";
-            arguments.column = arguments.first;
-            arguments.value = isNull( arguments.second ) ? javacast( "null", "" ) : arguments.second;
-            variables.joins.append(
-                invoke( join, method, arguments )
-            );
-            addBindings( join.getBindings(), "join" );
-        }
+
+        var method = where ? "where" : "on";
+        arguments.column = arguments.first;
+        arguments.value = isNull( arguments.second ) ? javacast( "null", "" ) : arguments.second;
+        variables.joins.append(
+            invoke( join, method, arguments )
+        );
+        addBindings( join.getBindings(), "join" );
 
         return this;
     }
@@ -879,7 +906,7 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
-        if ( isClosure( value ) ) {
+        if ( isClosure( value ) || getUtils().isBuilder( value ) ) {
             return whereSub( column, operator, value, combinator );
         }
 
@@ -931,16 +958,19 @@ component displayname="QueryBuilder" accessors="true" {
     private QueryBuilder function whereSub(
         column,
         operator,
-        callback,
+        query,
         combinator = "and"
     ) {
-        var query = newQuery();
-        callback( query );
+        if ( isClosure( arguments.query ) ) {
+            var callback = arguments.query;
+            arguments.query = newQuery();
+            callback( arguments.query );
+        }
         variables.wheres.append( {
             type = "sub",
             column = applyColumnFormatter( arguments.column ),
             operator = arguments.operator,
-            query = query,
+            query = arguments.query,
             combinator = arguments.combinator
         } );
         addBindings( query.getBindings(), "where" );
@@ -977,8 +1007,8 @@ component displayname="QueryBuilder" accessors="true" {
         combinator = "and",
         negate = false
     ) {
-        if ( isClosure( values ) ) {
-            arguments.callback = arguments.values;
+        if ( isClosure( values ) || getUtils().isBuilder( values ) ) {
+            arguments.query = arguments.values;
             return whereInSub( argumentCollection = arguments );
         }
 
@@ -1034,21 +1064,24 @@ component displayname="QueryBuilder" accessors="true" {
     */
     private QueryBuilder function whereInSub(
         column,
-        callback,
+        query,
         combinator = "and",
         negate = false
     ) {
-        var query = newQuery();
-        callback( query );
+        if ( isClosure( arguments.query ) ) {
+            var callback = arguments.query;
+            arguments.query = newQuery();
+            callback( arguments.query );
+        }
 
         var type = negate ? "notInSub" : "inSub";
         variables.wheres.append( {
             type = type,
             column = applyColumnFormatter( arguments.column ),
-            query = query,
+            query = arguments.query,
             combinator = arguments.combinator
         } );
-        addBindings( query.getBindings(), "where" );
+        addBindings( arguments.query.getBindings(), "where" );
 
         return this;
     }
@@ -1208,13 +1241,16 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function whereExists(
-        callback,
+        query,
         combinator = "and",
         negate = false
     ) {
-        var query = newQuery();
-        callback( query );
-        return addWhereExistsQuery( query, combinator, negate );
+        if ( isClosure( arguments.query ) ) {
+            var callback = arguments.query;
+            arguments.query = newQuery();
+            callback( arguments.query );
+        }
+        return addWhereExistsQuery( arguments.query, arguments.combinator, arguments.negate );
     }
 
     /**
@@ -1266,7 +1302,7 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function orWhereExists( callback, negate = false ) {
+    public QueryBuilder function orWhereExists( query, negate = false ) {
         arguments.combinator = "or";
         return whereExists( argumentCollection = arguments );
     }
@@ -1279,7 +1315,7 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function whereNotExists( callback, combinator = "and" ) {
+    public QueryBuilder function whereNotExists( query, combinator = "and" ) {
         arguments.negate = true;
         return whereExists( argumentCollection = arguments );
     }
@@ -1292,7 +1328,7 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function andWhereNotExists( callback, combinator = "and" ) {
+    public QueryBuilder function andWhereNotExists( query, combinator = "and" ) {
         return whereNotExists( argumentCollection = arguments );
     }
 
@@ -1303,7 +1339,7 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function orWhereNotExists( callback ) {
+    public QueryBuilder function orWhereNotExists( query ) {
         arguments.combinator = "or";
         arguments.negate = true;
         return whereExists( argumentCollection = arguments );
@@ -1367,12 +1403,42 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function whereNull( column, combinator = "and", negate = false ) {
+        if ( isClosure( arguments.column ) || getUtils().isBuilder( arguments.column ) ) {
+            return whereNullSub( arguments.column, arguments.combinator, arguments.negate );
+        }
+
         var type = negate ? "notNull" : "null";
         variables.wheres.append( {
             type = type,
             column = applyColumnFormatter( arguments.column ),
             combinator = arguments.combinator
         } );
+        return this;
+    }
+
+    /**
+    * Adds a WHERE NULL clause with a subselect to the query.
+    *
+    * @query The builder instance or closure to apply.
+    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+    * @negate False for NULL, True for NOT NULL. Default: false.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function whereNullSub( query, combinator = "and", negate = false ) {
+        if ( isClosure( arguments.query ) ) {
+            var callback = arguments.query;
+            arguments.query = newQuery();
+            callback( arguments.query );
+        }
+
+        var type = arguments.negate ? "notNullSub" : "nullSub";
+        variables.wheres.append( {
+            type = type,
+            query = arguments.query,
+            combinator = arguments.combinator
+        } );
+
         return this;
     }
 
@@ -1459,6 +1525,18 @@ component displayname="QueryBuilder" accessors="true" {
         negate = false
     ) {
         var type = negate ? "notBetween" : "between";
+
+        if ( isClosure( arguments.start ) || isCustomFunction( arguments.start ) ) {
+            var callback = arguments.start;
+            arguments.start = newQuery();
+            callback( arguments.start );
+        }
+
+        if ( isClosure( arguments.end ) || isCustomFunction( arguments.end ) ) {
+            var callback = arguments.end;
+            arguments.end = newQuery();
+            callback( arguments.end );
+        }
 
         variables.wheres.append( {
             type = type,
@@ -1679,9 +1757,15 @@ component displayname="QueryBuilder" accessors="true" {
                 direction = "raw",
                 column = column
             } );
+            return this;
         }
+
+        if ( isClosure( arguments.column ) || isCustomFunction( arguments.column ) || getUtils().isBuilder( arguments.column ) ) {
+            return orderBySub( arguments.column );
+        }
+
         // if the column argument is an array
-        else if ( isArray( column ) ) {
+        if ( isArray( column ) ) {
             for ( var col in column ) {
                 //check the value of the current iteration to determine what blend of column def they went with
                 // ex: "DATE(created_at)" -- RAW expression
@@ -1760,6 +1844,27 @@ component displayname="QueryBuilder" accessors="true" {
             } );
         }
 
+        return this;
+    }
+
+    /**
+    * Add an order by clause with a subquery to the query.
+    *
+    * @query The builder instance or closure to define the query.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function orderBySub( required any query ) {
+        if ( ! getUtils().isBuilder( arguments.query ) ) {
+            var callback = arguments.query;
+            arguments.query = newQuery();
+            callback( arguments.query );
+        }
+
+        variables.orders.append( {
+            direction = "sub",
+            query = arguments.query
+        } );
         return this;
     }
 

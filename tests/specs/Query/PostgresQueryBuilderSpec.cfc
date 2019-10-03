@@ -663,6 +663,72 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function whereBuilderInstance() {
+        return {
+            sql = "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" = (SELECT MAX(id) FROM ""users"" WHERE ""email"" = ?)",
+            bindings = [ "foo", "bar" ]
+        };
+    }
+
+    function whereNullSubselect() {
+        return "SELECT * FROM ""users"" WHERE (SELECT MAX(created_date) FROM ""logins"" WHERE ""logins"".""user_id"" = ""users"".""id"") IS NULL";
+    }
+
+    function whereNullSubquery() {
+        return "SELECT * FROM ""users"" WHERE (SELECT MAX(created_date) FROM ""logins"" WHERE ""logins"".""user_id"" = ""users"".""id"") IS NULL";
+    }
+
+    function whereBetweenClosures() {
+        return {
+            sql = "SELECT * FROM ""users"" WHERE ""id"" BETWEEN (SELECT MIN(id) FROM ""users"" WHERE ""email"" = ?) AND (SELECT MAX(id) FROM ""users"" WHERE ""email"" = ?)",
+            bindings = [ "bar", "bar" ]
+        };
+    }
+
+    function whereExistsBuilderInstance() {
+        return {
+            sql = "SELECT * FROM ""orders"" WHERE EXISTS (SELECT 1 FROM ""products"" WHERE ""products"".""id"" = ""orders"".""id"")",
+            bindings = []
+        };
+    }
+
+    function whereBetweenBuilderInstances() {
+        return {
+            sql = "SELECT * FROM ""users"" WHERE ""id"" BETWEEN (SELECT MIN(id) FROM ""users"" WHERE ""email"" = ?) AND (SELECT MAX(id) FROM ""users"" WHERE ""email"" = ?)",
+            bindings = [ "bar", "bar" ]
+        };
+    }
+
+    function whereBetweenMixed() {
+        return {
+            sql = "SELECT * FROM ""users"" WHERE ""id"" BETWEEN (SELECT MIN(id) FROM ""users"" WHERE ""email"" = ?) AND (SELECT MAX(id) FROM ""users"" WHERE ""email"" = ?)",
+            bindings = [ "bar", "bar" ]
+        };
+    }
+
+    function whereInBuilderInstance() {
+        return {
+            sql = "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT ""id"" FROM ""users"" WHERE ""age"" > ?)",
+            bindings = [ 25 ]
+        };
+    }
+
+    function innerJoinCallback() {
+        return "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id""";
+    }
+
+    function innerJoinWithJoinInstance() {
+        return "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id""";
+    }
+
+    function orderBySubselect() {
+        return "SELECT * FROM ""users"" ORDER BY (SELECT MAX(created_date) FROM ""logins"" WHERE ""users"".""id"" = ""logins"".""user_id"")";
+    }
+
+    function orderByBuilderInstance() {
+        return "SELECT * FROM ""users"" ORDER BY (SELECT MAX(created_date) FROM ""logins"" WHERE ""users"".""id"" = ""logins"".""user_id"")";
+    }
+
     private function getBuilder() {
         variables.grammar = getMockBox()
             .createMock( "qb.models.Grammars.PostgresGrammar" )

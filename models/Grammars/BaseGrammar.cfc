@@ -415,6 +415,21 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+    * Compiles a null where subselect statement.
+    *
+    * @query The Builder instance.
+    * @where The where clause to compile.
+    *
+    * @return string
+    */
+    private string function whereNullSub(
+        required qb.models.Query.QueryBuilder query,
+        required struct where
+    ) {
+        return "(#compileSelect( where.query )#) IS NULL";
+    }
+
+    /**
     * Compiles a not null where statement.
     *
     * @query The Builder instance.
@@ -430,6 +445,21 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+    * Compiles a not null where subselect statement.
+    *
+    * @query The Builder instance.
+    * @where The where clause to compile.
+    *
+    * @return string
+    */
+    private string function whereNotNullSub(
+        required qb.models.Query.QueryBuilder query,
+        required struct where
+    ) {
+        return "(#compileSelect( where.query )#) IS NOT NULL";
+    }
+
+    /**
     * Compiles a between where statement.
     *
     * @query The Builder instance.
@@ -441,7 +471,10 @@ component displayname="Grammar" accessors="true" singleton {
         required qb.models.Query.QueryBuilder query,
         required struct where
     ) {
-        return "#wrapColumn( where.column )# BETWEEN ? AND ?";
+        var start = isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)";
+        var end = isSimpleValue( where.end ) ? "?" : "(#compileSelect( where.end )#)";
+        return "#wrapColumn( where.column )# BETWEEN #start# AND #end#";
+
     }
 
     /**
@@ -628,9 +661,14 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         var orderBys = orders.map( function( orderBy ) {
-            return orderBy.direction == "raw" ?
-                orderBy.column.getSql() :
-                "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
+            switch( orderBy.direction ) {
+                case "raw":
+                    return orderBy.column.getSQL();
+                case "sub":
+                    return "(#compileSelect( orderBy.query )#)";
+                default:
+                    return "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
+            }
         } );
 
         return "ORDER BY #orderBys.toList( ", " )#";

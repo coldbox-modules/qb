@@ -8,9 +8,13 @@ component displayname="QueryUtils" singleton {
     *
     * @value The value from which to extract the binding
     *
-    * @return struct
+    * @return any
     */
-    public struct function extractBinding( required any value ) {
+    public any function extractBinding( required any value ) {
+        if ( isBuilder( arguments.value ) ) {
+            return arguments.value.getBindings();
+        }
+
         var binding = "";
         if ( isStruct( value ) ) {
             if ( structKeyExists( value, "isExpression" ) && value.isExpression == true ) {
@@ -80,6 +84,32 @@ component displayname="QueryUtils" singleton {
         return isSimpleValue( arguments.value ) ||
             isArray( arguments.value ) ||
             ! structKeyExists( arguments.value, "isExpression" );
+    }
+
+    /**
+    * Returns true if a value is an Expression.
+    *
+    * @value The value to check if it is an Expression.
+    *
+    * @return boolean
+    */
+    public boolean function isBuilder( required any value ) {
+        return ! isSimpleValue( arguments.value ) &&
+            ! isArray( arguments.value ) &&
+            structKeyExists( arguments.value, "isBuilder" );
+    }
+
+    /**
+    * Returns true if a value is not an Expression.
+    *
+    * @value The value to check if it is not an Expression.
+    *
+    * @return boolean
+    */
+    public boolean function isNotBuilder( required any value ) {
+        return isSimpleValue( arguments.value ) ||
+            isArray( arguments.value ) ||
+            ! structKeyExists( arguments.value, "isBuilder" );
     }
 
     /**

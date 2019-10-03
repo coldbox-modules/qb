@@ -103,9 +103,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
 
         var orderBys = orders.map( function( orderBy ) {
-            return orderBy.direction == "raw" ?
-                orderBy.column.getSql() :
-                "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
+            switch( orderBy.direction ) {
+                case "raw":
+                    return orderBy.column.getSQL();
+                case "sub":
+                    return "(#compileSelect( orderBy.query )#)";
+                default:
+                    return "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
+            }
         } );
 
         return "ORDER BY #orderBys.toList( ", " )#";

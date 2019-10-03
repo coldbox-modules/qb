@@ -291,6 +291,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM [users] LEFT JOIN contacts (nolock) ON [users].[id] = [contacts].[id]";
     }
 
+    function leftJoinNested() {
+        return "SELECT * FROM [users] LEFT JOIN [orders] ON [users].[id] = [orders].[user_id]";
+    }
+
     function rightJoin() {
         return "SELECT * FROM [orders] RIGHT JOIN [users] ON [orders].[user_id] = [users].[id]";
     }

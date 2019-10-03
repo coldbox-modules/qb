@@ -466,7 +466,7 @@ component displayname="QueryBuilder" accessors="true" {
     */
     public QueryBuilder function leftJoin(
         required any table,
-        string first,
+        any first,
         string operator,
         string second,
         boolean where
@@ -492,7 +492,7 @@ component displayname="QueryBuilder" accessors="true" {
     */
     public QueryBuilder function rightJoin(
         required any table,
-        string first,
+        any first,
         string operator,
         string second,
         boolean where

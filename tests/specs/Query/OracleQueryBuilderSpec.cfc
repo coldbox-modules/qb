@@ -291,6 +291,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS"" LEFT JOIN contacts (nolock) ON ""USERS"".""ID"" = ""CONTACTS"".""ID""";
     }
 
+    function leftJoinNested() {
+        return "SELECT * FROM ""USERS"" LEFT JOIN ""ORDERS"" ON ""USERS"".""ID"" = ""ORDERS"".""USER_ID""";
+    }
+
     function rightJoin() {
         return "SELECT * FROM ""ORDERS"" RIGHT JOIN ""USERS"" ON ""ORDERS"".""USER_ID"" = ""USERS"".""ID""";
     }

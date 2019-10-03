@@ -521,6 +521,14 @@ component extends="testbox.system.BaseSpec" {
                         }, leftJoinRaw() );
                     } );
 
+                    it( "can left join using a nested query", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).leftJoin( "orders", function( j ) {
+                                j.on( "users.id", "=", "orders.user_id" );
+                            } );
+                        }, leftJoinNested() );
+                    } );
+
                     it( "can right join", function() {
                         testCase( function( builder ) {
                             builder.from( "orders" ).rightJoin( "users", "orders.user_id", "users.id" );

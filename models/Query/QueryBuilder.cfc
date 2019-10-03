@@ -2389,10 +2389,27 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return any
     */
-    public any function value( required string column, struct options = {} ) {
+    public any function value(
+        required string column,
+        string defaultValue = "",
+        boolean throwWhenNotFound = false,
+        struct options = {}
+    ) {
         return withReturnFormat( "query", function() {
             select( column );
-            return first( options = options )[ column ];
+            var data = first( options = options );
+            if ( structIsEmpty( data ) ) {
+                if ( throwWhenNotFound ) {
+                    throw(
+                        type = "RecordCountException",
+                        message = "Expected at least one row to be returned for `value` function."
+                    );
+                } else {
+                    return defaultValue;
+                }
+            } else {
+                return data[ column ];
+            }
         } );
     }
 

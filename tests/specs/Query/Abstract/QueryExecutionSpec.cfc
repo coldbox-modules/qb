@@ -174,6 +174,7 @@ component extends="testbox.system.BaseSpec" {
                 it( "returns the first value when calling value", function() {
                     var builder = getBuilder();
                     var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
+                    // writeDump( var = expectedQuery, abort = true );
                     builder.$( "runQuery" ).$args(
                         sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
                         options = {},
@@ -183,6 +184,78 @@ component extends="testbox.system.BaseSpec" {
                     var results = builder.from( "users" ).value( "name" );
 
                     expect( results ).toBe( "foo" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
+                        options = {},
+                        clearExcept = []
+                    } );
+                } );
+
+                it( "returns the defaultValue when calling value with an empty query", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [] );
+                    // writeDump( var = expectedQuery, abort = true );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
+                        options = {},
+                        clearExcept = []
+                    ).$results( expectedQuery );
+
+                    var result = builder.from( "users" ).value( "name" );
+
+                    expect( result ).toBe( "" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
+                        options = {},
+                        clearExcept = []
+                    } );
+                } );
+
+                it( "returns a custom defaultValue when provided", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [] );
+                    // writeDump( var = expectedQuery, abort = true );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
+                        options = {},
+                        clearExcept = []
+                    ).$results( expectedQuery );
+
+                    var result = builder.from( "users" ).value( column = "name", defaultValue = "default" );
+
+                    expect( result ).toBe( "default" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
+                        options = {},
+                        clearExcept = []
+                    } );
+                } );
+
+                it( "throws an exception when calling value with an empty query and throwWhenNotFound is true", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [] );
+
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""name"" FROM ""users"" LIMIT 1",
+                        options = {},
+                        clearExcept = []
+                    ).$results( expectedQuery );
+
+                    expect( function() {
+                        var result = builder.from( "users" ).value( column = "name", throwWhenNotFound = true );
+                    } ).toThrow( type = "RecordCountException" );
 
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();

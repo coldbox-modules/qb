@@ -445,10 +445,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE ""users"" DROP COLUMN ""username"" CASCADE" ];
     }
 
+    function dropColumnWithColumn() {
+        return [ "ALTER TABLE ""users"" DROP COLUMN ""username"" CASCADE" ];
+    }
+
     function dropsMultipleColumns() {
         return [
             "ALTER TABLE ""users"" DROP COLUMN ""username"" CASCADE",
             "ALTER TABLE ""users"" DROP COLUMN ""password"" CASCADE"
+        ];
+    }
+
+    function dropColumnWithConstraint() {
+        return [
+            "ALTER TABLE ""users"" DROP COLUMN ""someFlag"" CASCADE"
         ];
     }
 

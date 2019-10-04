@@ -454,8 +454,8 @@ component accessors="true" {
                 blueprint = this,
                 commandParameters = command.getParameters()
             } );
-            if ( result != "" ) {
-                statements.append( result );
+            if ( isArray( result ) || ( isSimpleValue( result ) && result != "" ) ) {
+                statements.append( result, true );
             }
         }
         return statements;

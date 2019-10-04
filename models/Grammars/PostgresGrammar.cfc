@@ -104,7 +104,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             "ALTER TABLE",
             wrapTable( blueprint.getTable() ),
             "DROP COLUMN",
-            wrapColumn( commandParameters.name ),
+            isSimpleValue( commandParameters.name ) ?
+                wrapColumn( commandParameters.name ) :
+                wrapColumn( commandParameters.name.getName() ),
             "CASCADE"
         ], function( item ) {
             return item != "";

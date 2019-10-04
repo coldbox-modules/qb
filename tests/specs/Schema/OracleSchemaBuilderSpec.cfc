@@ -466,10 +466,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE ""USERS"" DROP COLUMN ""USERNAME""" ];
     }
 
+    function dropColumnWithColumn() {
+        return [ "ALTER TABLE ""USERS"" DROP COLUMN ""USERNAME""" ];
+    }
+
     function dropsMultipleColumns() {
         return [
             "ALTER TABLE ""USERS"" DROP COLUMN ""USERNAME""",
             "ALTER TABLE ""USERS"" DROP COLUMN ""PASSWORD"""
+        ];
+    }
+
+    function dropColumnWithConstraint() {
+        return [
+            "ALTER TABLE ""USERS"" DROP COLUMN ""SOMEFLAG"""
         ];
     }
 

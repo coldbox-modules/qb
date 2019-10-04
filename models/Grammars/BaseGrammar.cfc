@@ -1061,14 +1061,25 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function compileDropColumn( blueprint, commandParameters ) {
-        return arrayToList( arrayFilter( [
-            "ALTER TABLE",
-            wrapTable( blueprint.getTable() ),
-            "DROP COLUMN",
-            wrapColumn( commandParameters.name )
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        if ( isSimpleValue( commandParameters.name ) ) {
+            return arrayToList( arrayFilter( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "DROP COLUMN",
+                wrapColumn( commandParameters.name )
+            ], function( item ) {
+                return item != "";
+            } ), " " );
+        } else {
+            return arrayToList( arrayFilter( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "DROP COLUMN",
+                wrapColumn( commandParameters.name.getName() )
+            ], function( item ) {
+                return item != "";
+            } ), " " );
+        }
     }
 
     function compileRenameTable( blueprint, commandParameters ) {

@@ -425,10 +425,21 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE [users] DROP COLUMN [username]" ];
     }
 
+    function dropColumnWithColumn() {
+        return [ "ALTER TABLE [users] DROP COLUMN [username]" ];
+    }
+
     function dropsMultipleColumns() {
         return [
             "ALTER TABLE [users] DROP COLUMN [username]",
             "ALTER TABLE [users] DROP COLUMN [password]"
+        ];
+    }
+
+    function dropColumnWithConstraint() {
+        return [
+            "ALTER TABLE [users] DROP CONSTRAINT [df_users_someFlag]",
+            "ALTER TABLE [users] DROP COLUMN [someFlag]"
         ];
     }
 

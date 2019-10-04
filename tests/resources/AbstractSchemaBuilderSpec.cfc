@@ -878,6 +878,14 @@ component extends="testbox.system.BaseSpec" {
                     }, dropColumn() );
                 } );
 
+                it( "drops a column when using a column instance", function() {
+                    testCase( function( schema ) {
+                        return schema.alter( "users", function( table ) {
+                            table.dropColumn( table.string( "username" ) );
+                        }, {}, false );
+                    }, dropColumnWithColumn() );
+                } );
+
                 it( "drops multiple columns", function() {
                     testCase( function( schema ) {
                         return schema.alter( "users", function( table ) {
@@ -885,6 +893,14 @@ component extends="testbox.system.BaseSpec" {
                             table.dropColumn( "password" );
                         }, {}, false );
                     }, dropsMultipleColumns() );
+                } );
+
+                it( "drops constraints with the column when using a column instance", function() {
+                    testCase( function( schema ) {
+                        return schema.alter( "users", function( table ) {
+                            table.dropColumn( table.boolean( "someFlag" ).default( false ) );
+                        }, {}, false );
+                    }, dropColumnWithConstraint() );
                 } );
             } );
 

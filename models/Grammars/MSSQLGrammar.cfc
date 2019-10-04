@@ -221,6 +221,34 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "";
     }
 
+    function compileDropColumn( blueprint, commandParameters ) {
+        if ( isSimpleValue( commandParameters.name ) ) {
+            return arrayToList( arrayFilter( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "DROP COLUMN",
+                wrapColumn( commandParameters.name )
+            ], function( item ) {
+                return item != "";
+            } ), " " );
+        } else {
+            var statements = [
+                arrayToList( [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "DROP COLUMN",
+                    wrapColumn( commandParameters.name.getName() )
+                ], " " )
+            ];
+            if ( commandParameters.name.getDefault() != "" ) {
+                statements.prepend(
+                    "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#commandParameters.name.getName()#" )#"
+                );
+            }
+            return statements;
+        }
+    }
+
     function compileRenameTable( blueprint, commandParameters ) {
         return "EXEC sp_rename #wrapTable( blueprint.getTable() )#, #wrapTable( commandParameters.to )#";
     }

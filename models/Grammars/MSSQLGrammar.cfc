@@ -248,6 +248,37 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         } ), " " );
     }
 
+    function getAllTableNames( options, schema = "" ) {
+        var sql = "SELECT #wrapColumn( "table_name" )# FROM #wrapTable( "information_schema.tables" )#";
+        var args = [];
+        if ( schema != "" ) {
+            sql &= " WHERE #wrapColumn( "table_schema" )# = ?";
+            args.append( schema );
+        }
+        var tablesQuery = runQuery( sql, args, options, "query" );
+        var tables = [];
+        for ( var table in tablesQuery ) {
+            arrayAppend( tables, table[ "table_name" ] );
+        }
+        return tables;
+    }
+
+    function compileDropAllObjects( options, schema = "" ) {
+        var tables = getAllTableNames( options, schema );
+        var tableList = arrayToList( arrayMap( tables, function( table ) {
+            return wrapTable( table );
+        } ), ", " );
+        return arrayFilter( [
+            "DECLARE @sql NVARCHAR(MAX) = N'';
+            SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_NAME(parent_object_id))
+                + ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
+            FROM sys.foreign_keys;
+
+            EXEC sp_executesql @sql;",
+            arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#"
+        ], function( sql ) { return sql != ""; } );
+    }
+
     function typeBigInteger( column ) {
         if ( !isNull( column.getPrecision() ) ) {
             return "NUMERIC(#column.getPrecision()#)";

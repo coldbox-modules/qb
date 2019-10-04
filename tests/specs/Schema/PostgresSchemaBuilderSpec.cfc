@@ -149,6 +149,12 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""users"" (id BLOB NOT NULL)" ];
     }
 
+    function rawInAlter() {
+        return [
+            "ALTER TABLE ""registrars"" ADD COLUMN HasDNSSecAPI bit NOT NULL CONSTRAINT DF_registrars_HasDNSSecAPI DEFAULT (0)"
+        ];
+    }
+
     function smallIncrements() {
         return [ "CREATE TABLE ""users"" (""id"" SERIAL NOT NULL, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" ];
     }

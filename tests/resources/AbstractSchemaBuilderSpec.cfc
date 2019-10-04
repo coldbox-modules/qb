@@ -289,6 +289,16 @@ component extends="testbox.system.BaseSpec" {
                     }, raw() );
                 } );
 
+                it( "raw in alter", function() {
+                    testCase( function( schema ) {
+                        return schema.alter( "registrars", function ( table ) {
+                            table.addColumn(
+                                table.raw( "HasDNSSecAPI bit NOT NULL CONSTRAINT DF_registrars_HasDNSSecAPI DEFAULT (0)" )
+                            );
+                        }, {}, false );
+                    }, rawInAlter() );
+                } );
+
                 it( "smallIncrements", function() {
                     testCase( function( schema ) {
                         return schema.create( "users", function( table ) {

@@ -156,8 +156,9 @@ component accessors="true" {
     }
 
     function raw( sql ) {
-        variables.columns.append( new qb.models.Query.Expression( sql ) );
-        return this;
+        var expression = new qb.models.Query.Expression( sql );
+        variables.columns.append( expression );
+        return expression;
     }
 
     function smallIncrements( name, indexName ) {

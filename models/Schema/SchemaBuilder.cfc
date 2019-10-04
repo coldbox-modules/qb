@@ -141,6 +141,21 @@ component accessors="true" singleton {
     }
 
     /**
+    * Rename an existing table in the database.
+    * Alias for `rename`
+    *
+    * @from     The current name of the table.
+    * @to       The new name of the table.
+    * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+    * @execute  Flag to immediately execute the statement.  Default: `true`.
+    *
+    * @returns  The blueprint instance
+    */
+    function renameTable( from, to, options = {}, execute = true ) {
+        return rename( argumentCollection = arguments );
+    }
+
+    /**
     * Check if a table exists in the database.
     *
     * @name     The name of the table to check.

@@ -777,6 +777,12 @@ component extends="testbox.system.BaseSpec" {
                         return schema.rename( "workers", "employees", {}, false );
                     }, renameTable() );
                 } );
+
+                it( "rename table with a renameTable alias", function() {
+                    testCase( function( schema ) {
+                        return schema.renameTable( "workers", "employees", {}, false );
+                    }, renameTable() );
+                } );
             } );
 
             describe( "rename columns", function() {

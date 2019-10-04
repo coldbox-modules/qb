@@ -96,8 +96,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function generateDefault( column ) {
-        if ( column.getDefault() == "" && column.getType() == "TIMESTAMP" ) {
-            column.setDefault( "CURRENT_TIMESTAMP" );
+        if (
+            column.getDefault() == "" &&
+            column.getType().findNoCase( "TIMESTAMP" ) > 0 &&
+            ! column.getNullable()
+        ) {
+            column.withCurrent();
         }
         return super.generateDefault( column );
     }
@@ -116,6 +120,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function typeChar( column ) {
         return "NCHAR(#column.getLength()#)";
+    }
+
+    function typeLineString( column ) {
+        return "LINESTRING";
+    }
+
+    function typePoint( column ) {
+        return "POINT";
+    }
+
+    function typePolygon( column ) {
+        return "POLYGON";
     }
 
 }

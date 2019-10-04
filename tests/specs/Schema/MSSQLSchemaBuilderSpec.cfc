@@ -52,6 +52,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [posts] ([posted_date] DATETIME2 NOT NULL)" ];
     }
 
+    function datetimeTz() {
+        return [ "CREATE TABLE [posts] ([posted_date] DATETIMEOFFSET NOT NULL)" ];
+    }
+
     function decimal() {
         return [ "CREATE TABLE [employees] ([salary] DECIMAL(10,0) NOT NULL)" ];
     }
@@ -104,6 +108,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [users] ([personalizations] NVARCHAR(MAX) NOT NULL)" ];
     }
 
+    function lineString() {
+        return [ "CREATE TABLE [users] ([positions] GEOGRAPHY NOT NULL)" ];
+    }
+
     function longText() {
         return [ "CREATE TABLE [posts] ([body] VARCHAR(MAX) NOT NULL)" ];
     }
@@ -140,6 +148,18 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [tags] ([taggable_id] INTEGER, [taggable_type] VARCHAR(255), INDEX [taggable_index] ([taggable_id], [taggable_type]))" ];
     }
 
+    function nullableTimestamps() {
+        return [ "CREATE TABLE [posts] ([createdDate] DATETIME2, [modifiedDate] DATETIME2)" ];
+    }
+
+    function point() {
+        return [ "CREATE TABLE [users] ([position] GEOGRAPHY NOT NULL)" ];
+    }
+
+    function polygon() {
+        return [ "CREATE TABLE [users] ([positions] GEOGRAPHY NOT NULL)" ];
+    }
+
     function raw() {
         return [ "CREATE TABLE [users] (id BLOB NOT NULL)" ];
     }
@@ -158,6 +178,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function smallIntegerWithPrecision() {
         return [ "CREATE TABLE [users] ([age] NUMERIC(5) NOT NULL)" ];
+    }
+
+    function softDeletes() {
+        return [ "CREATE TABLE [posts] ([deletedDate] DATETIME2)" ];
+    }
+
+    function softDeletesTz() {
+        return [ "CREATE TABLE [posts] ([deletedDate] DATETIMEOFFSET)" ];
     }
 
     function string() {
@@ -184,8 +212,24 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [recurring_tasks] ([fire_time] TIME NOT NULL)" ];
     }
 
+    function timeTz() {
+        return [ "CREATE TABLE [recurring_tasks] ([fire_time] TIME NOT NULL)" ];
+    }
+
     function timestamp() {
         return [ "CREATE TABLE [posts] ([posted_date] DATETIME2 NOT NULL)" ];
+    }
+
+    function timestampTz() {
+        return [ "CREATE TABLE [posts] ([posted_date] DATETIMEOFFSET NOT NULL)" ];
+    }
+
+    function timestamps() {
+        return [ "CREATE TABLE [posts] ([createdDate] DATETIME2 NOT NULL, [modifiedDate] DATETIME2 NOT NULL)" ];
+    }
+
+    function timestampsTz() {
+        return [ "CREATE TABLE [posts] ([createdDate] DATETIMEOFFSET NOT NULL, [modifiedDate] DATETIMEOFFSET NOT NULL)" ];
     }
 
     function tinyIncrements() {
@@ -256,6 +300,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function defaultForBoolean() {
         return [ "CREATE TABLE [users] ([active] BIT NOT NULL CONSTRAINT [df_users_active] DEFAULT 1)" ];
+    }
+
+    function timestampWithCurrent() {
+        return [ "CREATE TABLE [posts] ([posted_date] DATETIME2 NOT NULL CONSTRAINT [df_posts_posted_date] DEFAULT CURRENT_TIMESTAMP)" ];
     }
 
     function defaultForNumber() {

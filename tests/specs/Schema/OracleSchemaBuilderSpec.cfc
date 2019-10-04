@@ -60,6 +60,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" DATE NOT NULL)" ];
     }
 
+    function datetimeTz() {
+        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
+    }
+
     function decimal() {
         return [ "CREATE TABLE ""EMPLOYEES"" (""SALARY"" FLOAT NOT NULL)" ];
     }
@@ -116,6 +120,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""USERS"" (""PERSONALIZATIONS"" CLOB NOT NULL)" ];
     }
 
+    function lineString() {
+        return [ "CREATE TABLE ""USERS"" (""POSITIONS"" SDO_GEOMETRY NOT NULL)" ];
+    }
+
     function longText() {
         return [ "CREATE TABLE ""POSTS"" (""BODY"" CLOB NOT NULL)" ];
     }
@@ -156,6 +164,26 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
             "CREATE TABLE ""TAGS"" (""TAGGABLE_ID"" NUMBER(10, 0), ""TAGGABLE_TYPE"" VARCHAR2(255))",
             "CREATE INDEX ""TAGGABLE_INDEX"" ON ""TAGS"" (""TAGGABLE_ID"", ""TAGGABLE_TYPE"")"
         ];
+    }
+
+    function nullableTimestamps() {
+        return [ "CREATE TABLE ""POSTS"" (""CREATEDDATE"" DATE, ""MODIFIEDDATE"" DATE)" ];
+    }
+
+    function point() {
+        return [ "CREATE TABLE ""USERS"" (""POSITION"" SDO_GEOMETRY NOT NULL)" ];
+    }
+
+    function polygon() {
+        return [ "CREATE TABLE ""USERS"" (""POSITIONS"" SDO_GEOMETRY NOT NULL)" ];
+    }
+
+    function softDeletes() {
+        return [ "CREATE TABLE ""POSTS"" (""DELETEDDATE"" DATE)" ];
+    }
+
+    function softDeletesTz() {
+        return [ "CREATE TABLE ""POSTS"" (""DELETEDDATE"" TIMESTAMP WITH TIME ZONE)" ];
     }
 
     function raw() {
@@ -208,8 +236,24 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""RECURRING_TASKS"" (""FIRE_TIME"" DATE NOT NULL)" ];
     }
 
+    function timeTz() {
+        return [ "CREATE TABLE ""RECURRING_TASKS"" (""FIRE_TIME"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
+    }
+
     function timestamp() {
         return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" DATE NOT NULL)" ];
+    }
+
+    function timestamps() {
+        return [ "CREATE TABLE ""POSTS"" (""CREATEDDATE"" DATE NOT NULL, ""MODIFIEDDATE"" DATE NOT NULL)" ];
+    }
+
+    function timestampTz() {
+        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
+    }
+
+    function timestampsTz() {
+        return [ "CREATE TABLE ""POSTS"" (""CREATEDDATE"" TIMESTAMP WITH TIME ZONE NOT NULL, ""MODIFIEDDATE"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
     }
 
     function tinyIncrements() {
@@ -293,6 +337,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function defaultForString() {
         return [ "CREATE TABLE ""USERS"" (""COUNTRY"" VARCHAR2(255) DEFAULT 'USA' NOT NULL)" ];
+    }
+
+    function timestampWithCurrent() {
+        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" DATE DEFAULT CURRENT_TIMESTAMP NOT NULL)" ];
     }
 
     function nullable() {

@@ -306,7 +306,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeDatetime( column ) {
-        return "DATE";
+        return typeTimestamp( column );
+    }
+
+    function typeDatetimeTz( column ) {
+        return typeTimestampTz( column );
     }
 
     function typeDecimal( column ) {
@@ -335,6 +339,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "CLOB";
     }
 
+    function typeLineString( column ) {
+        return "SDO_GEOMETRY";
+    }
+
     function typeLongText( column ) {
         return "CLOB";
     }
@@ -350,6 +358,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function typeMediumText( column ) {
         return "CLOB";
+    }
+
+    function typePoint( column ) {
+        return "SDO_GEOMETRY";
+    }
+
+    function typePolygon( column ) {
+        return "SDO_GEOMETRY";
     }
 
     function typeSmallInteger( column ) {
@@ -374,11 +390,19 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeTime( column ) {
-        return "DATE";
+        return typeTimestamp( column );
+    }
+
+    function typeTimeTz( column ) {
+        return typeTimestampTz( column );
     }
 
     function typeTimestamp( column ) {
         return "DATE";
+    }
+
+    function typeTimestampTz( column ) {
+        return "TIMESTAMP WITH TIME ZONE";
     }
 
     function typeTinyInteger( column ) {

@@ -187,7 +187,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeDatetime( column ) {
-        return "TIMESTAMP";
+        return typeTimestamp( column );
+    }
+
+    function typeDatetimeTz( column ) {
+        return typeTimestampTz( column );
     }
 
     function typeEnum( column ) {
@@ -226,6 +230,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "BIGINT";
     }
 
+    function typeLineString( column ) {
+        return formatPostGisType( "linestring" );
+    }
+
     function typeMediumInteger( column ) {
         if ( column.getAutoIncrement() ) {
             return "SERIAL";
@@ -236,6 +244,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
 
         return "INTEGER";
+    }
+
+    function typePoint( column ) {
+        return formatPostGisType( "point" );
+    }
+
+    function typePolygon( column ) {
+        return formatPostGisType( "polygon" );
     }
 
     function typeSmallInteger( column ) {
@@ -258,6 +274,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return typeText( argumentCollection = arguments );
     }
 
+    function typeTimeTz( column ) {
+        return "TIME WITH TIME ZONE";
+    }
+
+    function typeTimestampTz( column ) {
+        return typeTimestamp( column ) & " WITH TIME ZONE";
+    }
+
     function typeTinyInteger( column ) {
         if ( column.getAutoIncrement() ) {
             return "SERIAL";
@@ -268,6 +292,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
 
         return "SMALLINT";
+    }
+
+    private function formatPostGisType( type ) {
+        return "GEOGRAPHY(#uCase( type )#, 4326)";
     }
 
     /*===================================

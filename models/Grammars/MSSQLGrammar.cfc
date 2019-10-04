@@ -328,7 +328,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeDatetime( column ) {
-        return "DATETIME2";
+        return typeTimestamp( column );
+    }
+
+    function typeDatetimeTz( column ) {
+        return typeTimestampTz( column );
     }
 
     function typeUUID( column ) {
@@ -402,6 +406,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function typeTimestamp( column ) {
         return "DATETIME2";
+    }
+
+    function typeTimestampTz( column ) {
+        return "DATETIMEOFFSET";
     }
 
     function typeTinyInteger( column ) {

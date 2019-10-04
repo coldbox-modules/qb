@@ -1189,6 +1189,10 @@ component displayname="Grammar" accessors="true" singleton {
         return "DATETIME";
     }
 
+    function typeDatetimeTz( column ) {
+        return typeDatetime( column );
+    }
+
     function typeDecimal( column ) {
         return "DECIMAL(#column.getLength()#,#column.getPrecision()#)";
     }
@@ -1229,6 +1233,10 @@ component displayname="Grammar" accessors="true" singleton {
         return typeChar( column, 36 );
     }
 
+    function typeLineString( column ) {
+        return "GEOGRAPHY";
+    }
+
     function typeMediumInteger( column ) {
         return arrayToList( arrayFilter( [
             "MEDIUMINT",
@@ -1244,6 +1252,14 @@ component displayname="Grammar" accessors="true" singleton {
 
     function typeUnicodeMediumText( column ) {
         return "TEXT";
+    }
+
+    function typePoint( column ) {
+        return "GEOGRAPHY";
+    }
+
+    function typePolygon( column ) {
+        return "GEOGRAPHY";
     }
 
     function typeSmallInteger( column ) {
@@ -1275,8 +1291,16 @@ component displayname="Grammar" accessors="true" singleton {
         return "TIME";
     }
 
+    function typeTimeTz( column ) {
+        return "TIME";
+    }
+
     function typeTimestamp( column ) {
         return "TIMESTAMP";
+    }
+
+    function typeTimestampTz( column ) {
+        return typeTimestamp( column );
     }
 
     function typeTinyInteger( column ) {

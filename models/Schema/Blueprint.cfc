@@ -68,6 +68,11 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function datetimeTz( name ) {
+        arguments.type = "datetimeTz";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function decimal( name, length = 10, precision = 0 ) {
         arguments.type = "decimal";
         return appendColumn( argumentCollection = arguments );
@@ -133,6 +138,11 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function lineString( name ) {
+        arguments.type = "lineString";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function morphs( name ) {
         unsignedInteger( "#name#_id" );
         string( "#name#_type" );
@@ -155,6 +165,22 @@ component accessors="true" {
         return this;
     }
 
+    function nullableTimestamps() {
+        appendColumn( name = "createdDate", type = "timestamp", nullable = true );
+        appendColumn( name = "modifiedDate", type = "timestamp", nullable = true );
+        return this;
+    }
+
+    function point( name ) {
+        arguments.type = "point";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function polygon( name ) {
+        arguments.type = "polygon";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function raw( sql ) {
         var expression = new qb.models.Query.Expression( sql );
         variables.columns.append( expression );
@@ -171,6 +197,16 @@ component accessors="true" {
     function smallInteger( name, precision ) {
         arguments.type = "smallInteger";
         return appendColumn( argumentCollection = arguments );
+    }
+
+    function softDeletes() {
+        appendColumn( name = "deletedDate", type = "timestamp", nullable = true );
+        return this;
+    }
+
+    function softDeletesTz() {
+        appendColumn( name = "deletedDate", type = "timestampTz", nullable = true );
+        return this;
     }
 
     function string( name, length ) {
@@ -204,9 +240,31 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function timeTz( name ) {
+        arguments.type = "timeTz";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function timestamp( name ) {
         arguments.type = "timestamp";
         return appendColumn( argumentCollection = arguments );
+    }
+
+    function timestamps() {
+        appendColumn( name = "createdDate", type = "timestamp" );
+        appendColumn( name = "modifiedDate", type = "timestamp" );
+        return this;
+    }
+
+    function timestampTz( name ) {
+        arguments.type = "timestampTz";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function timestampsTz() {
+        appendColumn( name = "createdDate", type = "timestampTz" );
+        appendColumn( name = "modifiedDate", type = "timestampTz" );
+        return this;
     }
 
     function tinyIncrements( name, indexName ) {

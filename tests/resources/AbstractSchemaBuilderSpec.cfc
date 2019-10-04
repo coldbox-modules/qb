@@ -113,6 +113,14 @@ component extends="testbox.system.BaseSpec" {
                     }, datetime() );
                 } );
 
+                it( "datetimeTz", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.datetimeTz( "posted_date" );
+                        }, {}, false );
+                    }, datetimeTz() );
+                } );
+
                 it( "decimal (with defaults)", function() {
                     testCase( function( schema ) {
                         return schema.create( "employees", function( table ) {
@@ -217,6 +225,14 @@ component extends="testbox.system.BaseSpec" {
                     }, json() );
                 } );
 
+                it( "lineString", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "users", function( table ) {
+                            table.lineString( "positions" );
+                        }, {}, false );
+                    }, lineString() );
+                } );
+
                 it( "longText", function() {
                     testCase( function( schema ) {
                         return schema.create( "posts", function( table ) {
@@ -281,6 +297,30 @@ component extends="testbox.system.BaseSpec" {
                     }, nullableMorphs() );
                 } );
 
+                it( "nullableTimestamps", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.nullableTimestamps();
+                        }, {}, false );
+                    }, nullableTimestamps() );
+                } );
+
+                it( "point", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "users", function( table ) {
+                            table.point( "position" );
+                        }, {}, false );
+                    }, point() );
+                } );
+
+                it( "polygon", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "users", function( table ) {
+                            table.polygon( "positions" );
+                        }, {}, false );
+                    }, polygon() );
+                } );
+
                 it( "raw", function() {
                     testCase( function( schema ) {
                         return schema.create( "users", function( table ) {
@@ -321,6 +361,22 @@ component extends="testbox.system.BaseSpec" {
                             table.smallInteger( "age", 5 );
                         }, {}, false );
                     }, smallIntegerWithPrecision() );
+                } );
+
+                it( "softDeletes", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.softDeletes();
+                        }, {}, false );
+                    }, softDeletes() );
+                } );
+
+                it( "softDeletesTz", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.softDeletesTz();
+                        }, {}, false );
+                    }, softDeletesTz() );
                 } );
 
                 it( "string", function() {
@@ -372,12 +428,44 @@ component extends="testbox.system.BaseSpec" {
                     }, time() );
                 } );
 
+                it( "timeTz", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "recurring_tasks", function( table ) {
+                            table.timeTz( "fire_time" );
+                        }, {}, false );
+                    }, timeTz() );
+                } );
+
                 it( "timestamp", function() {
                     testCase( function( schema ) {
                         return schema.create( "posts", function( table ) {
                             table.timestamp( "posted_date" );
                         }, {}, false );
                     }, timestamp() );
+                } );
+
+                it( "timestampTz", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.timestampTz( "posted_date" );
+                        }, {}, false );
+                    }, timestampTz() );
+                } );
+
+                it( "timestamps", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.timestamps();
+                        }, {}, false );
+                    }, timestamps() );
+                } );
+
+                it( "timestampsTz", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.timestampsTz();
+                        }, {}, false );
+                    }, timestampsTz() );
                 } );
 
                 it( "tinyIncrements", function() {
@@ -532,6 +620,14 @@ component extends="testbox.system.BaseSpec" {
                             table.string( "country" ).default( "USA" );
                         }, {}, false );
                     }, defaultForString() );
+                } );
+
+                it( "timestamp withCurrent", function() {
+                    testCase( function( schema ) {
+                        return schema.create( "posts", function( table ) {
+                            table.timestamp( "posted_date" ).withCurrent();
+                        }, {}, false );
+                    }, timestampWithCurrent() );
                 } );
 
                 it( "nullable", function() {

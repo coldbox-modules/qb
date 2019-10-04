@@ -52,6 +52,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL)" ];
     }
 
+    function datetimeTz() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
+    }
+
     function decimal() {
         return [ "CREATE TABLE ""employees"" (""salary"" DECIMAL(10,0) NOT NULL)" ];
     }
@@ -115,6 +119,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return longText();
     }
 
+    function lineString() {
+        return [ "CREATE TABLE ""users"" (""positions"" GEOGRAPHY(LINESTRING, 4326) NOT NULL)" ];
+    }
+
     function mediumIncrements() {
         return [ "CREATE TABLE ""users"" (""id"" SERIAL NOT NULL, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" ];
     }
@@ -145,6 +153,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function nullableTimestamps() {
+        return [
+            "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP, ""modifiedDate"" TIMESTAMP)"
+        ];
+    }
+
+    function point() {
+        return [ "CREATE TABLE ""users"" (""position"" GEOGRAPHY(POINT, 4326) NOT NULL)" ];
+    }
+
+    function polygon() {
+        return [ "CREATE TABLE ""users"" (""positions"" GEOGRAPHY(POLYGON, 4326) NOT NULL)" ];
+    }
+
     function raw() {
         return [ "CREATE TABLE ""users"" (id BLOB NOT NULL)" ];
     }
@@ -165,6 +187,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function smallIntegerWithPrecision() {
         return [ "CREATE TABLE ""users"" (""age"" NUMERIC(5) NOT NULL)" ];
+    }
+
+    function softDeletes() {
+        return [ "CREATE TABLE ""posts"" (""deletedDate"" TIMESTAMP)" ];
+    }
+
+    function softDeletesTz() {
+        return [ "CREATE TABLE ""posts"" (""deletedDate"" TIMESTAMP WITH TIME ZONE)" ];
     }
 
     function string() {
@@ -191,8 +221,24 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""recurring_tasks"" (""fire_time"" TIME NOT NULL)" ];
     }
 
+    function timeTz() {
+        return [ "CREATE TABLE ""recurring_tasks"" (""fire_time"" TIME WITH TIME ZONE NOT NULL)" ];
+    }
+
     function timestamp() {
         return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL)" ];
+    }
+
+    function timestamps() {
+        return [ "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP NOT NULL, ""modifiedDate"" TIMESTAMP NOT NULL)" ];
+    }
+
+    function timestampTz() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
+    }
+
+    function timestampsTz() {
+        return [ "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP WITH TIME ZONE NOT NULL, ""modifiedDate"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
     }
 
     function tinyIncrements() {
@@ -272,6 +318,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function defaultForString() {
         return [ "CREATE TABLE ""users"" (""country"" VARCHAR(255) NOT NULL DEFAULT 'USA')" ];
+    }
+
+    function timestampWithCurrent() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)" ];
     }
 
     function nullable() {

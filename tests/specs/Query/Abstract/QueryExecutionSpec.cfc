@@ -348,6 +348,117 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
             } );
+
+            describe( "chunk", function() {
+                it( "can chunk a query into smaller sections", function() {
+                    var builder = getBuilder();
+                    var expectedQuery100 = queryNew( "name", "varchar" );
+                    for ( var i = 1; i <= 100; i++ ) {
+                        queryAddRow( expectedQuery100, { "name" = "name-#i#" } );
+                    }
+                    var expectedQueryRest = queryNew( "name", "varchar" );
+                    for ( var i = 1; i <= 57; i++ ) {
+                        queryAddRow( expectedQueryRest, { "name" = "name-#i#" } );
+                    }
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
+                            options = {},
+                            clearExcept = []
+                        )
+                        .$results(
+                            queryNew( "aggregate", "varchar", [
+                                { "aggregate" = 257 }
+                            ] )
+                        )
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 0",
+                            options = {},
+                            clearExcept = []
+                        )
+                        .$results( expectedQuery100 )
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 100",
+                            options = {},
+                            clearExcept = []
+                        )
+                        .$results( expectedQuery100 )
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 200",
+                            options = {},
+                            clearExcept = []
+                        )
+                        .$results( expectedQueryRest );
+
+                    builder.select( "name" ).from( "users" ).chunk( 100, function( results ) {
+                        expect( results ).toBeArray();
+                        expect( arrayLen( results ) ).toBeLTE( 100 );
+                    } );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 4 );
+                } );
+
+                it( "can stop the chunk early by returning false", function() {
+                    var builder = getBuilder();
+                    var expectedQuery100 = queryNew( "name", "varchar" );
+                    for ( var i = 1; i <= 100; i++ ) {
+                        queryAddRow( expectedQuery100, { "name" = "name-#i#" } );
+                    }
+                    var expectedQueryRest = queryNew( "name", "varchar" );
+                    for ( var i = 1; i <= 57; i++ ) {
+                        queryAddRow( expectedQueryRest, { "name" = "name-#i#" } );
+                    }
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""",
+                            options = {},
+                            clearExcept = []
+                        )
+                        .$results(
+                            queryNew( "aggregate", "varchar", [
+                                { "aggregate" = 257 }
+                            ] )
+                        )
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 0",
+                            options = {},
+                            clearExcept = []
+                        )
+                        .$results( expectedQuery100 )
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 100",
+                            options = {},
+                            clearExcept = []
+                        )
+                        .$results( expectedQuery100 )
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 200",
+                            options = {},
+                            clearExcept = []
+                        )
+                        .$results( expectedQueryRest );
+
+                    builder.select( "name" ).from( "users" ).chunk( 100, function( results ) {
+                        expect( results ).toBeArray();
+                        expect( arrayLen( results ) ).toBeLTE( 100 );
+                        return false;
+                    } );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 2 );
+                } );
+            } );
         } );
 
         describe( "aggregate functions", function() {

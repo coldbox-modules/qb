@@ -2201,7 +2201,7 @@ component displayname="QueryBuilder" accessors="true" {
         struct options = {},
         boolean toSql = false
     ) {
-        if ( exists( clearExcept = [ "where" ] ) ) {
+        if ( exists() ) {
             return this.limit( 1 ).update( argumentCollection = arguments );
         }
 
@@ -2575,6 +2575,23 @@ component displayname="QueryBuilder" accessors="true" {
         return arrayToList( values( argumentCollection = arguments ), glue );
     }
 
+    public QueryBuilder function chunk(
+        required numeric max,
+        required callback,
+        struct options = {}
+    ) {
+        var count = count( options = arguments.options );
+        for ( var i = 1; i <= count; i += max ) {
+            var shouldContinue = callback(
+                variables.limit( max ).offset( i - 1 ).get( options = arguments.options )
+            );
+            if ( ! isNull( shouldContinue ) && ! shouldContinue ) {
+                break;
+            }
+        }
+        return this;
+    }
+
     /**
     * Execute a query and convert it to the proper return format.
     *
@@ -2620,7 +2637,6 @@ component displayname="QueryBuilder" accessors="true" {
     ) {
         structAppend( arguments.options, getDefaultOptions() );
         var result = grammar.runQuery( sql, getBindings(), arguments.options, returnObject );
-        clearBindings( except = arguments.clearExcept );
         if ( ! isNull( result ) ) {
             return result;
         }

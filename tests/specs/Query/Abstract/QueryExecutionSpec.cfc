@@ -580,9 +580,7 @@ component extends="testbox.system.BaseSpec" {
             describe( "exists", function() {
                 it( "returns true if any records come back from the query", function() {
                     var builder = getBuilder();
-                    builder.$( "runQuery", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [
-                        { name = "foo", email = "bar" }
-                    ] ) );
+                    builder.$( "runQuery", queryNew( "aggregate", "varchar", [{ "aggregate": 6 }] ) );
                     expect( builder.select( "*" ).from( "users" ).exists() ).toBe( true );
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
@@ -590,7 +588,7 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "returns false if no records come back from the query", function() {
                     var builder = getBuilder();
-                    builder.$( "runQuery", queryNew( "name,email", "CF_SQL_VARCHAR,CF_SQL_VARCHAR", [] ) );
+                    builder.$( "runQuery", queryNew( "aggregate", "varchar", [{ "aggregate": 0 }] ) );
                     expect( builder.select( "*" ).from( "users" ).exists() ).toBe( false );
                 } );
             } );

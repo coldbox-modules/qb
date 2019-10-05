@@ -2409,7 +2409,7 @@ component displayname="QueryBuilder" accessors="true" {
         return withAggregate( { type = type, column = column }, function() {
             return withReturnFormat( "query", function() {
                 return withColumns( "*", function() {
-                    return get( options = options ).aggregate;;
+                    return get( options = options ).aggregate;
                 } );
             } );
         } );
@@ -2423,9 +2423,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return      boolean
     */
     public boolean function exists( struct options = {} ) {
-        return withReturnFormat( "array", function() {
-            return arrayLen( get( options = options ) ) > 0;
-        });
+        return count( options = arguments.options ) > 0;
     }
 
     /*******************************************************************************\

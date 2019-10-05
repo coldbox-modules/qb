@@ -273,16 +273,16 @@ component displayname="QueryBuilder" accessors="true" {
     */
     public QueryBuilder function subSelect(
         required string alias,
-        required any callback
+        required any query
     ) {
-        var subselect = callback;
-        if ( isClosure( callback ) ) {
-            subselect = newQuery();
-            callback( subselect );
+        if ( isClosure( query ) ) {
+            var callback = arguments.query;
+            arguments.query = newQuery();
+            callback( arguments.query );
         }
         return selectRaw(
-            "( #subselect.toSQL()# ) AS #getGrammar().wrapAlias( alias )#",
-            subselect.getBindings()
+            "( #arguments.query.toSQL()# ) AS #getGrammar().wrapAlias( arguments.alias )#",
+            arguments.query.getBindings()
         );
     }
 

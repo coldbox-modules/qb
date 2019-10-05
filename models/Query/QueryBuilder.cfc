@@ -2419,13 +2419,12 @@ component displayname="QueryBuilder" accessors="true" {
     * Returns true if the query returns any rows.
     *
     * @options     Any options to pass to `queryExecute`. Default: {}.
-    * @clearExcept Any bindings to keep when running the query. Default: []
     *
     * @return      boolean
     */
-    public boolean function exists( struct options = {}, any clearExcept = [] ) {
+    public boolean function exists( struct options = {} ) {
         return withReturnFormat( "array", function() {
-            return arrayLen( get( options = options, clearExcept = clearExcept ) ) > 0;
+            return arrayLen( get( options = options ) ) > 0;
         });
     }
 
@@ -2439,16 +2438,15 @@ component displayname="QueryBuilder" accessors="true" {
     * @columns     An optional column, list of columns, or array of columns to select.
     *              The selected columns before calling get will be restored after running the query.
     * @options     Any options to pass to `queryExecute`. Default: {}.
-    * @clearExcept Any bindings to keep when running the query. Default: []
     *
     * @return      any
     */
-    public any function get( any columns, struct options = {}, any clearExcept = [] ) {
+    public any function get( any columns, struct options = {} ) {
         var originalColumns = getColumns();
         if ( ! isNull( arguments.columns ) ) {
             select( arguments.columns );
         }
-        var result = run( sql = toSql(), options = arguments.options, clearExcept = arguments.clearExcept );
+        var result = run( sql = toSql(), options = arguments.options );
         select( originalColumns );
         return result;
     }
@@ -2597,11 +2595,10 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @sql         The sql string to execute.
     * @options     Any options to pass to `queryExecute`. Default: {}.
-    * @clearExcept Any bindings to keep when running the query. Default: []
     *
     * @return      any
     */
-    private any function run( required string sql, struct options = {}, any clearExcept = [] ) {
+    private any function run( required string sql, struct options = {} ) {
         var q = runQuery( argumentCollection = arguments );
 
         if ( isNull( q ) ) {
@@ -2625,15 +2622,13 @@ component displayname="QueryBuilder" accessors="true" {
     * @options      Any options to pass to `queryExecute`. Default: {}.
     * @returnObject The return object that running the query should return.
     *               Can be either `query` or `result`. Default: `query`.
-    * @clearExcept  Any bindings to keep when running the query. Default: []
     *
     * @return       any
     */
     private any function runQuery(
         required string sql,
         struct options = {},
-        string returnObject = "query",
-        any clearExcept = []
+        string returnObject = "query"
     ) {
         structAppend( arguments.options, getDefaultOptions() );
         var result = grammar.runQuery( sql, getBindings(), arguments.options, returnObject );

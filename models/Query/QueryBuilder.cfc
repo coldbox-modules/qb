@@ -234,8 +234,8 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function distinct() {
-        setDistinct( true );
+    public QueryBuilder function distinct( boolean state = true ) {
+        setDistinct( arguments.state );
 
         return this;
     }

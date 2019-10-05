@@ -12,7 +12,7 @@ component singleton {
             case "PostgreSQL":
                 return wirebox.getInstance( "PostgresGrammar@qb" );
             case "Microsoft SQL Server":
-                return wirebox.getInstance( "MSSQLGrammar@qb" );
+                return wirebox.getInstance( "SQLServerGrammar@qb" );
             case "Oracle":
                 return wirebox.getInstance( "OracleGrammar@qb" );
             default:

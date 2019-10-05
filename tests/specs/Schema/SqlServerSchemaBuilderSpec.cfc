@@ -510,7 +510,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
         arguments.mockGrammar = isNull( arguments.mockGrammar ) ?
-            getMockBox().createMock( "qb.models.Grammars.MSSQLGrammar" ).init( utils ) :
+            getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init( utils ) :
             arguments.mockGrammar;
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
             .init( arguments.mockGrammar );

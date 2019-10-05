@@ -731,7 +731,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     private function getBuilder() {
         variables.grammar = getMockBox()
-            .createMock( "qb.models.Grammars.MSSQLGrammar" )
+            .createMock( "qb.models.Grammars.SqlServerGrammar" )
             .init();
         var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" )
             .init( grammar );

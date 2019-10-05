@@ -13,8 +13,8 @@ Using qb, you can:
 
 ## Requirements
 
-+ Adobe ColdFusion 11+
-+ Lucee 4.5+
++ Adobe ColdFusion 2016+
++ Lucee 5+
 
 ## Installation
 

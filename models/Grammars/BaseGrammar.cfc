@@ -1318,6 +1318,11 @@ component displayname="Grammar" accessors="true" singleton {
     =            Index Types            =
     ===================================*/
 
+    function compileCreateView( blueprint, commandParameters ) {
+        var query = commandParameters[ 1 ];
+        return "CREATE VIEW #wrapTable( blueprint.getTable() )# AS (#compileSelect( query )#)";
+    }
+
     function compileCreateIndexes( blueprint ) {
         return blueprint.getIndexes().map( function( index ) {
             return invoke( this, "index#index.getType()#", { index = index, blueprint = blueprint } );

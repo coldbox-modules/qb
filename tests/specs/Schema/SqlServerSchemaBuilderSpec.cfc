@@ -507,6 +507,12 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "SELECT 1 FROM [information_schema].[columns] WHERE [table_name] = ? AND [column_name] = ? AND [table_schema] = ?" ];
     }
 
+    function simpleView() {
+        return [
+            "CREATE VIEW [active_users] AS (SELECT * FROM [users] WHERE [active] = ?)"
+        ];
+    }
+
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
         arguments.mockGrammar = isNull( arguments.mockGrammar ) ?

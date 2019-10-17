@@ -1000,6 +1000,16 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            describe( "views", function() {
+                it( "can create a basic view from a QueryBuilder", function() {
+                    testCase( function( schema ) {
+                        return schema.view( "active_users", function( query ) {
+                            query.from( "users" ).where( "active", 1 );
+                        }, {}, false );
+                    }, simpleView() );
+                } );
+            } );
+
             it( "has table", function() {
                 testCase( function( schema ) {
                     return schema.hasTable( name = "users", options = {}, execute = false );

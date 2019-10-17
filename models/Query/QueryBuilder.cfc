@@ -543,25 +543,12 @@ component displayname="QueryBuilder" accessors="true" {
     * This allows multiple `on` and `where` conditions to be applied to the join.
     *
     * @table The table/expression to join to the query.
-    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
-    * @operator The boolean operator for the join clause. Default: "=".
-    * @second The second column in the join's `on` statement.
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function crossJoin(
-        required any table,
-        any first,
-        string operator,
-        any second
-    ) {
-        if ( ! isNull( arguments.first ) ) {
-            arguments.type = "cross";
-            return join( argumentCollection = arguments );
-        }
-
+    public QueryBuilder function crossJoin( required any table ) {
         variables.joins.append(
-            new qb.models.Query.JoinClause( this, "cross", table )
+            new qb.models.Query.JoinClause( this, "cross", arguments.table )
         );
 
         return this;
@@ -656,29 +643,16 @@ component displayname="QueryBuilder" accessors="true" {
     * For complex joins, a closure can be passed to `first`.
     * This allows multiple `on` and `where` conditions to be applied to the join.
     *
-    * @table The /expression to join to the query.
-    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
-    * @operator The boolean operator for the join clause. Default: "=".
-    * @second The second column in the join's `on` statement.
+    * @table The expression to join to the query.
     *
     * @return qb.models.Query.QueryBuilder
     */
-    public QueryBuilder function crossJoinRaw(
-        required string table,
-        any first,
-        string operator,
-        any second
-    ) {
-        if ( ! isNull( arguments.first ) ) {
-            arguments.type = "cross";
-            return joinRaw( argumentCollection = arguments );
-        }
-
+    public QueryBuilder function crossJoinRaw( required string table ) {
         // create the table reference
         arguments.table = raw(arguments.table);
 
         variables.joins.append(
-            new qb.models.Query.JoinClause( this, "cross", table )
+            new qb.models.Query.JoinClause( this, "cross", arguments.table )
         );
 
         return this;
@@ -796,24 +770,13 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @alias The alias for the derived table
     * @input Either a QueryBuilder instance or a closure to define the derived query.
-    * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
-    * @operator The boolean operator for the join clause. Default: "=".
-    * @second The second column in the join's `on` statement.
     *
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function crossJoinSub(
         required any alias,
-        required any input,
-        any first,
-        string operator,
-        any second
+        required any input
     ) {
-        if ( ! isNull( arguments.first ) ) {
-            arguments.type = "cross";
-            return joinSub( argumentCollection = arguments );
-        }
-
         // since we have a callback, we generate a new query object and pass it into the callback
         if( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ){
             var subquery = newQuery();

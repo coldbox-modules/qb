@@ -7,5 +7,6 @@
     },
     "app":{
         "cfengine":"adobe@2016"
-    }
+    },
+    "directoryBrowsing":"true"
 }

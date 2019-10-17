@@ -997,25 +997,6 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-    * Adds a WHERE IN clause to the query.
-    *
-    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
-    * @values The values with which to constrain the column. An expression (`builder.raw()`) can be passed as any of the values as well.
-    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-    * @negate False for IN, True for NOT IN. Default: false.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereIn(
-        column,
-        values,
-        combinator = "and",
-        negate = false
-    ) {
-        return whereIn( argumentCollection = arguments );
-    }
-
-    /**
     * Adds a WHERE IN clause to the query using a subselect.  To call this using the public api, pass a closure to `whereIn` as the second argument (`values`).
     *
     * @column The name of the column with which to constrain the query.
@@ -1050,20 +1031,6 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-    * Adds an OR WHERE IN clause to the query.
-    *
-    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
-    * @values The values with which to constrain the column. An expression (`builder.raw()`) can be passed as any of the values as well.
-    * @negate False for IN, True for NOT IN. Default: false.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereIn( column, values, negate = false ) {
-        arguments.combinator = "or";
-        return whereIn( argumentCollection = arguments );
-    }
-
-    /**
     * Adds a WHERE NOT IN clause to the query.
     *
     * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
@@ -1073,20 +1040,6 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function whereNotIn( column, values, combinator = "and" ) {
-        arguments.negate = true;
-        return whereIn( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds an OR WHERE NOT IN clause to the query.
-    *
-    * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
-    * @values The values with which to constrain the column. An expression (`builder.raw()`) can be passed as any of the values as well.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereNotIn( column, values ) {
-        arguments.combinator = "or";
         arguments.negate = true;
         return whereIn( argumentCollection = arguments );
     }
@@ -1114,22 +1067,6 @@ component displayname="QueryBuilder" accessors="true" {
             combinator = arguments.combinator
         } );
         return this;
-    }
-
-    /**
-    * Adds a raw SQL statement to the WHERE clauses with an OR combinator.
-    *
-    * @sql The raw SQL to add to the query.
-    * @whereBindings Any bindings needed for the raw SQL. Default: [].
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereRaw(
-        required string sql,
-        array whereBindings = []
-    ) {
-        arguments.combinator = "or";
-        return whereRaw( argumentCollection = arguments );
     }
 
     /**
@@ -1164,34 +1101,6 @@ component displayname="QueryBuilder" accessors="true" {
         } );
 
         return this;
-    }
-
-    /**
-    * Adds a WHERE clause to the query comparing two columns
-    *
-    * @first The name of the first column to compare.
-    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `second` left null as a shortcut for equals (e.g. whereColumn( "columnA", "columnB" ) == where( "column", "=", "columnB" ) ).
-    * @second The name of the second column to compare.
-    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereColumn( required first, operator, second, string combinator = "and" ) {
-        return whereColumn( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds a OR WHERE clause to the query comparing two columns
-    *
-    * @first The name of the first column to compare.
-    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `second` left null as a shortcut for equals (e.g. whereColumn( "columnA", "columnB" ) == where( "column", "=", "columnB" ) ).
-    * @second The name of the second column to compare.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereColumn( required first, operator, second ) {
-        arguments.combinator = "or";
-        return whereColumn( argumentCollection = arguments );
     }
 
     /**
@@ -1241,36 +1150,6 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-    * Adds a WHERE EXISTS clause to the query.
-    *
-    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
-    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-    * @negate False for EXISTS, True for NOT EXISTS. Default: false.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereExists(
-        callback,
-        combinator = "and",
-        negate = false
-    ) {
-        return whereExists( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds an OR WHERE EXISTS clause to the query.
-    *
-    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
-    * @negate False for EXISTS, True for NOT EXISTS. Default: false.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereExists( query, negate = false ) {
-        arguments.combinator = "or";
-        return whereExists( argumentCollection = arguments );
-    }
-
-    /**
     * Adds a WHERE NOT EXISTS clause to the query.
     *
     * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
@@ -1279,31 +1158,6 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function whereNotExists( query, combinator = "and" ) {
-        arguments.negate = true;
-        return whereExists( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds a WHERE NOT EXISTS clause to the query.
-    *
-    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
-    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereNotExists( query, combinator = "and" ) {
-        return whereNotExists( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds a OR WHERE NOT EXISTS clause to the query.
-    *
-    * @callback A callback to specify the query for the EXISTS clause.  It will be passed a query as the only argument.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereNotExists( query ) {
-        arguments.combinator = "or";
         arguments.negate = true;
         return whereExists( argumentCollection = arguments );
     }
@@ -1406,32 +1260,6 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-    * Adds a WHERE NULL clause to the query.
-    *
-    * @column The name of the column to check if it is NULL.
-    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-    * @negate False for NULL, True for NOT NULL. Default: false.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereNull( column, combinator = "and", negate = false ) {
-        return whereNull( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds an OR WHERE NULL clause to the query.
-    *
-    * @column The name of the column to check if it is NULL.
-    * @negate False for NULL, True for NOT NULL. Default: false.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereNull( column, negate = false ) {
-        arguments.combinator = "or";
-        return whereNull( argumentCollection = arguments );
-    }
-
-    /**
     * Adds a WHERE NOT NULL clause to the query.
     *
     * @column The name of the column to check if it is NULL.
@@ -1440,31 +1268,6 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function whereNotNull( column, combinator = "and" ) {
-        arguments.negate = true;
-        return whereNull( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds a WHERE NOT NULL clause to the query.
-    *
-    * @column The name of the column to check if it is NULL.
-    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereNotNull( column, combinator = "and" ) {
-        return whereNotNull( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds an OR WHERE NOT NULL clause to the query.
-    *
-    * @column The name of the column to check if it is NULL.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereNotNull( column ) {
-        arguments.combinator = "or";
         arguments.negate = true;
         return whereNull( argumentCollection = arguments );
     }
@@ -1516,42 +1319,6 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-    * Adds a WHERE BETWEEN clause to the query.
-    *
-    * @column The name of the column with which to constrain the query.
-    * @start The beginning value of the BETWEEN statement.
-    * @end The end value of the BETWEEN statement.
-    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-    * @negate False for BETWEEN, True for NOT BETWEEN. Default: false.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereBetween(
-        column,
-        start,
-        end,
-        combinator = "and",
-        negate = false
-    ) {
-        return whereBetween( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds a OR WHERE BETWEEN clause to the query.
-    *
-    * @column The name of the column with which to constrain the query.
-    * @start The beginning value of the BETWEEN statement.
-    * @end The end value of the BETWEEN statement.
-    * @negate False for BETWEEN, True for NOT BETWEEN. Default: false.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereBetween( column, start, end, negate = false ) {
-        arguments.combinator = "or";
-        return whereBetween( argumentCollection = arguments );
-    }
-
-    /**
     * Adds a WHERE NOT BETWEEN clause to the query.
     *
     * @column The name of the column with which to constrain the query.
@@ -1562,35 +1329,6 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function whereNotBetween( column, start, end, combinator ) {
-        arguments.negate = true;
-        return whereBetween( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds a WHERE NOT BETWEEN clause to the query.
-    *
-    * @column The name of the column with which to constrain the query.
-    * @start The beginning value of the BETWEEN statement.
-    * @end The end value of the BETWEEN statement.
-    * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereNotBetween( column, start, end, combinator ) {
-        return whereNotBetween( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds an OR WHERE NOT BETWEEN clause to the query.
-    *
-    * @column The name of the column with which to constrain the query.
-    * @start The beginning value of the BETWEEN statement.
-    * @end The end value of the BETWEEN statement.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereNotBetween( column, start, end, combinator ) {
-        arguments.combinator = "or";
         arguments.negate = true;
         return whereBetween( argumentCollection = arguments );
     }
@@ -1607,33 +1345,6 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereLike( column, value, string combinator = "and" ) {
         arguments.operator = "like";
         return where( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds a WHERE LIKE clause to the query.
-    * Alias for `whereLike`
-    *
-    * @column The name of the column with which to constrain the query.
-    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function andWhereLike( column, value ) {
-        arguments.combinator = "and";
-        return whereLike( argumentCollection = arguments );
-    }
-
-    /**
-    * Adds a WHERE LIKE clause to the query using the `OR` combinator.
-    *
-    * @column The name of the column with which to constrain the query.
-    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
-    public QueryBuilder function orWhereLike( column, value ) {
-        arguments.combinator = "or";
-        return whereLike( argumentCollection = arguments );
     }
 
     /*******************************************************************************\
@@ -2801,14 +2512,51 @@ component displayname="QueryBuilder" accessors="true" {
     /**
     * onMissingMethod serves the following purpose for Builder:
     *
-    * Magic `where` methods. If a method starts with `where`, `andWhere`, or `orWhere`
-    * but doesn't match any other methods, Builder assumes that what
-    * comes after is the column name to constrain.
+    * `andWhere...` and `orWhere...` methods for all real `where...` methods
+    * are dynamically available.  For example, the `whereNull` method
+    * automatically can be called using `andWhereNull` or `orWhereNull`
+    * with the combinator set appropriately.
+    *
+    * Magic `where` column methods are also available. If a method starts with
+    * `where`, `andWhere`, or `orWhere` but doesn't match any other methods,
+    * Builder assumes that what comes after is the column name to constrain.
     * All the other arguments to `where` are shifted accordingly.
     *
     * @return any
     */
     public any function onMissingMethod( string missingMethodName, struct missingMethodArguments ) {
+        /*
+         * This block handles dynamic `andWhere` methods.
+         * If the method exists without the `and` we route the call there.
+         * Otherwise, we go on to the next check.
+         */
+        if ( ! arrayIsEmpty( REMatchNoCase( "andWhere.*", arguments.missingMethodName ) ) ) {
+            var originalMethodName = mid( arguments.missingMethodName, 4, len( arguments.missingMethodName ) - 3 );
+            if ( structKeyExists( variables, originalMethodName ) ) {
+                missingMethodArguments.combinator = "and";
+                return invoke( this, originalMethodName, missingMethodArguments );
+            }
+        }
+
+        /*
+         * This block handles dynamic `orWhere` methods.
+         * If the method exists without the `and` we route the call there.
+         * Otherwise, we go on to the next check.
+         */
+        if ( ! arrayIsEmpty( REMatchNoCase( "orWhere.*", arguments.missingMethodName ) ) ) {
+            var originalMethodName = mid( arguments.missingMethodName, 3, len( arguments.missingMethodName ) - 2 );
+            // check if method without the `or` is a real method
+            if ( structKeyExists( variables, originalMethodName ) ) {
+                missingMethodArguments.combinator = "or";
+                return invoke( this, originalMethodName, missingMethodArguments );
+            }
+        }
+
+        /*
+         * This block handles `where` methods with dynamic column names.
+         * If detected, we shift the arguments over one and set the dynamic
+         * column in the function name as the first column name.
+         */
         if ( ! arrayIsEmpty( REMatchNoCase( "^where(.+)", missingMethodName ) ) ) {
             var args = { "1" = mid( missingMethodName, 6, len( missingMethodName ) - 5 ) };
             for ( var key in missingMethodArguments ) {
@@ -2817,6 +2565,11 @@ component displayname="QueryBuilder" accessors="true" {
             return where( argumentCollection = args );
         }
 
+        /*
+         * This block handles `andWhere` methods with dynamic column names.
+         * If detected, we shift the arguments over one and set the dynamic
+         * column in the function name as the first column name.
+         */
         if ( ! arrayIsEmpty( REMatchNoCase( "^andWhere(.+)", missingMethodName ) ) ) {
             var args = { "1" = mid( missingMethodName, 9, len( missingMethodName ) - 8 ) };
             for ( var key in missingMethodArguments ) {
@@ -2826,6 +2579,11 @@ component displayname="QueryBuilder" accessors="true" {
             return andWhere( argumentCollection = args );
         }
 
+        /*
+         * This block handles `orWhere` methods with dynamic column names.
+         * If detected, we shift the arguments over one and set the dynamic
+         * column in the function name as the first column name.
+         */
         if ( ! arrayIsEmpty( REMatchNoCase( "^orWhere(.+)", missingMethodName ) ) ) {
             var args = { "1" = mid( missingMethodName, 8, len( missingMethodName ) - 7 ) };
             for ( var key in missingMethodArguments ) {
@@ -2835,7 +2593,7 @@ component displayname="QueryBuilder" accessors="true" {
             return orWhere( argumentCollection = args );
         }
 
-        throw( "Method does not exist [#missingMethodName#]" );
+        throw( "Method does not exist on QueryBuilder [#missingMethodName#]" );
     }
 
     function applyColumnFormatter( column ) {

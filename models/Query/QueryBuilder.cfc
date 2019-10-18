@@ -902,9 +902,9 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function andWhere(
         column,
         operator,
-        value,
-        string combinator = "and"
+        value
     ) {
+        arguments.combinator = "and";
         return where( argumentCollection = arguments );
     }
 

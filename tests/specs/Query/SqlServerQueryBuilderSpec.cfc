@@ -156,23 +156,23 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function whereExists() {
-        return "SELECT * FROM [orders] WHERE EXISTS (SELECT 1 FROM [products] WHERE [products].[id] = orders.id)";
+        return "SELECT * FROM [orders] WHERE EXISTS (SELECT 1 FROM [products] WHERE [products].[id] = [orders].[id])";
     }
 
     function orWhereExists() {
         return {
-            sql = "SELECT * FROM [orders] WHERE [id] = ? OR EXISTS (SELECT 1 FROM [products] WHERE [products].[id] = orders.id)",
+            sql = "SELECT * FROM [orders] WHERE [id] = ? OR EXISTS (SELECT 1 FROM [products] WHERE [products].[id] = [orders].[id])",
             bindings = [ 1 ]
         };
     }
 
     function whereNotExists() {
-        return "SELECT * FROM [orders] WHERE NOT EXISTS (SELECT 1 FROM [products] WHERE [products].[id] = orders.id)";
+        return "SELECT * FROM [orders] WHERE NOT EXISTS (SELECT 1 FROM [products] WHERE [products].[id] = [orders].[id])";
     }
 
     function orWhereNotExists() {
         return {
-            sql = "SELECT * FROM [orders] WHERE [id] = ? OR NOT EXISTS (SELECT 1 FROM [products] WHERE [products].[id] = orders.id)",
+            sql = "SELECT * FROM [orders] WHERE [id] = ? OR NOT EXISTS (SELECT 1 FROM [products] WHERE [products].[id] = [orders].[id])",
             bindings = [ 1 ]
         };
     }

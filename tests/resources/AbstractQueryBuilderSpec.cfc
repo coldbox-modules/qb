@@ -327,7 +327,7 @@ component extends="testbox.system.BaseSpec" {
                                     .whereExists( function( q ) {
                                         q.select( q.raw( 1 ) )
                                             .from( "products" )
-                                            .where( "products.id", "=", q.raw( "orders.id" ) );
+                                            .whereColumn( "products.id", "orders.id" );
                                     } );
                             }, whereExists() );
                         } );
@@ -341,7 +341,7 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhereExists( function( q ) {
                                         q.select( q.raw( 1 ) )
                                             .from( "products" )
-                                            .where( "products.id", "=", q.raw( "orders.id" ) );
+                                            .whereColumn( "products.id", "orders.id" );
                                     } );
                             }, orWhereExists() );
                         } );
@@ -354,7 +354,7 @@ component extends="testbox.system.BaseSpec" {
                                     .whereNotExists( function( q ) {
                                         q.select( q.raw( 1 ) )
                                             .from( "products" )
-                                            .where( "products.id", "=", q.raw( "orders.id" ) );
+                                            .whereColumn( "products.id", "orders.id" );
                                     } );
                             }, whereNotExists() );
                         } );
@@ -368,7 +368,7 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhereNotExists( function( q ) {
                                         q.select( q.raw( 1 ) )
                                             .from( "products" )
-                                            .where( "products.id", "=", q.raw( "orders.id" ) );
+                                            .whereColumn( "products.id", "orders.id" );
                                     } );
                             }, orWhereNotExists() );
                         } );
@@ -382,7 +382,7 @@ component extends="testbox.system.BaseSpec" {
                                         builder.newQuery()
                                             .select( builder.raw( 1 ) )
                                             .from( "products" )
-                                            .whereColumn( "products.id", "=", "orders.id" )
+                                            .whereColumn( "products.id", "orders.id" )
                                     );
                             }, whereExistsBuilderInstance() );
                         } );

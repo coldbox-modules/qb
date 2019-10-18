@@ -156,23 +156,23 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function whereExists() {
-        return "SELECT * FROM ""ORDERS"" WHERE EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = orders.id)";
+        return "SELECT * FROM ""ORDERS"" WHERE EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")";
     }
 
     function orWhereExists() {
         return {
-            sql = "SELECT * FROM ""ORDERS"" WHERE ""ID"" = ? OR EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = orders.id)",
+            sql = "SELECT * FROM ""ORDERS"" WHERE ""ID"" = ? OR EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")",
             bindings = [ 1 ]
         };
     }
 
     function whereNotExists() {
-        return "SELECT * FROM ""ORDERS"" WHERE NOT EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = orders.id)";
+        return "SELECT * FROM ""ORDERS"" WHERE NOT EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")";
     }
 
     function orWhereNotExists() {
         return {
-            sql = "SELECT * FROM ""ORDERS"" WHERE ""ID"" = ? OR NOT EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = orders.id)",
+            sql = "SELECT * FROM ""ORDERS"" WHERE ""ID"" = ? OR NOT EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")",
             bindings = [ 1 ]
         };
     }

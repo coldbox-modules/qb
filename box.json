@@ -35,7 +35,8 @@
         "testbox":"^3.0.0"
     },
     "installPaths":{
-        "testbox":"testbox/"
+        "testbox":"testbox/",
+        "cbpaginator":"modules/cbpaginator/"
     },
     "ignore":[
         "**/.*",
@@ -52,5 +53,8 @@
     "testbox":{
         "runner":"http://localhost:7777/tests/runner.cfm",
         "verbose": false
+    },
+    "dependencies":{
+        "cbpaginator":"^1.2.0"
     }
 }

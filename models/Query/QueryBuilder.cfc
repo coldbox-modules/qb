@@ -847,7 +847,7 @@ component displayname="QueryBuilder" accessors="true" {
         value,
         string combinator = "and"
     ) {
-        if ( isClosure( column ) ) {
+        if ( isClosure( column ) || isCustomFunction( column ) ) {
             return whereNested( column, combinator );
         }
 

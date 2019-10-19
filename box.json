@@ -55,6 +55,6 @@
         "verbose": false
     },
     "dependencies":{
-        "cbpaginator":"^1.2.0"
+        "cbpaginator":"github:quinteroj/pagination#89cb669"
     }
 }

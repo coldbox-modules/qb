@@ -1734,29 +1734,27 @@ component displayname="QueryBuilder" accessors="true" {
     /**
     * Helper method to calculate the limit and offset given a page number and count per page.
     *
-    * @pageNumber The page number to retrieve
-    * @pageCount The number of records per page.
+    * @page The page number to retrieve
+    * @maxRows The number of records per page.
     *
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function forPage(
-        required numeric pageNumber,
-        required numeric pageCount
+        required numeric page,
+        required numeric maxRows
     ) {
-        arguments.pageCount = arguments.pageCount > 0 ? arguments.pageCount : 0;
-        offset( arguments.pageNumber * arguments.pageCount - arguments.pageCount );
-        limit( arguments.pageCount );
+        arguments.maxRows = arguments.maxRows > 0 ? arguments.maxRows : 0;
+        offset( arguments.page * arguments.maxRows - arguments.maxRows );
+        limit( arguments.maxRows );
         return this;
     }
 
     public any function paginate(
-        required numeric page = 1,
-        required numeric maxRows = 25
+        numeric page = 1,
+        numeric maxRows = 25
     ) {
         var totalRecords = count();
-        var results = withReturnFormat( "array", function() {
-            return forPage( page, maxRows ).get();
-        } );
+        var results = forPage( page, maxRows ).get();
         return getPaginationCollector().generateWithResults(
             totalRecords = totalRecords,
             results = results,

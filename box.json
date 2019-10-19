@@ -50,6 +50,7 @@
         "yarn.lock"
     ],
     "testbox":{
-        "runner":"http://localhost:7777/tests/runner.cfm"
+        "runner":"http://localhost:7777/tests/runner.cfm",
+        "verbose": false
     }
 }

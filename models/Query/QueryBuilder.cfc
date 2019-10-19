@@ -1737,7 +1737,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function tap( required callback ) {
-        callback( duplicate( this ) );
+        callback( clone( this ) );
         return this;
     }
 
@@ -2343,19 +2343,19 @@ component displayname="QueryBuilder" accessors="true" {
     public qb.models.Query.QueryBuilder function clone() {
         var clonedQuery = newQuery();
         clonedQuery.setDistinct( this.getDistinct() );
-        clonedQuery.setAggregate( this.getAggregate() );
-        clonedQuery.setColumns( this.getColumns() );
-        clonedQuery.setFrom( this.getFrom() );
-        clonedQuery.setJoins( this.getJoins() );
-        clonedQuery.setWheres( this.getWheres() );
-        clonedQuery.setGroups( this.getGroups() );
-        clonedQuery.setHavings( this.getHavings() );
-        clonedQuery.setUnions( this.getUnions() );
-        clonedQuery.setOrders( this.getOrders() );
-        clonedQuery.setCommonTables( this.getCommonTables() );
-        clonedQuery.setLimitValue( this.getLimitValue() );
-        clonedQuery.setOffsetValue( this.getOffsetValue() );
-        clonedQuery.setReturning( this.getReturning() );
+        clonedQuery.setAggregate( duplicate( this.getAggregate() ) );
+        clonedQuery.setColumns( duplicate( this.getColumns() ) );
+        clonedQuery.setFrom( duplicate( this.getFrom() ) );
+        clonedQuery.setJoins( duplicate( this.getJoins() ) );
+        clonedQuery.setWheres( duplicate( this.getWheres() ) );
+        clonedQuery.setGroups( duplicate( this.getGroups() ) );
+        clonedQuery.setHavings( duplicate( this.getHavings() ) );
+        clonedQuery.setUnions( duplicate( this.getUnions() ) );
+        clonedQuery.setOrders( duplicate( this.getOrders() ) );
+        clonedQuery.setCommonTables( duplicate( this.getCommonTables() ) );
+        clonedQuery.setLimitValue( duplicate( this.getLimitValue() ) );
+        clonedQuery.setOffsetValue( duplicate( this.getOffsetValue() ) );
+        clonedQuery.setReturning( duplicate( this.getReturning() ) );
         clonedQuery.mergeBindings( this );
         return clonedQuery;
     }
@@ -2377,8 +2377,25 @@ component displayname="QueryBuilder" accessors="true" {
     *
     * @return string
     */
-    public string function toSQL() {
-        return grammar.compileSelect( this );
+    public string function toSQL( boolean showBindings = false ) {
+        var sql = grammar.compileSelect( this );
+
+        if ( ! showBindings ) {
+            return sql;
+        }
+
+        var bindings = getBindings();
+        var index = 1;
+        return replace( sql, "?", function( pattern, position, originalString ) {
+            var thisBinding = bindings[ index ];
+            var orderedBinding = structNew( "ordered" );
+            for ( var type in [ "value", "cfsqltype", "null" ] ) {
+                orderedBinding[ type ] = thisBinding[ type ];
+            }
+            var stringifiedBinding = serializeJSON( orderedBinding );
+            index++;
+            return stringifiedBinding;
+        }, "all" );
     }
 
     /**

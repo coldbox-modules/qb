@@ -2334,9 +2334,13 @@ component displayname="QueryBuilder" accessors="true" {
             grammar = getGrammar(),
             utils = getUtils(),
             returnFormat = getReturnFormat(),
+            paginationCollector = isNull( variables.paginationCollector ) ?
+                javacast( "null", "" ) :
+                variables.paginationCollector,
             columnFormatter = isNull( getColumnFormatter() ) ?
                 javacast( "null", "" ) :
-                getColumnFormatter()
+                getColumnFormatter(),
+            defaultOptions = getDefaultOptions()
         );
     }
 

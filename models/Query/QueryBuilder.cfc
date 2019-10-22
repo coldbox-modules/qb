@@ -24,6 +24,18 @@ component displayname="QueryBuilder" accessors="true" {
     property name="returnFormat";
 
     /**
+    * paginationCollector
+    * A component or struct with a `generateWithResults` method.
+    * The `generate` method will recieve the following arguments:
+    * - `totalRecords`
+    * - `results`
+    * - `page`
+    * - `maxRows`
+    * @default cbpaginator.models.Pagination
+    */
+    property name="paginationCollector";
+
+    /**
     * columnFormatter callback
     * If provided, each column is passed to it before being added to the query.
     * Provides a hook for libraries like Quick to influence columns names.
@@ -177,7 +189,9 @@ component displayname="QueryBuilder" accessors="true" {
     * @grammar The grammar to use when compiling queries. Default: qb.models.Grammars.BaseGrammar
     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
     * @returnFormat the closure (or string format shortcut) that modifies the query and is eventually returned to the caller. Default: 'array'
+    * @paginationCollector the closure that processes the pagination result. Default: cbpaginator.models.Pagination
     * @columnFormatter the closure that modifies each column before being added to the query. Default: Identity
+    * @defaultOptions the default queryExecute options to use for this builder.  This will be merged in each execution.
     *
     * @return qb.models.Query.QueryBuilder
     */
@@ -185,6 +199,7 @@ component displayname="QueryBuilder" accessors="true" {
         grammar = new qb.models.Grammars.BaseGrammar(),
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
+        paginationCollector = new modules.cbpaginator.models.Pagination(),
         columnFormatter,
         defaultOptions = {}
     ) {
@@ -197,6 +212,7 @@ component displayname="QueryBuilder" accessors="true" {
                 return column;
             };
         }
+        setPaginationCollector( arguments.paginationCollector );
         setColumnFormatter( arguments.columnFormatter );
         setDefaultOptions( arguments.defaultOptions );
 
@@ -1417,6 +1433,42 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+    * Add a and having clause to a query.
+    *
+    * @column The column with which to constrain the having clause. An expression (`builder.raw()`) can be passed as well.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function andHaving(
+        column,
+        operator,
+        value
+    ) {
+        arguments.combinator = "and";
+        return having( argumentCollection = arguments );
+    }
+
+    /**
+    * Add a or having clause to a query.
+    *
+    * @column The column with which to constrain the having clause. An expression (`builder.raw()`) can be passed as well.
+    * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+    * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+    *
+    * @return qb.models.Query.QueryBuilder
+    */
+    public QueryBuilder function orHaving(
+        column,
+        operator,
+        value
+    ) {
+        arguments.combinator = "or";
+        return having( argumentCollection = arguments );
+    }
+
+    /**
     * Add an order by clause to the query.  To order by multiple columns, call `orderBy` multiple times.
     * The order in which `orderBy` is called matters and is the order it appears in the SQL.
     *
@@ -1682,19 +1734,33 @@ component displayname="QueryBuilder" accessors="true" {
     /**
     * Helper method to calculate the limit and offset given a page number and count per page.
     *
-    * @pageNumber The page number to retrieve
-    * @pageCount The number of records per page.
+    * @page The page number to retrieve
+    * @maxRows The number of records per page.
     *
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function forPage(
-        required numeric pageNumber,
-        required numeric pageCount
+        required numeric page,
+        required numeric maxRows
     ) {
-        arguments.pageCount = arguments.pageCount > 0 ? arguments.pageCount : 0;
-        offset( arguments.pageNumber * arguments.pageCount - arguments.pageCount );
-        limit( arguments.pageCount );
+        arguments.maxRows = arguments.maxRows > 0 ? arguments.maxRows : 0;
+        offset( arguments.page * arguments.maxRows - arguments.maxRows );
+        limit( arguments.maxRows );
         return this;
+    }
+
+    public any function paginate(
+        numeric page = 1,
+        numeric maxRows = 25
+    ) {
+        var totalRecords = count();
+        var results = forPage( page, maxRows ).get();
+        return getPaginationCollector().generateWithResults(
+            totalRecords = totalRecords,
+            results = results,
+            page = arguments.page,
+            maxRows = arguments.maxRows
+        );
     }
 
     /*******************************************************************************\

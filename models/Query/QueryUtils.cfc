@@ -120,11 +120,19 @@ component displayname="QueryUtils" singleton {
     * @return array
     */
     public array function queryToArrayOfStructs( required any q ) {
-        var results = [];
-        for ( var row in arguments.q ) {
-            results.append( row );
-        }
-        return results;
+        var queryColumns = getMetadata( arguments.q )
+            .map( function( item ) {
+                return item.name;
+            } );
+        
+        return queryReduce( arguments.q, function( results, row ) {
+            var rowData = structNew( "ordered" );
+            for ( var column in queryColumns ) {
+                rowData[ column ] = row[ column ];
+            }
+            results.append( rowData );
+            return results;
+        }, [] );
     }
 
     /**

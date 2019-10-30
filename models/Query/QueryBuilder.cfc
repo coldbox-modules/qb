@@ -1644,7 +1644,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
     * Adds a new COMMON TABLE EXPRESSION (CTE) to the SQL.
     *
-    * @alias       The name of the CTE.
+    * @name        The name of the CTE.
     * @input       Either a QueryBuilder instance or a closure to define the derived query.
     * @columns     An optional array containing the columns to include in the CTE.
     * @recursive   Determines if CTE statement should be a recursive CTE.  Passing this as an argument is discouraged.  Use the dedicated `withRecursive` where possible.

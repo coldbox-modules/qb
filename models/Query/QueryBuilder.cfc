@@ -1953,7 +1953,7 @@ component displayname="QueryBuilder" accessors="true" {
     * This call must come after setting the query's table using `from` or `table`.
     * Any constraining of the update query should be done using the appropriate WHERE statement before calling `update`.
     *
-    * @id A convience argument for `where( "id", "=", arguments.id ).  The query can be constrained by normal WHERE methods if you have more complex needs.
+    * @id A convenience argument for `where( "id", "=", arguments.id ).  The query can be constrained by normal WHERE methods if you have more complex needs.
     * @idColumnName The name of the id column for the delete shorthand. Default: "id".
     * @options Any options to pass to `queryExecute`. Default: {}.
     * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.

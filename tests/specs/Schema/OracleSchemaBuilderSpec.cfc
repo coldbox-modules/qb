@@ -547,6 +547,25 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ? AND ""OWNER"" = ?" ];
     }
 
+    function createView() {
+        return [
+            "CREATE VIEW ""ACTIVE_USERS"" AS (SELECT * FROM ""USERS"" WHERE ""ACTIVE"" = ?)"
+        ];
+    }
+
+    function alterView() {
+        return [
+            "DROP VIEW ""ACTIVE_USERS""",
+            "CREATE VIEW ""ACTIVE_USERS"" AS (SELECT * FROM ""USERS"" WHERE ""ACTIVE"" = ?)"
+        ];
+    }
+
+    function dropView() {
+        return [
+            "DROP VIEW ""ACTIVE_USERS"""
+        ];
+    }
+
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
         arguments.mockGrammar = isNull( arguments.mockGrammar ) ?

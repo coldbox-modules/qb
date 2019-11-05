@@ -10,7 +10,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     * @return string
     */
     public string function compileInsert(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required array columns,
         required array values
     ) {

@@ -52,6 +52,56 @@ component accessors="true" singleton {
         return blueprint;
     }
 
+    function createView( required string view, required any callback, struct options = {}, boolean execute = true ) {
+        var query = new models.Query.QueryBuilder( getGrammar() );
+        callback( query );
+
+        var blueprint = new Blueprint( this, getGrammar() );
+        blueprint.addCommand( "createView", [ query ] );
+        blueprint.setCreating( true );
+        blueprint.setTable( arguments.view );
+
+        if ( execute ) {
+            blueprint.toSql().each( function( statement ) {
+                getGrammar().runQuery( statement, query.getBindings(), options, "result" );
+            } );
+        }
+
+        return blueprint;
+    }
+
+    function alterView( required string view, required any callback, struct options = {}, boolean execute = true ) {
+        var query = new models.Query.QueryBuilder( getGrammar() );
+        callback( query );
+
+        var blueprint = new Blueprint( this, getGrammar() );
+        blueprint.addCommand( "alterView", [ query ] );
+        blueprint.setCreating( true );
+        blueprint.setTable( arguments.view );
+
+        if ( execute ) {
+            blueprint.toSql().each( function( statement ) {
+                getGrammar().runQuery( statement, query.getBindings(), options, "result" );
+            } );
+        }
+
+        return blueprint;
+    }
+
+    function dropView( required string view, struct options = {}, boolean execute = true ) {
+        var blueprint = new Blueprint( this, getGrammar() );
+        blueprint.addCommand( "dropView" );
+        blueprint.setTable( arguments.view );
+
+        if ( execute ) {
+            blueprint.toSql().each( function( statement ) {
+                getGrammar().runQuery( statement, query.getBindings(), options, "result" );
+            } );
+        }
+
+        return blueprint;
+    }
+
     /**
     * Drop an existing table in the database.
     *

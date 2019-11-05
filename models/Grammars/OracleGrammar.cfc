@@ -1,5 +1,3 @@
-import qb.models.Query.QueryBuilder;
-
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**

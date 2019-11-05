@@ -116,7 +116,7 @@ component displayname="Grammar" accessors="true" singleton {
     *
     * @return string
     */
-    public string function compileSelect( required qb.models.Query.QueryBuilder query ) {
+    public string function compileSelect( required QueryBuilder query ) {
         var sql = [];
 
         for ( var component in selectComponents ) {
@@ -140,7 +140,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function compileCommonTables(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required array commonTables
     ) {
         return getCommonTableExpressionSQL(arguments.query, arguments.commonTables);
@@ -198,7 +198,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function compileColumns(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required array columns
     ) {
         if ( ! query.getAggregate().isEmpty() ) {
@@ -217,7 +217,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function compileFrom(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required any from
     ) {
         return "FROM " & wrapTable( from );
@@ -232,7 +232,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function compileJoins(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required array joins
     ) {
         var joinsArray = [];
@@ -254,7 +254,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function compileWheres(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         array wheres = []
     ) {
         var wheresArray = [];
@@ -289,7 +289,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereBasic(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         if ( ! isStruct( where ) ) {
@@ -313,7 +313,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereRaw(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return where.sql;
@@ -328,7 +328,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereColumn(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return trim( "#wrapColumn( where.first )# #where.operator# #wrapColumn( where.second )#" );
@@ -343,7 +343,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNested(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         var sql = compileWheres(
@@ -363,7 +363,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereSub(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapValue( where.column )# #where.operator# (#compileSelect( where.query )#)";
@@ -378,7 +378,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereExists(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "EXISTS (#compileSelect( where.query )#)";
@@ -393,7 +393,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNotExists(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "NOT EXISTS (#compileSelect( where.query )#)";
@@ -408,7 +408,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNull(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# IS NULL";
@@ -423,7 +423,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNullSub(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "(#compileSelect( where.query )#) IS NULL";
@@ -438,7 +438,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNotNull(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# IS NOT NULL";
@@ -453,7 +453,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNotNullSub(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "(#compileSelect( where.query )#) IS NOT NULL";
@@ -468,7 +468,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereBetween(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         var start = isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)";
@@ -486,7 +486,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNotBetween(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# NOT BETWEEN ? AND ?";
@@ -501,7 +501,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereIn(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         var placeholderString = where.values.map( function( value ) {
@@ -522,7 +522,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNotIn(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         var placeholderString = where.values.map( function( value ) {
@@ -543,7 +543,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereInSub(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# IN (#compileSelect( where.query )#)";
@@ -558,7 +558,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function whereNotInSub(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required struct where
     ) {
         return "#wrapColumn( where.column )# NOT IN (#compileSelect( where.query )#)";
@@ -572,7 +572,7 @@ component displayname="Grammar" accessors="true" singleton {
     *
     * @return string
     */
-    private string function compileGroups( required qb.models.Query.QueryBuilder query, required array groups ) {
+    private string function compileGroups( required QueryBuilder query, required array groups ) {
         if ( groups.isEmpty() ) {
             return "";
         }
@@ -588,7 +588,7 @@ component displayname="Grammar" accessors="true" singleton {
     *
     * @return string
     */
-    private string function compileHavings( required qb.models.Query.QueryBuilder query, required array havings ) {
+    private string function compileHavings( required QueryBuilder query, required array havings ) {
         if ( arguments.havings.isEmpty() ) {
             return "";
         }
@@ -618,7 +618,7 @@ component displayname="Grammar" accessors="true" singleton {
     *
     * @return string
     */
-    private string function compileUnions( required qb.models.Query.QueryBuilder query, required array unions ) {
+    private string function compileUnions( required QueryBuilder query, required array unions ) {
         if ( arguments.unions.isEmpty() ) {
             return "";
         }
@@ -653,7 +653,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     private string function compileOrders(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required array orders
     ) {
         if ( orders.isEmpty() ) {
@@ -682,7 +682,7 @@ component displayname="Grammar" accessors="true" singleton {
     *
     * @return string
     */
-    private string function compileLimitValue( required qb.models.Query.QueryBuilder query, limitValue ) {
+    private string function compileLimitValue( required QueryBuilder query, limitValue ) {
         if ( isNull( arguments.limitValue ) ) {
             return "";
         }
@@ -697,7 +697,7 @@ component displayname="Grammar" accessors="true" singleton {
     *
     * @return string
     */
-    private string function compileOffsetValue( required qb.models.Query.QueryBuilder query, offsetValue ) {
+    private string function compileOffsetValue( required QueryBuilder query, offsetValue ) {
         if ( isNull( arguments.offsetValue ) ) {
             return "";
         }
@@ -741,7 +741,7 @@ component displayname="Grammar" accessors="true" singleton {
     * @return string
     */
     public string function compileUpdate(
-        required qb.models.Query.QueryBuilder query,
+        required QueryBuilder query,
         required array columns,
         required struct updateMap
     ) {
@@ -760,7 +760,7 @@ component displayname="Grammar" accessors="true" singleton {
     *
     * @return string
     */
-    public string function compileDelete( required qb.models.Query.QueryBuilder query ) {
+    public string function compileDelete( required QueryBuilder query ) {
         return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )#" );
     }
 
@@ -772,7 +772,7 @@ component displayname="Grammar" accessors="true" singleton {
     *
     * @return string
     */
-    private string function compileAggregate( required qb.models.Query.QueryBuilder query, required struct aggregate ) {
+    private string function compileAggregate( required QueryBuilder query, required struct aggregate ) {
         if ( aggregate.isEmpty() ) {
             return "";
         }

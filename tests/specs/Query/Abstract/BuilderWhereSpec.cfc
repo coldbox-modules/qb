@@ -137,7 +137,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "returns the query instance to continue chaining", function() {
                         var q = query.whereSomeColumn( "::some value::" );
-                        expect( q ).toBeInstanceOf( "qb.models.Query.QueryBuilder" );
+                        expect( q ).toBeInstanceOf( "QueryBuilder" );
                     } );
                 } );
 

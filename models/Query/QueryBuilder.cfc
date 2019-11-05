@@ -2410,7 +2410,7 @@ component displayname="QueryBuilder" accessors="true" {
         );
     }
 
-    public qb.models.Query.QueryBuilder function clone() {
+    public QueryBuilder function clone() {
         var clonedQuery = newQuery();
         clonedQuery.setDistinct( this.getDistinct() );
         clonedQuery.setAggregate( duplicate( this.getAggregate() ) );

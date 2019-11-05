@@ -1315,13 +1315,28 @@ component displayname="Grammar" accessors="true" singleton {
     /*=====  End of Column Types  ======*/
 
     /*===================================
-    =            Index Types            =
+    =               Views               =
     ===================================*/
 
     function compileCreateView( blueprint, commandParameters ) {
         var query = commandParameters[ 1 ];
         return "CREATE VIEW #wrapTable( blueprint.getTable() )# AS (#compileSelect( query )#)";
     }
+
+    function compileAlterView( blueprint, commandParameters ) {
+        return [
+            compileDropView( blueprint, commandParameters ),
+            compileCreateView( blueprint, commandParameters )
+        ];
+    }
+
+    function compileDropView( blueprint, commandParameters ) {
+        return "DROP VIEW #wrapTable( blueprint.getTable() )#";
+    }
+
+    /*===================================
+    =            Index Types            =
+    ===================================*/
 
     function compileCreateIndexes( blueprint ) {
         return blueprint.getIndexes().map( function( index ) {

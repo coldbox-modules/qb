@@ -1003,10 +1003,24 @@ component extends="testbox.system.BaseSpec" {
             describe( "views", function() {
                 it( "can create a basic view from a QueryBuilder", function() {
                     testCase( function( schema ) {
-                        return schema.view( "active_users", function( query ) {
+                        return schema.createView( "active_users", function( query ) {
                             query.from( "users" ).where( "active", 1 );
                         }, {}, false );
-                    }, simpleView() );
+                    }, createView() );
+                } );
+
+                it( "can alter a basic view", function() {
+                    testCase( function( schema ) {
+                        return schema.alterView( "active_users", function( query ) {
+                            query.from( "users" ).where( "active", 1 );
+                        }, {}, false );
+                    }, alterView() );
+                } );
+
+                it( "can drop a basic view", function() {
+                    testCase( function( schema ) {
+                        return schema.dropView( "active_users", {}, false );
+                    }, dropView() );
                 } );
             } );
 

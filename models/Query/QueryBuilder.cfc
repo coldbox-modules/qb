@@ -199,7 +199,7 @@ component displayname="QueryBuilder" accessors="true" {
         grammar = new qb.models.Grammars.BaseGrammar(),
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
-        paginationCollector = new modules.cbpaginator.models.Pagination(),
+        paginationCollector = new qb.modules.cbpaginator.models.Pagination(),
         columnFormatter,
         defaultOptions = {}
     ) {

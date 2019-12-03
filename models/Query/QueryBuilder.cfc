@@ -269,7 +269,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function select( any columns = "*" ) {
-        variables.columns = normalizeToArray( arguments.columns )
+        variables.columns = normalizeToArray( trim( arguments.columns ) )
             .map( function( column ) {
                 return applyColumnFormatter( column );
             } );

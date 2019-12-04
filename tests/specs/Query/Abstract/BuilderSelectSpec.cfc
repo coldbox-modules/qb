@@ -22,6 +22,13 @@ component extends="testbox.system.BaseSpec" {
                         expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );
                     } );
 
+                    it( "trims a list before splitting it", function() {
+                        query.select( "
+                            ::some_column::, ::another_column::
+                        " );
+                        expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );
+                    } );
+
                     it( "using an array", function() {
                         query.select( [ "::some_column::", "::another_column::" ] );
                         expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );

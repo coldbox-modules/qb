@@ -2569,9 +2569,13 @@ component displayname="QueryBuilder" accessors="true" {
             return [ arguments.listOrArray ];
         }
 
-        var cfArray = [];
-        cfArray.append( trim( arguments.listOrArray ).split( ",\s*" ), true );
-        return cfArray;
+        try {
+            var cfArray = [];
+            cfArray.append( trim( arguments.listOrArray ).split( ",\s*" ), true );
+            return cfArray;
+        } catch ( any e ) {
+            return arguments.listOrArray;
+        }
     }
 
     /**

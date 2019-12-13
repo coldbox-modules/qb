@@ -10,7 +10,11 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
             } );
 
             it( "numbers", function() {
-                expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
+                if ( isACF2016() ) {
+                    expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_VARCHAR" );
+                } else {
+                    expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
+                }
             } );
 
             it( "dates", function() {
@@ -19,7 +23,11 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             describe( "it infers the sql type from the members of an array", function() {
                 it( "if all the members of the array are the same", function() {
-                    expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_NUMERIC" );
+                    if ( isACF2016() ) {
+                        expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_VARCHAR" );
+                    } else {
+                        expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_NUMERIC" );
+                    }
                 } );
 
                 it( "but defaults to CF_SQL_VARCHAR if they are different", function() {
@@ -104,4 +112,11 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
             } );
         } );
     }
+
+    private boolean function isACF2016() {
+        return server.keyExists( "coldfusion" ) &&
+            ! server.keyExists( "lucee" ) &&
+            left( server.coldfusion.productversion, 4 ) == "2016";
+    }
+
 }

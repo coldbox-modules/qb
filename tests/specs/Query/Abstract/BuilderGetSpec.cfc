@@ -26,7 +26,7 @@ component extends="testbox.system.BaseSpec" {
             it( "retreives bindings in a flat array", function() {
                 query.join( "second", function( join ) {
                     join.where( "second.locale", "=", "en-US" );
-                } ).where( "first.quantity", ">=", "10" );
+                } ).where( "first.quantity", ">=", 10 );
 
                 var bindings = query.getBindings();
                 expect( bindings ).toBeArray();
@@ -36,7 +36,11 @@ component extends="testbox.system.BaseSpec" {
                 expect( binding.cfsqltype ).toBe( "cf_sql_varchar" );
                 var binding = bindings[ 2 ];
                 expect( binding.value ).toBe( 10 );
-                expect( binding.cfsqltype ).toBe( "cf_sql_numeric" );
+                if ( isACF2016() ) {
+                    expect( binding.cfsqltype ).toBe( "cf_sql_varchar" );
+                } else {
+                    expect( binding.cfsqltype ).toBe( "cf_sql_numeric" );
+                }
             } );
 
             it( "retreives a map of bindings", function() {
@@ -45,9 +49,15 @@ component extends="testbox.system.BaseSpec" {
                 } ).where( "first.quantity", ">=", "10" );
 
                 var bindings = query.getRawBindings();
-                
+
                 expect( bindings ).toBeStruct();
             } );
         } );
+    }
+
+    private boolean function isACF2016() {
+        return server.keyExists( "coldfusion" ) &&
+            ! server.keyExists( "lucee" ) &&
+            left( server.coldfusion.productversion, 4 ) == "2016";
     }
 }

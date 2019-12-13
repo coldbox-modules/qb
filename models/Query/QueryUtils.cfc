@@ -49,7 +49,7 @@ component displayname="QueryUtils" singleton {
             }, "CF_SQL_VARCHAR" );
         }
 
-        if ( isNumeric( value ) ) {
+        if ( checkIsActuallyNumeric( value ) ) {
             return "CF_SQL_NUMERIC";
         }
 
@@ -124,7 +124,7 @@ component displayname="QueryUtils" singleton {
             .map( function( item ) {
                 return item.name;
             } );
-        
+
         return queryReduce( arguments.q, function( results, row ) {
             var rowData = structNew( "ordered" );
             for ( var column in queryColumns ) {
@@ -206,6 +206,17 @@ component displayname="QueryUtils" singleton {
         }
 
         return initial;
+    }
+
+    private boolean function checkIsActuallyNumeric( required any value ) {
+        return arrayContainsNoCase( [
+            "CFDouble",
+            "Integer",
+            "Double",
+            "Float",
+            "Long",
+            "Short"
+        ], value.getClass().getSimpleName() );
     }
 
 }

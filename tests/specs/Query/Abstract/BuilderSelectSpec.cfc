@@ -25,8 +25,9 @@ component extends="testbox.system.BaseSpec" {
                     it( "trims a list before splitting it", function() {
                         query.select( "
                             ::some_column::, ::another_column::
+                            ,::third_column::
                         " );
-                        expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );
+                        expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::", "::third_column::" ] );
                     } );
 
                     it( "using an array", function() {

@@ -2570,9 +2570,9 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         try {
-            var cfArray = [];
-            cfArray.append( trim( arguments.listOrArray ).split( ",\s*" ), true );
-            return cfArray;
+            return arrayMap( trim( arguments.listOrArray ).split( ",\s*" ), function( item ) {
+                return trim( item );
+            } );
         } catch ( any e ) {
             return arguments.listOrArray;
         }

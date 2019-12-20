@@ -1,3 +1,86 @@
+# v7.0.0
+## 20 Dec 2019 — 05:53:14 UTC
+
+### BREAKING
+
++ __QueryUtils:__ Improve numeric sqltype detection ([74649bd](https://github.com/coldbox-modules/qb/commit/74649bde08500edc915878ae1e2453d119c4a13b))
++ __QueryBuilder:__ Add pagination collectors to qb ([4b2d85f](https://github.com/coldbox-modules/qb/commit/4b2d85fea749022f3093260d2ab912b5417e695e))
++ __MSSQLGrammar:__ Rename MSSQLGrammar to SqlServerGrammar ([ea94494](https://github.com/coldbox-modules/qb/commit/ea94494e0c8116dc7de0c34f709d45708f37f706))
++ __QueryBuilder:__ Rename callback to query for subSelect ([87b27f5](https://github.com/coldbox-modules/qb/commit/87b27f56bb13dae653419078ab3457b82b84bcae))
++ __QueryBuilder:__ Expand closure and builder argument options ([e002d94](https://github.com/coldbox-modules/qb/commit/e002d945fa31c555491b857aca0fed4fc839c14a))
++ __QueryBuilder:__ Add defaultValue and optional exception to value ([ec23bb7](https://github.com/coldbox-modules/qb/commit/ec23bb7d0f0a8ea3901eb93bf9d9b16cd4f9605d))
++ __ModuleConfig:__ Use full setting for WireBox mapping ([1e14099](https://github.com/coldbox-modules/qb/commit/1e140990ec4fc6eb91474317f4c735c2b507c577))
++ __QueryBuilder:__ Remove variadic parameter support ([8690fcf](https://github.com/coldbox-modules/qb/commit/8690fcf9a4078f220ed4a44082aca42cdf0e661b))
++ __\*:__ refactor: Drop support for ACF 11 and Lucee 4.5 ([9dbeaf3](https://github.com/coldbox-modules/qb/commit/9dbeaf3c9b45ade9994228f86a3dc6cd5e748120))
+
+### chore
+
++ __tests:__ Add code coverage with FusionReactor
+ ([6e6600f](https://github.com/coldbox-modules/qb/commit/6e6600f8365a065b8619f52df9ac58b8f9010b84))
++ __README:__ Remove unused all-contributors information
+ ([e84addd](https://github.com/coldbox-modules/qb/commit/e84addd17753771bf56d73563170fa89bc5c1911))
+
+### feat
+
++ __SchemaBuilder:__ Add methods to manage views ([1ef8f82](https://github.com/coldbox-modules/qb/commit/1ef8f828da1b18250bbc06939a08e7ee6140a301))
++ __QueryUtils:__ Preserve column case and order in conversion ([00cd691](https://github.com/coldbox-modules/qb/commit/00cd6915798e77d0ee1cbed29743bc54d8d887c9))
++ __QueryBuilder:__ Generate SQL strings with bindings ([2c84afb](https://github.com/coldbox-modules/qb/commit/2c84afb72e78e3367afc6517cc2bcf0182e8747d))
++ __QueryBuilder:__ Distinct can now be toggled off ([7255fa3](https://github.com/coldbox-modules/qb/commit/7255fa31de9139e03c48a15ef4b869c1596d8191))
++ __SchemaBuilder:__ Add more column types ([c9c4678](https://github.com/coldbox-modules/qb/commit/c9c4678ebe746a819d1d28c9fa5c3182cacbac6e))
++ __MSSQLGrammar:__ Remove default constraint when dropping columns
+ ([88bfe81](https://github.com/coldbox-modules/qb/commit/88bfe81f2b15f78969ee892188ba71c3f81c2cde))
++ __SchemaBuilder:__ Add renameTable alias for rename
+ ([e2c796e](https://github.com/coldbox-modules/qb/commit/e2c796ee090c515d3607f49994728d97a275637b))
++ __OracleGrammar:__ Add dropAllObjects and migrate fresh support
+ ([7fe3429](https://github.com/coldbox-modules/qb/commit/7fe34294649a0422c3787074857a1a675fa9722f))
++ __MSSQLGrammar:__ Add support for dropAllObjects and migrate fresh
+ ([719e264](https://github.com/coldbox-modules/qb/commit/719e2646de8dcf7fc2deefabc1226584a1cd4c70))
++ __QueryBuilder:__ Add database chunking ([2a20ba4](https://github.com/coldbox-modules/qb/commit/2a20ba401fd46635507acd2dd88221b6e5328ba1))
++ __QueryBuilder:__ Use addUpdate to progressively add columns to update ([65ad791](https://github.com/coldbox-modules/qb/commit/65ad7918efc44dd573a8656bb60f59efff70be80))
++ __QueryBuilder:__ Add whereLike method ([ec12a2a](https://github.com/coldbox-modules/qb/commit/ec12a2aa9fdfc60db11b2225aa51912038ca7d3b))
++ __QueryBuilder:__ Allow default options to be configured ([34db905](https://github.com/coldbox-modules/qb/commit/34db905eaf89970a73c5a1f75029a24e421c9a2c))
++ __QueryBuilder:__ Allow raw values in inserts ([bae3435](https://github.com/coldbox-modules/qb/commit/bae343554cae242fafeded137bb854f404511762))
+
+### fix
+
++ __QueryBuilder:__ Better whitespace splitting for select lists
+ ([6f771e3](https://github.com/coldbox-modules/qb/commit/6f771e3930cc56dbea1f02c974aadbd0a2f1af1e))
++ __QueryUtils:__ Fix array normalization to handle non-string inputs ([01613c4](https://github.com/coldbox-modules/qb/commit/01613c4d6a5c922dcfc3c93996b1c302dd9d748f))
++ __QueryBuilder:__ Trim select columns string before applying
+ ([d6cbf36](https://github.com/coldbox-modules/qb/commit/d6cbf36ec89699d230ab66839b329d05313da14f))
++ __QueryBuilder:__ Fix cbpaginator instantiation path
+ ([9a8f03a](https://github.com/coldbox-modules/qb/commit/9a8f03a224dfd601d8b4ff0b34037de289262de0))
++ __QueryBuilder:__ Fix typo in docblock
+ ([97c8785](https://github.com/coldbox-modules/qb/commit/97c878588e56512f4dd4c1eb6230d85a2cdca720))
++ __QueryBuilder:__ Fix docblock name
+ ([79b96c6](https://github.com/coldbox-modules/qb/commit/79b96c6c1f15cd02a65746f352e751c3e73e8a83))
++ __QueryBuilder:__ Pass paginationCollector and defaultOptions to newQuery
+ ([bccbc40](https://github.com/coldbox-modules/qb/commit/bccbc40e2dbdbce835288d040451007194ad70b6))
++ __QueryBuilder:__ Explicitly set andWhere methods to use the 'and' combinator
+ ([adce834](https://github.com/coldbox-modules/qb/commit/adce834a6c181793d008fce490e6124e6c8a1cf4))
++ __QueryBuilder:__ Allow any custom function for where
+ ([fb01927](https://github.com/coldbox-modules/qb/commit/fb019276359851b8de415182953a97c7cb30bb64))
++ __SchemaBuilder:__ Allow raw in alter statements
+ ([2202828](https://github.com/coldbox-modules/qb/commit/220282873ea7b58dbd07713939e8059b0569ee6a))
++ __QueryBuilder:__ Allow closures to be used with leftJoin and rightJoin ([e7ddf2f](https://github.com/coldbox-modules/qb/commit/e7ddf2f50fe4fe04134910ee81e4c6a5df98053d))
+
+### other
+
++ __\*:__ refactor: Remove unneeded clearExcept argument
+ ([0b90157](https://github.com/coldbox-modules/qb/commit/0b901573b3d7869ea237238332129a36fec3fcf2))
+
+### perf
+
++ __QueryBuilder:__ Use count to determine exists instead of the full query
+ ([d51ecf4](https://github.com/coldbox-modules/qb/commit/d51ecf43bed0b39cbe6c517a239783587e5b9d8d))
+
+### refactor
+
++ __QueryBuilder:__ Handle all andWhere.* and orWhere.* methods dynamically ([cc560af](https://github.com/coldbox-modules/qb/commit/cc560af007f57414e380756830aaf12a4faec1c0))
++ __QueryBuilder:__ Remove unnecessary arguments from crossJoin methods
+ ([f920d1b](https://github.com/coldbox-modules/qb/commit/f920d1b7a816b1cd073bec79de43f0bdb422ce09))
+
+
 # v6.5.0
 ## 05 Sep 2019 — 18:45:38 UTC
 

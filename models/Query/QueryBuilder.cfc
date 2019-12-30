@@ -291,7 +291,7 @@ component displayname="QueryBuilder" accessors="true" {
         required string alias,
         required any query
     ) {
-        if ( isClosure( query ) ) {
+        if ( isClosure( query ) || isCustomFunction( query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
             callback( arguments.query );
@@ -481,7 +481,7 @@ component displayname="QueryBuilder" accessors="true" {
             table = arguments.table
         );
 
-        if ( isClosure( arguments.first ) ) {
+        if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
             first( join );
             variables.joins.append( join );
             addBindings( join.getBindings(), "join" );
@@ -885,7 +885,11 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
-        if ( isClosure( value ) || getUtils().isBuilder( value ) ) {
+        if (
+            isClosure( value ) ||
+            isCustomFunction( value ) ||
+            getUtils().isBuilder( value )
+        ) {
             return whereSub( column, operator, value, combinator );
         }
 
@@ -940,7 +944,7 @@ component displayname="QueryBuilder" accessors="true" {
         query,
         combinator = "and"
     ) {
-        if ( isClosure( arguments.query ) ) {
+        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
             callback( arguments.query );
@@ -986,7 +990,11 @@ component displayname="QueryBuilder" accessors="true" {
         combinator = "and",
         negate = false
     ) {
-        if ( isClosure( values ) || getUtils().isBuilder( values ) ) {
+        if (
+            isClosure( values ) ||
+            isCustomFunction( values ) ||
+            getUtils().isBuilder( values )
+        ) {
             arguments.query = arguments.values;
             return whereInSub( argumentCollection = arguments );
         }
@@ -1028,7 +1036,7 @@ component displayname="QueryBuilder" accessors="true" {
         combinator = "and",
         negate = false
     ) {
-        if ( isClosure( arguments.query ) ) {
+        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
             callback( arguments.query );
@@ -1133,7 +1141,7 @@ component displayname="QueryBuilder" accessors="true" {
         combinator = "and",
         negate = false
     ) {
-        if ( isClosure( arguments.query ) ) {
+        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
             callback( arguments.query );
@@ -1236,7 +1244,11 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function whereNull( column, combinator = "and", negate = false ) {
-        if ( isClosure( arguments.column ) || getUtils().isBuilder( arguments.column ) ) {
+        if (
+            isClosure( arguments.column ) ||
+            isCustomFunction( arguments.column ) ||
+            getUtils().isBuilder( arguments.column )
+        ) {
             return whereNullSub( arguments.column, arguments.combinator, arguments.negate );
         }
 
@@ -1259,7 +1271,7 @@ component displayname="QueryBuilder" accessors="true" {
     * @return qb.models.Query.QueryBuilder
     */
     public QueryBuilder function whereNullSub( query, combinator = "and", negate = false ) {
-        if ( isClosure( arguments.query ) ) {
+        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
             callback( arguments.query );
@@ -1486,7 +1498,11 @@ component displayname="QueryBuilder" accessors="true" {
             return this;
         }
 
-        if ( isClosure( arguments.column ) || isCustomFunction( arguments.column ) || getUtils().isBuilder( arguments.column ) ) {
+        if (
+            isClosure( arguments.column ) ||
+            isCustomFunction( arguments.column ) ||
+            getUtils().isBuilder( arguments.column )
+        ) {
             return orderBySub( arguments.column );
         }
 
@@ -2690,4 +2706,5 @@ component displayname="QueryBuilder" accessors="true" {
     function applyColumnFormatter( column ) {
         return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
     }
+
 }

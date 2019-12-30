@@ -82,7 +82,7 @@ component
         second,
         combinator = "and"
     ) {
-        if ( isClosure( first ) ) {
+        if ( isClosure( first ) || isCustomFunction( first ) ) {
             return whereNested( first, combinator );
         }
 

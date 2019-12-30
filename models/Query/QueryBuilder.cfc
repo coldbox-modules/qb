@@ -1589,6 +1589,10 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    public QueryBuilder function orderByRaw( required any sql ) {
+        return orderBy( new Expression( arguments.sql ) );
+    }
+
     /**
     * Add an order by clause with a subquery to the query.
     *

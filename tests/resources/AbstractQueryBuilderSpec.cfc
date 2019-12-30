@@ -991,6 +991,12 @@ component extends="testbox.system.BaseSpec" {
                         }, orderByRaw() );
                     } );
 
+                    it( "has an orderByRaw shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByRaw( "DATE(created_at)" );
+                        }, orderByRaw() );
+                    } );
+
                     it( "can order by a subselect", function() {
                         testCase( function( builder ) {
                             builder.from( "users" ).orderBy( function( q ) {

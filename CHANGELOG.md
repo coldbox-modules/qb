@@ -1,3 +1,16 @@
+# v7.1.0
+## 31 Dec 2019 — 01:40:01 UTC
+
+### feat
+
++ __QueryBuilder:__ Fully-qualified columns can be used in `value` and `values` ([e4c16b8](https://github.com/coldbox-modules/qb/commit/e4c16b854b39a532e75394993d29f164ed4ff9d0))
++ __QueryBuilder:__ Add orderByRaw method ([67a9222](https://github.com/coldbox-modules/qb/commit/67a92228d5b791b95c17444fb757f3356d45afa3))
+
+### fix
+
++ __QueryBuilder:__ Accept lambdas where closures are allowed. ([f88809b](https://github.com/coldbox-modules/qb/commit/f88809b80ba0b8f010dfdc7bb1cbd4a18f340d28))
+
+
 # v7.0.0
 ## 20 Dec 2019 — 05:53:14 UTC
 

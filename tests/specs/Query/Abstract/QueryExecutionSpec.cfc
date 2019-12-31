@@ -180,6 +180,28 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
+                it( "returns the first value when calling value using a fully-qualified column", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" } ] );
+                    // writeDump( var = expectedQuery, abort = true );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.from( "users" ).value( "some_table.name" );
+
+                    expect( results ).toBe( "foo" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1",
+                        options = {}
+                    } );
+                } );
+
                 it( "returns the defaultValue when calling value with an empty query", function() {
                     var builder = getBuilder();
                     var expectedQuery = queryNew( "name", "varchar", [] );
@@ -264,6 +286,26 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( {
                         sql = "SELECT ""name"" FROM ""users""",
+                        options = {}
+                    } );
+                } );
+
+                it( "can return an array of values with fully qualified columns", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [ { name = "foo" }, { name = "bar" } ] );
+                    builder.$( "runQuery" ).$args(
+                        sql = "SELECT ""some_table"".""name"" FROM ""users""",
+                        options = {}
+                    ).$results( expectedQuery );
+
+                    var results = builder.from( "users" ).values( "some_table.name" );
+                    expect( results ).toBe( [ "foo", "bar" ] );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql = "SELECT ""some_table"".""name"" FROM ""users""",
                         options = {}
                     } );
                 } );

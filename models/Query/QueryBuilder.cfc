@@ -2289,7 +2289,7 @@ component displayname="QueryBuilder" accessors="true" {
                     return defaultValue;
                 }
             } else {
-                return data[ column ];
+                return data[ listLast( column, "." ) ];
             }
         } );
     }
@@ -2304,11 +2304,12 @@ component displayname="QueryBuilder" accessors="true" {
     */
     public array function values( required string column, struct options = {} ) {
         return withReturnFormat( "query", function() {
+            var columnName = listLast( column, "." );
             select( column );
             var result = get( options = options );
             var results = [];
             for ( var row in result ) {
-                results.append( row[ column ] );
+                results.append( row[ columnName ] );
             }
             return results;
         } );

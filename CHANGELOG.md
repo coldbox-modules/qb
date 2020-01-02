@@ -1,3 +1,11 @@
+# v7.2.0
+## 02 Jan 2020 — 06:11:35 UTC
+
+### feat
+
++ __QueryBuilder:__ Add a parentQuery option ([f84de76](https://github.com/coldbox-modules/qb/commit/f84de76f16baa23f7cdac54cae84b2f4d52b3b43))
+
+
 # v7.1.0
 ## 31 Dec 2019 — 01:40:01 UTC
 

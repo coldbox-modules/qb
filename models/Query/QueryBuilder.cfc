@@ -1,48 +1,55 @@
 /**
-* Query Builder for fluently creating SQL queries.
-*/
+ * Query Builder for fluently creating SQL queries.
+ */
 component displayname="QueryBuilder" accessors="true" {
 
     /**
-    * The specific grammar that will compile the builder statements.
-    * e.g. MySQLGrammar, OracleGrammar, etc.
-    */
+     * The specific grammar that will compile the builder statements.
+     * e.g. MySQLGrammar, OracleGrammar, etc.
+     */
     property name="grammar";
 
     /**
-    * Query utilities shared across multiple models.
-    */
+     * Query utilities shared across multiple models.
+     */
     property name="utils" inject="QueryUtils@qb";
 
     /**
-    * returnFormat callback
-    * If provided, the result of the callback is returned as the result of builder.
-    * Can optionally pass either "array" or "query"
-    * and the correct callback will be generated
-    * @default "array"
-    */
+     * returnFormat callback
+     * If provided, the result of the callback is returned as the result of builder.
+     * Can optionally pass either "array" or "query"
+     * and the correct callback will be generated
+     * @default "array"
+     */
     property name="returnFormat";
 
     /**
-    * paginationCollector
-    * A component or struct with a `generateWithResults` method.
-    * The `generate` method will recieve the following arguments:
-    * - `totalRecords`
-    * - `results`
-    * - `page`
-    * - `maxRows`
-    * @default cbpaginator.models.Pagination
-    */
+     * paginationCollector
+     * A component or struct with a `generateWithResults` method.
+     * The `generate` method will recieve the following arguments:
+     * - `totalRecords`
+     * - `results`
+     * - `page`
+     * - `maxRows`
+     * @default cbpaginator.models.Pagination
+     */
     property name="paginationCollector";
 
     /**
-    * columnFormatter callback
-    * If provided, each column is passed to it before being added to the query.
-    * Provides a hook for libraries like Quick to influence columns names.
-    * @default Identity
-    */
+     * columnFormatter callback
+     * If provided, each column is passed to it before being added to the query.
+     * Provides a hook for libraries like Quick to influence columns names.
+     * @default Identity
+     */
     property name="columnFormatter";
 
+
+    /**
+     * If provided, the parent query will be called if no methods
+     * match on this query builder.
+     * @default null
+     */
+    property name="parentQuery";
 
     /**
      * A struct of default options for the query builder.
@@ -53,28 +60,28 @@ component displayname="QueryBuilder" accessors="true" {
     /******************** Query Properties ********************/
 
     /**
-    * Flag to bring back only distinct values.
-    * @default false
-    */
+     * Flag to bring back only distinct values.
+     * @default false
+     */
     property name="distinct" type="boolean";
 
     /**
-    * The aggregate option and column to execute.
-    * e.g. { type = "count", column = "*" }
-    * @default {}
-    */
+     * The aggregate option and column to execute.
+     * e.g. { type = "count", column = "*" }
+     * @default {}
+     */
     property name="aggregate" type="struct";
 
     /**
-    * An array of columns to select.
-    * @default [ "*" ]
-    */
+     * An array of columns to select.
+     * @default [ "*" ]
+     */
     property name="columns" type="array";
 
     /**
-    * The base table of the query.
-    * @default null
-    */
+     * The base table of the query.
+     * @default null
+     */
     property name="from" type="string";
 
     /**
@@ -184,23 +191,33 @@ component displayname="QueryBuilder" accessors="true" {
     variables.directions = [ "asc", "desc" ];
 
     /**
-    * Creates an empty query builder.
-    *
-    * @grammar The grammar to use when compiling queries. Default: qb.models.Grammars.BaseGrammar
-    * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
-    * @returnFormat the closure (or string format shortcut) that modifies the query and is eventually returned to the caller. Default: 'array'
-    * @paginationCollector the closure that processes the pagination result. Default: cbpaginator.models.Pagination
-    * @columnFormatter the closure that modifies each column before being added to the query. Default: Identity
-    * @defaultOptions the default queryExecute options to use for this builder.  This will be merged in each execution.
-    *
-    * @return qb.models.Query.QueryBuilder
-    */
+     * Creates an empty query builder.
+     *
+     * @grammar              The grammar to use when compiling queries.
+     *                       Default: qb.models.Grammars.BaseGrammar
+     * @utils                A collection of query utilities.
+     *                       Default: qb.models.Query.QueryUtils
+     * @returnFormat         The closure (or string format shortcut) that
+     *                       modifies the query and is eventually returned to
+     *                       the caller. Default: 'array'
+     * @paginationCollector  The closure that processes the pagination result.
+     *                       Default: cbpaginator.models.Pagination
+     * @columnFormatter      The closure that modifies each column before being
+     *                       added to the query. Default: Identity
+     * @parentQuery          An optional parent query that will be called when
+     *                       a method isn't found on this query builder.
+     * @defaultOptions       The default queryExecute options to use for this
+     *                       builder. This will be merged in each execution.
+     *
+     * @return               qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function init(
         grammar = new qb.models.Grammars.BaseGrammar(),
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
         paginationCollector = new qb.modules.cbpaginator.models.Pagination(),
         columnFormatter,
+        parentQuery,
         defaultOptions = {}
     ) {
         variables.grammar = arguments.grammar;
@@ -214,6 +231,9 @@ component displayname="QueryBuilder" accessors="true" {
         }
         setPaginationCollector( arguments.paginationCollector );
         setColumnFormatter( arguments.columnFormatter );
+        if ( ! isNull( arguments.parentQuery ) ) {
+            setParentQuery( arguments.parentQuery );
+        }
         setDefaultOptions( arguments.defaultOptions );
 
         setDefaultValues();
@@ -2427,6 +2447,9 @@ component displayname="QueryBuilder" accessors="true" {
             columnFormatter = isNull( getColumnFormatter() ) ?
                 javacast( "null", "" ) :
                 getColumnFormatter(),
+            parentQuery = isNull( getParentQuery() ) ?
+                javacast( "null", "" ) :
+                getParentQuery(),
             defaultOptions = getDefaultOptions()
         );
     }
@@ -2516,6 +2539,11 @@ component displayname="QueryBuilder" accessors="true" {
             throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );
         }
 
+        return this;
+    }
+
+    public QueryBuilder function clearParentQuery() {
+        variables.parentQuery = javacast( "null", "" );
         return this;
     }
 
@@ -2705,9 +2733,28 @@ component displayname="QueryBuilder" accessors="true" {
             return orWhere( argumentCollection = args );
         }
 
+        /*
+         * If a parent query has been set, populate it with this query
+         * and then forward on the method call to the parent query.
+         */
+        if ( ! isNull( variables.parentQuery ) ) {
+            return invoke(
+                variables.parentQuery.populateQuery( this ),
+                missingMethodName,
+                missingMethodArguments
+            );
+        }
+
         throw( "Method does not exist on QueryBuilder [#missingMethodName#]" );
     }
 
+    /**
+     * Applies a column formatter to a column, if one is set.
+     *
+     * @column   The column to format.
+     *
+     * @returns  The formatted column.
+     */
     function applyColumnFormatter( column ) {
         return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
     }

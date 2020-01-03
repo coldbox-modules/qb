@@ -1,6 +1,11 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**
+     * The parameter limit for SQL Server grammar.
+     */
+    this.parameterLimit = 2000;
+
+    /**
     * The different components of a select statement in the order of compilation.
     */
     variables.selectComponents = [

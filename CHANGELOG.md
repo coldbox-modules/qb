@@ -1,3 +1,11 @@
+# v7.3.0
+## 03 Jan 2020 — 06:06:16 UTC
+
+### feat
+
++ __SqlServerGrammar:__ Add a parameterLimit public property ([155cd3c](https://github.com/coldbox-modules/qb/commit/155cd3ca31cc2f5375c6de0693144dcd8f4af243))
+
+
 # v7.2.0
 ## 02 Jan 2020 — 06:11:35 UTC
 

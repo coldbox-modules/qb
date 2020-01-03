@@ -1,10 +1,10 @@
 {
     "name":"qb",
-    "version":"7.2.0",
+    "version":"7.3.0",
     "author":"Eric Peterson",
     "homepage":"https://github.com/coldbox-modules/qb",
     "documentation":"https://github.com/coldbox-modules/qb",
-    "location":"coldbox-modules/qb#v7.2.0",
+    "location":"coldbox-modules/qb#v7.3.0",
     "scripts":{
         "generateAPIDocs":"rm docs --recurse --force && docbox generate mapping=qb excludes=test|ModuleConfig strategy-outputDir=docs strategy-projectTitle=qb",
         "commitAPIDocs":"run-script generateAPIDocs && !git add docs/apidocs/* && !git commit -m 'Updated API Docs'",

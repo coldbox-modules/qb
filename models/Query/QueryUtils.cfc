@@ -209,14 +209,18 @@ component displayname="QueryUtils" singleton {
     }
 
     private boolean function checkIsActuallyNumeric( required any value ) {
-        return arrayContainsNoCase( [
-            "CFDouble",
-            "Integer",
-            "Double",
-            "Float",
-            "Long",
-            "Short"
-        ], value.getClass().getSimpleName() );
+        if (!IsNull(value)) {
+            return arrayContainsNoCase( [
+                "CFDouble",
+                "Integer",
+                "Double",
+                "Float",
+                "Long",
+                "Short"
+            ], value.getClass().getSimpleName() );
+        } else {
+            return false
+        }    
     }
 
 }

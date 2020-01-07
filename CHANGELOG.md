@@ -1,3 +1,11 @@
+# v7.3.1
+## 07 Jan 2020 — 17:58:00 UTC
+
+### other
+
++ __\*:__  fix(QueryUtils): Account for null values when checking for numeric values ([42f2eb4](https://github.com/coldbox-modules/qb/commit/42f2eb4028f8cea98f6fc5542109ceac8be644c2))
+
+
 # v7.3.0
 ## 03 Jan 2020 — 06:06:16 UTC
 

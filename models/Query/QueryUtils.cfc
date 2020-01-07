@@ -209,8 +209,8 @@ component displayname="QueryUtils" singleton {
     }
 
     private boolean function checkIsActuallyNumeric( required any value ) {
-        if ( !isNull(value) ) {
-            return arrayContainsNoCase( [
+        return isNull( arguments.value ) ||
+            arrayContainsNoCase( [
                 "CFDouble",
                 "Integer",
                 "Double",
@@ -218,9 +218,6 @@ component displayname="QueryUtils" singleton {
                 "Long",
                 "Short"
             ], value.getClass().getSimpleName() );
-        } else {
-            return true;
-        }
     }
 
 

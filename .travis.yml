@@ -36,7 +36,7 @@ deploy:
   on:
     branch: master
     condition: $ENGINE = adobe@2018
-  cleanup: false
+  skip_cleanup: true
   #AWS Credentials need to be set in Travis
   access_key_id: $AWS_ACCESS_KEY
   secret_access_key: $AWS_ACCESS_SECRET

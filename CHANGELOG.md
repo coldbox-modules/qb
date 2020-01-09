@@ -1,3 +1,12 @@
+# v7.3.3
+## 09 Jan 2020 — 20:28:40 UTC
+
+### chore
+
++ __build:__ Skip cleanup of working directory before uploading APIDocs
+ ([1c2d0d3](https://github.com/coldbox-modules/qb/commit/1c2d0d38301abcd899591564c6e8f034e0147178))
+
+
 # v7.3.2
 ## 09 Jan 2020 — 20:16:18 UTC
 

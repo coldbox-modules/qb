@@ -1,3 +1,12 @@
+# v7.3.2
+## 09 Jan 2020 — 20:16:18 UTC
+
+### chore
+
++ __build:__ Commit apidocs to Ortus artifacts
+ ([636af8b](https://github.com/coldbox-modules/qb/commit/636af8b4812ab7b8eac6ea8421d23a8ef1a28e31))
+
+
 # v7.3.1
 ## 07 Jan 2020 — 17:58:00 UTC
 

@@ -1,3 +1,11 @@
+# v7.3.4
+## 13 Jan 2020 — 18:21:30 UTC
+
+### fix
+
++ __MySQLGrammar:__ Use single quote for column comment ([7304202](https://github.com/coldbox-modules/qb/commit/7304202b2bc81b953ea79735dfec70833310f897))
+
+
 # v7.3.3
 ## 09 Jan 2020 — 20:28:40 UTC
 

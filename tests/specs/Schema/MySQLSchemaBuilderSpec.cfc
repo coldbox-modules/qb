@@ -290,7 +290,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function comment() {
         return [
-            "CREATE TABLE `users` (`active` TINYINT(1) NOT NULL COMMENT `This is a comment`)"
+            "CREATE TABLE `users` (`active` TINYINT(1) NOT NULL COMMENT 'This is a comment')"
         ];
     }
 

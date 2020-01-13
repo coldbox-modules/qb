@@ -975,7 +975,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function generateComment( column ) {
-        return column.getComment() != "" ? "COMMENT #wrapValue( column.getComment() )#" : "";
+        return column.getComment() != "" ? "COMMENT '#column.getComment()#'" : "";
     }
 
     function compileAddComment( blueprint, commandParameters ) {

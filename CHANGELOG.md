@@ -1,3 +1,15 @@
+# v7.3.5
+## 25 Jan 2020 — 08:09:54 UTC
+
+### chore
+
++ __formatting:__ Use cfformat for automatic formatting ([119e434](https://github.com/coldbox-modules/qb/commit/119e434b307a2cc2323b857a214c20842cafbbd4))
+
+### fix
+
++ __QueryBuilder:__ Add a type to the onMissingMethod exception ([90d1093](https://github.com/coldbox-modules/qb/commit/90d109312b2ea86c00db34020b12b5ab22bb377b))
+
+
 # v7.3.4
 ## 13 Jan 2020 — 18:21:30 UTC
 

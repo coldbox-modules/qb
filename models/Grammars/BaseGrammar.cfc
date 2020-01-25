@@ -1,50 +1,58 @@
 /**
-* Grammar represents a platform to run sql on.
-*
-* This is the Base Grammar that other grammars can extend to modify
-* the generated sql for their specific platforms.
-*/
+ * Grammar represents a platform to run sql on.
+ *
+ * This is the Base Grammar that other grammars can extend to modify
+ * the generated sql for their specific platforms.
+ */
 component displayname="Grammar" accessors="true" singleton {
 
     /**
-    * ColdBox Interceptor Service to announce pre- and post- interception points
-    */
+     * ColdBox Interceptor Service to announce pre- and post- interception points
+     */
     property name="interceptorService" inject="box:interceptorService";
 
     /**
-    * LogBox logger to log out SQL and bindings.
-    * If this is not a ColdBox application, a NullLogger will be created in the constructor.
-    */
+     * LogBox logger to log out SQL and bindings.
+     * If this is not a ColdBox application, a NullLogger will be created in the constructor.
+     */
     property name="log" inject="logbox:logger:{this}";
 
     /**
-    * Query utilities shared across multiple models.
-    */
+     * Query utilities shared across multiple models.
+     */
     property name="utils";
 
     /**
-    * Global table prefix for the grammar.
-    */
+     * Global table prefix for the grammar.
+     */
     property name="tablePrefix" type="string" default="";
 
     /**
-    * The different components of a select statement in the order of compilation.
-    */
+     * The different components of a select statement in the order of compilation.
+     */
     variables.selectComponents = [
-        "commonTables", "aggregate", "columns", "from", "joins", "wheres",
-        "groups", "havings", "unions", "orders", "limitValue", "offsetValue"
+        "commonTables",
+        "aggregate",
+        "columns",
+        "from",
+        "joins",
+        "wheres",
+        "groups",
+        "havings",
+        "unions",
+        "orders",
+        "limitValue",
+        "offsetValue"
     ];
 
     /**
-    * Creates a new basic Query Grammar.
-    *
-    * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
-    *
-    * @return qb.models.Grammars.BaseGrammar
-    */
-    public BaseGrammar function init(
-        qb.models.Query.QueryUtils utils = new qb.models.Query.QueryUtils()
-    ) {
+     * Creates a new basic Query Grammar.
+     *
+     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
+     *
+     * @return qb.models.Grammars.BaseGrammar
+     */
+    public BaseGrammar function init( qb.models.Query.QueryUtils utils = new qb.models.Query.QueryUtils( ) {
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
         // These are overwritten by WireBox, if it exists.
@@ -54,38 +62,44 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Runs a query through `queryExecute`.
-    * This function exists so that platform-specific grammars can override it if needed.
-    *
-    * @sql The sql string to execute.
-    * @bindings The bindings to apply to the query.
-    * @options Any options to pass to `queryExecute`. Default: {}.
-    *
-    * @return any
-    */
-    public any function runQuery( sql, bindings, options, returnObject = "query" ) {
+     * Runs a query through `queryExecute`.
+     * This function exists so that platform-specific grammars can override it if needed.
+     *
+     * @sql The sql string to execute.
+     * @bindings The bindings to apply to the query.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return any
+     */
+    public any function runQuery(
+        sql,
+        bindings,
+        options,
+        returnObject = "query"
+    ) {
         local.result = "";
         var data = {
-            sql = arguments.sql,
-            bindings = arguments.bindings,
-            options = arguments.options,
-            returnObject = arguments.returnObject
+            sql: arguments.sql,
+            bindings: arguments.bindings,
+            options: arguments.options,
+            returnObject: arguments.returnObject
         };
         tryPreInterceptor( data );
-        structAppend( data.options, { result = "local.result" }, true );
+        structAppend( data.options, { result: "local.result" }, true );
         log.debug( "Executing sql: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
         var q = queryExecute( data.sql, data.bindings, data.options );
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
         data.result = local.result;
         tryPostInterceptor( data );
-        return returnObject == "query" ?
-            ( isNull( q ) ? javacast( "null", "" ) : q ) :
-            { result = local.result, query = ( isNull( q ) ? javacast( "null", "" ) : q ) };
+        return returnObject == "query" ? ( isNull( q ) ? javacast( "null", "" ) : q ) : {
+            result: local.result,
+            query: ( isNull( q ) ? javacast( "null", "" ) : q )
+        };
     }
 
     /**
-    * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
-    */
+     * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
+     */
     private function tryPreInterceptor( data ) {
         if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
             variables.interceptorService.announceInterception( "preQBExecute", data );
@@ -97,8 +111,8 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
-    */
+     * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
+     */
     private function tryPostInterceptor( data ) {
         if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
             variables.interceptorService.announceInterception( "postQBExecute", data );
@@ -110,21 +124,18 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compile a Builder's query into a sql string.
-    *
-    * @query The Builder instance.
-    *
-    * @return string
-    */
+     * Compile a Builder's query into a sql string.
+     *
+     * @query The Builder instance.
+     *
+     * @return string
+     */
     public string function compileSelect( required QueryBuilder query ) {
         var sql = [];
 
         for ( var component in selectComponents ) {
             var func = variables[ "compile#component#" ];
-            var args = {
-                "query" = query,
-                "#component#" = invoke( query, "get" & component )
-            };
+            var args = { "query": query, "#component#": invoke( query, "get" & component ) };
             arrayAppend( sql, func( argumentCollection = args ) );
         }
 
@@ -132,33 +143,30 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles the Common Table Expressions (CTEs).
-    *
-    * @query The Builder instance.
-    * @columns The selected columns.
-    *
-    * @return string
-    */
-    private string function compileCommonTables(
-        required QueryBuilder query,
-        required array commonTables
-    ) {
-        return getCommonTableExpressionSQL(arguments.query, arguments.commonTables);
+     * Compiles the Common Table Expressions (CTEs).
+     *
+     * @query The Builder instance.
+     * @columns The selected columns.
+     *
+     * @return string
+     */
+    private string function compileCommonTables( required QueryBuilder query, required array commonTables ) {
+        return getCommonTableExpressionSQL( arguments.query, arguments.commonTables );
     }
 
     /**
-    * Compiles the Common Table Expressions (CTEs).
-    *
-    * @query                      The Builder instance.
-    * @columns                    The selected columns.
-    * @supportsRecursiveKeyword   Determines if the current grammar requires the RECURSIVE keyword if any CTEs are recursive.
-    *
-    * @return string
-    */
+     * Compiles the Common Table Expressions (CTEs).
+     *
+     * @query                      The Builder instance.
+     * @columns                    The selected columns.
+     * @supportsRecursiveKeyword   Determines if the current grammar requires the RECURSIVE keyword if any CTEs are recursive.
+     *
+     * @return string
+     */
     private string function getCommonTableExpressionSQL(
         required query,
         required array commonTables,
-        boolean supportsRecursiveKeyword=true
+        boolean supportsRecursiveKeyword = true
     ) {
         if ( arguments.commonTables.isEmpty() ) {
             return "";
@@ -166,42 +174,43 @@ component displayname="Grammar" accessors="true" singleton {
 
         var hasRecursion = false;
 
-        var sql = arguments.commonTables.map(function (commonTable){
+        var sql = arguments.commonTables.map( function( commonTable ) {
             var sql = arguments.commonTable.query.toSQL();
 
             // generate the optional column definition
-            var columns = arguments.commonTable.columns.map(function (value){
-                return wrapColumn(arguments.value);
-            }).toList();
+            var columns = arguments.commonTable.columns
+                .map( function( value ) {
+                    return wrapColumn( arguments.value );
+                } )
+                .toList();
 
             // we need to track if any of the CTEs are recursive
-            if( arguments.commonTable.recursive ){
+            if ( arguments.commonTable.recursive ) {
                 hasRecursion = true;
             }
 
-            return wrapColumn(arguments.commonTable.name) & (len(columns) ? " " & columns : "") & " AS (" & sql & ")";
-        });
+            return wrapColumn( arguments.commonTable.name ) & ( len( columns ) ? " " & columns : "" ) & " AS (" & sql & ")";
+        } );
 
         /*
             Most implementations of CTE require the RECURSIVE keyword if *any* single CTE uses recursive,
             but some grammars, like SQL Server, does not support the keyword (as it's not necessary).
         */
-        return trim( "WITH " &  (arguments.supportsRecursiveKeyword && hasRecursion ? "RECURSIVE " : "") & sql.toList(', ') );
+        return trim(
+            "WITH " & ( arguments.supportsRecursiveKeyword && hasRecursion ? "RECURSIVE " : "" ) & sql.toList( ", " )
+        );
     }
 
     /**
-    * Compiles the columns portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @columns The selected columns.
-    *
-    * @return string
-    */
-    private string function compileColumns(
-        required QueryBuilder query,
-        required array columns
-    ) {
-        if ( ! query.getAggregate().isEmpty() ) {
+     * Compiles the columns portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @columns The selected columns.
+     *
+     * @return string
+     */
+    private string function compileColumns( required QueryBuilder query, required array columns ) {
+        if ( !query.getAggregate().isEmpty() ) {
             return "";
         }
         var select = query.getDistinct() ? "SELECT DISTINCT " : "SELECT ";
@@ -209,32 +218,26 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles the table portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @from The selected table.
-    *
-    * @return string
-    */
-    private string function compileFrom(
-        required QueryBuilder query,
-        required any from
-    ) {
+     * Compiles the table portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @from The selected table.
+     *
+     * @return string
+     */
+    private string function compileFrom( required QueryBuilder query, required any from ) {
         return "FROM " & wrapTable( from );
     }
 
     /**
-    * Compiles the joins portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @joins The selected joins.
-    *
-    * @return string
-    */
-    private string function compileJoins(
-        required QueryBuilder query,
-        required array joins
-    ) {
+     * Compiles the joins portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @joins The selected joins.
+     *
+     * @return string
+     */
+    private string function compileJoins( required QueryBuilder query, required array joins ) {
         var joinsArray = [];
         for ( var join in arguments.joins ) {
             var conditions = compileWheres( join, join.getWheres() );
@@ -246,17 +249,14 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles the where portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @wheres The where clauses.
-    *
-    * @return string
-    */
-    private string function compileWheres(
-        required QueryBuilder query,
-        array wheres = []
-    ) {
+     * Compiles the where portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @wheres The where clauses.
+     *
+     * @return string
+     */
+    private string function compileWheres( required QueryBuilder query, array wheres = [] ) {
         var wheresArray = [];
 
         if ( arguments.wheres.isEmpty() ) {
@@ -281,18 +281,15 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles a basic where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereBasic(
-        required QueryBuilder query,
-        required struct where
-    ) {
-        if ( ! isStruct( where ) ) {
+     * Compiles a basic where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereBasic( required QueryBuilder query, required struct where ) {
+        if ( !isStruct( where ) ) {
             return;
         }
 
@@ -305,208 +302,167 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles a raw where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereRaw(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a raw where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereRaw( required QueryBuilder query, required struct where ) {
         return where.sql;
     }
 
     /**
-    * Compiles a column where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereColumn(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a column where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereColumn( required QueryBuilder query, required struct where ) {
         return trim( "#wrapColumn( where.first )# #where.operator# #wrapColumn( where.second )#" );
     }
 
     /**
-    * Compiles a nested where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNested(
-        required QueryBuilder query,
-        required struct where
-    ) {
-        var sql = compileWheres(
-            arguments.where.query,
-            arguments.where.query.getWheres()
-        );
+     * Compiles a nested where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNested( required QueryBuilder query, required struct where ) {
+        var sql = compileWheres( arguments.where.query, arguments.where.query.getWheres() );
         // cut off the first 7 characters to account for the extra "WHERE"
         return trim( "(#mid( sql, 7, len( sql ) - 6 )#)" );
     }
 
     /**
-    * Compiles a subselect where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereSub(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a subselect where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereSub( required QueryBuilder query, required struct where ) {
         return "#wrapValue( where.column )# #where.operator# (#compileSelect( where.query )#)";
     }
 
     /**
-    * Compiles an exists where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereExists(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles an exists where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereExists( required QueryBuilder query, required struct where ) {
         return "EXISTS (#compileSelect( where.query )#)";
     }
 
     /**
-    * Compiles a not exists where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNotExists(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a not exists where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNotExists( required QueryBuilder query, required struct where ) {
         return "NOT EXISTS (#compileSelect( where.query )#)";
     }
 
     /**
-    * Compiles a null where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNull(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a null where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNull( required QueryBuilder query, required struct where ) {
         return "#wrapColumn( where.column )# IS NULL";
     }
 
     /**
-    * Compiles a null where subselect statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNullSub(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a null where subselect statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNullSub( required QueryBuilder query, required struct where ) {
         return "(#compileSelect( where.query )#) IS NULL";
     }
 
     /**
-    * Compiles a not null where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNotNull(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a not null where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNotNull( required QueryBuilder query, required struct where ) {
         return "#wrapColumn( where.column )# IS NOT NULL";
     }
 
     /**
-    * Compiles a not null where subselect statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNotNullSub(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a not null where subselect statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNotNullSub( required QueryBuilder query, required struct where ) {
         return "(#compileSelect( where.query )#) IS NOT NULL";
     }
 
     /**
-    * Compiles a between where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereBetween(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a between where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereBetween( required QueryBuilder query, required struct where ) {
         var start = isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)";
         var end = isSimpleValue( where.end ) ? "?" : "(#compileSelect( where.end )#)";
         return "#wrapColumn( where.column )# BETWEEN #start# AND #end#";
-
     }
 
     /**
-    * Compiles a not between where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNotBetween(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a not between where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNotBetween( required QueryBuilder query, required struct where ) {
         return "#wrapColumn( where.column )# NOT BETWEEN ? AND ?";
     }
 
     /**
-    * Compiles an in where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereIn(
-        required QueryBuilder query,
-        required struct where
-    ) {
-        var placeholderString = where.values.map( function( value ) {
-            return variables.utils.isExpression( value ) ? value.getSql() : "?";
-        } ).toList( ", " );
+     * Compiles an in where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereIn( required QueryBuilder query, required struct where ) {
+        var placeholderString = where.values
+            .map( function( value ) {
+                return variables.utils.isExpression( value ) ? value.getSql() : "?";
+            } )
+            .toList( ", " );
         if ( placeholderString == "" ) {
             return "0 = 1";
         }
@@ -514,20 +470,19 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles a not in where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNotIn(
-        required QueryBuilder query,
-        required struct where
-    ) {
-        var placeholderString = where.values.map( function( value ) {
-            return variables.utils.isExpression( value ) ? value.getSql() : "?";
-        } ).toList( ", " );
+     * Compiles a not in where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNotIn( required QueryBuilder query, required struct where ) {
+        var placeholderString = where.values
+            .map( function( value ) {
+                return variables.utils.isExpression( value ) ? value.getSql() : "?";
+            } )
+            .toList( ", " );
         if ( placeholderString == "" ) {
             return "1 = 1";
         }
@@ -535,43 +490,37 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles a in subselect where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereInSub(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a in subselect where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereInSub( required QueryBuilder query, required struct where ) {
         return "#wrapColumn( where.column )# IN (#compileSelect( where.query )#)";
     }
 
     /**
-    * Compiles a not in subselect where statement.
-    *
-    * @query The Builder instance.
-    * @where The where clause to compile.
-    *
-    * @return string
-    */
-    private string function whereNotInSub(
-        required QueryBuilder query,
-        required struct where
-    ) {
+     * Compiles a not in subselect where statement.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereNotInSub( required QueryBuilder query, required struct where ) {
         return "#wrapColumn( where.column )# NOT IN (#compileSelect( where.query )#)";
     }
 
     /**
-    * Compiles the group by portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @wheres The group clauses.
-    *
-    * @return string
-    */
+     * Compiles the group by portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @wheres The group clauses.
+     *
+     * @return string
+     */
     private string function compileGroups( required QueryBuilder query, required array groups ) {
         if ( groups.isEmpty() ) {
             return "";
@@ -581,13 +530,13 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles the having portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @havings The having clauses.
-    *
-    * @return string
-    */
+     * Compiles the having portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @havings The having clauses.
+     *
+     * @return string
+     */
     private string function compileHavings( required QueryBuilder query, required array havings ) {
         if ( arguments.havings.isEmpty() ) {
             return "";
@@ -597,38 +546,37 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles a single having clause.
-    *
-    * @having The having clauses.
-    *
-    * @return string
-    */
+     * Compiles a single having clause.
+     *
+     * @having The having clauses.
+     *
+     * @return string
+     */
     private string function compileHaving( required struct having ) {
-        var placeholder = variables.utils.isExpression( having.value ) ?
-            having.value.getSQL() : "?";
+        var placeholder = variables.utils.isExpression( having.value ) ? having.value.getSQL() : "?";
         return trim( "#having.combinator# #wrapColumn( having.column )# #having.operator# #placeholder#" );
     }
 
 
     /**
-    * Compiles the UNION portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @orders The union clauses.
-    *
-    * @return string
-    */
+     * Compiles the UNION portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @orders The union clauses.
+     *
+     * @return string
+     */
     private string function compileUnions( required QueryBuilder query, required array unions ) {
         if ( arguments.unions.isEmpty() ) {
             return "";
         }
 
-        var sql = arguments.unions.map(function (union){
+        var sql = arguments.unions.map( function( union ) {
             /*
              * No queries being unioned to the origin query can contain an ORDER BY clause, only the outer-most
              * QueryBuilder instance can actually have a defined orderBy().
              */
-            if( arguments.union.query.getOrders().len() ){
+            if ( arguments.union.query.getOrders().len() ) {
                 throw(
                     type = "OrderByNotAllowed",
                     message = "The ORDER BY clause is not allowed in a UNION statement.",
@@ -636,32 +584,29 @@ component displayname="Grammar" accessors="true" singleton {
                 );
             }
 
-           var sql = arguments.union.query.toSQL();
+            var sql = arguments.union.query.toSQL();
 
-            return "UNION " & (arguments.union.all ? "ALL " : "") & sql;
-        });
+            return "UNION " & ( arguments.union.all ? "ALL " : "" ) & sql;
+        } );
 
-        return trim( arrayToList(sql, ' ') );
+        return trim( arrayToList( sql, " " ) );
     }
 
     /**
-    * Compiles the order by portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @orders The where clauses.
-    *
-    * @return string
-    */
-    private string function compileOrders(
-        required QueryBuilder query,
-        required array orders
-    ) {
+     * Compiles the order by portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @orders The where clauses.
+     *
+     * @return string
+     */
+    private string function compileOrders( required QueryBuilder query, required array orders ) {
         if ( orders.isEmpty() ) {
             return "";
         }
 
         var orderBys = orders.map( function( orderBy ) {
-            switch( orderBy.direction ) {
+            switch ( orderBy.direction ) {
                 case "raw":
                     return orderBy.column.getSQL();
                 case "sub":
@@ -675,13 +620,13 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles the limit portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @limitValue The limit clauses.
-    *
-    * @return string
-    */
+     * Compiles the limit portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @limitValue The limit clauses.
+     *
+     * @return string
+     */
     private string function compileLimitValue( required QueryBuilder query, limitValue ) {
         if ( isNull( arguments.limitValue ) ) {
             return "";
@@ -690,13 +635,13 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compiles the offset portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @offsetValue The offset value.
-    *
-    * @return string
-    */
+     * Compiles the offset portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @offsetValue The offset value.
+     *
+     * @return string
+     */
     private string function compileOffsetValue( required QueryBuilder query, offsetValue ) {
         if ( isNull( arguments.offsetValue ) ) {
             return "";
@@ -705,73 +650,77 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Compile a Builder's query into an insert string.
-    *
-    * @query The Builder instance.
-    * @columns The array of columns into which to insert.
-    * @values The array of values to insert.
-    *
-    * @return string
-    */
-    public string function compileInsert(
-        required any query,
-        required array columns,
-        required array values
-    ) {
+     * Compile a Builder's query into an insert string.
+     *
+     * @query The Builder instance.
+     * @columns The array of columns into which to insert.
+     * @values The array of values to insert.
+     *
+     * @return string
+     */
+    public string function compileInsert( required any query, required array columns, required array values ) {
         var columnsString = columns.map( wrapColumn ).toList( ", " );
 
-        var placeholderString = values.map( function( valueArray ) {
-            return "(" & valueArray.map( function( item ) {
-                if ( getUtils().isExpression( item ) ) {
-                    return item.getSQL();
-                } else {
-                    return "?";
-                }
-            } ).toList( ", " ) & ")";
-        } ).toList( ", ");
+        var placeholderString = values
+            .map( function( valueArray ) {
+                return "(" & valueArray
+                    .map( function( item ) {
+                        if ( getUtils().isExpression( item ) ) {
+                            return item.getSQL();
+                        } else {
+                            return "?";
+                        }
+                    } )
+                    .toList( ", " ) & ")";
+            } )
+            .toList( ", " );
         return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES #placeholderString#" );
     }
 
     /**
-    * Compile a Builder's query into an update string.
-    *
-    * @query The Builder instance.
-    * @columns The array of columns into which to insert.
-    *
-    * @return string
-    */
+     * Compile a Builder's query into an update string.
+     *
+     * @query The Builder instance.
+     * @columns The array of columns into which to insert.
+     *
+     * @return string
+     */
     public string function compileUpdate(
         required QueryBuilder query,
         required array columns,
         required struct updateMap
     ) {
-        var updateList = columns.map( function( column ) {
-            var value = updateMap[ column ];
-            return "#wrapColumn( column )# = #utils.isExpression( value ) ? value.getSql() : '?'#";
-        } ).toList( ", " );
+        var updateList = columns
+            .map( function( column ) {
+                var value = updateMap[ column ];
+                return "#wrapColumn( column )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+            } )
+            .toList( ", " );
 
-        return trim( "UPDATE #wrapTable( query.getFrom() )# SET #updateList# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#" );
+        return trim(
+            "UPDATE #wrapTable( query.getFrom() )# SET #updateList# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#"
+        );
     }
 
     /**
-    * Compile a Builder's query into a delete string.
-    *
-    * @query The Builder instance.
-    *
-    * @return string
-    */
+     * Compile a Builder's query into a delete string.
+     *
+     * @query The Builder instance.
+     *
+     * @return string
+     */
     public string function compileDelete( required QueryBuilder query ) {
         return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )#" );
     }
 
     /**
-    * Compile a Builder's query into an aggregate select string.
-    *
-    * @query The Builder instance.
-    * @aggregate The aggregate query to execute.
-    *
-    * @return string
-    */
+     * Compile a Builder's query into an aggregate select string.
+     *
+     * @query The Builder instance.
+     * @aggregate The aggregate query to execute.
+     *
+     * @return string
+     */
     private string function compileAggregate( required QueryBuilder query, required struct aggregate ) {
         if ( aggregate.isEmpty() ) {
             return "";
@@ -780,36 +729,39 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Returns an array of sql concatenated together with empty spaces.
-    *
-    * @sql An array of sql fragments.
-    *
-    * @return string
-    */
+     * Returns an array of sql concatenated together with empty spaces.
+     *
+     * @sql An array of sql fragments.
+     *
+     * @return string
+     */
     private string function concatenate( required array sql ) {
-        return arrayToList( arrayFilter( sql, function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter( sql, function( item ) {
+                return item != "";
+            } ),
+            " "
+        );
     }
 
     /**
-    * Removes the leading "AND" or "OR" from a sql fragment.
-    *
-    * @whereList The sql fragment
-    *
-    * @return string;
-    */
+     * Removes the leading "AND" or "OR" from a sql fragment.
+     *
+     * @whereList The sql fragment
+     *
+     * @return string;
+     */
     private string function removeLeadingCombinator( required string whereList ) {
-        return REReplaceNoCase( whereList, "and\s|or\s", "", "one" );
+        return reReplaceNoCase( whereList, "and\s|or\s", "", "one" );
     }
 
     /**
-    * Parses and wraps a table from the Builder for use in a sql statement.
-    *
-    * @table The table to parse and wrap.
-    *
-    * @return string
-    */
+     * Parses and wraps a table from the Builder for use in a sql statement.
+     *
+     * @table The table to parse and wrap.
+     *
+     * @return string
+     */
     public string function wrapTable( required any table ) {
         // if we have a raw expression, just return it as-is
         if ( variables.utils.isExpression( arguments.table ) ) {
@@ -818,62 +770,72 @@ component displayname="Grammar" accessors="true" singleton {
 
         var alias = "";
         if ( table.findNoCase( " as " ) > 0 ) {
-            var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );
+            var matches = reFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );
             if ( matches.pos.len() >= 3 ) {
-                alias = mid( table, matches.pos[3], matches.len[3] );
-                table = mid( table, matches.pos[2], matches.len[2] );
+                alias = mid( table, matches.pos[ 3 ], matches.len[ 3 ] );
+                table = mid( table, matches.pos[ 2 ], matches.len[ 2 ] );
             }
-        }
-        else if ( table.findNoCase( " " ) > 0 ) {
+        } else if ( table.findNoCase( " " ) > 0 ) {
             alias = listGetAt( table, 2, " " );
             table = listGetAt( table, 1, " " );
         }
 
-        table = table.listToArray( "." ).map( function( tablePart, index ) {
-            return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
-        } ).toList( "." );
+        table = table
+            .listToArray( "." )
+            .map( function( tablePart, index ) {
+                return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
+            } )
+            .toList( "." );
         return alias == "" ? table : table & " AS " & wrapValue( getTablePrefix() & alias );
     }
 
     /**
-    * Parses and wraps a column from the Builder for use in a sql statement.
-    *
-    * @column The column to parse and wrap.
-    *
-    * @return string
-    */
+     * Parses and wraps a column from the Builder for use in a sql statement.
+     *
+     * @column The column to parse and wrap.
+     *
+     * @return string
+     */
     public string function wrapColumn( required any column ) {
         // In this case, isInstanceOf takes ~30 ms while this takes ~0 ms
-        if ( ! isSimpleValue( column ) &&
-             isObject( column ) &&
-             structKeyExists( column, "getSQL" )
+        if (
+            !isSimpleValue( column ) &&
+            isObject( column ) &&
+            structKeyExists( column, "getSQL" )
         ) {
             return column.getSQL();
         }
 
         var alias = "";
         if ( column.findNoCase( " as " ) > 0 ) {
-            var matches = REFindNoCase( "(.*)(?:\sAS\s)(.*)", column, 1, true );
+            var matches = reFindNoCase(
+                "(.*)(?:\sAS\s)(.*)",
+                column,
+                1,
+                true
+            );
             if ( matches.pos.len() >= 3 ) {
-                alias = mid( column, matches.pos[3], matches.len[3] );
-                column = mid( column, matches.pos[2], matches.len[2] );
+                alias = mid( column, matches.pos[ 3 ], matches.len[ 3 ] );
+                column = mid( column, matches.pos[ 2 ], matches.len[ 2 ] );
             }
-        }
-        else if ( column.findNoCase( " " ) > 0 ) {
+        } else if ( column.findNoCase( " " ) > 0 ) {
             alias = listGetAt( column, 2, " " );
             column = listGetAt( column, 1, " " );
         }
-        column = column.listToArray( "." ).map( wrapValue ).toList( "." );
+        column = column
+            .listToArray( "." )
+            .map( wrapValue )
+            .toList( "." );
         return alias == "" ? column : column & " AS " & wrapValue( alias );
     }
 
     /**
-    * Parses and wraps a value from the Builder for use in a sql statement.
-    *
-    * @table The value to parse and wrap.
-    *
-    * @return string
-    */
+     * Parses and wraps a value from the Builder for use in a sql statement.
+     *
+     * @table The value to parse and wrap.
+     *
+     * @return string
+     */
     public string function wrapValue( required any value ) {
         if ( value == "*" ) {
             return value;
@@ -882,12 +844,12 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-    * Parses and wraps a value from the Builder for use in a sql statement.
-    *
-    * @table The value to parse and wrap.
-    *
-    * @return string
-    */
+     * Parses and wraps a value from the Builder for use in a sql statement.
+     *
+     * @table The value to parse and wrap.
+     *
+     * @return string
+     */
     public string function wrapAlias( required any value ) {
         return wrapValue( value );
     }
@@ -905,18 +867,21 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function compileCreateBody( blueprint ) {
-        return arrayToList( arrayFilter( [
-            compileCreateColumns( blueprint ),
-            compileCreateIndexes( blueprint )
-        ], function( item ) {
-            return item != "";
-        } ), ", " );
+        return arrayToList(
+            arrayFilter( [ compileCreateColumns( blueprint ), compileCreateIndexes( blueprint ) ], function( item ) {
+                return item != "";
+            } ),
+            ", "
+        );
     }
 
     function compileCreateColumns( required blueprint ) {
-        return blueprint.getColumns().map( function( column ) {
-            return compileCreateColumn( column, blueprint );
-        } ).toList( ", " );
+        return blueprint
+            .getColumns()
+            .map( function( column ) {
+                return compileCreateColumn( column, blueprint );
+            } )
+            .toList( ", " );
     }
 
     function compileCreateColumn( column, blueprint ) {
@@ -925,11 +890,11 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         try {
-            if (!column.isColumn()) {
-                throw(message="Not a Column");
+            if ( !column.isColumn() ) {
+                throw( message = "Not a Column" );
             }
-        } catch(any e) {
-            //exception happens when isColumn returns false or is not a method on the column object
+        } catch ( any e ) {
+            // exception happens when isColumn returns false or is not a method on the column object
             throw(
                 type = "InvalidColumn",
                 message = "Recieved a TableIndex instead of a Column when trying to create a Column.",
@@ -937,18 +902,24 @@ component displayname="Grammar" accessors="true" singleton {
             );
         }
 
-        return arrayToList( arrayFilter( [
-            wrapColumn( column.getName() ),
-            generateType( column, blueprint ),
-            modifyUnsigned( column ),
-            generateNullConstraint( column ),
-            generateUniqueConstraint( column, blueprint ),
-            generateAutoIncrement( column, blueprint ),
-            generateDefault( column, blueprint ),
-            generateComment( column, blueprint )
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    wrapColumn( column.getName() ),
+                    generateType( column, blueprint ),
+                    modifyUnsigned( column ),
+                    generateNullConstraint( column ),
+                    generateUniqueConstraint( column, blueprint ),
+                    generateAutoIncrement( column, blueprint ),
+                    generateDefault( column, blueprint ),
+                    generateComment( column, blueprint )
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
     }
 
     function generateNullConstraint( column ) {
@@ -979,12 +950,15 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function compileAddComment( blueprint, commandParameters ) {
-        return arrayToList( [
-            "COMMENT ON COLUMN",
-            wrapColumn( commandParameters.table & "." & commandParameters.column.getName() ),
-            "IS",
-            "'" & commandParameters.column.getComment() & "'"
-        ], " " );
+        return arrayToList(
+            [
+                "COMMENT ON COLUMN",
+                wrapColumn( commandParameters.table & "." & commandParameters.column.getName() ),
+                "IS",
+                "'" & commandParameters.column.getComment() & "'"
+            ],
+            " "
+        );
     }
 
     /*=====  End of Blueprint: Create  ======*/
@@ -994,13 +968,12 @@ component displayname="Grammar" accessors="true" singleton {
     =======================================*/
 
     function compileDrop( required blueprint ) {
-        return arrayToList( arrayFilter( [
-            "DROP TABLE",
-            generateIfExists( blueprint ),
-            wrapTable( blueprint.getTable() )
-        ], function( item ) {
-            return item != "";
-        } ), " ");
+        return arrayToList(
+            arrayFilter( [ "DROP TABLE", generateIfExists( blueprint ), wrapTable( blueprint.getTable() ) ], function( item ) {
+                return item != "";
+            } ),
+            " "
+        );
     }
 
     function generateIfExists( blueprint ) {
@@ -1041,93 +1014,135 @@ component displayname="Grammar" accessors="true" singleton {
         var existingIndexes = blueprint.getIndexes();
         blueprint.setIndexes( [] );
 
-        var body = arrayToList( arrayFilter( [
-            compileCreateColumn( commandParameters.column, blueprint ),
-            compileCreateIndexes( blueprint )
-        ], function( item ) {
-            return item != "";
-        } ), ", " );
+        var body = arrayToList(
+            arrayFilter( [ compileCreateColumn( commandParameters.column, blueprint ), compileCreateIndexes( blueprint ) ], function( item ) {
+                return item != "";
+            } ),
+            ", "
+        );
 
         blueprint.setIndexes( existingIndexes );
 
-        return arrayToList( arrayFilter( [
-            "ALTER TABLE",
-            wrapTable( blueprint.getTable() ),
-            "ADD",
-            body
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "ADD",
+                    body
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
     }
 
     function compileDropColumn( blueprint, commandParameters ) {
         if ( isSimpleValue( commandParameters.name ) ) {
-            return arrayToList( arrayFilter( [
-                "ALTER TABLE",
-                wrapTable( blueprint.getTable() ),
-                "DROP COLUMN",
-                wrapColumn( commandParameters.name )
-            ], function( item ) {
-                return item != "";
-            } ), " " );
+            return arrayToList(
+                arrayFilter(
+                    [
+                        "ALTER TABLE",
+                        wrapTable( blueprint.getTable() ),
+                        "DROP COLUMN",
+                        wrapColumn( commandParameters.name )
+                    ],
+                    function( item ) {
+                        return item != "";
+                    }
+                ),
+                " "
+            );
         } else {
-            return arrayToList( arrayFilter( [
-                "ALTER TABLE",
-                wrapTable( blueprint.getTable() ),
-                "DROP COLUMN",
-                wrapColumn( commandParameters.name.getName() )
-            ], function( item ) {
-                return item != "";
-            } ), " " );
+            return arrayToList(
+                arrayFilter(
+                    [
+                        "ALTER TABLE",
+                        wrapTable( blueprint.getTable() ),
+                        "DROP COLUMN",
+                        wrapColumn( commandParameters.name.getName() )
+                    ],
+                    function( item ) {
+                        return item != "";
+                    }
+                ),
+                " "
+            );
         }
     }
 
     function compileRenameTable( blueprint, commandParameters ) {
-        return arrayToList( arrayFilter( [
-            "ALTER TABLE",
-            wrapTable( blueprint.getTable() ),
-            "RENAME TO",
-            wrapTable( commandParameters.to )
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "RENAME TO",
+                    wrapTable( commandParameters.to )
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
     }
 
     function compileRenameColumn( blueprint, commandParameters ) {
-        return arrayToList( arrayFilter( [
-            "ALTER TABLE",
-            wrapTable( blueprint.getTable() ),
-            "CHANGE",
-            wrapColumn( commandParameters.from ),
-            compileCreateColumn( commandParameters.to, blueprint )
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "CHANGE",
+                    wrapColumn( commandParameters.from ),
+                    compileCreateColumn( commandParameters.to, blueprint )
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
     }
 
     function compileRenameConstraint( blueprint, commandParameters ) {
-        return arrayToList( arrayFilter( [
-            "ALTER TABLE",
-            wrapTable( blueprint.getTable() ),
-            "RENAME INDEX",
-            wrapColumn( commandParameters.from ),
-            "TO",
-            wrapColumn( commandParameters.to )
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "RENAME INDEX",
+                    wrapColumn( commandParameters.from ),
+                    "TO",
+                    wrapColumn( commandParameters.to )
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
     }
 
     function compileModifyColumn( blueprint, commandParameters ) {
-        return arrayToList( arrayFilter( [
-            "ALTER TABLE",
-            wrapTable( blueprint.getTable() ),
-            "CHANGE",
-            wrapColumn( commandParameters.from ),
-            compileCreateColumn( commandParameters.to, blueprint )
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "CHANGE",
+                    wrapColumn( commandParameters.from ),
+                    compileCreateColumn( commandParameters.to, blueprint )
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
     }
 
     /*=====  End of Blueprint: Alter  ======*/
@@ -1138,7 +1153,7 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileAddConstraint( blueprint, commandParameters ) {
         var index = commandParameters.index;
-        var constraint = invoke( this, "index#index.getType()#", { index = index } );
+        var constraint = invoke( this, "index#index.getType()#", { index: index } );
         return "ALTER TABLE #wrapTable( blueprint.getTable() )# ADD #constraint#";
     }
 
@@ -1157,16 +1172,16 @@ component displayname="Grammar" accessors="true" singleton {
     ====================================*/
 
     function generateType( column, blueprint ) {
-        return invoke( this, "type#column.getType()#", { column = column, blueprint = blueprint } );
+        return invoke( this, "type#column.getType()#", { column: column, blueprint: blueprint } );
     }
 
     function typeBigInteger( column ) {
-        return arrayToList( arrayFilter( [
-            "BIGINT",
-            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
-        ], function( item ) {
-            return item != "";
-        } ), "" );
+        return arrayToList(
+            arrayFilter( [ "BIGINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
+                return item != "";
+            } ),
+            ""
+        );
     }
 
     function typeBit( column ) {
@@ -1198,9 +1213,12 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeEnum( column ) {
-        var values = column.getValues().map( function ( value ) {
-            return "'#value#'";
-        } ).toList( ", " );
+        var values = column
+            .getValues()
+            .map( function( value ) {
+                return "'#value#'";
+            } )
+            .toList( ", " );
         return "ENUM(#values#)";
     }
 
@@ -1209,12 +1227,12 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeInteger( column ) {
-        return arrayToList( arrayFilter( [
-            "INTEGER",
-            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
-        ], function( item ) {
-            return item != "";
-        } ), "" );
+        return arrayToList(
+            arrayFilter( [ "INTEGER", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
+                return item != "";
+            } ),
+            ""
+        );
     }
 
     function typeJson( column ) {
@@ -1238,12 +1256,12 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeMediumInteger( column ) {
-        return arrayToList( arrayFilter( [
-            "MEDIUMINT",
-            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
-        ], function( item ) {
-            return item != "";
-        } ), "" );
+        return arrayToList(
+            arrayFilter( [ "MEDIUMINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
+                return item != "";
+            } ),
+            ""
+        );
     }
 
     function typeMediumText( column ) {
@@ -1263,12 +1281,12 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeSmallInteger( column ) {
-        return arrayToList( arrayFilter( [
-            "SMALLINT",
-            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
-        ], function( item ) {
-            return item != "";
-        } ), "" );
+        return arrayToList(
+            arrayFilter( [ "SMALLINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
+                return item != "";
+            } ),
+            ""
+        );
     }
 
     function typeString( column ) {
@@ -1284,7 +1302,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeUnicodeText( column ) {
-         return "TEXT";
+        return "TEXT";
     }
 
     function typeTime( column ) {
@@ -1304,12 +1322,12 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeTinyInteger( column ) {
-        return arrayToList( arrayFilter( [
-            "TINYINT",
-            isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"
-        ], function( item ) {
-            return item != "";
-        } ), "" );
+        return arrayToList(
+            arrayFilter( [ "TINYINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
+                return item != "";
+            } ),
+            ""
+        );
     }
 
     /*=====  End of Column Types  ======*/
@@ -1324,10 +1342,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function compileAlterView( blueprint, commandParameters ) {
-        return [
-            compileDropView( blueprint, commandParameters ),
-            compileCreateView( blueprint, commandParameters )
-        ];
+        return [ compileDropView( blueprint, commandParameters ), compileCreateView( blueprint, commandParameters ) ];
     }
 
     function compileDropView( blueprint, commandParameters ) {
@@ -1339,78 +1354,115 @@ component displayname="Grammar" accessors="true" singleton {
     ===================================*/
 
     function compileCreateIndexes( blueprint ) {
-        return blueprint.getIndexes().map( function( index ) {
-            return invoke( this, "index#index.getType()#", { index = index, blueprint = blueprint } );
-        } ).filter( function( item ) {
-            return item != "";
-        } ).toList( ", " );
+        return blueprint
+            .getIndexes()
+            .map( function( index ) {
+                return invoke( this, "index#index.getType()#", { index: index, blueprint: blueprint } );
+            } )
+            .filter( function( item ) {
+                return item != "";
+            } )
+            .toList( ", " );
     }
 
     function compileAddIndex( blueprint, commandParameters ) {
-        var columnList = commandParameters.index.getColumns().map( function( column ) {
-            column = isSimpleValue( column ) ? column : column.getName();
-            return wrapValue( column );
-        } ).toList( ", " );
-        return arrayToList( [
-            "CREATE INDEX",
-            wrapValue( commandParameters.index.getName() ),
-            "ON",
-            wrapTable( commandParameters.table ),
-            "(#columnList#)"
-        ], " " );
+        var columnList = commandParameters.index
+            .getColumns()
+            .map( function( column ) {
+                column = isSimpleValue( column ) ? column : column.getName();
+                return wrapValue( column );
+            } )
+            .toList( ", " );
+        return arrayToList(
+            [
+                "CREATE INDEX",
+                wrapValue( commandParameters.index.getName() ),
+                "ON",
+                wrapTable( commandParameters.table ),
+                "(#columnList#)"
+            ],
+            " "
+        );
     }
 
     function indexBasic( index, blueprint ) {
-        var columnsString = index.getColumns().map( function( column ) {
-            return wrapValue( column );
-        } ).toList( ", " );
+        var columnsString = index
+            .getColumns()
+            .map( function( column ) {
+                return wrapValue( column );
+            } )
+            .toList( ", " );
         return "INDEX #wrapValue( index.getName() )# (#columnsString#)";
     }
 
     function indexForeign( index ) {
-        //FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
-        var keys = index.getForeignKey().map( function( key ) {
-            return wrapColumn( key );
-        } ).toList( ", " );
-        var references = index.getColumns().map( function( column ) {
-            return wrapColumn( column );
-        } ).toList( ", " );
-        return arrayToList( [
-            "CONSTRAINT #wrapValue( index.getName() )#",
-            "FOREIGN KEY (#keys#)",
-            "REFERENCES #wrapTable( index.getTable() )# (#references#)",
-            "ON UPDATE #ucase( index.getOnUpdate() )#",
-            "ON DELETE #ucase( index.getOnDelete() )#"
-        ], " " );
+        // FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
+        var keys = index
+            .getForeignKey()
+            .map( function( key ) {
+                return wrapColumn( key );
+            } )
+            .toList( ", " );
+        var references = index
+            .getColumns()
+            .map( function( column ) {
+                return wrapColumn( column );
+            } )
+            .toList( ", " );
+        return arrayToList(
+            [
+                "CONSTRAINT #wrapValue( index.getName() )#",
+                "FOREIGN KEY (#keys#)",
+                "REFERENCES #wrapTable( index.getTable() )# (#references#)",
+                "ON UPDATE #uCase( index.getOnUpdate() )#",
+                "ON DELETE #uCase( index.getOnDelete() )#"
+            ],
+            " "
+        );
     }
 
     function indexPrimary( index ) {
-        var references = index.getColumns().map( function( column ) {
-            return wrapColumn( column );
-        } ).toList( ", " );
+        var references = index
+            .getColumns()
+            .map( function( column ) {
+                return wrapColumn( column );
+            } )
+            .toList( ", " );
         return "CONSTRAINT #wrapValue( index.getName() )# PRIMARY KEY (#references#)";
     }
 
     function indexUnique( index ) {
-        var references = index.getColumns().map( function( column ) {
-            return wrapColumn( column );
-        } ).toList( ", " );
+        var references = index
+            .getColumns()
+            .map( function( column ) {
+                return wrapColumn( column );
+            } )
+            .toList( ", " );
         return "CONSTRAINT #wrapValue( index.getName() )# UNIQUE (#references#)";
     }
 
     function indexCheck( index ) {
         var column = index.getColumns()[ 1 ];
-        var values = column.getValues().map( function( val ) {
-            return "'#val#'";
-        } ).toList( ", " );
-        return arrayToList( arrayFilter( [
-            "CONSTRAINT",
-            wrapValue( index.getName() ),
-            "CHECK",
-            "(#wrapValue( column.getName() )# IN (#values#))"
-        ], function( str ) {
-            return str != "";
-        } ), " " );
+        var values = column
+            .getValues()
+            .map( function( val ) {
+                return "'#val#'";
+            } )
+            .toList( ", " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "CONSTRAINT",
+                    wrapValue( index.getName() ),
+                    "CHECK",
+                    "(#wrapValue( column.getName() )# IN (#values#))"
+                ],
+                function( str ) {
+                    return str != "";
+                }
+            ),
+            " "
+        );
     }
 
     /*=====  End of Index Types  ======*/

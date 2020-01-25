@@ -11,10 +11,7 @@ component extends="testbox.system.BaseSpec" {
                                 query.where( "id", "=", 1 );
                             } )
                             .where( "email", "foo" );
-                    }, {
-                        sql = "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?",
-                        bindings = [ 1, "foo" ]
-                    } );
+                    }, { sql: "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?", bindings: [ 1, "foo" ] } );
                 } );
 
                 it( "does not execute the callback when the condition is false", function() {
@@ -25,42 +22,43 @@ component extends="testbox.system.BaseSpec" {
                                 query.where( "id", "=", 1 );
                             } )
                             .where( "email", "foo" );
-                    }, {
-                        sql = "SELECT * FROM ""users"" WHERE ""email"" = ?",
-                        bindings = [ "foo" ]
-                    } );
+                    }, { sql: "SELECT * FROM ""users"" WHERE ""email"" = ?", bindings: [ "foo" ] } );
                 } );
 
                 it( "executes the default callback when the condition is false", function() {
                     testCase( function( builder ) {
-                        builder.select( "*" )
+                        builder
+                            .select( "*" )
                             .from( "users" )
-                            .when( false, function( query ) {
-                                query.where( "id", "=", 1 );
-                            }, function( query ) {
-                                query.where( "id", "=", 2 );
-                            } )
+                            .when(
+                                false,
+                                function( query ) {
+                                    query.where( "id", "=", 1 );
+                                },
+                                function( query ) {
+                                    query.where( "id", "=", 2 );
+                                }
+                            )
                             .where( "email", "foo" );
-                    }, {
-                        sql = "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?",
-                        bindings = [ 2, "foo" ]
-                    } );
+                    }, { sql: "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?", bindings: [ 2, "foo" ] } );
                 } );
 
                 it( "does not execute the default callback when the condition is true", function() {
                     testCase( function( builder ) {
-                        builder.select( "*" )
+                        builder
+                            .select( "*" )
                             .from( "users" )
-                            .when( true, function( query ) {
-                                query.where( "id", "=", 1 );
-                            }, function( query ) {
-                                query.where( "id", "=", 2 );
-                            } )
+                            .when(
+                                true,
+                                function( query ) {
+                                    query.where( "id", "=", 1 );
+                                },
+                                function( query ) {
+                                    query.where( "id", "=", 2 );
+                                }
+                            )
                             .where( "email", "foo" );
-                    }, {
-                        sql = "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?",
-                        bindings = [ 1, "foo" ]
-                    } );
+                    }, { sql: "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?", bindings: [ 1, "foo" ] } );
                 } );
             } );
 
@@ -82,10 +80,7 @@ component extends="testbox.system.BaseSpec" {
                                 // attempts to modify the query should not work
                                 return q.where( "foo", "bar" );
                             } );
-                    }, {
-                        sql = "SELECT * FROM ""users"" WHERE ""id"" = ?",
-                        bindings = [ 1 ]
-                    } );
+                    }, { sql: "SELECT * FROM ""users"" WHERE ""id"" = ?", bindings: [ 1 ] } );
 
                     expect( count ).toBe( 3, "Three different tap functions should have been called." );
                 } );
@@ -96,37 +91,32 @@ component extends="testbox.system.BaseSpec" {
     private function testCase( callback, expected ) {
         var builder = getBuilder();
         var sql = callback( builder );
-        if ( ! isNull( sql ) ) {
-            if ( ! isSimpleValue( sql ) ) {
+        if ( !isNull( sql ) ) {
+            if ( !isSimpleValue( sql ) ) {
                 sql = sql.toSQL();
             }
-        }
-        else {
+        } else {
             sql = builder.toSQL();
         }
         if ( isSimpleValue( expected ) ) {
-            expected = {
-                sql = expected,
-                bindings = []
-            };
+            expected = { sql: expected, bindings: [] };
         }
         expect( sql ).toBeWithCase( expected.sql );
         expect( getTestBindings( builder ) ).toBe( expected.bindings );
     }
 
     private function getBuilder() {
-        var grammar = getMockBox()
-            .createMock( "qb.models.Grammars.BaseGrammar" )
-            .init();
-        var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" )
-            .init( grammar );
+        var grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init();
+        var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" ).init( grammar );
         return builder;
     }
 
     private array function getTestBindings( builder ) {
-        return builder.getBindings().map( function( binding ) {
-            return binding.value;
-        } );
+        return builder
+            .getBindings()
+            .map( function( binding ) {
+                return binding.value;
+            } );
     }
 
 }

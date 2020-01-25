@@ -1,12 +1,12 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**
-    * Parses and wraps a value from the Builder for use in a sql statement.
-    *
-    * @table The value to parse and wrap.
-    *
-    * @return string
-    */
+     * Parses and wraps a value from the Builder for use in a sql statement.
+     *
+     * @table The value to parse and wrap.
+     *
+     * @return string
+     */
     function wrapValue( required any value ) {
         if ( value == "*" ) {
             return value;
@@ -15,25 +15,31 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     /**
-    * Parses and wraps a value from the Builder for use in a sql statement.
-    *
-    * @table The value to parse and wrap.
-    *
-    * @return string
-    */
+     * Parses and wraps a value from the Builder for use in a sql statement.
+     *
+     * @table The value to parse and wrap.
+     *
+     * @return string
+     */
     public string function wrapAlias( required any value ) {
         return "`#value#`";
     }
 
     function compileRenameTable( blueprint, commandParameters ) {
-        return arrayToList( arrayFilter( [
-            "RENAME TABLE",
-            wrapTable( blueprint.getTable() ),
-            "TO",
-            wrapTable( commandParameters.to )
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "RENAME TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "TO",
+                    wrapTable( commandParameters.to )
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
     }
 
     function compileDropForeignKey( blueprint, commandParameters ) {
@@ -42,21 +48,36 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function compileDropAllObjects( options ) {
         var tables = getAllTableNames( options );
-        var tableList = arrayToList( arrayMap( tables, function( table ) {
-            return wrapTable( table );
-        } ), ", " );
-        return arrayFilter( [
-            compileDisableForeignKeyConstraints(),
-            arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#",
-            compileEnableForeignKeyConstraints()
-        ], function( sql ) { return sql != ""; } );
+        var tableList = arrayToList(
+            arrayMap( tables, function( table ) {
+                return wrapTable( table );
+            } ),
+            ", "
+        );
+        return arrayFilter(
+            [
+                compileDisableForeignKeyConstraints(),
+                arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#",
+                compileEnableForeignKeyConstraints()
+            ],
+            function( sql ) {
+                return sql != "";
+            }
+        );
     }
 
     function getAllTableNames( options ) {
-        var tablesQuery = runQuery( "SHOW FULL TABLES WHERE table_type = 'BASE TABLE'", {}, options, "query" );
-        var columnName = arrayToList( arrayFilter( tablesQuery.getColumnNames(), function( columnName ) {
-            return columnName != "Table_type";
-        } ) );
+        var tablesQuery = runQuery(
+            "SHOW FULL TABLES WHERE table_type = 'BASE TABLE'",
+            {},
+            options,
+            "query"
+        );
+        var columnName = arrayToList(
+            arrayFilter( tablesQuery.getColumnNames(), function( columnName ) {
+                return columnName != "Table_type";
+            } )
+        );
         var tables = [];
         for ( var table in tablesQuery ) {
             arrayAppend( tables, table[ columnName ] );
@@ -65,24 +86,17 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     /**
-    * Compile a Builder's query into an insert string.
-    *
-    * @query The Builder instance.
-    * @columns The array of columns into which to insert.
-    * @values The array of values to insert.
-    *
-    * @return string
-    */
-    public string function compileInsert(
-        required QueryBuilder query,
-        required array columns,
-        required array values
-    ) {
-        if ( ! query.getReturning().isEmpty() ) {
-            throw(
-                type = "UnsupportedOperation",
-                message = "This grammar does not support a RETURNING clause"
-            );
+     * Compile a Builder's query into an insert string.
+     *
+     * @query The Builder instance.
+     * @columns The array of columns into which to insert.
+     * @values The array of values to insert.
+     *
+     * @return string
+     */
+    public string function compileInsert( required QueryBuilder query, required array columns, required array values ) {
+        if ( !query.getReturning().isEmpty() ) {
+            throw( type = "UnsupportedOperation", message = "This grammar does not support a RETURNING clause" );
         }
         return super.compileInsert( argumentCollection = arguments );
     }
@@ -99,7 +113,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         if (
             column.getDefault() == "" &&
             column.getType().findNoCase( "TIMESTAMP" ) > 0 &&
-            ! column.getNullable()
+            !column.getNullable()
         ) {
             column.withCurrent();
         }

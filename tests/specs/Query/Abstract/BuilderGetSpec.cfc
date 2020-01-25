@@ -1,4 +1,5 @@
 component extends="testbox.system.BaseSpec" {
+
     function run() {
         describe( "get methods", function() {
             beforeEach( function() {
@@ -9,24 +10,25 @@ component extends="testbox.system.BaseSpec" {
                 query.$property( propertyName = "utils", mock = utils );
 
                 var mockWirebox = getMockBox().createStub();
-                var mockJoinClause = getMockBox()
-                    .prepareMock( new qb.models.Query.JoinClause( query, "inner", "second" ) );
+                var mockJoinClause = getMockBox().prepareMock(
+                    new qb.models.Query.JoinClause( query, "inner", "second" )
+                );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
                 mockWirebox
                     .$( "getInstance" )
-                    .$args( name = "JoinClause@Quick", initArguments = {
-                        parentQuery = query,
-                        type = "inner",
-                        table = "second"
-                    } )
+                    .$args(
+                        name = "JoinClause@Quick",
+                        initArguments = { parentQuery: query, type: "inner", table: "second" }
+                    )
                     .$results( mockJoinClause );
                 query.$property( propertyName = "wirebox", mock = mockWirebox );
             } );
 
             it( "retreives bindings in a flat array", function() {
-                query.join( "second", function( join ) {
+                query {
                     join.where( "second.locale", "=", "en-US" );
-                } ).where( "first.quantity", ">=", 10 );
+                }
+                ).where( "first.quantity", ">=", 10 );
 
                 var bindings = query.getBindings();
                 expect( bindings ).toBeArray();
@@ -44,9 +46,10 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "retreives a map of bindings", function() {
-                query.join( "second", function( join ) {
+                query {
                     join.where( "second.locale", "=", "en-US" );
-                } ).where( "first.quantity", ">=", "10" );
+                }
+                ).where( "first.quantity", ">=", "10" );
 
                 var bindings = query.getRawBindings();
 
@@ -57,7 +60,8 @@ component extends="testbox.system.BaseSpec" {
 
     private boolean function isACF2016() {
         return server.keyExists( "coldfusion" ) &&
-            ! server.keyExists( "lucee" ) &&
-            left( server.coldfusion.productversion, 4 ) == "2016";
+        !server.keyExists( "lucee" ) &&
+        left( server.coldfusion.productversion, 4 ) == "2016";
     }
+
 }

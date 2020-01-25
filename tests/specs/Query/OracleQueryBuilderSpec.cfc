@@ -50,8 +50,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function subSelectWithBindings() {
         return {
-            sql = "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ? ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""",
-            bindings = [ 1 ]
+            sql: "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ? ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""",
+            bindings: [ 1 ]
         };
     }
 
@@ -65,8 +65,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function fromDerivedTable() {
         return {
-            sql = "SELECT * FROM (SELECT ""ID"", ""NAME"" FROM ""USERS"" WHERE ""AGE"" >= ?) AS ""U""",
-            bindings = [21]
+            sql: "SELECT * FROM (SELECT ""ID"", ""NAME"" FROM ""USERS"" WHERE ""AGE"" >= ?) AS ""U""",
+            bindings: [ 21 ]
         };
     }
 
@@ -99,38 +99,23 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function basicWhere() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" = ?",
-            bindings = [ 1 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ?", bindings: [ 1 ] };
     }
 
     function orWhere() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR ""EMAIL"" = ?",
-            bindings = [ 1, "foo" ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR ""EMAIL"" = ?", bindings: [ 1, "foo" ] };
     }
 
     function andWhere() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" = ? AND ""EMAIL"" = ?",
-            bindings = [ 1, "foo" ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ? AND ""EMAIL"" = ?", bindings: [ 1, "foo" ] };
     }
 
     function whereRaw() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE id = ? OR email = ?",
-            bindings = [ 1, "foo" ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE id = ? OR email = ?", bindings: [ 1, "foo" ] };
     }
 
     function orWhereRaw() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR email = ?",
-            bindings = [ 1, "foo" ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR email = ?", bindings: [ 1, "foo" ] };
     }
 
     function whereColumn() {
@@ -143,15 +128,15 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereNested() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR (""NAME"" = ? AND ""AGE"" >= ?)",
-            bindings = [ "foo", "bar", 21 ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR (""NAME"" = ? AND ""AGE"" >= ?)",
+            bindings: [ "foo", "bar", 21 ]
         };
     }
 
     function whereSubselect() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR ""ID"" = (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
-            bindings = [ "foo", "bar" ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR ""ID"" = (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
+            bindings: [ "foo", "bar" ]
         };
     }
 
@@ -161,8 +146,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function orWhereExists() {
         return {
-            sql = "SELECT * FROM ""ORDERS"" WHERE ""ID"" = ? OR EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")",
-            bindings = [ 1 ]
+            sql: "SELECT * FROM ""ORDERS"" WHERE ""ID"" = ? OR EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")",
+            bindings: [ 1 ]
         };
     }
 
@@ -172,8 +157,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function orWhereNotExists() {
         return {
-            sql = "SELECT * FROM ""ORDERS"" WHERE ""ID"" = ? OR NOT EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")",
-            bindings = [ 1 ]
+            sql: "SELECT * FROM ""ORDERS"" WHERE ""ID"" = ? OR NOT EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")",
+            bindings: [ 1 ]
         };
     }
 
@@ -182,10 +167,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function orWhereNull() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR ""ID"" IS NULL",
-            bindings = [ 1 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR ""ID"" IS NULL", bindings: [ 1 ] };
     }
 
     function whereNotNull() {
@@ -193,44 +175,29 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function orWhereNotNull() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR ""ID"" IS NOT NULL",
-            bindings = [ 1 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR ""ID"" IS NOT NULL", bindings: [ 1 ] };
     }
 
     function whereBetween() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN ? AND ?",
-            bindings = [ 1, 2 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN ? AND ?", bindings: [ 1, 2 ] };
     }
 
     function whereNotBetween() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" NOT BETWEEN ? AND ?",
-            bindings = [ 1, 2 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" NOT BETWEEN ? AND ?", bindings: [ 1, 2 ] };
     }
 
     function whereInList() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" IN (?, ?, ?)",
-            bindings = [ 1, 2, 3 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
     }
 
     function whereInArray() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" IN (?, ?, ?)",
-            bindings = [ 1, 2, 3 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
     }
 
     function orWhereIn() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR ""ID"" IN (?, ?, ?)",
-            bindings = [ "foo", 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR ""ID"" IN (?, ?, ?)",
+            bindings: [ "foo", 1, 2, 3 ]
         };
     }
 
@@ -248,16 +215,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereInSubSelect() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""ID"" FROM ""USERS"" WHERE ""AGE"" > ?)",
-            bindings = [ 25 ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""ID"" FROM ""USERS"" WHERE ""AGE"" > ?)",
+            bindings: [ 25 ]
         };
     }
 
     function whereLike() {
-        return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""USERNAME"" LIKE ?",
-            bindings = [ "Jo%" ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""USERNAME"" LIKE ?", bindings: [ "Jo%" ] };
     }
 
     function innerJoin() {
@@ -278,8 +242,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function joinWithWhere() {
         return {
-            sql = "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""CONTACTS"".""BALANCE"" < ?",
-            bindings = [ 100 ]
+            sql: "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""CONTACTS"".""BALANCE"" < ?",
+            bindings: [ 100 ]
         };
     }
 
@@ -313,8 +277,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function complexJoin() {
         return {
-            sql = "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" OR ""USERS"".""NAME"" = ""CONTACTS"".""NAME"" OR ""USERS"".""ADMIN"" = ?",
-            bindings = [ 1 ]
+            sql: "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" OR ""USERS"".""NAME"" = ""CONTACTS"".""NAME"" OR ""USERS"".""ADMIN"" = ?",
+            bindings: [ 1 ]
         };
     }
 
@@ -336,57 +300,57 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function joinWithWhereIn() {
         return {
-            sql = "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" AND ""CONTACTS"".""ID"" IN (?, ?, ?)",
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" AND ""CONTACTS"".""ID"" IN (?, ?, ?)",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function joinWithOrWhereIn() {
         return {
-            sql = "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" OR ""CONTACTS"".""ID"" IN (?, ?, ?)",
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" OR ""CONTACTS"".""ID"" IN (?, ?, ?)",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function joinWithWhereNotIn() {
         return {
-            sql = "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" AND ""CONTACTS"".""ID"" NOT IN (?, ?, ?)",
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" AND ""CONTACTS"".""ID"" NOT IN (?, ?, ?)",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function joinWithOrWhereNotIn() {
         return {
-            sql = "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" OR ""CONTACTS"".""ID"" NOT IN (?, ?, ?)",
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" OR ""CONTACTS"".""ID"" NOT IN (?, ?, ?)",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function joinSub() {
         return {
-            sql = 'SELECT * FROM "USERS" AS "U" INNER JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) AS "C" ON "U"."ID" = "C"."ID"',
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" AS ""U"" INNER JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) AS ""C"" ON ""U"".""ID"" = ""C"".""ID""",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function leftJoinSub() {
         return {
-            sql = 'SELECT * FROM "USERS" AS "U" LEFT JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) AS "C" ON "U"."ID" = "C"."ID"',
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" AS ""U"" LEFT JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) AS ""C"" ON ""U"".""ID"" = ""C"".""ID""",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function rightJoinSub() {
         return {
-            sql = 'SELECT * FROM "USERS" AS "U" RIGHT JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) AS "C" ON "U"."ID" = "C"."ID"',
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" AS ""U"" RIGHT JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) AS ""C"" ON ""U"".""ID"" = ""C"".""ID""",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function crossJoinSub() {
         return {
-            sql = 'SELECT * FROM "USERS" AS "U" CROSS JOIN (SELECT "ID" FROM "CONTACTS" WHERE "ID" NOT IN (?, ?, ?)) AS "C"',
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT * FROM ""USERS"" AS ""U"" CROSS JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) AS ""C""",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
@@ -403,23 +367,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function havingBasic() {
-        return {
-            sql = "SELECT * FROM ""USERS"" HAVING ""EMAIL"" > ?",
-            bindings = [ 1 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" HAVING ""EMAIL"" > ?", bindings: [ 1 ] };
     }
 
     function havingRawColumn() {
-        return {
-            sql = "SELECT * FROM ""USERS"" GROUP BY ""EMAIL"" HAVING COUNT(email) > ?",
-            bindings = [ 1 ]
-        };
+        return { sql: "SELECT * FROM ""USERS"" GROUP BY ""EMAIL"" HAVING COUNT(email) > ?", bindings: [ 1 ] };
     }
 
     function havingRawValue() {
         return {
-            sql = "SELECT COUNT(*) AS ""total"" FROM ""ITEMS"" WHERE ""DEPARTMENT"" = ? GROUP BY ""CATEGORY"" HAVING ""TOTAL"" > 3",
-            bindings = [ "popular" ]
+            sql: "SELECT COUNT(*) AS ""total"" FROM ""ITEMS"" WHERE ""DEPARTMENT"" = ? GROUP BY ""CATEGORY"" HAVING ""TOTAL"" > 3",
+            bindings: [ "popular" ]
         };
     }
 
@@ -497,50 +455,50 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function union() {
         return {
-            sql = "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ?",
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ?",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function unionOrderBy() {
         return {
-            sql = "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? ORDER BY ""NAME"" ASC",
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? ORDER BY ""NAME"" ASC",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function unionAll() {
         return {
-            sql = "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION ALL SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION ALL SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ?",
-            bindings = [ 1, 2, 3 ]
+            sql: "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION ALL SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION ALL SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ?",
+            bindings: [ 1, 2, 3 ]
         };
     }
 
     function commonTableExpression() {
         return {
-            sql='WITH "USERSCTE" AS (SELECT * FROM "USERS" INNER JOIN "CONTACTS" ON "USERS"."ID" = "CONTACTS"."ID" WHERE "USERS"."AGE" > ?) SELECT * FROM "USERSCTE" WHERE "USER"."ID" NOT IN (?, ?)',
-            bindings= [ 25, 1, 2 ]
+            sql: "WITH ""USERSCTE"" AS (SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" WHERE ""USERS"".""AGE"" > ?) SELECT * FROM ""USERSCTE"" WHERE ""USER"".""ID"" NOT IN (?, ?)",
+            bindings: [ 25, 1, 2 ]
         };
     }
 
     function commonTableExpressionWithRecursive() {
         return {
-            sql='WITH "USERSCTE" AS (SELECT * FROM "USERS" INNER JOIN "CONTACTS" ON "USERS"."ID" = "CONTACTS"."ID" WHERE "USERS"."AGE" > ?) SELECT * FROM "USERSCTE" WHERE "USER"."ID" NOT IN (?, ?)',
-            bindings= [ 25, 1, 2 ]
+            sql: "WITH ""USERSCTE"" AS (SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" WHERE ""USERS"".""AGE"" > ?) SELECT * FROM ""USERSCTE"" WHERE ""USER"".""ID"" NOT IN (?, ?)",
+            bindings: [ 25, 1, 2 ]
         };
     }
 
     function commonTableExpressionMultipleCTEsWithRecursive() {
         return {
-            sql='WITH "USERSCTE" AS (SELECT * FROM "USERS" INNER JOIN "CONTACTS" ON "USERS"."ID" = "CONTACTS"."ID" WHERE "USERS"."AGE" > ?), "ORDERCTE" AS (SELECT * FROM "ORDERS" WHERE "CREATED" > ?) SELECT * FROM "USERSCTE" WHERE "USER"."ID" NOT IN (?, ?)',
-            bindings= [ 25, "2018-04-30", 1, 2 ]
+            sql: "WITH ""USERSCTE"" AS (SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" WHERE ""USERS"".""AGE"" > ?), ""ORDERCTE"" AS (SELECT * FROM ""ORDERS"" WHERE ""CREATED"" > ?) SELECT * FROM ""USERSCTE"" WHERE ""USER"".""ID"" NOT IN (?, ?)",
+            bindings: [ 25, "2018-04-30", 1, 2 ]
         };
     }
 
     function commonTableExpressionBindingOrder() {
         return {
-            sql='WITH "ORDERCTE" AS (SELECT * FROM "ORDERS" WHERE "CREATED" > ?), "USERSCTE" AS (SELECT * FROM "USERS" INNER JOIN "CONTACTS" ON "USERS"."ID" = "CONTACTS"."ID" WHERE "USERS"."AGE" > ?) SELECT * FROM "USERSCTE" WHERE "USER"."ID" NOT IN (?, ?)',
-            bindings= [ "2018-04-30", 25, 1, 2 ]
+            sql: "WITH ""ORDERCTE"" AS (SELECT * FROM ""ORDERS"" WHERE ""CREATED"" > ?), ""USERSCTE"" AS (SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" WHERE ""USERS"".""AGE"" > ?) SELECT * FROM ""USERSCTE"" WHERE ""USER"".""ID"" NOT IN (?, ?)",
+            bindings: [ "2018-04-30", 25, 1, 2 ]
         };
     }
 
@@ -569,79 +527,62 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function insertSingleColumn() {
-        return {
-            sql = "INSERT ALL INTO ""USERS"" (""EMAIL"") VALUES (?) SELECT 1 FROM dual",
-            bindings = [ "foo" ]
-        };
+        return { sql: "INSERT ALL INTO ""USERS"" (""EMAIL"") VALUES (?) SELECT 1 FROM dual", bindings: [ "foo" ] };
     }
 
     function insertMultipleColumns() {
         return {
-            sql = "INSERT ALL INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?) SELECT 1 FROM dual",
-            bindings = [ "foo", "bar" ]
+            sql: "INSERT ALL INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?) SELECT 1 FROM dual",
+            bindings: [ "foo", "bar" ]
         };
     }
 
     function batchInsert() {
         return {
-            sql = "INSERT ALL INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?) INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?) SELECT 1 FROM dual",
-            bindings = [ "foo", "bar", "baz", "bleh" ]
+            sql: "INSERT ALL INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?) INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?) SELECT 1 FROM dual",
+            bindings: [ "foo", "bar", "baz", "bleh" ]
         };
     }
 
     function insertWithRaw() {
         return {
-            sql = "INSERT ALL INTO ""USERS"" (""CREATED_DATE"", ""EMAIL"") VALUES (now(), ?) SELECT 1 FROM dual",
-            bindings = [ "john@example.com" ]
+            sql: "INSERT ALL INTO ""USERS"" (""CREATED_DATE"", ""EMAIL"") VALUES (now(), ?) SELECT 1 FROM dual",
+            bindings: [ "john@example.com" ]
         };
     }
 
     function returning() {
-        return {
-            exception = "UnsupportedOperation"
-        };
+        return { exception: "UnsupportedOperation" };
     }
 
     function updateAllRecords() {
-        return {
-            sql = "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""NAME"" = ?",
-            bindings = [ "foo", "bar" ]
-        };
+        return { sql: "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""NAME"" = ?", bindings: [ "foo", "bar" ] };
     }
 
     function updateWithWhere() {
         return {
-            sql = "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""NAME"" = ? WHERE ""ID"" = ?",
-            bindings = [ "foo", "bar", 1 ]
+            sql: "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""NAME"" = ? WHERE ""ID"" = ?",
+            bindings: [ "foo", "bar", 1 ]
         };
     }
 
     function updateWithRaw() {
-        return {
-            sql = "UPDATE ""HITS"" SET ""COUNT"" = count + 1 WHERE ""PAGE"" = ?",
-            bindings = [ "someUrl" ]
-        };
+        return { sql: "UPDATE ""HITS"" SET ""COUNT"" = count + 1 WHERE ""PAGE"" = ?", bindings: [ "someUrl" ] };
     }
 
     function addUpdate() {
         return {
-            sql = "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""FOO"" = ?, ""NAME"" = ? WHERE ""ID"" = ?",
-            bindings = [ "foo", "yes", "bar", 1 ]
+            sql: "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""FOO"" = ?, ""NAME"" = ? WHERE ""ID"" = ?",
+            bindings: [ "foo", "yes", "bar", 1 ]
         };
     }
 
     function updateOrInsertNotExists() {
-        return {
-            sql = "INSERT ALL INTO ""USERS"" (""NAME"") VALUES (?) SELECT 1 FROM dual",
-            bindings = [ "baz" ]
-        };
+        return { sql: "INSERT ALL INTO ""USERS"" (""NAME"") VALUES (?) SELECT 1 FROM dual", bindings: [ "baz" ] };
     }
 
     function updateOrInsertExists() {
-        return {
-            sql = "UPDATE ""USERS"" SET ""NAME"" = ? WHERE ""EMAIL"" = ?",
-            bindings = [ "baz", "foo" ]
-        };
+        return { sql: "UPDATE ""USERS"" SET ""NAME"" = ? WHERE ""EMAIL"" = ?", bindings: [ "baz", "foo" ] };
     }
 
     function deleteAll() {
@@ -649,23 +590,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function deleteById() {
-        return {
-            sql = "DELETE FROM ""USERS"" WHERE ""ID"" = ?",
-            bindings = [ 1 ]
-        };
+        return { sql: "DELETE FROM ""USERS"" WHERE ""ID"" = ?", bindings: [ 1 ] };
     }
 
     function deleteWhere() {
-        return {
-            sql = "DELETE FROM ""USERS"" WHERE ""EMAIL"" = ?",
-            bindings = [ "foo" ]
-        };
+        return { sql: "DELETE FROM ""USERS"" WHERE ""EMAIL"" = ?", bindings: [ "foo" ] };
     }
 
     function whereBuilderInstance() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR ""ID"" = (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
-            bindings = [ "foo", "bar" ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR ""ID"" = (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
+            bindings: [ "foo", "bar" ]
         };
     }
 
@@ -679,36 +614,36 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereBetweenClosures() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN (SELECT MIN(id) FROM ""USERS"" WHERE ""EMAIL"" = ?) AND (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
-            bindings = [ "bar", "bar" ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN (SELECT MIN(id) FROM ""USERS"" WHERE ""EMAIL"" = ?) AND (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
+            bindings: [ "bar", "bar" ]
         };
     }
 
     function whereExistsBuilderInstance() {
         return {
-            sql = "SELECT * FROM ""ORDERS"" WHERE EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")",
-            bindings = []
+            sql: "SELECT * FROM ""ORDERS"" WHERE EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")",
+            bindings: []
         };
     }
 
     function whereBetweenBuilderInstances() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN (SELECT MIN(id) FROM ""USERS"" WHERE ""EMAIL"" = ?) AND (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
-            bindings = [ "bar", "bar" ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN (SELECT MIN(id) FROM ""USERS"" WHERE ""EMAIL"" = ?) AND (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
+            bindings: [ "bar", "bar" ]
         };
     }
 
     function whereBetweenMixed() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN (SELECT MIN(id) FROM ""USERS"" WHERE ""EMAIL"" = ?) AND (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
-            bindings = [ "bar", "bar" ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN (SELECT MIN(id) FROM ""USERS"" WHERE ""EMAIL"" = ?) AND (SELECT MAX(id) FROM ""USERS"" WHERE ""EMAIL"" = ?)",
+            bindings: [ "bar", "bar" ]
         };
     }
 
     function whereInBuilderInstance() {
         return {
-            sql = "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""ID"" FROM ""USERS"" WHERE ""AGE"" > ?)",
-            bindings = [ 25 ]
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""ID"" FROM ""USERS"" WHERE ""AGE"" > ?)",
+            bindings: [ 25 ]
         };
     }
 
@@ -729,11 +664,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     private function getBuilder() {
-        variables.grammar = getMockBox()
-            .createMock( "qb.models.Grammars.OracleGrammar" )
-            .init();
-        var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" )
-            .init( grammar );
+        variables.grammar = getMockBox().createMock( "qb.models.Grammars.OracleGrammar" ).init();
+        var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" ).init( grammar );
         return builder;
     }
 

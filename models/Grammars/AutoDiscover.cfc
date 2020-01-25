@@ -4,9 +4,9 @@ component singleton {
     property name="grammar";
 
     function autoDiscoverGrammar() {
-        cfdbinfo( type = "Version", name = "local.dbInfo" );
+        cfdbinfo(type="Version", name="local.dbInfo");
 
-        switch( dbInfo.DATABASE_PRODUCTNAME ) {
+        switch ( dbInfo.DATABASE_PRODUCTNAME ) {
             case "MySQL":
                 return wirebox.getInstance( "MySQLGrammar@qb" );
             case "PostgreSQL":
@@ -21,9 +21,10 @@ component singleton {
     }
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
-        if ( ! structKeyExists( variables, "grammar" ) ) {
+        if ( !structKeyExists( variables, "grammar" ) ) {
             variables.grammar = autoDiscoverGrammar();
         }
         return invoke( variables.grammar, missingMethodName, missingMethodArguments );
     }
+
 }

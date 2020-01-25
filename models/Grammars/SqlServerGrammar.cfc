@@ -6,100 +6,106 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     this.parameterLimit = 2000;
 
     /**
-    * The different components of a select statement in the order of compilation.
-    */
+     * The different components of a select statement in the order of compilation.
+     */
     variables.selectComponents = [
-        "commonTables", "aggregate", "columns", "from", "joins", "wheres",
-        "groups", "havings", "unions", "orders", "offsetValue", "limitValue"
+        "commonTables",
+        "aggregate",
+        "columns",
+        "from",
+        "joins",
+        "wheres",
+        "groups",
+        "havings",
+        "unions",
+        "orders",
+        "offsetValue",
+        "limitValue"
     ];
 
     /**
-    * Compile a Builder's query into an insert string.
-    *
-    * @query The Builder instance.
-    * @columns The array of columns into which to insert.
-    * @values The array of values to insert.
-    *
-    * @return string
-    */
-    public string function compileInsert(
-        required query,
-        required array columns,
-        required array values
-    ) {
+     * Compile a Builder's query into an insert string.
+     *
+     * @query The Builder instance.
+     * @columns The array of columns into which to insert.
+     * @values The array of values to insert.
+     *
+     * @return string
+     */
+    public string function compileInsert( required query, required array columns, required array values ) {
         var columnsString = columns.map( wrapColumn ).toList( ", " );
-        var returningColumns = query.getReturning().map( function( column ) {
-            return "INSERTED." & wrapColumn( column );
-        } ).toList( ", " );
+        var returningColumns = query
+            .getReturning()
+            .map( function( column ) {
+                return "INSERTED." & wrapColumn( column );
+            } )
+            .toList( ", " );
         var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
-        var placeholderString = values.map( function( valueArray ) {
-            return "(" & valueArray.map( function( item ) {
-                if ( getUtils().isExpression( item ) ) {
-                    return item.getSQL();
-                } else {
-                    return "?";
-                }
-            } ).toList( ", " ) & ")";
-        } ).toList( ", ");
-        return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#)#returningClause# VALUES #placeholderString#" );
+        var placeholderString = values
+            .map( function( valueArray ) {
+                return "(" & valueArray
+                    .map( function( item ) {
+                        if ( getUtils().isExpression( item ) ) {
+                            return item.getSQL();
+                        } else {
+                            return "?";
+                        }
+                    } )
+                    .toList( ", " ) & ")";
+            } )
+            .toList( ", " );
+        return trim(
+            "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#)#returningClause# VALUES #placeholderString#"
+        );
     }
 
     /**
-    * Compiles the Common Table Expressions (CTEs).
-    *
-    * @query The Builder instance.
-    * @columns The selected columns.
-    *
-    * @return string
-    */
-    private string function compileCommonTables(
-        required query,
-        required array commonTables
-    ) {
+     * Compiles the Common Table Expressions (CTEs).
+     *
+     * @query The Builder instance.
+     * @columns The selected columns.
+     *
+     * @return string
+     */
+    private string function compileCommonTables( required query, required array commonTables ) {
         var results = getCommonTableExpressionSQL(
-            query=arguments.query,
-            commonTables=arguments.commonTables,
-            supportsRecursiveKeyword=false
+            query = arguments.query,
+            commonTables = arguments.commonTables,
+            supportsRecursiveKeyword = false
         );
 
         // the semi-colon can avoid some issues with the JDBC drivers
-        return (results.len() ? ";" : "") & results;
+        return ( results.len() ? ";" : "" ) & results;
     }
 
     /**
-    * Compiles the columns portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @columns The selected columns.
-    *
-    * @return string
-    */
-    private string function compileColumns(
-        required query,
-        required array columns
-    ) {
-        if ( ! query.getAggregate().isEmpty() ) {
+     * Compiles the columns portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @columns The selected columns.
+     *
+     * @return string
+     */
+    private string function compileColumns( required query, required array columns ) {
+        if ( !query.getAggregate().isEmpty() ) {
             return "";
         }
         var select = query.getDistinct() ? "SELECT DISTINCT " : "SELECT ";
-        if ( ! isNull( query.getLimitValue() ) && isNull( query.getOffsetValue() ) ) {
+        if ( !isNull( query.getLimitValue() ) && isNull( query.getOffsetValue() ) ) {
             select &= "TOP (#query.getLimitValue()#) ";
         }
         return select & columns.map( wrapColumn ).toList( ", " );
     }
 
     /**
-    * Compiles the order by portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @orders The where clauses.
-    *
-    * @return string
-    */
-    private string function compileOrders(
-        required query,
-        required array orders
-    ) {
+     * Compiles the order by portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @orders The where clauses.
+     *
+     * @return string
+     */
+    private string function compileOrders( required query, required array orders ) {
         if ( orders.isEmpty() ) {
             if ( isNull( query.getOffsetValue() ) ) {
                 return "";
@@ -108,7 +114,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
 
         var orderBys = orders.map( function( orderBy ) {
-            switch( orderBy.direction ) {
+            switch ( orderBy.direction ) {
                 case "raw":
                     return orderBy.column.getSQL();
                 case "sub":
@@ -122,13 +128,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     /**
-    * Compiles the offset portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @offsetValue The offset value.
-    *
-    * @return string
-    */
+     * Compiles the offset portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @offsetValue The offset value.
+     *
+     * @return string
+     */
     private string function compileOffsetValue( required query, offsetValue ) {
         if ( isNull( query.getOffsetValue() ) ) {
             return "";
@@ -138,27 +144,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     /**
-    * Compiles the limit portion of a sql statement.
-    *
-    * @query The Builder instance.
-    * @limitValue The limit clauses.
-    *
-    * @return string
-    */
+     * Compiles the limit portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @limitValue The limit clauses.
+     *
+     * @return string
+     */
     private string function compileLimitValue( required query, limitValue ) {
-        if ( ! isNull( arguments.limitValue ) && ! isNull( query.getOffsetValue() ) ) {
+        if ( !isNull( arguments.limitValue ) && !isNull( query.getOffsetValue() ) ) {
             return "FETCH NEXT #limitValue# ROWS ONLY";
         }
         return "";
     }
 
     /**
-    * Parses and wraps a value from the Builder for use in a sql statement.
-    *
-    * @table The value to parse and wrap.
-    *
-    * @return string
-    */
+     * Parses and wraps a value from the Builder for use in a sql statement.
+     *
+     * @table The value to parse and wrap.
+     *
+     * @return string
+     */
     public string function wrapValue( required any value ) {
         if ( value == "*" ) {
             return value;
@@ -167,33 +173,37 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     /**
-    * Compile a Builder's query into an update string.
-    *
-    * @query The Builder instance.
-    * @columns The array of columns into which to insert.
-    *
-    * @return string
-    */
-    public string function compileUpdate(
-        required query,
-        required array columns,
-        required struct updateMap
-    ) {
-        var updateList = columns.map( function( column ) {
-            var value = updateMap[ column ];
-            return "#wrapColumn( column )# = #utils.isExpression( value ) ? value.getSql() : '?'#";
-        } ).toList( ", " );
+     * Compile a Builder's query into an update string.
+     *
+     * @query The Builder instance.
+     * @columns The array of columns into which to insert.
+     *
+     * @return string
+     */
+    public string function compileUpdate( required query, required array columns, required struct updateMap ) {
+        var updateList = columns
+            .map( function( column ) {
+                var value = updateMap[ column ];
+                return "#wrapColumn( column )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+            } )
+            .toList( ", " );
 
-        return arrayToList( arrayFilter( [
-            "UPDATE",
-            isNull( query.getLimitValue() ) ? "" : "TOP (#query.getLimitValue()#)",
-            wrapTable( query.getFrom() ),
-            "SET",
-            updateList,
-            compileWheres( query, query.getWheres() )
-        ], function( str ) {
-           return str != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "UPDATE",
+                    isNull( query.getLimitValue() ) ? "" : "TOP (#query.getLimitValue()#)",
+                    wrapTable( query.getFrom() ),
+                    "SET",
+                    updateList,
+                    compileWheres( query, query.getWheres() )
+                ],
+                function( str ) {
+                    return str != "";
+                }
+            ),
+            " "
+        );
     }
 
     function modifyUnsigned( column ) {
@@ -205,9 +215,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function generateDefault( column, blueprint ) {
-        return column.getDefault() != "" ?
-            "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" :
-            "";
+        return column.getDefault() != "" ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
     }
 
     function wrapDefaultType( column ) {
@@ -228,22 +236,31 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function compileDropColumn( blueprint, commandParameters ) {
         if ( isSimpleValue( commandParameters.name ) ) {
-            return arrayToList( arrayFilter( [
-                "ALTER TABLE",
-                wrapTable( blueprint.getTable() ),
-                "DROP COLUMN",
-                wrapColumn( commandParameters.name )
-            ], function( item ) {
-                return item != "";
-            } ), " " );
+            return arrayToList(
+                arrayFilter(
+                    [
+                        "ALTER TABLE",
+                        wrapTable( blueprint.getTable() ),
+                        "DROP COLUMN",
+                        wrapColumn( commandParameters.name )
+                    ],
+                    function( item ) {
+                        return item != "";
+                    }
+                ),
+                " "
+            );
         } else {
             var statements = [
-                arrayToList( [
-                    "ALTER TABLE",
-                    wrapTable( blueprint.getTable() ),
-                    "DROP COLUMN",
-                    wrapColumn( commandParameters.name.getName() )
-                ], " " )
+                arrayToList(
+                    [
+                        "ALTER TABLE",
+                        wrapTable( blueprint.getTable() ),
+                        "DROP COLUMN",
+                        wrapColumn( commandParameters.name.getName() )
+                    ],
+                    " "
+                )
             ];
             if ( commandParameters.name.getDefault() != "" ) {
                 statements.prepend(
@@ -271,14 +288,20 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileModifyColumn( blueprint, commandParameters ) {
-        return arrayToList( arrayFilter( [
-            "ALTER TABLE",
-            wrapTable( blueprint.getTable() ),
-            "ALTER COLUMN",
-            compileCreateColumn( commandParameters.to, blueprint )
-        ], function( item ) {
-            return item != "";
-        } ), " " );
+        return arrayToList(
+            arrayFilter(
+                [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "ALTER COLUMN",
+                    compileCreateColumn( commandParameters.to, blueprint )
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
     }
 
     function getAllTableNames( options, schema = "" ) {
@@ -298,18 +321,26 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function compileDropAllObjects( options, schema = "" ) {
         var tables = getAllTableNames( options, schema );
-        var tableList = arrayToList( arrayMap( tables, function( table ) {
-            return wrapTable( table );
-        } ), ", " );
-        return arrayFilter( [
-            "DECLARE @sql NVARCHAR(MAX) = N'';
+        var tableList = arrayToList(
+            arrayMap( tables, function( table ) {
+                return wrapTable( table );
+            } ),
+            ", "
+        );
+        return arrayFilter(
+            [
+                "DECLARE @sql NVARCHAR(MAX) = N'';
             SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_NAME(parent_object_id))
                 + ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
             FROM sys.foreign_keys;
 
             EXEC sp_executesql @sql;",
-            arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#"
-        ], function( sql ) { return sql != ""; } );
+                arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#"
+            ],
+            function( sql ) {
+                return sql != "";
+            }
+        );
     }
 
     function typeBigInteger( column ) {

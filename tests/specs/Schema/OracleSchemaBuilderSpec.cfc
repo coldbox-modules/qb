@@ -81,7 +81,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function enum() {
-        return [ "CREATE TABLE ""EMPLOYEES"" (""TSHIRT_SIZE"" VARCHAR2(255) NOT NULL, CONSTRAINT ""ENUM_EMPLOYEES_TSHIRT_SIZE"" CHECK (""TSHIRT_SIZE"" IN ('S', 'M', 'L', 'XL', 'XXL')))" ];
+        return [
+            "CREATE TABLE ""EMPLOYEES"" (""TSHIRT_SIZE"" VARCHAR2(255) NOT NULL, CONSTRAINT ""ENUM_EMPLOYEES_TSHIRT_SIZE"" CHECK (""TSHIRT_SIZE"" IN ('S', 'M', 'L', 'XL', 'XXL')))"
+        ];
     }
 
     function float() {
@@ -253,7 +255,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function timestampsTz() {
-        return [ "CREATE TABLE ""POSTS"" (""CREATEDDATE"" TIMESTAMP WITH TIME ZONE NOT NULL, ""MODIFIEDDATE"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
+        return [
+            "CREATE TABLE ""POSTS"" (""CREATEDDATE"" TIMESTAMP WITH TIME ZONE NOT NULL, ""MODIFIEDDATE"" TIMESTAMP WITH TIME ZONE NOT NULL)"
+        ];
     }
 
     function tinyIncrements() {
@@ -352,19 +356,27 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function columnUnique() {
-        return [ "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME""))" ];
+        return [
+            "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME""))"
+        ];
     }
 
     function tableUnique() {
-        return [ "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME""))" ];
+        return [
+            "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME""))"
+        ];
     }
 
     function uniqueOverridingName() {
-        return [ "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_UNAME"" UNIQUE (""USERNAME""))" ];
+        return [
+            "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_UNAME"" UNIQUE (""USERNAME""))"
+        ];
     }
 
     function uniqueMultipleColumns() {
-        return [ "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_FIRST_NAME_LAST_NAME"" UNIQUE (""FIRST_NAME"", ""LAST_NAME""))" ];
+        return [
+            "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_FIRST_NAME_LAST_NAME"" UNIQUE (""FIRST_NAME"", ""LAST_NAME""))"
+        ];
     }
 
     function addConstraint() {
@@ -379,7 +391,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function renameConstraint() {
-        return [ "ALTER TABLE ""USERS"" RENAME CONSTRAINT ""UNQ_USERS_FIRST_NAME_LAST_NAME"" TO ""UNQ_USERS_FULL_NAME""" ];
+        return [
+            "ALTER TABLE ""USERS"" RENAME CONSTRAINT ""UNQ_USERS_FIRST_NAME_LAST_NAME"" TO ""UNQ_USERS_FULL_NAME"""
+        ];
     }
 
     function dropConstraintFromName() {
@@ -416,35 +430,51 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function columnPrimaryKey() {
-        return [ "CREATE TABLE ""USERS"" (""UUID"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_USERS_UUID"" PRIMARY KEY (""UUID""))" ];
+        return [
+            "CREATE TABLE ""USERS"" (""UUID"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_USERS_UUID"" PRIMARY KEY (""UUID""))"
+        ];
     }
 
     function tablePrimaryKey() {
-        return [ "CREATE TABLE ""USERS"" (""UUID"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_USERS_UUID"" PRIMARY KEY (""UUID""))" ];
+        return [
+            "CREATE TABLE ""USERS"" (""UUID"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_USERS_UUID"" PRIMARY KEY (""UUID""))"
+        ];
     }
 
     function compositePrimaryKey() {
-        return [ "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_USERS_FIRST_NAME_LAST_NAME"" PRIMARY KEY (""FIRST_NAME"", ""LAST_NAME""))" ];
+        return [
+            "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_USERS_FIRST_NAME_LAST_NAME"" PRIMARY KEY (""FIRST_NAME"", ""LAST_NAME""))"
+        ];
     }
 
     function overridePrimaryKeyIndexName() {
-        return [ "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_FULL_NAME"" PRIMARY KEY (""FIRST_NAME"", ""LAST_NAME""))" ];
+        return [
+            "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_FULL_NAME"" PRIMARY KEY (""FIRST_NAME"", ""LAST_NAME""))"
+        ];
     }
 
     function columnForeignKey() {
-        return [ "CREATE TABLE ""POSTS"" (""AUTHOR_ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""FK_POSTS_AUTHOR_ID"" FOREIGN KEY (""AUTHOR_ID"") REFERENCES ""USERS"" (""ID"") ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE ""POSTS"" (""AUTHOR_ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""FK_POSTS_AUTHOR_ID"" FOREIGN KEY (""AUTHOR_ID"") REFERENCES ""USERS"" (""ID"") ON DELETE NO ACTION)"
+        ];
     }
 
     function tableForeignKey() {
-        return [ "CREATE TABLE ""POSTS"" (""AUTHOR_ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""FK_POSTS_AUTHOR_ID"" FOREIGN KEY (""AUTHOR_ID"") REFERENCES ""USERS"" (""ID"") ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE ""POSTS"" (""AUTHOR_ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""FK_POSTS_AUTHOR_ID"" FOREIGN KEY (""AUTHOR_ID"") REFERENCES ""USERS"" (""ID"") ON DELETE NO ACTION)"
+        ];
     }
 
     function overrideColumnForeignKeyIndexName() {
-        return [ "CREATE TABLE ""POSTS"" (""AUTHOR_ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""FK_AUTHOR"" FOREIGN KEY (""AUTHOR_ID"") REFERENCES ""USERS"" (""ID"") ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE ""POSTS"" (""AUTHOR_ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""FK_AUTHOR"" FOREIGN KEY (""AUTHOR_ID"") REFERENCES ""USERS"" (""ID"") ON DELETE NO ACTION)"
+        ];
     }
 
     function overrideTableForeignKeyIndexName() {
-        return [ "CREATE TABLE ""POSTS"" (""AUTHOR_ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""FK_AUTHOR"" FOREIGN KEY (""AUTHOR_ID"") REFERENCES ""USERS"" (""ID"") ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE ""POSTS"" (""AUTHOR_ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""FK_AUTHOR"" FOREIGN KEY (""AUTHOR_ID"") REFERENCES ""USERS"" (""ID"") ON DELETE NO ACTION)"
+        ];
     }
 
     function renameTable() {
@@ -519,16 +549,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function dropsMultipleColumns() {
-        return [
-            "ALTER TABLE ""USERS"" DROP COLUMN ""USERNAME""",
-            "ALTER TABLE ""USERS"" DROP COLUMN ""PASSWORD"""
-        ];
+        return [ "ALTER TABLE ""USERS"" DROP COLUMN ""USERNAME""", "ALTER TABLE ""USERS"" DROP COLUMN ""PASSWORD""" ];
     }
 
     function dropColumnWithConstraint() {
-        return [
-            "ALTER TABLE ""USERS"" DROP COLUMN ""SOMEFLAG"""
-        ];
+        return [ "ALTER TABLE ""USERS"" DROP COLUMN ""SOMEFLAG""" ];
     }
 
     function hasTable() {
@@ -544,13 +569,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasColumnInSchema() {
-        return [ "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ? AND ""OWNER"" = ?" ];
+        return [
+            "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ? AND ""OWNER"" = ?"
+        ];
     }
 
     function createView() {
-        return [
-            "CREATE VIEW ""ACTIVE_USERS"" AS (SELECT * FROM ""USERS"" WHERE ""ACTIVE"" = ?)"
-        ];
+        return [ "CREATE VIEW ""ACTIVE_USERS"" AS (SELECT * FROM ""USERS"" WHERE ""ACTIVE"" = ?)" ];
     }
 
     function alterView() {
@@ -561,17 +586,16 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function dropView() {
-        return [
-            "DROP VIEW ""ACTIVE_USERS"""
-        ];
+        return [ "DROP VIEW ""ACTIVE_USERS""" ];
     }
 
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
-        arguments.mockGrammar = isNull( arguments.mockGrammar ) ?
-            getMockBox().createMock( "qb.models.Grammars.OracleGrammar" ).init( utils ) :
-            arguments.mockGrammar;
-        var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
+        arguments.mockGrammar = isNull( arguments.mockGrammar ) ? getMockBox()
+            .createMock( "qb.models.Grammars.OracleGrammar" )
+            .init( utils ) : arguments.mockGrammar;
+        var builder = getMockBox()
+            .createMock( "qb.models.Schema.SchemaBuilder" )
             .init( arguments.mockGrammar );
         variables.mockGrammar = arguments.mockGrammar;
         return builder;

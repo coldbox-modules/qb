@@ -18,11 +18,13 @@ before_install:
   - sudo echo "deb http://downloads.ortussolutions.com/debs/noarch /" | sudo tee -a /etc/apt/sources.list.d/commandbox.list
 install:
   - sudo apt-get update && sudo apt-get --assume-yes install commandbox jq rsync
+  - box install commandbox-cfformat
   - box install
 before_script:
   - box server start name=qb cfengine=$ENGINE port=8500
 script:
   - box testbox run runner='http://127.0.0.1:8500/tests/runner.cfm'
+  - box run-script format:check
 after_success:
   - box install commandbox-docbox,commandbox-semantic-release
   - box config set endpoints.forgebox.APIToken=${FORGEBOX_TOKEN}

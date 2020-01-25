@@ -1,4 +1,5 @@
 component extends="testbox.system.BaseSpec" {
+
     function run() {
         describe( "select methods", function() {
             beforeEach( function() {
@@ -7,7 +8,7 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "select()", function() {
-                it ( "defaults to all columns", function() {
+                it( "defaults to all columns", function() {
                     expect( query.getColumns() ).toBe( [ "*" ] );
                 } );
 
@@ -23,10 +24,12 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "trims a list before splitting it", function() {
-                        query.select( "
+                        query.select(
+                            "
                             ::some_column::, ::another_column::
                             ,::third_column::
-                        " );
+                        "
+                        );
                         expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::", "::third_column::" ] );
                     } );
 
@@ -63,15 +66,14 @@ component extends="testbox.system.BaseSpec" {
 
             describe( "distinct()", function() {
                 it( "sets the distinct flag", function() {
-                    expect( query.getDistinct() ).toBe( false,
-                        "Queries are not distinct by default" );
+                    expect( query.getDistinct() ).toBe( false, "Queries are not distinct by default" );
 
                     query.distinct();
 
-                    expect( query.getDistinct() ).toBe( true,
-                        "Distinct should be set to true" );
+                    expect( query.getDistinct() ).toBe( true, "Distinct should be set to true" );
                 } );
             } );
         } );
     }
+
 }

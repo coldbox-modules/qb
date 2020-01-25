@@ -1,4 +1,5 @@
 component extends="testbox.system.BaseSpec" {
+
     function run() {
         describe( "join clause", function() {
             beforeEach( function() {
@@ -6,16 +7,30 @@ component extends="testbox.system.BaseSpec" {
             } );
             describe( "initialization", function() {
                 it( "requires a parentQuery, type, and a table", function() {
-                    expect( function() { new qb.models.Query.JoinClause(); } ).toThrow();
-                    expect( function() { new qb.models.Query.JoinClause( "inner" ); } ).toThrow();
-                    expect( function() { new qb.models.Query.JoinClause( "inner", "sometable" ); } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause();
+                    } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( "inner" );
+                    } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( "inner", "sometable" );
+                    } ).toThrow();
                 } );
 
                 it( "validates the type is a valid sql join type", function() {
-                    expect( function() { new qb.models.Query.JoinClause( query, "gibberish", "sometable" ); } ).toThrow();
-                    expect( function() { new qb.models.Query.JoinClause( query, "left typo", "sometable" ); } ).toThrow();
-                    expect( function() { new qb.models.Query.JoinClause( query, "left", "sometable" ); } ).notToThrow();
-                    expect( function() { new qb.models.Query.JoinClause( query, "left outer", "sometable" ); } ).notToThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( query, "gibberish", "sometable" );
+                    } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( query, "left typo", "sometable" );
+                    } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( query, "left", "sometable" );
+                    } ).notToThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( query, "left outer", "sometable" );
+                    } ).notToThrow();
                 } );
             } );
 
@@ -32,7 +47,13 @@ component extends="testbox.system.BaseSpec" {
 
                 describe( "on()", function() {
                     it( "can add a single join condition", function() {
-                        join.on( "first.id", "=", "second.first_id", "and", false );
+                        join.on(
+                            "first.id",
+                            "=",
+                            "second.first_id",
+                            "and",
+                            false
+                        );
 
                         var clauses = join.getWheres();
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
@@ -67,7 +88,10 @@ component extends="testbox.system.BaseSpec" {
                         var clauseOne = clauses[ 1 ];
                         expect( clauseOne.first ).toBe( "first.id", "First column should be [first.id]" );
                         expect( clauseOne.operator ).toBe( "=", "Operator should be [=]" );
-                        expect( clauseOne.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                        expect( clauseOne.second ).toBe(
+                            "second.first_id",
+                            "First column should be [second.first_id]"
+                        );
                         expect( clauseOne.combinator ).toBe( "and" );
 
                         var clauseTwo = clauses[ 2 ];
@@ -96,9 +120,15 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
 
                         var clause = clauses[ 1 ];
-                        expect( clause.first ).toBe( "first.another_value", "First column should be [first.another_value]" );
+                        expect( clause.first ).toBe(
+                            "first.another_value",
+                            "First column should be [first.another_value]"
+                        );
                         expect( clause.operator ).toBe( ">=", "Operator should be [>=]" );
-                        expect( clause.second ).toBe( "second.another_value", "First column should be [second.another_value]" );
+                        expect( clause.second ).toBe(
+                            "second.another_value",
+                            "First column should be [second.another_value]"
+                        );
                         expect( clause.combinator ).toBe( "or" );
                     } );
                 } );
@@ -163,4 +193,5 @@ component extends="testbox.system.BaseSpec" {
             } );
         } );
     }
+
 }

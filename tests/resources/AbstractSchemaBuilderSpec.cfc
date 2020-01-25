@@ -38,7 +38,11 @@ component extends="testbox.system.BaseSpec" {
                             table.unicodeString( "first_name" );
                             table.unicodeString( "last_name" );
                             table.unicodeString( "password", 100 );
-                            table;
+                            table
+                                .unsignedInteger( "country_id" )
+                                .references( "id" )
+                                .onTable( "countries" )
+                                .onDelete( "CASCADE" );
                             table.timestamp( "created_date" ).setDefault( "CURRENT_TIMESTAMP" );
                             table.timestamp( "modified_date" ).setDefault( "CURRENT_TIMESTAMP" );
                         },
@@ -1301,7 +1305,10 @@ component extends="testbox.system.BaseSpec" {
                             return schema.create(
                                 "posts",
                                 function( table ) {
-                                    table;
+                                    table
+                                        .unsignedInteger( "author_id" )
+                                        .references( "id" )
+                                        .onTable( "users" );
                                 },
                                 {},
                                 false
@@ -1315,7 +1322,10 @@ component extends="testbox.system.BaseSpec" {
                                 "posts",
                                 function( table ) {
                                     table.unsignedInteger( "author_id" );
-                                    table;
+                                    table
+                                        .foreignKey( "author_id" )
+                                        .references( "id" )
+                                        .onTable( "users" );
                                 },
                                 {},
                                 false
@@ -1328,7 +1338,11 @@ component extends="testbox.system.BaseSpec" {
                             return schema.create(
                                 "posts",
                                 function( table ) {
-                                    table;
+                                    table
+                                        .unsignedInteger( "author_id" )
+                                        .references( "id" )
+                                        .onTable( "users" )
+                                        .setName( "fk_author" );
                                 },
                                 {},
                                 false
@@ -1342,7 +1356,11 @@ component extends="testbox.system.BaseSpec" {
                                 "posts",
                                 function( table ) {
                                     table.unsignedInteger( "author_id" );
-                                    table;
+                                    table
+                                        .foreignKey( "author_id" )
+                                        .references( "id" )
+                                        .onTable( "users" )
+                                        .setName( "fk_author" );
                                 },
                                 {},
                                 false

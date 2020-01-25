@@ -25,10 +25,9 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "retreives bindings in a flat array", function() {
-                query {
+                query.join( "second", function( join ) {
                     join.where( "second.locale", "=", "en-US" );
-                }
-                ).where( "first.quantity", ">=", 10 );
+                } ).where( "first.quantity", ">=", 10 );
 
                 var bindings = query.getBindings();
                 expect( bindings ).toBeArray();
@@ -46,10 +45,9 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "retreives a map of bindings", function() {
-                query {
+                query.join( "second", function( join ) {
                     join.where( "second.locale", "=", "en-US" );
-                }
-                ).where( "first.quantity", ">=", "10" );
+                } ).where( "first.quantity", ">=", "10" );
 
                 var bindings = query.getRawBindings();
 

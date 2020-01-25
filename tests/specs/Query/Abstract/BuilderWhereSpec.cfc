@@ -40,7 +40,14 @@ component extends="testbox.system.BaseSpec" {
                 } );
 
                 it( "can be specify the boolean combinator", function() {
-                    query;
+                    query
+                        .where( "::some column::", "=", "::some value::" )
+                        .where(
+                            "::another column::",
+                            "=",
+                            "::another value::",
+                            "or"
+                        );
                     expect( query.getWheres() ).toBe( [
                         {
                             column: "::some column::",

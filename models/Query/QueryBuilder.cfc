@@ -2625,7 +2625,7 @@ component displayname="QueryBuilder" accessors="true" {
             return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
         }
 
-        throw( "Method does not exist on QueryBuilder [#missingMethodName#]" );
+        throw( type = "QBMissingMethod", message = "Method does not exist on QueryBuilder [#missingMethodName#]" );
     }
 
     /**

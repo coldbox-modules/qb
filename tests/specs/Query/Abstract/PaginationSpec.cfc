@@ -77,7 +77,7 @@ component extends="testbox.system.BaseSpec" {
             it( "can provide a custom paginator shell", function() {
                 var builder = getBuilder();
                 builder.setPaginationCollector( {
-                    "generateWithResults" =function( totalRecords, results, page, maxRows ) {
+                    "generateWithResults": function( totalRecords, results, page, maxRows ) {
                         return {
                             "total": totalRecords,
                             "pageNumber": page,

@@ -1,3 +1,12 @@
+# v7.3.6
+## 27 Jan 2020 — 22:04:59 UTC
+
+### fix
+
++ __formatting:__ Futher fixes with cfformat
+ ([b4d74b3](https://github.com/coldbox-modules/qb/commit/b4d74b343c3d06668e13c97661c0e435989a5abb))
+
+
 # v7.3.5
 ## 25 Jan 2020 — 08:09:54 UTC
 

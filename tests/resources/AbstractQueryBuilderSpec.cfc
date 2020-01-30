@@ -1693,6 +1693,17 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, insertWithRaw() );
                 } );
+
+                it( "can insert with null values", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .insert(
+                                values = { "email": "john@example.com", "optional_field": javacast( "null", "" ) },
+                                toSql = true
+                            );
+                    }, insertWithNull() );
+                } );
             } );
 
             describe( "update statements", function() {
@@ -1822,7 +1833,11 @@ component extends="testbox.system.BaseSpec" {
                 if ( builder.getUtils().isExpression( binding ) ) {
                     return binding.getSQL();
                 } else {
-                    return binding.value;
+                    if ( binding.null ) {
+                        return "NULL";
+                    } else {
+                        return binding.value;
+                    }
                 }
             } );
     }

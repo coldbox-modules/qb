@@ -1793,7 +1793,7 @@ component displayname="QueryBuilder" accessors="true" {
         columns.sort( "textnocase" );
         var newBindings = values.map( function( value ) {
             return columns.map( function( column ) {
-                return getUtils().extractBinding( value[ column ] );
+                return getUtils().extractBinding( value.keyExists( column ) ? value[ column ] : javacast( "null", "" ) );
             } );
         } );
 

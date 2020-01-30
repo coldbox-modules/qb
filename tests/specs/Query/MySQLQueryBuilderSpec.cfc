@@ -539,6 +539,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertWithNull() {
+        return {
+            sql: "INSERT INTO `users` (`email`, `optional_field`) VALUES (?, ?)",
+            bindings: [ "john@example.com", "NULL" ]
+        };
+    }
+
     function returning() {
         return { exception: "UnsupportedOperation" };
     }

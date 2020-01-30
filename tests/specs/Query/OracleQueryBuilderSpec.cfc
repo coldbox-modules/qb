@@ -551,6 +551,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertWithNull() {
+        return {
+            sql: "INSERT ALL INTO ""USERS"" (""EMAIL"", ""OPTIONAL_FIELD"") VALUES (?, ?) SELECT 1 FROM dual",
+            bindings: [ "john@example.com", "NULL" ]
+        };
+    }
+
     function returning() {
         return { exception: "UnsupportedOperation" };
     }

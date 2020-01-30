@@ -10,7 +10,11 @@ component displayname="QueryUtils" singleton {
      *
      * @return any
      */
-    public any function extractBinding( required any value ) {
+    public any function extractBinding( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return { "cfsqltype": "CF_SQL_VARCHAR", "value": "", "null": true };
+        }
+
         if ( isBuilder( arguments.value ) ) {
             return arguments.value.getBindings();
         }

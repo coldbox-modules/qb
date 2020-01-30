@@ -1,3 +1,12 @@
+# v7.3.7
+## 30 Jan 2020 — 16:50:04 UTC
+
+### fix
+
++ __QueryBuilder:__ Fix for inserting null values directly
+ ([1de27a6](https://github.com/coldbox-modules/qb/commit/1de27a697f65bfdeed63442ad66be47cd0d30344))
+
+
 # v7.3.6
 ## 27 Jan 2020 — 22:04:59 UTC
 

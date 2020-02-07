@@ -1709,9 +1709,19 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
-    public any function paginate( numeric page = 1, numeric maxRows = 25 ) {
+    /**
+     * Executes the configured query for the given page and maxRows.
+     * A pagination collector will be returned with the results.
+     *
+     * @page    The page of results to return.
+     * @maxRows The number of rows to return.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return  PaginationCollector
+     */
+    public any function paginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
         var totalRecords = count();
-        var results = forPage( page, maxRows ).get();
+        var results = forPage( page, maxRows ).get( options = options );
         return getPaginationCollector().generateWithResults(
             totalRecords = totalRecords,
             results = results,

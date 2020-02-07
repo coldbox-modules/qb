@@ -1,3 +1,12 @@
+# v7.3.8
+## 07 Feb 2020 — 06:19:42 UTC
+
+### fix
+
++ __Pagination:__ Allow passing query options in to paginate
+ ([cdecfb3](https://github.com/coldbox-modules/qb/commit/cdecfb36f5acab87edd3a478c570f77d285df554))
+
+
 # v7.3.7
 ## 30 Jan 2020 — 16:50:04 UTC
 

@@ -537,6 +537,7 @@ component displayname="QueryBuilder" accessors="true" {
             }
         }
 
+
         if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
             first( join );
             variables.joins.append( join );

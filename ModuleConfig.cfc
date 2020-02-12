@@ -9,7 +9,8 @@ component {
     function configure() {
         settings = {
             defaultGrammar = "AutoDiscover@qb",
-            defaultReturnFormat = "array"
+            defaultReturnFormat = "array",
+            preventDuplicateJoins = false
         };
 
         interceptorSettings = {
@@ -22,6 +23,7 @@ component {
             .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", ref = settings.defaultGrammar )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
+            .initArg( name = "preventDuplicateJoints", value = settings.preventDuplicateJoins ) 
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat );
 
         binder.map( alias = "SchemaBuilder@qb", force = true )

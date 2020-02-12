@@ -530,7 +530,6 @@ component displayname="QueryBuilder" accessors="true" {
         var join = new qb.models.Query.JoinClause( parentQuery = this, type = arguments.type, table = arguments.table );
 
         if ( arguments.preventDuplicateJoins ) {
-          
             var hasThisJoin = variables.joins.find( function( existingJoin ) {
                     return existingJoin.isEqualTo( join );
                 } );
@@ -919,10 +918,10 @@ component displayname="QueryBuilder" accessors="true" {
             if ( variables.joins.len() != arguments.otherQB.getJoins().len() ) {
                 return false;
             }
-            else if ( variables.joins.filter( function( j, index ) {
+            else if ( variables.joins.some( function( j, index ) {
                     return (! j.isEqualTo( otherQB.getJoins()[ index ] ) )
                 } )
-            .len() ) { 
+            ) { 
                 return false;
             }
         }
@@ -931,13 +930,13 @@ component displayname="QueryBuilder" accessors="true" {
             if ( variables.unions.len() != arguments.otherQB.getUnions().len() ) {
                 return false;
             }
-            else if ( variables.unions.filter( function( u, index ) {
+            else if ( variables.unions.some( function( u, index ) {
                 return (
                     u[ "ALL" ] != otherQB.getUnions()[ index ][ "ALL" ] ||
                     !u[ "QUERY" ].isEqualTo( otherQB.getUnions()[ index ][ "QUERY" ] )
                 );
                 } )
-            .len() ) {
+            ) {
                 return false;
             }
         }
@@ -946,14 +945,14 @@ component displayname="QueryBuilder" accessors="true" {
             if ( variables.commonTables.len() != arguments.otherQB.getCommonTables().len() ) {
                 return false;
             }
-            else if ( variables.commonTables.filter( function( cT, index ) {
+            else if ( variables.commonTables.some( function( cT, index ) {
                 return (
                     !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ "index" ][ "COLUMNS" ] ) ||
                     cT[ "NAME" ] != otherQB.getCommonTables()[ "index" ][ "NAME" ] ||
                     !cT[ "QUERY" ].isEqualTo( otherQB.getCommonTables()[ index ][ "QUERY" ] )
                 );
                 } )
-            .len() ) {
+            ) {
                 return false;
             }
         }

@@ -1,3 +1,12 @@
+# v7.3.10
+## 13 Feb 2020 — 19:35:23 UTC
+
+### other
+
++ __\*:__ chore: Adjust ignore files
+ ([e5702ed](https://github.com/coldbox-modules/qb/commit/e5702edcd5e00eab9502dee2854a49270a11f4c0))
+
+
 # v7.3.9
 ## 13 Feb 2020 — 17:34:56 UTC
 

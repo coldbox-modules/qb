@@ -190,7 +190,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( newJoin.getTable() ).toBe( join.getTable() );
                     } );
                 } );
-/*
+
                 describe( "preventDuplicateJoins", function() {
                     beforeEach( function() {
                         variables.qb = new qb.models.Query.QueryBuilder( preventDuplicateJoins = true );
@@ -221,7 +221,7 @@ component extends="testbox.system.BaseSpec" {
                         join.on( "first.id", "=", "second.first_id" );
                         joinOther.on( "first.locale", "=", "second.locale" );
                         expect( variables.join.isEqualTo( variables.joinOther ) ).toBeFalse();
-                    } )
+                    } );
 
                     it( "will prevent an identical join from being added when preventDuplicateJoins is true", function() {
                         variables.qb.join( variables.join );
@@ -236,7 +236,6 @@ component extends="testbox.system.BaseSpec" {
                         expect( variables.qb.getJoins().len() ).toBe( 2 );
                     } );
                 } );
-                */
             } );
         } );
     }

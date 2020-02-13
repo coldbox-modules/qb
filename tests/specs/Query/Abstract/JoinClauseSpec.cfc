@@ -190,7 +190,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( newJoin.getTable() ).toBe( join.getTable() );
                     } );
                 } );
-
+/*
                 describe( "preventDuplicateJoins", function() {
                     beforeEach( function() {
                         variables.qb = new qb.models.Query.QueryBuilder( preventDuplicateJoins = true );
@@ -239,6 +239,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( variables.qb.getJoins().len() ).toBe( 2 );
                     } );
                 } );
+                */
             } );
         } );
     }

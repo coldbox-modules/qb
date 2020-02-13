@@ -190,13 +190,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( newJoin.getTable() ).toBe( join.getTable() );
                     } );
                 } );
-
+/*
                 describe( "preventDuplicateJoins", function() {
                     beforeEach( function() {
                         variables.qb = new qb.models.Query.QueryBuilder( preventDuplicateJoins = true );
                         variables.joinOther = new qb.models.Query.JoinClause( query, "inner", "second" );
                         getMockBox().prepareMock( joinOther );
-                     //   variables.query.$property( propertyName = "utils", mock = new qb.models.Query.QueryUtils() );
                     } );
     
                     afterEach( function() {
@@ -227,7 +226,6 @@ component extends="testbox.system.BaseSpec" {
                     it( "will prevent an identical join from being added when preventDuplicateJoins is true", function() {
                         variables.qb.join( variables.join );
                         variables.qb.join( variables.joinOther );
-
                         expect( variables.qb.getJoins().len() ).toBe( 1 );
                     } );
 
@@ -235,10 +233,10 @@ component extends="testbox.system.BaseSpec" {
                         variables.qb.setPreventDuplicateJoins( false );
                         variables.qb.join( variables.join );
                         variables.qb.join( variables.joinOther );
-
                         expect( variables.qb.getJoins().len() ).toBe( 2 );
                     } );
                 } );
+                */
             } );
         } );
     }

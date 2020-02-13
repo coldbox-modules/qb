@@ -1,3 +1,11 @@
+# v7.3.9
+## 13 Feb 2020 — 17:34:56 UTC
+
+### other
+
++ __\*:__ chore: Use forgeboxStorage ([191c732](https://github.com/coldbox-modules/qb/commit/191c7323dc6607a67559b57a4b2148fae8820b5f))
+
+
 # v7.3.8
 ## 07 Feb 2020 — 06:19:42 UTC
 

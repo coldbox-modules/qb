@@ -1,5 +1,5 @@
-testbox
-modules
+/testbox/
+/modules/
 tests/results
 Engine.war
 *.sublime-workspace

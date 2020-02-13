@@ -917,7 +917,7 @@ component displayname="QueryBuilder" accessors="true" {
                 return false;
             }
             else if ( variables.joins.some( function( j, index ) {
-                    return (! j.isEqualTo( otherQB.getJoins()[ index ] ) )
+                    return (! j.isEqualTo( otherQB.getJoins()[ index ] ) );
                 } )
             ) { 
                 return false;

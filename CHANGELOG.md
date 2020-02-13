@@ -1,3 +1,12 @@
+# v7.3.11
+## 13 Feb 2020 — 19:45:42 UTC
+
+### other
+
++ __\*:__ fix: Update gitignore to account for folder paths
+ ([382c16b](https://github.com/coldbox-modules/qb/commit/382c16b3e144143edcc5e7e1de4dc133dc502d6f))
+
+
 # v7.3.10
 ## 13 Feb 2020 — 19:35:23 UTC
 

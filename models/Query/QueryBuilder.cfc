@@ -976,8 +976,8 @@ component displayname="QueryBuilder" accessors="true" {
              'groups' : variables.groups,
              'havings' : variables.havings,
              'orders' : variables.orders,
-             'limitValue' : this.getLimitvalue(),
-             'offsetValue' : this.getOffsetValue(),
+             'limitValue' : ( isNull( this.getLimitvalue() ) ? '' : this.getLimitValue() ),
+             'offsetValue' : ( isNull( this.getOffsetValue() ) ? '' : this.getOffsetvalue() ),
              'updates' : variables.updates
          };
 

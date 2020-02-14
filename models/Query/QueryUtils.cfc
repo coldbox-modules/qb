@@ -255,7 +255,7 @@ component displayname="QueryUtils" singleton {
             }
             // Key is a structure, call structCompare()
             else if ( isStruct( arguments.LeftStruct[ key ] ) ){
-                local.result = structCompare( arguments.LeftStruct[ key ], arguments.RightStruct[ key ]);
+                local.result = structCompare( arguments.LeftStruct[ key ], arguments.RightStruct[ key ] );
                 if ( !local.result ) {
                     return false;
                 }

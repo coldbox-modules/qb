@@ -57,8 +57,14 @@ component displayname="Grammar" accessors="true" singleton {
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
         // These are overwritten by WireBox, if it exists.
-        variables.interceptorService = { "processState": function() {} };
-        variables.log = { "debug": function() {} };
+        variables.interceptorService = {
+            "processState": function() {
+            }
+        };
+        variables.log = {
+            "debug": function() {
+            }
+        };
         return this;
     }
 

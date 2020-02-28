@@ -1,3 +1,18 @@
+# v7.3.12
+## 28 Feb 2020 — 05:37:32 UTC
+
+### chore
+
++ __BaseGrammar:__ Inline null services
+ ([4ccad99](https://github.com/coldbox-modules/qb/commit/4ccad998b63f6a75a0c3b04cf16ffe42a47f4cce))
++ __QueryBuilder:__ Fix tests on ACF 2016 due to @default metadata. ([29b31d0](https://github.com/coldbox-modules/qb/commit/29b31d0953c11eb73b563914c492786d695b7a04))
+
+### fix
+
++ __BaseGrammar:__ Improve column wrapping with trimming ([d98a5cb](https://github.com/coldbox-modules/qb/commit/d98a5cb65851c154b6755e90254d1a2c1df82833))
++ __QueryBuilder:__ Prefer the parent query over magic methods ([f9fd8d1](https://github.com/coldbox-modules/qb/commit/f9fd8d157cdc0d7480811c4659c130ee1d58888f))
+
+
 # v7.3.11
 ## 13 Feb 2020 — 19:45:42 UTC
 

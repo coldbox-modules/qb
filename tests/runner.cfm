@@ -13,7 +13,7 @@
 <cfparam name="url.coverageEnabled"					default="true">
 <cfparam name="url.coveragePathToCapture"			default="#expandPath( '/qb' )#">
 <cfparam name="url.coverageWhitelist"				default="">
-<cfparam name="url.coverageBlacklist"				default="/testbox,/tests,/docs">
+<cfparam name="url.coverageBlacklist"				default="/testbox,/tests,/docs,/modules">
 <cfparam name="url.coverageBrowserOutputDir"		default="#expandPath( '/tests/results/coverageReport' )#">
 
 <!--- Include the TestBox HTML Runner --->

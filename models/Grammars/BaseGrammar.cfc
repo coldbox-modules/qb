@@ -57,8 +57,8 @@ component displayname="Grammar" accessors="true" singleton {
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
         // These are overwritten by WireBox, if it exists.
-        variables.interceptorService = new qb.models.compat.NullInterceptorService();
-        variables.log = new qb.models.compat.NullLogger();
+        variables.interceptorService = { "processState": function() {} };
+        variables.log = { "debug": function() {} };
         return this;
     }
 
@@ -87,7 +87,7 @@ component displayname="Grammar" accessors="true" singleton {
         };
         tryPreInterceptor( data );
         structAppend( data.options, { result: "local.result" }, true );
-        log.debug( "Executing sql: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
+        variables.log.debug( "Executing sql: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
         var q = queryExecute( data.sql, data.bindings, data.options );
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
         data.result = local.result;
@@ -102,11 +102,6 @@ component displayname="Grammar" accessors="true" singleton {
      * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
      */
     private function tryPreInterceptor( data ) {
-        if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
-            variables.interceptorService.announceInterception( "preQBExecute", data );
-            return;
-        }
-
         variables.interceptorService.processState( "preQBExecute", data );
         return;
     }

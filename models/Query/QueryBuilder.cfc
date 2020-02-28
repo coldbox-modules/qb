@@ -2560,6 +2560,15 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public any function onMissingMethod( string missingMethodName, struct missingMethodArguments ) {
         /*
+         * If a parent query has been set, and has this exact method name,
+         * forward on the method call to the parent query.
+         */
+        if ( !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, missingMethodName ) ) {
+            return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
+        }
+
+
+        /*
          * This block handles dynamic `andWhere` methods.
          * If the method exists without the `and` we route the call there.
          * Otherwise, we go on to the next check.

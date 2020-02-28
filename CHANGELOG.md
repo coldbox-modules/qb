@@ -1,3 +1,12 @@
+# v7.3.13
+## 28 Feb 2020 — 07:59:08 UTC
+
+### other
+
++ __\*:__ fix: Format with cfformat
+ ([dc2a9b6](https://github.com/coldbox-modules/qb/commit/dc2a9b61503690d753a71c3b7bce002ebdf4ccda))
+
+
 # v7.3.12
 ## 28 Feb 2020 — 05:37:32 UTC
 

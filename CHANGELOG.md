@@ -1,3 +1,12 @@
+# v7.3.14
+## 28 Feb 2020 — 18:38:25 UTC
+
+### fix
+
++ __QueryBuilder:__ Ignore orders in aggregate queries
+ ([39e1338](https://github.com/coldbox-modules/qb/commit/39e1338a147838165e05225bd91ef7e6cde2319a))
+
+
 # v7.3.13
 ## 28 Feb 2020 — 07:59:08 UTC
 

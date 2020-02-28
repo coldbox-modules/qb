@@ -461,6 +461,20 @@ component extends="testbox.system.BaseSpec" {
                     expect( builder.getColumns() ).toBe( [ "id", "name" ] );
                 } );
 
+                it( "ignores orders in the aggregate query and sets them back afterward", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: 1 } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    builder.from( "users" ).orderBy( "name" );
+                    builder.from( "users" ).count();
+
+                    expect( builder.getOrders() ).toBe( [ { "column": "name", "direction": "asc" } ] );
+                } );
+
                 it( "should clear out the aggregate properties after an aggregate has been executed", function() {
                     var builder = getBuilder();
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: 1 } ] );

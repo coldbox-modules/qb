@@ -2490,9 +2490,12 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private function withAggregate( required struct aggregate, required any callback ) {
         var originalAggregate = getAggregate();
+        var originalOrders = getOrders();
         setAggregate( arguments.aggregate );
+        setOrders( [] );
         var result = callback();
         setAggregate( originalAggregate );
+        setOrders( originalOrders );
         return result;
     }
 

@@ -46,8 +46,7 @@ component displayname="QueryBuilder" accessors="true" {
 
     /**
      * If provided, the parent query will be called if no methods
-     * match on this query builder.
-     * @default null
+     * match on this query builder. Default: null
      */
     property name="parentQuery";
 
@@ -79,8 +78,7 @@ component displayname="QueryBuilder" accessors="true" {
     property name="columns" type="array";
 
     /**
-     * The base table of the query.
-     * @default null
+     * The base table of the query. Default: null
      */
     property name="from" type="string";
 
@@ -2566,7 +2564,6 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, missingMethodName ) ) {
             return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
         }
-
 
         /*
          * This block handles dynamic `andWhere` methods.

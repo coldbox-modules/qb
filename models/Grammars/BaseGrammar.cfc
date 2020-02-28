@@ -800,34 +800,35 @@ component displayname="Grammar" accessors="true" singleton {
     public string function wrapColumn( required any column ) {
         // In this case, isInstanceOf takes ~30 ms while this takes ~0 ms
         if (
-            !isSimpleValue( column ) &&
-            isObject( column ) &&
-            structKeyExists( column, "getSQL" )
+            !isSimpleValue( arguments.column ) &&
+            isObject( arguments.column ) &&
+            structKeyExists( arguments.column, "getSQL" )
         ) {
-            return column.getSQL();
+            return trim( arguments.column.getSQL() );
         }
 
+        arguments.column = trim( arguments.column );
         var alias = "";
-        if ( column.findNoCase( " as " ) > 0 ) {
+        if ( arguments.column.findNoCase( " as " ) > 0 ) {
             var matches = reFindNoCase(
                 "(.*)(?:\sAS\s)(.*)",
-                column,
+                arguments.column,
                 1,
                 true
             );
             if ( matches.pos.len() >= 3 ) {
-                alias = mid( column, matches.pos[ 3 ], matches.len[ 3 ] );
-                column = mid( column, matches.pos[ 2 ], matches.len[ 2 ] );
+                alias = mid( arguments.column, matches.pos[ 3 ], matches.len[ 3 ] );
+                arguments.column = mid( arguments.column, matches.pos[ 2 ], matches.len[ 2 ] );
             }
-        } else if ( column.findNoCase( " " ) > 0 ) {
-            alias = listGetAt( column, 2, " " );
-            column = listGetAt( column, 1, " " );
+        } else if ( arguments.column.findNoCase( " " ) > 0 ) {
+            alias = listGetAt( arguments.column, 2, " " );
+            arguments.column = listGetAt( arguments.column, 1, " " );
         }
-        column = column
+        arguments.column = arguments.column
             .listToArray( "." )
             .map( wrapValue )
             .toList( "." );
-        return alias == "" ? column : column & " AS " & wrapValue( alias );
+        return alias == "" ? arguments.column : arguments.column & " AS " & wrapValue( alias );
     }
 
     /**

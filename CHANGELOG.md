@@ -1,3 +1,12 @@
+# v7.3.15
+## 04 Mar 2020 — 15:00:38 UTC
+
+### fix
+
++ __QueryBuilder:__ Fix using  with query param structs
+ ([07c9b72](https://github.com/coldbox-modules/qb/commit/07c9b728bdbad6bf02ccd9d21dbdf6968062c02e))
+
+
 # v7.3.14
 ## 28 Feb 2020 — 18:38:25 UTC
 

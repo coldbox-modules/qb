@@ -234,6 +234,22 @@ component extends="testbox.system.BaseSpec" {
                             }, basicWhere() );
                         } );
 
+                        it( "can add a where statement with a query param struct", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .where(
+                                        "createdDate",
+                                        ">=",
+                                        {
+                                            value = "01/01/2019",
+                                            cfsqltype = "CF_SQL_TIMESTAMP"
+                                        }
+                                    );
+                            }, basicWhereWithQueryParamStruct() );
+                        } );
+
                         it( "can add or where statements", function() {
                             testCase( function( builder ) {
                                 builder
@@ -490,6 +506,19 @@ component extends="testbox.system.BaseSpec" {
                             }, whereBetween() );
                         } );
 
+                        it( "can add where between statements with query param structs", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "createdDate",
+                                        { value = "1/1/2019", cfsqltype = "CF_SQL_TIMESTAMP" },
+                                        { value = "12/31/2019", cfsqltype = "CF_SQL_TIMESTAMP" }
+                                    );
+                            }, whereBetweenWithQueryParamStructs() );
+                        } );
+
                         it( "can add where not between statements", function() {
                             testCase( function( builder ) {
                                 builder
@@ -574,6 +603,12 @@ component extends="testbox.system.BaseSpec" {
                             testCase( function( builder ) {
                                 builder.from( "users" ).whereIn( "id", [ 1, 2, 3 ] );
                             }, whereInArray() );
+                        } );
+
+                        it( "can add where in statements from an array", function() {
+                            testCase( function( builder ) {
+                                builder.from( "users" ).whereIn( "id", [ 1, { value: 2, cfsqltype: "CF_SQL_INTEGER" }, 3 ] );
+                            }, whereInArrayOfQueryParamStructs() );
                         } );
 
                         it( "can add or where in statements", function() {

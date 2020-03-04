@@ -1306,6 +1306,17 @@ component displayname="QueryBuilder" accessors="true" {
             callback( arguments.end );
         }
 
+        addBindings( utils.extractBinding( arguments.start ), "where" );
+        addBindings( utils.extractBinding( arguments.end ), "where" );
+
+        if ( isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && arguments.start.keyExists( "value" ) ) {
+            arguments.start = arguments.start.value;
+        }
+
+        if ( isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && arguments.end.keyExists( "value" ) ) {
+            arguments.end = arguments.end.value;
+        }
+
         variables.wheres.append( {
             type: type,
             column: applyColumnFormatter( arguments.column ),
@@ -1314,8 +1325,6 @@ component displayname="QueryBuilder" accessors="true" {
             combinator: arguments.combinator
         } );
 
-        addBindings( utils.extractBinding( arguments.start ), "where" );
-        addBindings( utils.extractBinding( arguments.end ), "where" );
 
         return this;
     }

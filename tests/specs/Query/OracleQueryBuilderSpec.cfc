@@ -102,6 +102,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ?", bindings: [ 1 ] };
     }
 
+    function basicWhereWithQueryParamStruct() {
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""CREATEDDATE"" >= ?", bindings: [ "01/01/2019" ] };
+    }
+
     function orWhere() {
         return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ? OR ""EMAIL"" = ?", bindings: [ 1, "foo" ] };
     }
@@ -182,6 +186,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" BETWEEN ? AND ?", bindings: [ 1, 2 ] };
     }
 
+    function whereBetweenWithQueryParamStructs() {
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""CREATEDDATE"" BETWEEN ? AND ?", bindings: [ "1/1/2019", "12/31/2019" ] };
+    }
+
     function whereNotBetween() {
         return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" NOT BETWEEN ? AND ?", bindings: [ 1, 2 ] };
     }
@@ -191,6 +199,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function whereInArray() {
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
+    }
+
+    function whereInArrayOfQueryParamStructs() {
         return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
     }
 

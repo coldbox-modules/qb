@@ -267,9 +267,6 @@ component extends="testbox.system.BaseSpec" {
                         expect( variables.qb.getJoins().len() ).toBe( 2 );
                     } );
                 } );
-                        expect( variables.qb.getJoins().len() ).toBe( 2 );
-                    } );
-                } );
             } );
         } );
     }

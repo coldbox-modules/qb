@@ -25,7 +25,7 @@ component displayname="QueryBuilder" accessors="true" {
 
     /**
      * preventDuplicateJoins
-     * If true, QB will introspect all existing JoinClauses for a match before creating a new join clause. 
+     * If true, QB will introspect all existing JoinClauses for a match before creating a new join clause.
      * If a match is found, qb will otherwise disregard the new .join() instead of appending it to the query.
      * @default false
      */
@@ -517,8 +517,8 @@ component displayname="QueryBuilder" accessors="true" {
                 var hasThisJoin = variables.joins.find( function( existingJoin ) {
                     return existingJoin.isEqualTo( table );
                 } );
-                
-                if ( local.hasThisJoin ) {
+
+                if ( hasThisJoin ) {
                     return this;
                 }
             }
@@ -531,10 +531,10 @@ component displayname="QueryBuilder" accessors="true" {
 
         if ( arguments.preventDuplicateJoins ) {
             var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                    return existingJoin.isEqualTo( join );
-                } );
+                return existingJoin.isEqualTo( join );
+            } );
 
-            if ( local.hasThisJoin ) {
+            if ( hasThisJoin ) {
                 return this;
             }
         }
@@ -891,7 +891,7 @@ component displayname="QueryBuilder" accessors="true" {
         return join( argumentCollection = arguments );
     }
 
-    
+
     /*******************************************************************************\
     |                            MATCHING utility functions                         |
     \*******************************************************************************/
@@ -905,12 +905,12 @@ component displayname="QueryBuilder" accessors="true" {
      */
 
     public boolean function isEqualTo( required otherQB ) {
-
         // compare simple values, structs, and arrays
-        if ( !this.getUtils().structCompare(
-            this.getMementOForComparison(),
-            arguments.otherQB.getMementoForComparison()
-        )) {
+        if (
+            !this
+                .getUtils()
+                .structCompare( this.getMementOForComparison(), arguments.otherQB.getMementoForComparison() )
+        ) {
             return false;
         }
 
@@ -919,23 +919,25 @@ component displayname="QueryBuilder" accessors="true" {
             if ( variables.joins.len() != arguments.otherQB.getJoins().len() ) {
                 return false;
             }
-            else if ( variables.joins.some( function( j, index ) {
-                    return (! j.isEqualTo( otherQB.getJoins()[ index ] ) );
+            if (
+                variables.joins.some( function( j, index ) {
+                    return ( !j.isEqualTo( otherQB.getJoins()[ index ] ) );
                 } )
-            ) { 
+            ) {
                 return false;
             }
         }
-        
+
         if ( variables.unions.len() || arguments.otherQB.getUnions().len() ) {
             if ( variables.unions.len() != arguments.otherQB.getUnions().len() ) {
                 return false;
             }
-            else if ( variables.unions.some( function( u, index ) {
-                return (
-                    u[ "ALL" ] != otherQB.getUnions()[ index ][ "ALL" ] ||
-                    !u[ "QUERY" ].isEqualTo( otherQB.getUnions()[ index ][ "QUERY" ] )
-                );
+            if (
+                variables.unions.some( function( u, index ) {
+                    return (
+                        u[ "ALL" ] != otherQB.getUnions()[ index ][ "ALL" ] ||
+                        !u[ "QUERY" ].isEqualTo( otherQB.getUnions()[ index ][ "QUERY" ] )
+                    );
                 } )
             ) {
                 return false;
@@ -946,12 +948,13 @@ component displayname="QueryBuilder" accessors="true" {
             if ( variables.commonTables.len() != arguments.otherQB.getCommonTables().len() ) {
                 return false;
             }
-            else if ( variables.commonTables.some( function( cT, index ) {
-                return (
-                    !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ "index" ][ "COLUMNS" ] ) ||
-                    cT[ "NAME" ] != otherQB.getCommonTables()[ "index" ][ "NAME" ] ||
-                    !cT[ "QUERY" ].isEqualTo( otherQB.getCommonTables()[ index ][ "QUERY" ] )
-                );
+            if (
+                variables.commonTables.some( function( cT, index ) {
+                    return (
+                        !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ "index" ][ "COLUMNS" ] ) ||
+                        cT[ "NAME" ] != otherQB.getCommonTables()[ "index" ][ "NAME" ] ||
+                        !cT[ "QUERY" ].isEqualTo( otherQB.getCommonTables()[ index ][ "QUERY" ] )
+                    );
                 } )
             ) {
                 return false;
@@ -967,35 +970,33 @@ component displayname="QueryBuilder" accessors="true" {
      * @return struct
      */
 
-     public struct function getMementoForComparison() {
-         
+    public struct function getMementoForComparison() {
         var memento = {
-             'distinct' : variables.distinct,
-             'aggregate' : variables.aggregate,
-             'columns' : variables.columns,
-             'wheres' : variables.wheres,
-             'groups' : variables.groups,
-             'havings' : variables.havings,
-             'orders' : variables.orders,
-             'limitValue' : ( isNull( this.getLimitvalue() ) ? '' : this.getLimitValue() ),
-             'offsetValue' : ( isNull( this.getOffsetValue() ) ? '' : this.getOffsetvalue() ),
-             'updates' : variables.updates
-         };
+            "distinct": variables.distinct,
+            "aggregate": variables.aggregate,
+            "columns": variables.columns,
+            "wheres": variables.wheres,
+            "groups": variables.groups,
+            "havings": variables.havings,
+            "orders": variables.orders,
+            "limitValue": ( isNull( this.getLimitvalue() ) ? "" : this.getLimitValue() ),
+            "offsetValue": ( isNull( this.getOffsetValue() ) ? "" : this.getOffsetvalue() ),
+            "updates": variables.updates
+        };
 
-         if ( !isJoin() ) {
-             if ( !isCustomFunction( variables.from ) ) { 
-                local.memento[ "from" ] = ( isSimpleValue( getFrom() ) ? getFrom() : getFrom().getSQL() ); 
-             }
-         }
-         else {
-             local.memento[ "type" ] = variables.type;
-             if ( !isCustomFunction( getTable() ) ) {
-                local.memento[ "table" ] = ( isSimpleValue( getTable() ) ? getTable() : getTable().getSQL() );
-             }
-         }
+        if ( !isJoin() ) {
+            if ( !isCustomFunction( variables.from ) ) {
+                memento[ "from" ] = ( isSimpleValue( getFrom() ) ? getFrom() : getFrom().toSQL() );
+            }
+        } else {
+            memento[ "type" ] = variables.type;
+            if ( !isCustomFunction( getTable() ) ) {
+                memento[ "table" ] = ( isSimpleValue( getTable() ) ? getTable() : getTable().toSQL() );
+            }
+        }
 
-         return local.memento;
-     }
+        return memento;
+    }
 
     /*******************************************************************************\
     |                            WHERE clause functions                             |

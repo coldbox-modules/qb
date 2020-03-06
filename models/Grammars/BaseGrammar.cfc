@@ -890,7 +890,7 @@ component displayname="Grammar" accessors="true" singleton {
         if ( utils.isExpression( column ) ) {
             return column.getSql();
         }
-        
+
         try {
             if ( !column.isColumn() ) {
                 throw( message = "Not a Column" );

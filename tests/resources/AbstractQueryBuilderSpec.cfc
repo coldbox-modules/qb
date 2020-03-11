@@ -242,10 +242,7 @@ component extends="testbox.system.BaseSpec" {
                                     .where(
                                         "createdDate",
                                         ">=",
-                                        {
-                                            value = "01/01/2019",
-                                            cfsqltype = "CF_SQL_TIMESTAMP"
-                                        }
+                                        { value: "01/01/2019", cfsqltype: "CF_SQL_TIMESTAMP" }
                                     );
                             }, basicWhereWithQueryParamStruct() );
                         } );
@@ -513,8 +510,8 @@ component extends="testbox.system.BaseSpec" {
                                     .from( "users" )
                                     .whereBetween(
                                         "createdDate",
-                                        { value = "1/1/2019", cfsqltype = "CF_SQL_TIMESTAMP" },
-                                        { value = "12/31/2019", cfsqltype = "CF_SQL_TIMESTAMP" }
+                                        { value: "1/1/2019", cfsqltype: "CF_SQL_TIMESTAMP" },
+                                        { value: "12/31/2019", cfsqltype: "CF_SQL_TIMESTAMP" }
                                     );
                             }, whereBetweenWithQueryParamStructs() );
                         } );
@@ -607,7 +604,9 @@ component extends="testbox.system.BaseSpec" {
 
                         it( "can add where in statements from an array", function() {
                             testCase( function( builder ) {
-                                builder.from( "users" ).whereIn( "id", [ 1, { value: 2, cfsqltype: "CF_SQL_INTEGER" }, 3 ] );
+                                builder
+                                    .from( "users" )
+                                    .whereIn( "id", [ 1, { value: 2, cfsqltype: "CF_SQL_INTEGER" }, 3 ] );
                             }, whereInArrayOfQueryParamStructs() );
                         } );
 
@@ -1171,9 +1170,21 @@ component extends="testbox.system.BaseSpec" {
                         }, orderBy() );
                     } );
 
+                    it( "can add a simple order by using the asc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByAsc( "email" );
+                        }, orderBy() );
+                    } );
+
                     it( "can order in descending order", function() {
                         testCase( function( builder ) {
                             builder.from( "users" ).orderBy( "email", "desc" );
+                        }, orderByDesc() );
+                    } );
+
+                    it( "can order in descending order using the desc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByDesc( "email" );
                         }, orderByDesc() );
                     } );
 
@@ -1210,6 +1221,42 @@ component extends="testbox.system.BaseSpec" {
                         }, orderBySubselect() );
                     } );
 
+                    it( "can order by a subselect using the asc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderByAsc( function( q ) {
+                                    q.selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" );
+                                } );
+                        }, orderBySubselect() );
+                    } );
+
+                    it( "can order by a subselect descending", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy( function( q ) {
+                                    q.selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" );
+                                }, "desc" );
+                        }, orderBySubselectDescending() );
+                    } );
+
+                    it( "can order by a subselect descending using the desc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderByDesc( function( q ) {
+                                    q.selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" );
+                                } );
+                        }, orderBySubselectDescending() );
+                    } );
+
                     it( "can order by a builder instance", function() {
                         testCase( function( builder ) {
                             builder
@@ -1222,6 +1269,49 @@ component extends="testbox.system.BaseSpec" {
                                         .whereColumn( "users.id", "logins.user_id" )
                                 );
                         }, orderByBuilderInstance() );
+                    } );
+
+                    it( "can order by a builder instance using the asc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderByAsc(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" )
+                                );
+                        }, orderByBuilderInstance() );
+                    } );
+
+                    it( "can order by a builder instance descending", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" ),
+                                    "desc"
+                                );
+                        }, orderByBuilderInstanceDescending() );
+                    } );
+
+                    it( "can order by a builder instance descending using the desc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderByDesc(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" )
+                                );
+                        }, orderByBuilderInstanceDescending() );
                     } );
 
                     describe( "can accept an array for the column argument", function() {

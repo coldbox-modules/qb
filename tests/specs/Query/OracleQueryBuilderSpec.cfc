@@ -187,7 +187,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function whereBetweenWithQueryParamStructs() {
-        return { sql: "SELECT * FROM ""USERS"" WHERE ""CREATEDDATE"" BETWEEN ? AND ?", bindings: [ "1/1/2019", "12/31/2019" ] };
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""CREATEDDATE"" BETWEEN ? AND ?",
+            bindings: [ "1/1/2019", "12/31/2019" ]
+        };
     }
 
     function whereNotBetween() {
@@ -675,11 +678,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function orderBySubselect() {
-        return "SELECT * FROM ""USERS"" ORDER BY (SELECT MAX(created_date) FROM ""LOGINS"" WHERE ""USERS"".""ID"" = ""LOGINS"".""USER_ID"")";
+        return "SELECT * FROM ""USERS"" ORDER BY (SELECT MAX(created_date) FROM ""LOGINS"" WHERE ""USERS"".""ID"" = ""LOGINS"".""USER_ID"") ASC";
+    }
+
+    function orderBySubselectDescending() {
+        return "SELECT * FROM ""USERS"" ORDER BY (SELECT MAX(created_date) FROM ""LOGINS"" WHERE ""USERS"".""ID"" = ""LOGINS"".""USER_ID"") DESC";
     }
 
     function orderByBuilderInstance() {
-        return "SELECT * FROM ""USERS"" ORDER BY (SELECT MAX(created_date) FROM ""LOGINS"" WHERE ""USERS"".""ID"" = ""LOGINS"".""USER_ID"")";
+        return "SELECT * FROM ""USERS"" ORDER BY (SELECT MAX(created_date) FROM ""LOGINS"" WHERE ""USERS"".""ID"" = ""LOGINS"".""USER_ID"") ASC";
+    }
+
+    function orderByBuilderInstanceDescending() {
+        return "SELECT * FROM ""USERS"" ORDER BY (SELECT MAX(created_date) FROM ""LOGINS"" WHERE ""USERS"".""ID"" = ""LOGINS"".""USER_ID"") DESC";
     }
 
     private function getBuilder() {

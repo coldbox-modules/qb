@@ -608,13 +608,12 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         var orderBys = orders.map( function( orderBy ) {
-            switch ( orderBy.direction ) {
-                case "raw":
-                    return orderBy.column.getSQL();
-                case "sub":
-                    return "(#compileSelect( orderBy.query )#)";
-                default:
-                    return "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
+            if ( orderBy.direction == "raw" ) {
+                return orderBy.column.getSQL();
+            } else if ( orderBy.keyExists( "query" ) ) {
+                return "(#compileSelect( orderBy.query )#) #uCase( orderBy.direction )#";
+            } else {
+                return "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
             }
         } );
 

@@ -1386,7 +1386,7 @@ component extends="testbox.system.BaseSpec" {
                         try {
                             var statements = blueprint.toSql();
                         } catch ( any e ) {
-                            // Darn ACF nests the exception message. 😠
+                            // Darn ACF nests the exception message. ðŸ˜ 
                             if ( e.message == "An exception occurred while calling the function map." ) {
                                 expect( e.detail ).toBe(
                                     "Recieved a TableIndex instead of a Column when trying to create a Column."

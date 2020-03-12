@@ -220,4 +220,104 @@ component displayname="QueryUtils" singleton {
         );
     }
 
+    /** Utility functions to assist with preventing duplicate joins. Adapted from cflib.org **/
+    /**
+     *
+     * @param LeftStruct      The first struct. (Required)
+     * @param RightStruct      The second structure. (Required)
+     * @return Returns a boolean.
+     * @author Ja Carter (ja@nuorbit.com).  Fix by Jose Alfonso and tweaks by Samuel Knowlton (sam@inleague.io) for scoping, formatting, and null checks
+     * @version 2, October 14, 2005 (updated 11 Feb 2020)
+     */
+
+    public boolean function structCompare( LeftStruct, RightStruct ) {
+        var result = true;
+        var LeftStructKeys = "";
+        var RightStructKeys = "";
+        var key = "";
+
+        // Make sure both params are structures
+        if ( !( isStruct( arguments.LeftStruct ) AND isStruct( arguments.RightStruct ) ) ) return false;
+
+        // Make sure both structures have the same keys
+        local.LeftStructKeys = listSort( structKeyList( LeftStruct ), "TextNoCase", "ASC" );
+        local.RightStructKeys = listSort( structKeyList( RightStruct ), "TextNoCase", "ASC" );
+        if ( LeftStructKeys neq RightStructKeys ) return false;
+
+        // Loop through the keys and compare them one at a time
+        for ( var key in arguments.LeftStruct ) {
+            // key is null, null check the other side
+            if ( isNull( arguments.leftStruct[ key ] ) ) {
+                local.result = isNull( arguments.rightStruct[ key ] );
+                if ( !local.result ) {
+                    return false;
+                }
+            }
+            // Key is a structure, call structCompare()
+            else if ( isStruct( arguments.LeftStruct[ key ] ) ) {
+                local.result = structCompare( arguments.LeftStruct[ key ], arguments.RightStruct[ key ] );
+                if ( !local.result ) {
+                    return false;
+                }
+            }
+            // Key is an array, call arrayCompare()
+            else if ( isArray( arguments.LeftStruct[ key ] ) ) {
+                local.result = arrayCompare( arguments.LeftStruct[ key ], arguments.RightStruct[ key ] );
+                if ( !local.result ) {
+                    return false;
+                }
+            }
+            // A simple type comparison here
+            else {
+                if ( arguments.LeftStruct[ key ] != arguments.RightStruct[ key ] ) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     *
+     * @param LeftArray      The first array. (Required)
+     * @param RightArray      The second array. (Required)
+     * @return Returns a boolean.
+     * @author Ja Carter (ja@nuorbit.com) with tweaks by Samuel Knowlton (sam@inleague.io) for scoping and formatting
+     * @version 1, September 23, 2004 (updated 11 Feb 2020)
+     */
+    public boolean function arrayCompare( LeftArray, RightArray ) {
+        var result = true;
+        var i = "";
+
+        // Make sure both params are arrays
+        if ( !( isArray( arguments.LeftArray ) AND isArray( arguments.RightArray ) ) ) {
+            return false;
+        }
+        // Make sure both arrays have the same length
+        if ( arrayLen( arguments.LeftArray ) != arrayLen( arguments.RightArray ) ) {
+            return false;
+        }
+
+        // If both arrays are empty, don't bother
+        if ( arguments.leftArray.isEmpty() && arguments.rightArray.isEmpty() ) return true;
+
+        // Loop through the elements and compare them one at a time
+        for ( var i = 1; local.i lte arrayLen( LeftArray ); local.i = local.i + 1 ) {
+            // elements is a structure, call structCompare()
+            if ( isStruct( arguments.LeftArray[ i ] ) ) {
+                local.result = structCompare( arguments.LeftArray[ i ], arguments.RightArray[ i ] );
+                if ( !local.result ) return false;
+                // elements is an array, call arrayCompare()
+            } else if ( isArray( arguments.LeftArray[ i ] ) ) {
+                local.result = arrayCompare( arguments.LeftArray[ i ], arguments.RightArray[ i ] );
+                if ( !local.result ) return false;
+                // A simple type comparison here
+            } else {
+                if ( arguments.LeftArray[ i ] != arguments.RightArray[ i ] ) return false;
+            }
+        }
+
+        return true;
+    }
+
 }

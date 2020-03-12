@@ -24,6 +24,14 @@ component displayname="QueryBuilder" accessors="true" {
     property name="returnFormat";
 
     /**
+     * preventDuplicateJoins
+     * If true, QB will introspect all existing JoinClauses for a match before creating a new join clause.
+     * If a match is found, qb will otherwise disregard the new .join() instead of appending it to the query.
+     * @default false
+     */
+    property name="preventDuplicateJoins";
+
+    /**
      * paginationCollector
      * A component or struct with a `generateWithResults` method.
      * The `generate` method will recieve the following arguments:
@@ -216,6 +224,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @returnFormat         The closure (or string format shortcut) that
      *                       modifies the query and is eventually returned to
      *                       the caller. Default: 'array'
+     * @preventDuplicateJoins Whether QB should ignore a .join() statement that matches an existing join
+     *                       Default: false
      * @paginationCollector  The closure that processes the pagination result.
      *                       Default: cbpaginator.models.Pagination
      * @columnFormatter      The closure that modifies each column before being
@@ -231,6 +241,7 @@ component displayname="QueryBuilder" accessors="true" {
         grammar = new qb.models.Grammars.BaseGrammar(),
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
+        preventDuplicateJoins = false,
         paginationCollector = new qb.modules.cbpaginator.models.Pagination(),
         columnFormatter,
         parentQuery,
@@ -240,6 +251,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.utils = arguments.utils;
 
         setReturnFormat( arguments.returnFormat );
+        setPreventDuplicateJoins( arguments.preventDuplicateJoins );
         if ( isNull( arguments.columnFormatter ) ) {
             arguments.columnFormatter = function( column ) {
                 return column;
@@ -485,6 +497,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @second The second column in the join's `on` statement.
      * @type The type of the join. Default: "inner".  Passing this as an argument is discouraged for readability.  Use the dedicated methods like `leftJoin` and `rightJoin` where possible.
      * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+     * @preventDuplicateJoins Introspects the builder for a join matching the join we're trying to add. If a match is found, disregards this request. Defaults to moduleSetting or qb setting
      *
      * @return qb.models.Query.QueryBuilder
      */
@@ -494,15 +507,36 @@ component displayname="QueryBuilder" accessors="true" {
         string operator = "=",
         string second,
         string type = "inner",
-        boolean where = false
+        boolean where = false,
+        boolean preventDuplicateJoins = this.getPreventDuplicateJoins()
     ) {
         if ( getUtils().isBuilder( arguments.table ) ) {
+            if ( arguments.preventDuplicateJoins ) {
+                var hasThisJoin = variables.joins.find( function( existingJoin ) {
+                    return existingJoin.isEqualTo( table );
+                } );
+
+                if ( hasThisJoin ) {
+                    return this;
+                }
+            }
             variables.joins.append( arguments.table );
             addBindings( arguments.table.getBindings(), "join" );
             return this;
         }
 
         var join = new qb.models.Query.JoinClause( parentQuery = this, type = arguments.type, table = arguments.table );
+
+        if ( arguments.preventDuplicateJoins ) {
+            var hasThisJoin = variables.joins.find( function( existingJoin ) {
+                return existingJoin.isEqualTo( join );
+            } );
+
+            if ( hasThisJoin ) {
+                return this;
+            }
+        }
+
 
         if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
             first( join );
@@ -853,6 +887,113 @@ component displayname="QueryBuilder" accessors="true" {
     ) {
         arguments.where = true;
         return join( argumentCollection = arguments );
+    }
+
+
+    /*******************************************************************************\
+    |                            MATCHING utility functions                         |
+    \*******************************************************************************/
+
+    /**
+     * Returns true if the specified QB/JoinClause instance matches this one exactly
+     * Relies on QueryUtils' structCompare and arrayCompare for most checks, but for JOINs and UNIONs and COMMONTABLES does recursive qb instance checking
+     * CHECKS TYPE, TABLE, DISTINCT, AGGREGATE, WHEREs, GROUPS, HAVINGS, ORDERS, UNIONS, COMMONTABLES, LIMITVALUE, OFFSETVALUE, and UPDATES
+     * @otherQB QueryBuilder or JoinClause
+     * @returns boolean
+     */
+
+    public boolean function isEqualTo( required otherQB ) {
+        // compare simple values, structs, and arrays
+        if (
+            !this
+                .getUtils()
+                .structCompare( this.getMementOForComparison(), arguments.otherQB.getMementoForComparison() )
+        ) {
+            return false;
+        }
+
+        // if there are any JOINs or UNIONs or COMMONTABLES, we have to compare QB to QB, along with some metadata
+        if ( variables.joins.len() || arguments.otherQB.getJoins().len() ) {
+            if ( variables.joins.len() != arguments.otherQB.getJoins().len() ) {
+                return false;
+            }
+            if (
+                variables.joins.some( function( j, index ) {
+                    return ( !j.isEqualTo( otherQB.getJoins()[ index ] ) );
+                } )
+            ) {
+                return false;
+            }
+        }
+
+        if ( variables.unions.len() || arguments.otherQB.getUnions().len() ) {
+            if ( variables.unions.len() != arguments.otherQB.getUnions().len() ) {
+                return false;
+            }
+            if (
+                variables.unions.some( function( u, index ) {
+                    return (
+                        u[ "ALL" ] != otherQB.getUnions()[ index ][ "ALL" ] ||
+                        !u[ "QUERY" ].isEqualTo( otherQB.getUnions()[ index ][ "QUERY" ] )
+                    );
+                } )
+            ) {
+                return false;
+            }
+        }
+
+        if ( variables.commonTables.len() || arguments.otherQB.getCommonTables().len() ) {
+            if ( variables.commonTables.len() != arguments.otherQB.getCommonTables().len() ) {
+                return false;
+            }
+            if (
+                variables.commonTables.some( function( cT, index ) {
+                    return (
+                        !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ "index" ][ "COLUMNS" ] ) ||
+                        cT[ "NAME" ] != otherQB.getCommonTables()[ "index" ][ "NAME" ] ||
+                        !cT[ "QUERY" ].isEqualTo( otherQB.getCommonTables()[ index ][ "QUERY" ] )
+                    );
+                } )
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns a memento of the QB object for the purpose of comparing it to other QB objects (particularly joins)
+     * Retrieves attributes that only have simple values, structs, or arrays of simple values; won't compare a QB to a QB
+     * @return struct
+     */
+
+    public struct function getMementoForComparison() {
+        var memento = {
+            "distinct": variables.distinct,
+            "aggregate": variables.aggregate,
+            "columns": variables.columns,
+            "wheres": variables.wheres,
+            "groups": variables.groups,
+            "havings": variables.havings,
+            "orders": variables.orders,
+            "limitValue": ( isNull( this.getLimitvalue() ) ? "" : this.getLimitValue() ),
+            "offsetValue": ( isNull( this.getOffsetValue() ) ? "" : this.getOffsetvalue() ),
+            "updates": variables.updates
+        };
+
+        if ( !isJoin() ) {
+            if ( !isCustomFunction( variables.from ) ) {
+                memento[ "from" ] = ( isSimpleValue( getFrom() ) ? getFrom() : getFrom().toSQL() );
+            }
+        } else {
+            memento[ "type" ] = variables.type;
+            if ( !isCustomFunction( getTable() ) ) {
+                memento[ "table" ] = ( isSimpleValue( getTable() ) ? getTable() : getTable().toSQL() );
+            }
+        }
+
+        return memento;
     }
 
     /*******************************************************************************\

@@ -1,3 +1,11 @@
+# v7.4.0
+## 12 Mar 2020 — 15:33:10 UTC
+
+### feat
+
++ __QueryBuilder:__ Enhance order by's with more direction options ([c767ac8](https://github.com/coldbox-modules/qb/commit/c767ac8764fab70d70dc77baa7bb9fb27c1d4eeb))
+
+
 # v7.3.15
 ## 04 Mar 2020 — 15:00:38 UTC
 

@@ -1,3 +1,11 @@
+# v7.5.0
+## 12 Mar 2020 — 15:54:22 UTC
+
+### feat
+
++ __Joins:__ Optionally prevent duplicate joins from being added ([40212ff](https://github.com/coldbox-modules/qb/commit/40212ff4463ea5a615dfda35ab9617513d9d4348))
+
+
 # v7.4.0
 ## 12 Mar 2020 — 15:33:10 UTC
 

@@ -1309,11 +1309,19 @@ component displayname="QueryBuilder" accessors="true" {
         addBindings( utils.extractBinding( arguments.start ), "where" );
         addBindings( utils.extractBinding( arguments.end ), "where" );
 
-        if ( isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && arguments.start.keyExists( "value" ) ) {
+        if (
+            isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && arguments.start.keyExists(
+                "value"
+            )
+        ) {
             arguments.start = arguments.start.value;
         }
 
-        if ( isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && arguments.end.keyExists( "value" ) ) {
+        if (
+            isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && arguments.end.keyExists(
+                "value"
+            )
+        ) {
             arguments.end = arguments.end.value;
         }
 
@@ -1455,97 +1463,190 @@ component displayname="QueryBuilder" accessors="true" {
      * Add an order by clause to the query.  To order by multiple columns, call `orderBy` multiple times.
      * The order in which `orderBy` is called matters and is the order it appears in the SQL.
      *
-     * @column The name of the column(s) to order by. An expression (`builder.raw()`) can be passed as well. An array can be passed with any combination of simple values, array, struct, or list for each entry in the array (an example with all possible value styles: column = [ "last_name", [ "age", "desc" ], { column = "favorite_color", direction = "desc" }, "height|desc" ];. The column argument can also just accept a comman delimited list with a pipe ( | ) as the secondary delimiter denoting the direction of the order by. The pipe delimiter is also used when parsing the column argument when it is passed as an array and the entry in the array is a pipe delimited string.
+     * @column    The name of the column(s) to order by.
+     *            An expression (`builder.raw()`) can be passed as well.
+     *            An array can be passed with any combination of simple values,
+     *            array, struct, or list for each entry in the array
+     *
+     *            An example with all possible value styles:
+     *                column = [
+     *                    "last_name",
+     *                    [ "age", "desc" ],
+     *                    { column = "favorite_color", direction = "desc" },
+     *                    "height|desc"
+     *                ];
+     *            The column argument can also just accept a comman delimited list
+     *            with a pipe ( | ) as the secondary delimiter denoting the direction
+     *            of the order by. The pipe delimiter is also used when parsing the
+     *            column argument when it is passed as an array and the entry in the
+     *            array is a pipe delimited string.
+     *
      * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc". If column argument is an array this argument will be used as the default value for all entries in the column list or array that fail to specify a direction for a speicifc column.
      *
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBy( required any column, string direction = "asc" ) {
-        if ( getUtils().isExpression( column ) ) {
-            variables.orders.append( { direction: "raw", column: column } );
-            return this;
+        // We are trying to determine if a positional array of [ column, direction ]
+        // was passed in.  This is the craziness that does that.
+        if (
+            !isClosure( arguments.column ) &&
+            !isCustomFunction( arguments.column ) &&
+            !getUtils().isBuilder( arguments.column ) &&
+            !getUtils().isExpression( arguments.column ) &&
+            isArray( arguments.column ) &&
+            arguments.column.len() == 2 &&
+            isSimpleValue( arguments.column[ 1 ] ) &&
+            isSimpleValue( arguments.column[ 2 ] ) &&
+            ( arguments.column[ 2 ] == "asc" || arguments.column[ 2 ] == "desc" )
+        ) {
+            arguments.direction = arguments.column[ 2 ];
+            arguments.column = arguments.column[ 1 ];
         }
 
+        if ( isSimpleValue( arguments.column ) ) {
+            arguments.column = listToArray( arguments.column );
+        }
+
+        for ( var col in arrayWrap( arguments.column ) ) {
+            orderBySingle( col, arguments.direction );
+        }
+        return this;
+    }
+
+    /**
+     * Adds a single order by clause to the query.
+     *
+     * @column    The name of the column(s) to order by.
+     * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc".
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    private QueryBuilder function orderBySingle( required any column, string direction = "asc" ) {
         if (
             isClosure( arguments.column ) ||
             isCustomFunction( arguments.column ) ||
             getUtils().isBuilder( arguments.column )
         ) {
-            return orderBySub( arguments.column );
+            return orderBySub( arguments.column, arguments.direction );
         }
 
-        // if the column argument is an array
+        // check the value of the current iteration to determine what blend of column def they went with
+        // ex: "DATE(created_at)" -- RAW expression
+        if ( getUtils().isExpression( column ) ) {
+            variables.orders.append( { direction: "raw", column: column } );
+            return this;
+        }
+
+        // ex: "age|desc" || "last_name"
+        if ( isSimpleValue( column ) ) {
+            var colName = listFirst( column, "|" );
+            // ex: "age|desc"
+            if ( listLen( column, "|" ) == 2 ) {
+                var dir = ( arrayFindNoCase( variables.directions, listLast( column, "|" ) ) ) ? listLast( column, "|" ) : direction;
+            } else {
+                var dir = direction;
+            }
+
+            // now append the simple value column name and determined direction
+            variables.orders.append( { direction: dir, column: applyColumnFormatter( colName ) } );
+            return this;
+        }
+
+        // ex: { "column" = "favorite_color" } || { "column" = "favorite_color", direction = "desc" }
+        if ( isStruct( column ) && structKeyExists( column, "column" ) ) {
+            // as long as the struct provided contains the column keyName then we can append it. If the direction column is omitted we will assume direction argument's value
+            if ( getUtils().isExpression( column.column ) ) {
+                variables.orders.append( { direction: "raw", column: column.column } );
+            } else {
+                var dir = (
+                    structKeyExists( column, "direction" ) && arrayFindNoCase( variables.directions, column.direction )
+                ) ? column.direction : direction;
+                variables.orders.append( { direction: dir, column: applyColumnFormatter( column.column ) } );
+            }
+            return this;
+        }
+
+        // ex: [ "age", "desc" ]
         if ( isArray( column ) ) {
-            for ( var col in column ) {
-                // check the value of the current iteration to determine what blend of column def they went with
-                // ex: "DATE(created_at)" -- RAW expression
-                if ( getUtils().isExpression( col ) ) {
-                    variables.orders.append( { direction: "raw", column: col } );
-                }
-                // ex: "age|desc" || "last_name"
-                else if ( isSimpleValue( col ) ) {
-                    var colName = listFirst( col, "|" );
-                    // ex: "age|desc"
-                    if ( listLen( col, "|" ) == 2 ) {
-                        var dir = ( arrayFindNoCase( variables.directions, listLast( col, "|" ) ) ) ? listLast(
-                            col,
-                            "|"
-                        ) : direction;
-                    } else {
-                        var dir = direction;
-                    }
-
-                    // now append the simple value column name and determined direction
-                    variables.orders.append( { direction: dir, column: applyColumnFormatter( colName ) } );
-                }
-                // ex: { "column" = "favorite_color" } || { "column" = "favorite_color", direction = "desc" }
-                else if ( isStruct( col ) && structKeyExists( col, "column" ) ) {
-                    // as long as the struct provided contains the column keyName then we can append it. If the direction column is omitted we will assume direction argument's value
-                    if ( getUtils().isExpression( col.column ) ) {
-                        variables.orders.append( { direction: "raw", column: col.column } );
-                    } else {
-                        var dir = (
-                            structKeyExists( col, "direction" ) && arrayFindNoCase(
-                                variables.directions,
-                                col.direction
-                            )
-                        ) ? col.direction : direction;
-                        variables.orders.append( { direction: dir, column: applyColumnFormatter( col.column ) } );
-                    }
-                }
-                // ex: [ "age", "desc" ]
-                else if ( isArray( col ) ) {
-                    // assume position 1 is the column name and position 2 if it exists and is a valid direction ( asc | desc ) use it.
-                    variables.orders.append( {
-                        direction: ( arrayLen( col ) == 2 && arrayFindNoCase( variables.directions, col[ 2 ] ) ) ? col[ 2 ] : direction,
-                        column: applyColumnFormatter( col[ 1 ] )
-                    } );
-                }
-            }
-        }
-        // ex: "last_name|asc,age|desc"
-        else if ( listLen( column ) > 1 ) {
-            // convert list to array for easier looping and access to vals
-            var arCols = listToArray( column );
-
-            for ( var col in arCols ) {
-                var colName = listFirst( col, "|" );
-
-                if ( listLen( col, "|" ) == 2 ) {
-                    var dir = ( arrayFindNoCase( variables.directions, listLast( col, "|" ) ) ) ? listLast( col, "|" ) : direction;
-                } else {
-                    var dir = direction;
-                }
-
-                variables.orders.append( { direction: dir, column: applyColumnFormatter( colName ) } );
-            }
-        } else {
-            variables.orders.append( { direction: direction, column: applyColumnFormatter( column ) } );
+            // assume position 1 is the column name and position 2 if it exists and is a valid direction ( asc | desc ) use it.
+            variables.orders.append( {
+                direction: ( arrayLen( column ) == 2 && arrayFindNoCase( variables.directions, column[ 2 ] ) ) ? column[ 2 ] : direction,
+                column: applyColumnFormatter( column[ 1 ] )
+            } );
+            return this;
         }
 
+        variables.orders.append( { direction: direction, column: applyColumnFormatter( column ) } );
         return this;
     }
 
+    /**
+     * Add an order by clause to the query with the direction 'asc'.
+     * To order by multiple columns, call `orderBy` multiple times.
+     * The order in which `orderBy` is called matters and is the order it appears in the SQL.
+     *
+     * @column The name of the column(s) to order by.
+     *         An expression (`builder.raw()`) can be passed as well.
+     *         An array can be passed with any combination of simple values,
+     *         array, struct, or list for each entry in the array
+     *
+     *         An example with all possible value styles:
+     *             column = [
+     *                 "last_name",
+     *                 [ "age", "desc" ],
+     *                 { column = "favorite_color", direction = "desc" },
+     *                 "height|desc"
+     *             ];
+     *         The column argument can also just accept a comman delimited list
+     *         with a pipe ( | ) as the secondary delimiter denoting the direction
+     *         of the order by. The pipe delimiter is also used when parsing the
+     *         column argument when it is passed as an array and the entry in the
+     *         array is a pipe delimited string.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function orderByAsc( required any column ) {
+        arguments.direction = "asc";
+        return orderBy( argumentCollection = arguments );
+    }
+
+    /**
+     * Add an order by clause to the query with the direction 'desc'.
+     * To order by multiple columns, call `orderBy` multiple times.
+     * The order in which `orderBy` is called matters and is the order it appears in the SQL.
+     *
+     * @column The name of the column(s) to order by.
+     *         An expression (`builder.raw()`) can be passed as well.
+     *         An array can be passed with any combination of simple values,
+     *         array, struct, or list for each entry in the array
+     *
+     *         An example with all possible value styles:
+     *             column = [
+     *                 "last_name",
+     *                 [ "age", "desc" ],
+     *                 { column = "favorite_color", direction = "desc" },
+     *                 "height|desc"
+     *             ];
+     *         The column argument can also just accept a comman delimited list
+     *         with a pipe ( | ) as the secondary delimiter denoting the direction
+     *         of the order by. The pipe delimiter is also used when parsing the
+     *         column argument when it is passed as an array and the entry in the
+     *         array is a pipe delimited string.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function orderByDesc( required any column ) {
+        arguments.direction = "desc";
+        return orderBy( argumentCollection = arguments );
+    }
+
+    /**
+     * Adds a raw statement as an order by
+     *
+     * @sql  The sql to add directly to the orders.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function orderByRaw( required any sql ) {
         return orderBy( new Expression( arguments.sql ) );
     }
@@ -1553,18 +1654,19 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Add an order by clause with a subquery to the query.
      *
-     * @query The builder instance or closure to define the query.
+     * @query     The builder instance or closure to define the query.
+     * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc".
      *
      * @return qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function orderBySub( required any query ) {
+    public QueryBuilder function orderBySub( required any query, string direction = "asc" ) {
         if ( !getUtils().isBuilder( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
             callback( arguments.query );
         }
 
-        variables.orders.append( { direction: "sub", query: arguments.query } );
+        variables.orders.append( { direction: arguments.direction, query: arguments.query } );
         return this;
     }
 
@@ -2529,6 +2631,19 @@ component displayname="QueryBuilder" accessors="true" {
         } catch ( any e ) {
             return arguments.listOrArray;
         }
+    }
+
+    /**
+     * Ensures the return value is an array, either by returning an array
+     * or by returning the value wrapped in an array.
+     *
+     * @value        The value to ensure is an array.
+     *
+     * @doc_generic  any
+     * @return       [any]
+     */
+    private array function arrayWrap( required any value ) {
+        return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
     }
 
     /**

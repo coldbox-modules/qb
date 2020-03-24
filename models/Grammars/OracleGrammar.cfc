@@ -61,7 +61,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             throw( type = "UnsupportedOperation", message = "This grammar does not support a RETURNING clause" );
         }
 
-        var columnsString = columns.map( wrapColumn ).toList( ", " );
+        var columnsString = arguments.columns
+            .map( function( column ) {
+                return wrapColumn( column.formatted );
+            } )
+            .toList( ", " );
 
         var placeholderString = values
             .map( function( valueArray ) {

@@ -660,7 +660,11 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function compileInsert( required any query, required array columns, required array values ) {
-        var columnsString = columns.map( wrapColumn ).toList( ", " );
+        var columnsString = arguments.columns
+            .map( function( column ) {
+                return wrapColumn( column.formatted );
+            } )
+            .toList( ", " );
 
         var placeholderString = values
             .map( function( valueArray ) {
@@ -693,8 +697,8 @@ component displayname="Grammar" accessors="true" singleton {
     ) {
         var updateList = columns
             .map( function( column ) {
-                var value = updateMap[ column ];
-                return "#wrapColumn( column )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+                var value = updateMap[ column.original ];
+                return "#wrapColumn( column.formatted )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
             } )
             .toList( ", " );
 

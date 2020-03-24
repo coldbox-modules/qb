@@ -2049,11 +2049,19 @@ component displayname="QueryBuilder" accessors="true" {
             values = [ values ];
         }
 
-        var columns = values[ 1 ].keyArray().map( applyColumnFormatter );
-        columns.sort( "textnocase" );
-        var newBindings = values.map( function( value ) {
+        var columns = arguments.values[ 1 ]
+            .keyArray()
+            .map( function( column ) {
+                return { "original": column, "formatted": applyColumnFormatter( column ) };
+            } );
+        columns.sort( function( a, b ) {
+            return compareNoCase( a.formatted, b.formatted );
+        } );
+        var newBindings = arguments.values.map( function( value ) {
             return columns.map( function( column ) {
-                return getUtils().extractBinding( value.keyExists( column ) ? value[ column ] : javacast( "null", "" ) );
+                return getUtils().extractBinding(
+                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" )
+                );
             } );
         } );
 
@@ -2097,11 +2105,18 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public any function update( struct values = {}, struct options = {}, boolean toSql = false ) {
         structAppend( arguments.values, variables.updates );
-        var updateArray = values.keyArray().map( applyColumnFormatter );
-        updateArray.sort( "textnocase" );
+        var updateArray = arguments.values
+            .keyArray()
+            .map( function( column ) {
+                return { original: column, formatted: applyColumnFormatter( column ) };
+            } );
+
+        updateArray.sort( function( a, b ) {
+            return compareNoCase( a.formatted, b.formatted );
+        } );
 
         for ( var column in updateArray ) {
-            var value = arguments.values[ column ];
+            var value = arguments.values[ column.original ];
             if ( !getUtils().isExpression( value ) ) {
                 addBindings( getUtils().extractBinding( value ), "update" );
             }

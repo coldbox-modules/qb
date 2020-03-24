@@ -33,7 +33,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     public string function compileInsert( required query, required array columns, required array values ) {
-        var columnsString = columns.map( wrapColumn ).toList( ", " );
+        var columnsString = arguments.columns
+            .map( function( column ) {
+                return wrapColumn( column.formatted );
+            } )
+            .toList( ", " );
         var returningColumns = query
             .getReturning()
             .map( function( column ) {
@@ -182,8 +186,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     public string function compileUpdate( required query, required array columns, required struct updateMap ) {
         var updateList = columns
             .map( function( column ) {
-                var value = updateMap[ column ];
-                return "#wrapColumn( column )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+                var value = updateMap[ column.original ];
+                return "#wrapColumn( column.formatted )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
             } )
             .toList( ", " );
 

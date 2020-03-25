@@ -1,3 +1,17 @@
+# v7.5.1
+## 25 Mar 2020 — 01:57:21 UTC
+
+### chore
+
++ __CI:__ Add coldbox@be testing
+ ([e14af28](https://github.com/coldbox-modules/qb/commit/e14af2833ddd38ed812d9d394a043e9557060d86))
+
+### fix
+
++ __BaseGrammar:__ Fix using column formatters with updates and inserts
+ ([e4fb585](https://github.com/coldbox-modules/qb/commit/e4fb58527c58dbc32a6948a2ee1fdee4a1f4eb67))
+
+
 # v7.5.0
 ## 12 Mar 2020 — 15:54:22 UTC
 

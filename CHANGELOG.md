@@ -1,3 +1,16 @@
+# v7.5.2
+## 25 Mar 2020 — 15:10:13 UTC
+
+### chore
+
++ __CI:__ Testing coldbox@be makes no sense as it's all unit tests
+ ([8b335da](https://github.com/coldbox-modules/qb/commit/8b335da3ca1c5a4ed70256b7e1c9214b89b48876))
+
+### fix
+
++ __QueryBuilder:__ Upgrade cbpaginator to fix maxrows discrepency ([085c8a6](https://github.com/coldbox-modules/qb/commit/085c8a6b6a60f81cc216079e35946bfe36cea4cd))
+
+
 # v7.5.1
 ## 25 Mar 2020 — 01:57:21 UTC
 

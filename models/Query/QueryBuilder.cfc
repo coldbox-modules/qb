@@ -376,7 +376,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Adds a Expression to the already selected columns.
      *
-     * @expression A raw query expression to add to the query.
+     * @expression A raw query expression or array of expressions to add to the query.
      *
      * Individual columns can contain fully-qualified names (i.e. "some_table.some_column"),
      * fully-qualified names with table aliases (i.e. "alias.some_column"),
@@ -387,9 +387,11 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function selectRaw( required any expression, array bindings = [] ) {
-        addSelect( raw( expression ) );
-        if ( !arrayIsEmpty( arguments.bindings ) ) {
-            addBindings( arguments.bindings, "select" );
+        for ( var sql in arrayWrap( arguments.expression ) ) {
+            addSelect( raw( sql ) );
+            if ( !arrayIsEmpty( arguments.bindings ) ) {
+                addBindings( arguments.bindings, "select" );
+            }
         }
         return this;
     }

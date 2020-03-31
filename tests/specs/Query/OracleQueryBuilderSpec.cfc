@@ -40,6 +40,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT substr( foo, 6 ) FROM ""USERS""";
     }
 
+    function selectRawArray() {
+        return "SELECT substr( foo, 6 ), trim( bar ) FROM ""USERS""";
+    }
+
     function subSelect() {
         return "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"" ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""";
     }

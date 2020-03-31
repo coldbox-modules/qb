@@ -70,6 +70,12 @@ component extends="testbox.system.BaseSpec" {
                             builder.selectRaw( "substr( foo, 6 )" ).from( "users" );
                         }, selectRaw() );
                     } );
+
+                    it( "can select multiple raw values with `selectRaw` when passing in an array", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).selectRaw( [ "substr( foo, 6 )", "trim( bar )" ] );
+                        }, selectRawArray() );
+                    } );
                 } );
 
                 describe( "sub-selects", function() {

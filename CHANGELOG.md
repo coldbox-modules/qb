@@ -1,3 +1,20 @@
+# v7.6.0
+## 31 Mar 2020 — 02:50:36 UTC
+
+### chore
+
++ __format:__ Always use lf for new lines ([707a288](https://github.com/coldbox-modules/qb/commit/707a288eb6483236914f5ea3793e55966ebd6476))
+
+### feat
+
++ __Select:__ selectRaw now can take an array of expressions ([d5b00af](https://github.com/coldbox-modules/qb/commit/d5b00af9c5d86f331408d7293790711693ac3eeb))
++ __Orders:__ Add a clearOrders method ([507dfdb](https://github.com/coldbox-modules/qb/commit/507dfdb935ec3bbf722e6fddebb8001fc90b8722))
+
+### refactor
+
++ __QueryBuilder:__ Split off a whereBasic method ([36d87b3](https://github.com/coldbox-modules/qb/commit/36d87b3f5ce20d1424efa85c6673ded0640f74e6))
+
+
 # v7.5.2
 ## 25 Mar 2020 — 15:10:13 UTC
 

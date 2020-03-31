@@ -4,7 +4,7 @@ component singleton {
     property name="grammar";
 
     function autoDiscoverGrammar() {
-        cfdbinfo(type="Version", name="local.dbInfo");
+        cfdbinfo( type="Version", name="local.dbInfo" );
 
         switch ( dbInfo.DATABASE_PRODUCTNAME ) {
             case "MySQL":

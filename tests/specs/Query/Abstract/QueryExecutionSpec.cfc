@@ -116,7 +116,7 @@ component extends="testbox.system.BaseSpec" {
                         [ { id: 1, name: "foo" }, { id: 2, name: "test" } ]
                     );
                     builder
-                        .$( "runQuery" )
+                        .$( 'runQuery' )
                         .$args( sql = "SELECT * FROM ""users""", options = {} )
                         .$results( expectedQuery );
 
@@ -315,7 +315,7 @@ component extends="testbox.system.BaseSpec" {
                     );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT ""name"" FROM ""users""", options = {} )
+                        .$args( sql = "SELECT "name" FROM "users"", options = {} )
                         .$results( expectedQuery );
 
                     var results = builder.from( "users" ).implode( "name", "-" );

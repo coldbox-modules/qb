@@ -1594,11 +1594,16 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Add a and having clause to a query.
      *
-     * @column The column with which to constrain the having clause. An expression (`builder.raw()`) can be passed as well.
-     * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
-     * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+     * @column   The column with which to constrain the having clause.
+     *           An expression (`builder.raw()`) can be passed as well.
+     * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).
+     *           A value can be passed as the `operator` and the `value` left
+     *           null as a shortcut for equals
+     *           (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+     * @value    The value with which to constrain the column.
+     *           An expression (`builder.raw()`) can be passed as well.
      *
-     * @return qb.models.Query.QueryBuilder
+     * @return   qb.models.Query.QueryBuilder
      */
     public QueryBuilder function andHaving( column, operator, value ) {
         arguments.combinator = "and";
@@ -1608,11 +1613,11 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Add a or having clause to a query.
      *
-     * @column The column with which to constrain the having clause. An expression (`builder.raw()`) can be passed as well.
+     * @column   The column with which to constrain the having clause. An expression (`builder.raw()`) can be passed as well.
      * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
-     * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+     * @value    The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
      *
-     * @return qb.models.Query.QueryBuilder
+     * @return   qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orHaving( column, operator, value ) {
         arguments.combinator = "or";
@@ -1643,7 +1648,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc". If column argument is an array this argument will be used as the default value for all entries in the column list or array that fail to specify a direction for a speicifc column.
      *
-     * @return qb.models.Query.QueryBuilder
+     * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBy( required any column, string direction = "asc" ) {
         // We are trying to determine if a positional array of [ column, direction ]
@@ -1803,7 +1808,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Adds a raw statement as an order by
      *
-     * @sql  The sql to add directly to the orders.
+     * @sql    The sql to add directly to the orders.
      *
      * @return qb.models.Query.QueryBuilder
      */
@@ -1817,7 +1822,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @query     The builder instance or closure to define the query.
      * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc".
      *
-     * @return qb.models.Query.QueryBuilder
+     * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBySub( required any query, string direction = "asc" ) {
         if ( !getUtils().isBuilder( arguments.query ) ) {
@@ -1840,7 +1845,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @input   Either a QueryBuilder instance or a closure to define the derived query.
      * @all     Determines if UNION statement should be a "UNION ALL".  Passing this as an argument is discouraged.  Use the dedicated `unionAll` where possible.
      *
-     * @returns qb.models.Query.QueryBuilder
+     * @return  qb.models.Query.QueryBuilder
      */
     public QueryBuilder function union( required any input, boolean all = false ) {
         // since we have a callback, we generate a new query object and pass it into the callback
@@ -1864,6 +1869,7 @@ component displayname="QueryBuilder" accessors="true" {
      * Add a UNION ALL statement to the SQL.
      *
      * @input Either a QueryBuilder instance or a closure to define the derived query.
+     *
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function unionAll( required any input ) {
@@ -1921,6 +1927,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @alias       The name of the CTE.
      * @input       Either a QueryBuilder instance or a closure to define the derived query.
      * @columns     An optional array containing the columns to include in the CTE.
+     *
+     * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function withRecursive( required string name, required any input, array columns = [] ) {
         arguments.recursive = true;
@@ -2009,7 +2017,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @condition A boolean condition that if true will trigger the `onTrue` callback. If not true, the `onFalse` callback will trigger if it was passed. Otherwise, the query is returned unmodified.
      * @onTrue A closure that will be triggered if the `condition` is true.
-     * @onFlase A closure that will be triggered if the `condition` is false.
+     * @onFalse A closure that will be triggered if the `condition` is false.
      *
      * @return qb.models.Query.QueryBuilder
      */
@@ -2546,6 +2554,17 @@ component displayname="QueryBuilder" accessors="true" {
         return arrayToList( values( argumentCollection = arguments ), glue );
     }
 
+    /**
+     * Retrieve the results of the query in chunks.  The number of items
+     * retrieved at a time is determined by the `max` parameter. Each
+     * chunk of items will be passed to the callback provided.
+     *
+     * @max      The number of results to retrieve at a time.
+     * @callback The callback to call with each chunk of results.
+     * @options  Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return   qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function chunk( required numeric max, required callback, struct options = {} ) {
         var count = count( options = arguments.options );
         for ( var i = 1; i <= count; i += max ) {
@@ -2639,6 +2658,11 @@ component displayname="QueryBuilder" accessors="true" {
         );
     }
 
+    /**
+     * Clones the current query into a new query instance.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function clone() {
         var clonedQuery = newQuery();
         clonedQuery.setDistinct( this.getDistinct() );
@@ -2729,6 +2753,11 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    /**
+     * Clears the parent query for this query builder instance.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function clearParentQuery() {
         variables.parentQuery = javacast( "null", "" );
         return this;

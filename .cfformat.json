@@ -43,7 +43,7 @@
     "keywords.spacing_to_group":true,
     "max_columns":120,
     "method_call.chain.multiline":3,
-    "newline":"os",
+    "newline":"\n",
     "parentheses.padding":true,
     "strings.attributes.quote":"double",
     "strings.quote":"double",

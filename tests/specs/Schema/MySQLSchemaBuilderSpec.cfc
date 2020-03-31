@@ -485,7 +485,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function addMultiple() {
         return [
-            "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL",
+            "ALTER TABLE `users` ADD `tshirt_size` ENUM(''S'', ''M'', ''L'', ''XL'', ''XXL'') NOT NULL",
             "ALTER TABLE `users` ADD `is_active` TINYINT(1) NOT NULL"
         ];
     }

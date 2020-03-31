@@ -1322,6 +1322,15 @@ component extends="testbox.system.BaseSpec" {
                                 }, orderByArray() );
                             } );
 
+                            it( "can clear already configured orders", function() {
+                                testCase( function( builder ) {
+                                    builder
+                                        .from( "users" )
+                                        .orderBy( [ "last_name", "age", "favorite_color" ] )
+                                        .clearOrders();
+                                }, orderByClearOrders() );
+                            } );
+
                             it( "as pipe delimited strings", function() {
                                 testCase( function( builder ) {
                                     builder.from( "users" ).orderBy( [ "last_name|desc", "age|asc", "favorite_color|desc" ] );

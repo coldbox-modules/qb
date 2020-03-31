@@ -1835,6 +1835,16 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    /**
+     * Clears the currently configured orders for the query.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function clearOrders() {
+        variables.orders = [];
+        return this;
+    }
+
     /*******************************************************************************\
     |         UNION functions                                                       |
     \*******************************************************************************/

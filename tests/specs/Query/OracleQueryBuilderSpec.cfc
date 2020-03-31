@@ -416,6 +416,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS"" ORDER BY ""LAST_NAME"" ASC, ""AGE"" ASC, ""FAVORITE_COLOR"" ASC";
     }
 
+    function orderByClearOrders() {
+        return "SELECT * FROM ""USERS""";
+    }
+
     function orderByPipeDelimited() {
         return "SELECT * FROM ""USERS"" ORDER BY ""LAST_NAME"" DESC, ""AGE"" ASC, ""FAVORITE_COLOR"" DESC";
     }

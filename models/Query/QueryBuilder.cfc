@@ -1039,6 +1039,25 @@ component displayname="QueryBuilder" accessors="true" {
             return whereSub( column, operator, value, combinator );
         }
 
+        return whereBasic( column, operator, value, combinator );
+    }
+
+    /**
+     * Adds a WHERE clause to the query.
+     *
+     * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
+     * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
+     * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    private QueryBuilder function whereBasic(
+        required string column,
+        required string operator,
+        any value,
+        string combinator = "and"
+    ) {
         arrayAppend(
             variables.wheres,
             {

@@ -2678,19 +2678,23 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function clone() {
         var clonedQuery = newQuery();
         clonedQuery.setDistinct( this.getDistinct() );
-        clonedQuery.setAggregate( duplicate( this.getAggregate() ) );
-        clonedQuery.setColumns( duplicate( this.getColumns() ) );
-        clonedQuery.setFrom( duplicate( this.getFrom() ) );
-        clonedQuery.setJoins( duplicate( this.getJoins() ) );
-        clonedQuery.setWheres( duplicate( this.getWheres() ) );
-        clonedQuery.setGroups( duplicate( this.getGroups() ) );
-        clonedQuery.setHavings( duplicate( this.getHavings() ) );
-        clonedQuery.setUnions( duplicate( this.getUnions() ) );
-        clonedQuery.setOrders( duplicate( this.getOrders() ) );
-        clonedQuery.setCommonTables( duplicate( this.getCommonTables() ) );
-        clonedQuery.setLimitValue( duplicate( this.getLimitValue() ) );
-        clonedQuery.setOffsetValue( duplicate( this.getOffsetValue() ) );
-        clonedQuery.setReturning( duplicate( this.getReturning() ) );
+        var newAggregate = {};
+        for ( var key in this.getAggregate() ) {
+            newAggregate[ key ] = this.getAggregate()[ key ];
+        }
+        clonedQuery.setAggregate( newAggregate );
+        clonedQuery.setColumns( this.getColumns().isEmpty() ? [] : arraySlice( this.getColumns(), 1 ) );
+        clonedQuery.setFrom( this.getFrom() );
+        clonedQuery.setJoins( this.getJoins().isEmpty() ? [] : arraySlice( this.getJoins(), 1 ) );
+        clonedQuery.setWheres( this.getWheres().isEmpty() ? [] : arraySlice( this.getWheres(), 1 ) );
+        clonedQuery.setGroups( this.getGroups().isEmpty() ? [] : arraySlice( this.getGroups(), 1 ) );
+        clonedQuery.setHavings( this.getHavings().isEmpty() ? [] : arraySlice( this.getHavings(), 1 ) );
+        clonedQuery.setUnions( this.getUnions().isEmpty() ? [] : arraySlice( this.getUnions(), 1 ) );
+        clonedQuery.setOrders( this.getOrders().isEmpty() ? [] : arraySlice( this.getOrders(), 1 ) );
+        clonedQuery.setCommonTables( this.getCommonTables().isEmpty() ? [] : arraySlice( this.getCommonTables(), 1 ) );
+        clonedQuery.setLimitValue( this.getLimitValue() );
+        clonedQuery.setOffsetValue( this.getOffsetValue() );
+        clonedQuery.setReturning( this.getReturning().isEmpty() ? [] : arraySlice( this.getReturning(), 1 ) );
         clonedQuery.mergeBindings( this );
         return clonedQuery;
     }

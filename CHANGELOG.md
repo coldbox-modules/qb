@@ -1,3 +1,11 @@
+# v7.6.1
+## 28 Apr 2020 — 21:46:32 UTC
+
+### fix
+
++ __QueryBuilder:__ Avoid duplicate due to Hibernate bugs ([ec429ba](https://github.com/coldbox-modules/qb/commit/ec429ba928e13483a92e1e0a2bfa394329e326b3))
+
+
 # v7.6.0
 ## 31 Mar 2020 — 02:50:36 UTC
 

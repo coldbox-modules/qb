@@ -350,7 +350,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereSub( required QueryBuilder query, required struct where ) {
-        return "#wrapValue( where.column )# #where.operator# (#compileSelect( where.query )#)";
+        return "#wrapColumn( where.column )# #where.operator# (#compileSelect( where.query )#)";
     }
 
     /**

@@ -53,6 +53,34 @@ component extends="testbox.system.BaseSpec" {
                         }, parseColumnAlias() );
                     } );
 
+                    it( "can parse column aliases in where clauses", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select( "users.foo" )
+                                .from( "users" )
+                                .where( "users.foo", "bar" );
+                        }, parseColumnAliasInWhere() );
+                    } );
+
+                    it( "can parse column aliases in where clauses with subselects", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users u" )
+                                .select( "u.*, user_roles.roleid, roles.rolecode" )
+                                .join( "user_roles", "user_roles.userid", "u.userid" )
+                                .leftjoin( "roles", "user_roles.roleid", "roles.roleid" )
+                                .where(
+                                    "user_roles.roleid",
+                                    "=",
+                                    function( q ) {
+                                        q.select( "roleid" )
+                                            .from( "roles" )
+                                            .where( "rolecode", "SYSADMIN" );
+                                    }
+                                );
+                        }, parseColumnAliasInWhereSubselect() );
+                    } );
+
                     it( "wraps columns and aliases correctly", function() {
                         testCase( function( builder ) {
                             builder.select( "x.y as foo.bar" ).from( "public.users" );

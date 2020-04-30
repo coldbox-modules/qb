@@ -28,6 +28,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT ""FOO"" AS ""BAR"" FROM ""USERS""";
     }
 
+    function parseColumnAliasInWhere() {
+        return { "sql": "SELECT ""USERS"".""FOO"" FROM ""USERS"" WHERE ""USERS"".""FOO"" = ?", "bindings": [ "bar" ] };
+    }
+
+    function parseColumnAliasInWhereSubselect() {
+        return {
+            "sql": "SELECT ""U"".*, ""USER_ROLES"".""ROLEID"", ""ROLES"".""ROLECODE"" FROM ""USERS"" AS ""U"" INNER JOIN ""USER_ROLES"" ON ""USER_ROLES"".""USERID"" = ""U"".""USERID"" LEFT JOIN ""ROLES"" ON ""USER_ROLES"".""ROLEID"" = ""ROLES"".""ROLEID"" WHERE ""USER_ROLES"".""ROLEID"" = (SELECT ""ROLEID"" FROM ""ROLES"" WHERE ""ROLECODE"" = ?)",
+            "bindings": [ "SYSADMIN" ]
+        };
+    }
+
     function wrapColumnsAndAliases() {
         return "SELECT ""X"".""Y"" AS ""FOO.BAR"" FROM ""PUBLIC"".""USERS""";
     }

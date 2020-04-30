@@ -28,6 +28,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT `foo` AS `bar` FROM `users`";
     }
 
+    function parseColumnAliasInWhere() {
+        return { "sql": "SELECT `users`.`foo` FROM `users` WHERE `users`.`foo` = ?", "bindings": [ "bar" ] };
+    }
+
+    function parseColumnAliasInWhereSubselect() {
+        return {
+            "sql": "SELECT `u`.*, `user_roles`.`roleid`, `roles`.`rolecode` FROM `users` AS `u` INNER JOIN `user_roles` ON `user_roles`.`userid` = `u`.`userid` LEFT JOIN `roles` ON `user_roles`.`roleid` = `roles`.`roleid` WHERE `user_roles`.`roleid` = (SELECT `roleid` FROM `roles` WHERE `rolecode` = ?)",
+            "bindings": [ "SYSADMIN" ]
+        };
+    }
+
     function wrapColumnsAndAliases() {
         return "SELECT `x`.`y` AS `foo.bar` FROM `public`.`users`";
     }

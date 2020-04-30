@@ -1,3 +1,12 @@
+# v7.6.2
+## 30 Apr 2020 — 21:19:47 UTC
+
+### fix
+
++ __BaseGrammar:__ Fix a case where a column was not wrapped correctly
+ ([e4fcff4](https://github.com/coldbox-modules/qb/commit/e4fcff4a2731ce3885b277bb5aeae8440f2e376b))
+
+
 # v7.6.1
 ## 28 Apr 2020 — 21:46:32 UTC
 

@@ -1,3 +1,12 @@
+# v7.7.0
+## 03 May 2020 — 16:43:06 UTC
+
+### feat
+
++ __BaseGrammar:__ Add executionTime to the data output, including interceptors
+ ([25d66d7](https://github.com/coldbox-modules/qb/commit/25d66d78bf84f254c824f701bde65bd739fb867e))
+
+
 # v7.6.2
 ## 30 Apr 2020 — 21:19:47 UTC
 

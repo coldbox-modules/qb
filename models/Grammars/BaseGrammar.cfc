@@ -94,7 +94,9 @@ component displayname="Grammar" accessors="true" singleton {
         tryPreInterceptor( data );
         structAppend( data.options, { result: "local.result" }, true );
         variables.log.debug( "Executing sql: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
+        var startTick = getTickCount();
         var q = queryExecute( data.sql, data.bindings, data.options );
+        data.executionTime = getTickCount() - startTick;
         data.query = isNull( q ) ? javacast( "null", "" ) : q;
         data.result = local.result;
         tryPostInterceptor( data );

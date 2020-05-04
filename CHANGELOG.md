@@ -1,3 +1,12 @@
+# v7.7.1
+## 04 May 2020 — 16:50:13 UTC
+
+### fix
+
++ __JoinClause:__ Prevent duplicate joins when using closure syntax
+ ([8f5028a](https://github.com/coldbox-modules/qb/commit/8f5028a038ef3a47c915b36ebb10bf5736a1c666))
+
+
 # v7.7.0
 ## 03 May 2020 — 16:43:06 UTC
 

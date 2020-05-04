@@ -260,6 +260,16 @@ component extends="testbox.system.BaseSpec" {
                         expect( variables.qb.getJoins().len() ).toBe( 1 );
                     } );
 
+                    it( "will prevent an identical join from being added using the closure syntax when preventDuplicateJoins is true", function() {
+                        variables.qb.join( "secondTable", function( j ) {
+                            j.on( "secondTable.id", "firstTable.secondId" );
+                        } );
+                        variables.qb.join( "secondTable", function( j ) {
+                            j.on( "secondTable.id", "firstTable.secondId" );
+                        } );
+                        expect( variables.qb.getJoins().len() ).toBe( 1 );
+                    } );
+
                     it( "will allow an identical join from being added when preventDuplicateJoins is false", function() {
                         variables.qb.setPreventDuplicateJoins( false );
                         variables.qb.join( variables.join );

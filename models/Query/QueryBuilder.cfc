@@ -529,6 +529,26 @@ component displayname="QueryBuilder" accessors="true" {
 
         var join = new qb.models.Query.JoinClause( parentQuery = this, type = arguments.type, table = arguments.table );
 
+        if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
+            first( join );
+            if ( arguments.preventDuplicateJoins ) {
+                var hasThisJoin = variables.joins.find( function( existingJoin ) {
+                    return existingJoin.isEqualTo( join );
+                } );
+
+                if ( hasThisJoin ) {
+                    return this;
+                }
+            }
+            variables.joins.append( join );
+            addBindings( join.getBindings(), "join" );
+            return this;
+        }
+
+        var method = where ? "where" : "on";
+        arguments.column = arguments.first;
+        arguments.value = isNull( arguments.second ) ? javacast( "null", "" ) : arguments.second;
+        join = invoke( join, method, arguments );
         if ( arguments.preventDuplicateJoins ) {
             var hasThisJoin = variables.joins.find( function( existingJoin ) {
                 return existingJoin.isEqualTo( join );
@@ -538,19 +558,7 @@ component displayname="QueryBuilder" accessors="true" {
                 return this;
             }
         }
-
-
-        if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
-            first( join );
-            variables.joins.append( join );
-            addBindings( join.getBindings(), "join" );
-            return this;
-        }
-
-        var method = where ? "where" : "on";
-        arguments.column = arguments.first;
-        arguments.value = isNull( arguments.second ) ? javacast( "null", "" ) : arguments.second;
-        variables.joins.append( invoke( join, method, arguments ) );
+        variables.joins.append( join );
         addBindings( join.getBindings(), "join" );
 
         return this;

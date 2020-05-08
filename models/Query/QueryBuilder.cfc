@@ -2099,7 +2099,8 @@ component displayname="QueryBuilder" accessors="true" {
         var columns = arguments.values[ 1 ]
             .keyArray()
             .map( function( column ) {
-                return { "original": column, "formatted": listLast( applyColumnFormatter( column ), "." ) };
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
             } );
         columns.sort( function( a, b ) {
             return compareNoCase( a.formatted, b.formatted );
@@ -2155,7 +2156,8 @@ component displayname="QueryBuilder" accessors="true" {
         var updateArray = arguments.values
             .keyArray()
             .map( function( column ) {
-                return { original: column, formatted: listLast( applyColumnFormatter( column ), "." ) };
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { original: column, formatted: formatted };
             } );
 
         updateArray.sort( function( a, b ) {

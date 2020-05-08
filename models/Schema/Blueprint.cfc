@@ -243,8 +243,8 @@ component accessors="true" {
     }
 
     function timestamps() {
-        appendColumn( name = "createdDate", type = "timestamp" );
-        appendColumn( name = "modifiedDate", type = "timestamp" );
+        appendColumn( name = "createdDate", type = "timestamp" ).withCurrent();
+        appendColumn( name = "modifiedDate", type = "timestamp" ).withCurrent();
         return this;
     }
 
@@ -254,8 +254,8 @@ component accessors="true" {
     }
 
     function timestampsTz() {
-        appendColumn( name = "createdDate", type = "timestampTz" );
-        appendColumn( name = "modifiedDate", type = "timestampTz" );
+        appendColumn( name = "createdDate", type = "timestampTz" ).withCurrent();
+        appendColumn( name = "modifiedDate", type = "timestampTz" ).withCurrent();
         return this;
     }
 

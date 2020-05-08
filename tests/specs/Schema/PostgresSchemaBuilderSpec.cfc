@@ -230,7 +230,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function timestamps() {
-        return [ "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP NOT NULL, ""modifiedDate"" TIMESTAMP NOT NULL)" ];
+        return [
+            "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modifiedDate"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+        ];
     }
 
     function timestampTz() {
@@ -239,7 +241,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function timestampsTz() {
         return [
-            "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP WITH TIME ZONE NOT NULL, ""modifiedDate"" TIMESTAMP WITH TIME ZONE NOT NULL)"
+            "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modifiedDate"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP)"
         ];
     }
 

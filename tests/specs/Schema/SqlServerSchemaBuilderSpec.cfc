@@ -235,12 +235,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function timestamps() {
-        return [ "CREATE TABLE [posts] ([createdDate] DATETIME2 NOT NULL, [modifiedDate] DATETIME2 NOT NULL)" ];
+        return [
+            "CREATE TABLE [posts] ([createdDate] DATETIME2 NOT NULL CONSTRAINT [df_posts_createdDate] DEFAULT CURRENT_TIMESTAMP, [modifiedDate] DATETIME2 NOT NULL CONSTRAINT [df_posts_modifiedDate] DEFAULT CURRENT_TIMESTAMP)"
+        ];
     }
 
     function timestampsTz() {
         return [
-            "CREATE TABLE [posts] ([createdDate] DATETIMEOFFSET NOT NULL, [modifiedDate] DATETIMEOFFSET NOT NULL)"
+            "CREATE TABLE [posts] ([createdDate] DATETIMEOFFSET NOT NULL CONSTRAINT [df_posts_createdDate] DEFAULT CURRENT_TIMESTAMP, [modifiedDate] DATETIMEOFFSET NOT NULL CONSTRAINT [df_posts_modifiedDate] DEFAULT CURRENT_TIMESTAMP)"
         ];
     }
 

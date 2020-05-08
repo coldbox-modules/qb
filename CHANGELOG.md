@@ -1,3 +1,16 @@
+# v7.7.2
+## 08 May 2020 — 21:26:38 UTC
+
+### fix
+
++ __QueryBuilder:__ Compat fix for ACF 2018 and listLast parsing
+ ([d30c8cd](https://github.com/coldbox-modules/qb/commit/d30c8cd6b06e100fcc63cf5f1405621659a7f18f))
++ __SchemaBuilder:__ Include current_timestamp default for timestamps
+ ([9f9a6c9](https://github.com/coldbox-modules/qb/commit/9f9a6c9514975066afed14b2fb14e724a47538a6))
++ __QueryBuilder:__ Ignore table qualifiers for insert and update
+ ([466d791](https://github.com/coldbox-modules/qb/commit/466d791aec08aabc61ce702439594dacff816fdf))
+
+
 # v7.7.1
 ## 04 May 2020 — 16:50:13 UTC
 

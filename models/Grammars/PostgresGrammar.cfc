@@ -359,7 +359,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function compileAddType( blueprint, commandParameters ) {
         var values = arrayMap( commandParameters.values, function( val ) {
-            return wrapValue( val );
+            return "'" & val & "'";
         } );
         return "CREATE TYPE #wrapColumn( commandParameters.name )# AS ENUM (#arrayToList( values, ", " )#)";
     }

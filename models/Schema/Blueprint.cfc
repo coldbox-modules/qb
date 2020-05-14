@@ -143,6 +143,16 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function money( name ) {
+        arguments.type = "money";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function smallMoney( name ) {
+        arguments.type = "smallMoney";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function morphs( name ) {
         unsignedInteger( "#name#_id" );
         string( "#name#_type" );

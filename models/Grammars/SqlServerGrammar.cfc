@@ -423,6 +423,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "VARCHAR(MAX)";
     }
 
+    function typeMoney( column ) {
+        return "MONEY";
+    }
+
+    function typeSmallMoney( column ) {
+        return "SMALLMONEY";
+    }
+
     function typeUnicodeMediumText( column ) {
         return "NVARCHAR(MAX)";
     }

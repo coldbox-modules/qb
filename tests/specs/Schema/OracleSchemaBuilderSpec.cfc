@@ -154,6 +154,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""POSTS"" (""BODY"" CLOB NOT NULL)" ];
     }
 
+    function money() {
+        return [ "CREATE TABLE ""TRANSACTIONS"" (""AMOUNT"" NUMBER(19, 4) NOT NULL)" ];
+    }
+    
+    function smallMoney() {
+        return [ "CREATE TABLE ""TRANSACTIONS"" (""AMOUNT"" NUMBER(10, 4) NOT NULL)" ];
+    }
+
     function morphs() {
         return [
             "CREATE TABLE ""TAGS"" (""TAGGABLE_ID"" NUMBER(10, 0) NOT NULL, ""TAGGABLE_TYPE"" VARCHAR2(255) NOT NULL)",

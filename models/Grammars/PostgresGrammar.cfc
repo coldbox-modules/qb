@@ -284,6 +284,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "INTEGER";
     }
 
+    function typeMoney( column ) {
+        return "MONEY";
+    }
+
+    function typeSmallMoney( column ) {
+        return typeMoney( column );
+    }
+
     function typePoint( column ) {
         return formatPostGisType( "point" );
     }

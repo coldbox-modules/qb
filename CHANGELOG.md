@@ -1,3 +1,11 @@
+# v7.8.0
+## 17 May 2020 — 13:31:14 UTC
+
+### feat
+
++ __SchemaBuilder:__ Add support for MONEY and SMALLMONEY data types ([24aadec](https://github.com/coldbox-modules/qb/commit/24aadec62b6121972d459bbb29b1ce5a7a2a296d))
+
+
 # v7.7.3
 ## 17 May 2020 — 07:33:29 UTC
 

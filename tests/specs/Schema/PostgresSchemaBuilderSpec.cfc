@@ -76,7 +76,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM (""S"", ""M"", ""L"", ""XL"", ""XXL"")",
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "CREATE TABLE ""employees"" (""tshirt_size"" tshirt_size NOT NULL)"
         ];
     }
@@ -484,14 +484,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function addColumn() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM (""S"", ""M"", ""L"", ""XL"", ""XXL"")",
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL"
         ];
     }
 
     function addMultiple() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM (""S"", ""M"", ""L"", ""XL"", ""XXL"")",
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL",
             "ALTER TABLE ""users"" ADD COLUMN ""is_active"" BOOLEAN NOT NULL"
         ];
@@ -499,7 +499,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function complicatedModify() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM (""S"", ""M"", ""L"", ""XL"", ""XXL"")",
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "ALTER TABLE ""users"" DROP COLUMN ""is_active"" CASCADE",
             "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL",
             "ALTER TABLE ""users"" RENAME COLUMN ""name"" TO ""username""",

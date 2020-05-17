@@ -144,6 +144,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [posts] ([body] NVARCHAR(MAX) NOT NULL)" ];
     }
 
+    function money() {
+        return [ "CREATE TABLE [transactions] ([amount] MONEY NOT NULL)" ];
+    }
+
+    function smallMoney() {
+        return [ "CREATE TABLE [transactions] ([amount] SMALLMONEY NOT NULL)" ];
+    }
+
     function morphs() {
         return [
             "CREATE TABLE [tags] ([taggable_id] INTEGER NOT NULL, [taggable_type] VARCHAR(255) NOT NULL, INDEX [taggable_index] ([taggable_id], [taggable_type]))"

@@ -391,6 +391,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "CLOB";
     }
 
+    function typeMoney( column ) {
+        return "NUMBER(19, 4)";
+    }
+
+    function typeSmallMoney( column ) {
+        return "NUMBER(10, 4)";
+    }
+
     function typePoint( column ) {
         return "SDO_GEOMETRY";
     }

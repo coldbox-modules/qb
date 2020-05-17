@@ -456,6 +456,32 @@ component extends="testbox.system.BaseSpec" {
                     }, mediumText() );
                 } );
 
+                it( "money", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "transactions",
+                            function( table ) {
+                                table.money( "amount" );
+                            },
+                            {},
+                            false
+                        );
+                    }, money() );
+                } );
+
+                it( "smallMoney", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "transactions",
+                            function( table ) {
+                                table.smallMoney( "amount" );
+                            },
+                            {},
+                            false
+                        );
+                    }, smallMoney() );
+                } );
+
                 it( "morphs", function() {
                     testCase( function( schema ) {
                         return schema.create(

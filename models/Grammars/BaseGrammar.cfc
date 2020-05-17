@@ -1251,6 +1251,14 @@ component displayname="Grammar" accessors="true" singleton {
         return "TEXT";
     }
 
+    function typeMoney( column ) {
+        return typeInteger( column );
+    }
+
+    function typeSmallMoney( column ) {
+        return typeInteger( column );
+    }
+
     function typeUnicodeLongText( column ) {
         return "TEXT";
     }

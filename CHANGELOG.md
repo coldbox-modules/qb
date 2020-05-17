@@ -1,3 +1,14 @@
+# v7.7.3
+## 17 May 2020 — 07:33:29 UTC
+
+### fix
+
++ __PostgresGrammar:__ Update enum tests for Postgres
+ ([c50b00b](https://github.com/coldbox-modules/qb/commit/c50b00ba8282562c6375de02399c7383ce5b0c96))
++ __PostgresGrammar:__ Fix wrapping of enum types
+ ([2d65e08](https://github.com/coldbox-modules/qb/commit/2d65e086893d7b5a3b039848614c5632cd9e123d))
+
+
 # v7.7.2
 ## 08 May 2020 — 21:26:38 UTC
 

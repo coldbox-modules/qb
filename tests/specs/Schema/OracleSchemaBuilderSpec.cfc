@@ -157,7 +157,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function money() {
         return [ "CREATE TABLE ""TRANSACTIONS"" (""AMOUNT"" NUMBER(19, 4) NOT NULL)" ];
     }
-    
+
     function smallMoney() {
         return [ "CREATE TABLE ""TRANSACTIONS"" (""AMOUNT"" NUMBER(10, 4) NOT NULL)" ];
     }

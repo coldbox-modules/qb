@@ -1,3 +1,72 @@
+# v7.9.0
+## 11 Jun 2020 — 22:59:22 UTC
+
+### chore
+
++ __Format:__ Format with cfformat
+ ([77af3ee](https://github.com/coldbox-modules/qb/commit/77af3ee6cfe331d251278d37c7d920fa60d3e47d))
++ __format:__ Always use lf for new lines ([707a288](https://github.com/coldbox-modules/qb/commit/707a288eb6483236914f5ea3793e55966ebd6476))
++ __CI:__ Testing coldbox@be makes no sense as it's all unit tests
+ ([8b335da](https://github.com/coldbox-modules/qb/commit/8b335da3ca1c5a4ed70256b7e1c9214b89b48876))
++ __CI:__ Add coldbox@be testing
+ ([e14af28](https://github.com/coldbox-modules/qb/commit/e14af2833ddd38ed812d9d394a043e9557060d86))
++ __BaseGrammar:__ Inline null services
+ ([4ccad99](https://github.com/coldbox-modules/qb/commit/4ccad998b63f6a75a0c3b04cf16ffe42a47f4cce))
++ __QueryBuilder:__ Fix tests on ACF 2016 due to @default metadata. ([29b31d0](https://github.com/coldbox-modules/qb/commit/29b31d0953c11eb73b563914c492786d695b7a04))
+
+### feat
+
++ __SchemaBuilder:__ Add support for MONEY and SMALLMONEY data types ([24aadec](https://github.com/coldbox-modules/qb/commit/24aadec62b6121972d459bbb29b1ce5a7a2a296d))
++ __BaseGrammar:__ Add executionTime to the data output, including interceptors
+ ([25d66d7](https://github.com/coldbox-modules/qb/commit/25d66d78bf84f254c824f701bde65bd739fb867e))
++ __Select:__ selectRaw now can take an array of expressions ([d5b00af](https://github.com/coldbox-modules/qb/commit/d5b00af9c5d86f331408d7293790711693ac3eeb))
++ __Orders:__ Add a clearOrders method ([507dfdb](https://github.com/coldbox-modules/qb/commit/507dfdb935ec3bbf722e6fddebb8001fc90b8722))
++ __Joins:__ Optionally prevent duplicate joins from being added ([40212ff](https://github.com/coldbox-modules/qb/commit/40212ff4463ea5a615dfda35ab9617513d9d4348))
++ __QueryBuilder:__ Enhance order by's with more direction options ([c767ac8](https://github.com/coldbox-modules/qb/commit/c767ac8764fab70d70dc77baa7bb9fb27c1d4eeb))
+
+### fix
+
++ __OracleGrammar:__ Remove elvis operator due to ACF compatibility issues
+ ([e4b27b8](https://github.com/coldbox-modules/qb/commit/e4b27b89515a617649dc780b43159aed20e11145))
++ __PostgresGrammar:__ Update enum tests for Postgres
+ ([c50b00b](https://github.com/coldbox-modules/qb/commit/c50b00ba8282562c6375de02399c7383ce5b0c96))
++ __PostgresGrammar:__ Fix wrapping of enum types
+ ([2d65e08](https://github.com/coldbox-modules/qb/commit/2d65e086893d7b5a3b039848614c5632cd9e123d))
++ __QueryBuilder:__ Compat fix for ACF 2018 and listLast parsing
+ ([d30c8cd](https://github.com/coldbox-modules/qb/commit/d30c8cd6b06e100fcc63cf5f1405621659a7f18f))
++ __SchemaBuilder:__ Include current_timestamp default for timestamps
+ ([9f9a6c9](https://github.com/coldbox-modules/qb/commit/9f9a6c9514975066afed14b2fb14e724a47538a6))
++ __QueryBuilder:__ Ignore table qualifiers for insert and update
+ ([466d791](https://github.com/coldbox-modules/qb/commit/466d791aec08aabc61ce702439594dacff816fdf))
++ __JoinClause:__ Prevent duplicate joins when using closure syntax
+ ([8f5028a](https://github.com/coldbox-modules/qb/commit/8f5028a038ef3a47c915b36ebb10bf5736a1c666))
++ __BaseGrammar:__ Fix a case where a column was not wrapped correctly
+ ([e4fcff4](https://github.com/coldbox-modules/qb/commit/e4fcff4a2731ce3885b277bb5aeae8440f2e376b))
++ __QueryBuilder:__ Avoid duplicate due to Hibernate bugs ([ec429ba](https://github.com/coldbox-modules/qb/commit/ec429ba928e13483a92e1e0a2bfa394329e326b3))
++ __QueryBuilder:__ Upgrade cbpaginator to fix maxrows discrepency ([085c8a6](https://github.com/coldbox-modules/qb/commit/085c8a6b6a60f81cc216079e35946bfe36cea4cd))
++ __BaseGrammar:__ Fix using column formatters with updates and inserts
+ ([e4fb585](https://github.com/coldbox-modules/qb/commit/e4fb58527c58dbc32a6948a2ee1fdee4a1f4eb67))
++ __QueryBuilder:__ Fix using  with query param structs
+ ([07c9b72](https://github.com/coldbox-modules/qb/commit/07c9b728bdbad6bf02ccd9d21dbdf6968062c02e))
++ __QueryBuilder:__ Ignore orders in aggregate queries
+ ([39e1338](https://github.com/coldbox-modules/qb/commit/39e1338a147838165e05225bd91ef7e6cde2319a))
++ __BaseGrammar:__ Improve column wrapping with trimming ([d98a5cb](https://github.com/coldbox-modules/qb/commit/d98a5cb65851c154b6755e90254d1a2c1df82833))
++ __QueryBuilder:__ Prefer the parent query over magic methods ([f9fd8d1](https://github.com/coldbox-modules/qb/commit/f9fd8d157cdc0d7480811c4659c130ee1d58888f))
+
+### other
+
++ __\*:__ fix: Format with cfformat
+ ([dc2a9b6](https://github.com/coldbox-modules/qb/commit/dc2a9b61503690d753a71c3b7bce002ebdf4ccda))
++ __\*:__ fix: Update gitignore to account for folder paths
+ ([382c16b](https://github.com/coldbox-modules/qb/commit/382c16b3e144143edcc5e7e1de4dc133dc502d6f))
++ __\*:__ chore: Adjust ignore files
+ ([e5702ed](https://github.com/coldbox-modules/qb/commit/e5702edcd5e00eab9502dee2854a49270a11f4c0))
+
+### refactor
+
++ __QueryBuilder:__ Split off a whereBasic method ([36d87b3](https://github.com/coldbox-modules/qb/commit/36d87b3f5ce20d1424efa85c6673ded0640f74e6))
+
+
 # v7.8.0
 ## 17 May 2020 — 13:31:14 UTC
 

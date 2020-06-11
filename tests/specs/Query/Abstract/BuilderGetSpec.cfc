@@ -10,9 +10,7 @@ component extends="testbox.system.BaseSpec" {
                 qb.$property( propertyName = "utils", mock = utils );
 
                 var mockWirebox = getMockBox().createStub();
-                var mockJoinClause = getMockBox().prepareMock(
-                    new qb.models.Query.JoinClause( qb, "inner", "second" )
-                );
+                var mockJoinClause = getMockBox().prepareMock( new qb.models.Query.JoinClause( qb, "inner", "second" ) );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
                 mockWirebox
                     .$( "getInstance" )
@@ -25,8 +23,7 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "retreives bindings in a flat array", function() {
-                qb
-                    .join( "second", function( join ) {
+                qb.join( "second", function( join ) {
                         join.where( "second.locale", "=", "en-US" );
                     } )
                     .where( "first.quantity", ">=", 10 );
@@ -47,8 +44,7 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "retreives a map of bindings", function() {
-                qb
-                    .join( "second", function( join ) {
+                qb.join( "second", function( join ) {
                         join.where( "second.locale", "=", "en-US" );
                     } )
                     .where( "first.quantity", ">=", "10" );

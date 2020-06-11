@@ -88,10 +88,7 @@ component extends="testbox.system.BaseSpec" {
                         var clauseOne = clauses[ 1 ];
                         expect( clauseOne.first ).toBe( "first.id", "First column should be [first.id]" );
                         expect( clauseOne.operator ).toBe( "=", "Operator should be [=]" );
-                        expect( clauseOne.second ).toBe(
-                            "second.first_id",
-                            "First column should be [second.first_id]"
-                        );
+                        expect( clauseOne.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
                         expect( clauseOne.combinator ).toBe( "and" );
 
                         var clauseTwo = clauses[ 2 ];

@@ -584,9 +584,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         arguments.mockGrammar = isNull( arguments.mockGrammar ) ? getMockBox()
             .createMock( "qb.models.Grammars.PostgresGrammar" )
             .init( utils ) : arguments.mockGrammar;
-        var builder = getMockBox()
-            .createMock( "qb.models.Schema.SchemaBuilder" )
-            .init( arguments.mockGrammar );
+        var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" ).init( arguments.mockGrammar );
         variables.mockGrammar = arguments.mockGrammar;
         return builder;
     }

@@ -1367,13 +1367,17 @@ component extends="testbox.system.BaseSpec" {
 
                             it( "as pipe delimited strings", function() {
                                 testCase( function( builder ) {
-                                    builder.from( "users" ).orderBy( [ "last_name|desc", "age|asc", "favorite_color|desc" ] );
+                                    builder
+                                        .from( "users" )
+                                        .orderBy( [ "last_name|desc", "age|asc", "favorite_color|desc" ] );
                                 }, orderByPipeDelimited() );
                             } );
 
                             it( "as a nested positional array", function() {
                                 testCase( function( builder ) {
-                                    builder.from( "users" ).orderBy( [ [ "last_name", "desc" ], [ "age", "asc" ], [ "favorite_color" ] ] );
+                                    builder
+                                        .from( "users" )
+                                        .orderBy( [ [ "last_name", "desc" ], [ "age", "asc" ], [ "favorite_color" ] ] );
                                 }, orderByArrayOfArrays() );
                             } );
 
@@ -1505,9 +1509,7 @@ component extends="testbox.system.BaseSpec" {
 
                             it( "as column names with optional secondary piped delimited value representing the direction for that column and inherits the direction argument's value when supplied", function() {
                                 testCase( function( builder ) {
-                                    builder
-                                        .from( "users" )
-                                        .orderBy( "last_name|asc,age,favorite_color|asc", "desc" );
+                                    builder.from( "users" ).orderBy( "last_name|asc,age,favorite_color|asc", "desc" );
                                 }, orderByListPipeDelimitedWithDefaultDirection() );
                             } );
                         } );

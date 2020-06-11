@@ -100,7 +100,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
         if ( !isNull( query.getLimitValue() ) ) {
             var offset = 0;
-            if (!isNull( query.getOffsetValue() )) {
+            if ( !isNull( query.getOffsetValue() ) ) {
                 offset = query.getOffsetValue();
             }
             limitAndOffset.append( """QB_RN"" <= #offset + query.getLimitValue()#" );

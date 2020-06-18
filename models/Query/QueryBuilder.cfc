@@ -2152,7 +2152,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return query
      */
     public any function update( struct values = {}, struct options = {}, boolean toSql = false ) {
-        structAppend( arguments.values, variables.updates );
+        structAppend( arguments.values, variables.updates, false );
         var updateArray = arguments.values
             .keyArray()
             .map( function( column ) {
@@ -2636,7 +2636,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return       any
      */
     private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
-        structAppend( arguments.options, getDefaultOptions() );
+        structAppend( arguments.options, getDefaultOptions(), false );
         var result = grammar.runQuery(
             sql,
             getBindings(),

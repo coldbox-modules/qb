@@ -1,3 +1,14 @@
+# v7.9.1
+## 18 Jun 2020 — 22:37:57 UTC
+
+### fix
+
++ __QueryUtils:__ Handle multi-word columns in queryRemoveColumns
+ ([69d3058](https://github.com/coldbox-modules/qb/commit/69d30585828f99cf89d4b7cadebee27b67355fbd))
++ __QueryBuilder:__ Fix incorrect structAppend overwrites
+ ([ad770d2](https://github.com/coldbox-modules/qb/commit/ad770d2e29a433315eb4c90d40533def4bf448ec))
+
+
 # v7.9.0
 ## 11 Jun 2020 — 22:59:22 UTC
 

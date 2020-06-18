@@ -249,6 +249,7 @@ component displayname="QueryBuilder" accessors="true" {
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
+        variables.utils.setBuilder( this );
 
         setReturnFormat( arguments.returnFormat );
         setPreventDuplicateJoins( arguments.preventDuplicateJoins );

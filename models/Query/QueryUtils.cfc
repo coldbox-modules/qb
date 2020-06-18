@@ -1,7 +1,12 @@
 /**
  * A collection of query utilities shared across multiple models
  */
-component displayname="QueryUtils" singleton {
+component displayname="QueryUtils" accessors="true" {
+
+    /**
+     * A reference to the owning query builder
+     */
+    property name="builder";
 
     /**
      * Extract a binding from a value.
@@ -150,18 +155,31 @@ component displayname="QueryUtils" singleton {
      * @return query
      */
     public query function queryRemoveColumns( required query q, required string columns ) {
-        var columnList = getMetadata( q )
+        var columnsToRemove = arguments.columns.listToArray();
+        var queryColumnInfo = getMetadata( q );
+        var queryAsArray = queryToArrayOfStructs( q );
+        queryAsArray.each( function( row ) {
+            columnsToRemove.each( function( col ) {
+                structDelete( row, col );
+            } );
+        } );
+
+        var newColumns = queryColumnInfo
+            .filter( function( column ) {
+                return !arrayContainsNoCase( columnsToRemove, column.name );
+            } )
             .map( function( column ) {
                 return column.name;
-            } )
-            .toList( "," );
-        for ( var c in arguments.columns.listToArray() ) {
-            var columnPosition = listFindNoCase( columnList, c );
-            if ( columnPosition != 0 ) {
-                columnList = listDeleteAt( columnList, columnPosition );
-            }
-        }
-        return queryExecute( "SELECT #columnList# FROM arguments.q", {}, { dbtype: "query" } );
+            } );
+
+        var newColumnTypes = newColumns.map( function( col ) {
+            var foundColumn = queryColumnInfo.filter( function( c ) {
+                return c.name == col;
+            } );
+            return arrayIsEmpty( foundColumn ) ? "varchar" : lCase( foundColumn[ 1 ].TypeName );
+        } );
+
+        return queryNew( newColumns.toList(), newColumnTypes.toList(), queryAsArray );
     }
 
     /**

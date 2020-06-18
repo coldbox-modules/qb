@@ -2,6 +2,11 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
     function beforeAll() {
         variables.utils = new qb.models.Query.QueryUtils();
+        variables.mockGrammar = createMock( "qb.models.Grammars.BaseGrammar" );
+        variables.mockBuilder = new qb.models.Query.QueryBuilder(
+            grammar = variables.mockGrammar,
+            utils = variables.utils
+        );
     }
 
     function run() {

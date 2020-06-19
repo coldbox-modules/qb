@@ -596,6 +596,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function returningIgnoresTableQualifiers() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function updateAllRecords() {
         return { sql: "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""NAME"" = ?", bindings: [ "foo", "bar" ] };
     }

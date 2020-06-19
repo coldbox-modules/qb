@@ -587,6 +587,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function returningIgnoresTableQualifiers() {
+        return {
+            sql: "INSERT INTO [users] ([email], [name]) OUTPUT INSERTED.[id] VALUES (?, ?)",
+            bindings: [ "foo", "bar" ]
+        };
+    }
+
     function updateAllRecords() {
         return { sql: "UPDATE [users] SET [email] = ?, [name] = ?", bindings: [ "foo", "bar" ] };
     }

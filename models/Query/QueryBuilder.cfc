@@ -2137,7 +2137,9 @@ component displayname="QueryBuilder" accessors="true" {
 
     function returning( required any columns ) {
         variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
-        variables.returning = variables.returning.map( applyColumnFormatter );
+        variables.returning = variables.returning.map( function( column ) {
+            return listLast( applyColumnFormatter( column ), "." );
+        } );
         return this;
     }
 

@@ -1853,6 +1853,18 @@ component extends="testbox.system.BaseSpec" {
                     }, returning() );
                 } );
 
+                it( "returning ignores table qualifiers", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .setColumnFormatter( function( column ) {
+                                return "tablePrefix." & column;
+                            } )
+                            .from( "users" )
+                            .returning( "id" )
+                            .insert( values = { "email": "foo", "name": "bar" }, toSql = true );
+                    }, returningIgnoresTableQualifiers() );
+                } );
+
                 it( "can insert with raw values", function() {
                     testCase( function( builder ) {
                         return builder

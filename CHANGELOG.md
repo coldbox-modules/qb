@@ -1,3 +1,16 @@
+# v7.9.2
+## 19 Jun 2020 — 03:52:35 UTC
+
+### fix
+
++ __QueryBuilder:__ Allow for space-delimited sort directions ([5530679](https://github.com/coldbox-modules/qb/commit/55306795354717630e1dd442628cf4e993c4203e))
++ __QueryBuilder:__ Add helpful message when trying to use a closure with 'from'
+ ([a8e7bb4](https://github.com/coldbox-modules/qb/commit/a8e7bb48af69cc7048f7ace45229fe5909a36c43))
++ __QueryBuilder:__ 'value' and 'values' now work with column formatters
+ ([da60695](https://github.com/coldbox-modules/qb/commit/da60695efe17329634efb7d9922c202ed2919dd8))
++ __QueryBuilder:__ Correctly format RETURNING clauses ([977edcf](https://github.com/coldbox-modules/qb/commit/977edcf59e66052624e4c7ff59a882adb0bcb51a))
+
+
 # v7.9.1
 ## 18 Jun 2020 — 22:37:57 UTC
 

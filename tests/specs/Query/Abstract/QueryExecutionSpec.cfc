@@ -189,6 +189,30 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1", options: {} } );
                 } );
 
+                it( "returns the first value when the column is changed by a column formatter", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [ { name: "foo" } ] );
+                    // writeDump( var = expectedQuery, abort = true );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder
+                        .setColumnFormatter( function( column ) {
+                            return "some_table.name";
+                        } )
+                        .from( "users" )
+                        .value( "different" );
+
+                    expect( results ).toBe( "foo" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1", options: {} } );
+                } );
+
                 it( "returns the defaultValue when calling value with an empty query", function() {
                     var builder = getBuilder();
                     var expectedQuery = queryNew( "name", "varchar", [] );
@@ -274,6 +298,28 @@ component extends="testbox.system.BaseSpec" {
                         .$results( expectedQuery );
 
                     var results = builder.from( "users" ).values( "some_table.name" );
+                    expect( results ).toBe( [ "foo", "bar" ] );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""some_table"".""name"" FROM ""users""", options: {} } );
+                } );
+
+                it( "can return an array of values when the column formatter changes the column name", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [ { name: "foo" }, { name: "bar" } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT ""some_table"".""name"" FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder
+                        .setColumnFormatter( function( column ) {
+                            return "some_table.name";
+                        } )
+                        .from( "users" )
+                        .values( "different" );
                     expect( results ).toBe( [ "foo", "bar" ] );
 
                     var runQueryLog = builder.$callLog().runQuery;

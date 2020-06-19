@@ -2528,7 +2528,8 @@ component displayname="QueryBuilder" accessors="true" {
         struct options = {}
     ) {
         return withReturnFormat( "query", function() {
-            select( column );
+            var formattedColumn = applyColumnFormatter( column );
+            select( formattedColumn );
             var data = first( options = options );
             if ( structIsEmpty( data ) ) {
                 if ( throwWhenNotFound ) {
@@ -2540,7 +2541,7 @@ component displayname="QueryBuilder" accessors="true" {
                     return defaultValue;
                 }
             } else {
-                return data[ listLast( column, "." ) ];
+                return data[ listLast( formattedColumn, "." ) ];
             }
         } );
     }
@@ -2555,9 +2556,10 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public array function values( required string column, struct options = {} ) {
         return withReturnFormat( "query", function() {
-            var columnName = listLast( column, "." );
-            select( column );
+            var formattedColumn = applyColumnFormatter( column );
+            select( formattedColumn );
             var result = get( options = options );
+            var columnName = listLast( formattedColumn, "." );
             var results = [];
             for ( var row in result ) {
                 results.append( row[ columnName ] );

@@ -31,6 +31,14 @@ component extends="testbox.system.BaseSpec" {
                     "SELECT * FROM ""users"" INNER JOIN ""logins"" ON ""users"".""id"" = ""logins"".""user_id"" AND ""logins"".""created_date"" > {""value"":""01 Jun 2019"",""cfsqltype"":""CF_SQL_TIMESTAMP"",""null"":false} WHERE ""users"".""type"" IN ({""value"":""admin"",""cfsqltype"":""CF_SQL_VARCHAR"",""null"":false}, {""value"":""manager"",""cfsqltype"":""CF_SQL_VARCHAR"",""null"":false}) AND ""active"" IS NOT NULL ORDER BY ""logins"".""created_date"" DESC"
                 );
             } );
+
+            it( "provides a useful error message when calling `from` with a closure", function() {
+                expect( function() {
+                    getBuilder().from( function( q ) {
+                        q.from( "whatever" ).where( "active", 1 );
+                    } );
+                } ).toThrow( type = "QBInvalidFrom" );
+            } );
         } );
     }
 

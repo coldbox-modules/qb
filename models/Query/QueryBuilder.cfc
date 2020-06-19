@@ -409,6 +409,12 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function from( required any from ) {
+        if ( isClosure( arguments.from ) || isCustomFunction( arguments.from ) ) {
+            throw(
+                type = "QBInvalidFrom",
+                message = "To use a subquery as a table, use the `fromSub` method.  This is required because your derived table needs an alias."
+            );
+        }
         variables.from = arguments.from;
         return this;
     }

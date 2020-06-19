@@ -1721,10 +1721,14 @@ component displayname="QueryBuilder" accessors="true" {
 
         // ex: "age|desc" || "last_name"
         if ( isSimpleValue( column ) ) {
-            var colName = listFirst( column, "|" );
+            var delimiter = find( "|", column ) > 0 ? "|" : " ";
+            var colName = listFirst( column, delimiter );
             // ex: "age|desc"
-            if ( listLen( column, "|" ) == 2 ) {
-                var dir = ( arrayFindNoCase( variables.directions, listLast( column, "|" ) ) ) ? listLast( column, "|" ) : direction;
+            if ( listLen( column, delimiter ) == 2 ) {
+                var dir = ( arrayFindNoCase( variables.directions, listLast( column, delimiter ) ) ) ? listLast(
+                    column,
+                    delimiter
+                ) : direction;
             } else {
                 var dir = direction;
             }

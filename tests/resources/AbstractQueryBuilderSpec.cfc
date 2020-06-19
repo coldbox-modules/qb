@@ -1453,8 +1453,8 @@ component extends="testbox.system.BaseSpec" {
                                 testCase( function( builder ) {
                                     builder
                                         .from( "users" )
-                                        .orderBy( [ "last_name", "age|desc" ] )
-                                        .orderBy( "favorite_color", "desc" )
+                                        .orderBy( "last_name,age desc" )
+                                        .orderBy( "favorite_color desc" )
                                         .orderBy(
                                             column = [ { column: "height" }, { column: "weight", direction: "asc" } ],
                                             direction = "desc"

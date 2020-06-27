@@ -2028,7 +2028,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return  PaginationCollector
      */
     public any function paginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
-        var totalRecords = count();
+        var totalRecords = count( options = options );
         var results = forPage( page, maxRows ).get( options = options );
         return getPaginationCollector().generateWithResults(
             totalRecords = totalRecords,

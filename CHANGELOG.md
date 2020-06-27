@@ -1,3 +1,11 @@
+# v7.9.3
+## 27 Jun 2020 — 19:24:33 UTC
+
+### fix
+
++ __QueryBuilder:__ Added options structure to count() method call in paginate ([99201fb](https://github.com/coldbox-modules/qb/commit/99201fbd7a8be4ca1e5d429faa921d2cd61f218a))
+
+
 # v7.9.2
 ## 19 Jun 2020 — 03:52:35 UTC
 

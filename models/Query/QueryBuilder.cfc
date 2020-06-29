@@ -1070,8 +1070,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     private QueryBuilder function whereBasic(
-        required string column,
-        required string operator,
+        required any column,
+        required any operator,
         any value,
         string combinator = "and"
     ) {

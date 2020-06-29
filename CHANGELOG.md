@@ -1,3 +1,12 @@
+# v7.9.4
+## 29 Jun 2020 — 19:19:27 UTC
+
+### fix
+
++ __QueryBuilder:__ Allow raw statements in basic where clauses
+ ([18200ec](https://github.com/coldbox-modules/qb/commit/18200ec69899c1b383b12b098fb1759db74907ba))
+
+
 # v7.9.3
 ## 27 Jun 2020 — 19:24:33 UTC
 

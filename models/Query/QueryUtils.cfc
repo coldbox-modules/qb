@@ -224,8 +224,8 @@ component displayname="QueryUtils" accessors="true" {
     }
 
     private boolean function checkIsActuallyNumeric( required any value ) {
-        return isNull( arguments.value ) ||
-        arrayContainsNoCase(
+        return isNull( arguments.value ) || (
+        isSimpleValue( arguments.value ) && arrayContainsNoCase(
             [
                 "CFDouble",
                 "Integer",
@@ -234,7 +234,7 @@ component displayname="QueryUtils" accessors="true" {
                 "Long",
                 "Short"
             ],
-            value.getClass().getSimpleName()
+            listLast( getMetadata( arguments.value ), '. ' ) )
         );
     }
 

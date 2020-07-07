@@ -1,3 +1,11 @@
+# v7.9.5
+## 07 Jul 2020 — 19:16:32 UTC
+
+### fix
+
++ __QueryUtils:__ Handle numeric checks with Secure Profile enabled  ([a849525](https://github.com/coldbox-modules/qb/commit/a849525ccdcea579f794ad12a72fdd1a95cd0122))
+
+
 # v7.9.4
 ## 29 Jun 2020 — 19:19:27 UTC
 

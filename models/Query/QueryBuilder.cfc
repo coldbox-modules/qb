@@ -687,7 +687,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public QueryBuilder function leftJoinRaw(
         required string table,
-        string first,
+        any first,
         string operator,
         string second,
         boolean where
@@ -713,7 +713,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public QueryBuilder function rightJoinRaw(
         required string table,
-        string first,
+        any first,
         string operator,
         string second,
         boolean where
@@ -808,7 +808,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function leftJoinSub(
         required any alias,
         required any input,
-        string first,
+        any first,
         string operator,
         string second,
         boolean where
@@ -836,7 +836,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function rightJoinSub(
         required any alias,
         required any input,
-        string first,
+        any first,
         string operator,
         string second,
         boolean where

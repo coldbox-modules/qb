@@ -1,3 +1,11 @@
+# v7.9.6
+## 08 Jul 2020 — 05:28:16 UTC
+
+### fix
+
++ __QueryBuilder:__ Match type hints to documentation for join functions ([a23a1b6](https://github.com/coldbox-modules/qb/commit/a23a1b6b366e9657ccd2ef1b7370eb3c40a911c9))
+
+
 # v7.9.5
 ## 07 Jul 2020 — 19:16:32 UTC
 

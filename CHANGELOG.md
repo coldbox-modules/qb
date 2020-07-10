@@ -1,3 +1,12 @@
+# v7.9.7
+## 10 Jul 2020 — 05:50:14 UTC
+
+### fix
+
++ __QueryBuilder:__ Return 0 on null aggregates
+ ([ee10a67](https://github.com/coldbox-modules/qb/commit/ee10a675575a24c7b1f68604bef2f79b25ecc707))
+
+
 # v7.9.6
 ## 08 Jul 2020 — 05:28:16 UTC
 

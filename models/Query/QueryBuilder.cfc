@@ -2844,7 +2844,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    private function withAggregate( required struct aggregate, required any callback ) {
+    private numeric function withAggregate( required struct aggregate, required any callback ) {
         var originalAggregate = getAggregate();
         var originalOrders = getOrders();
         setAggregate( arguments.aggregate );
@@ -2852,7 +2852,7 @@ component displayname="QueryBuilder" accessors="true" {
         var result = callback();
         setAggregate( originalAggregate );
         setOrders( originalOrders );
-        return result;
+        return isNumeric( result ) ? result : 0;
     }
 
     /**

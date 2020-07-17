@@ -1,3 +1,11 @@
+# v7.9.8
+## 17 Jul 2020 — 21:07:34 UTC
+
+### fix
+
++ __MySQLGrammar:__ Allow nullable timestamps in MySQL ([ceb96a1](https://github.com/coldbox-modules/qb/commit/ceb96a17e1e3ac6e1bd9883813b77fb460efe186))
+
+
 # v7.9.7
 ## 10 Jul 2020 — 05:50:14 UTC
 

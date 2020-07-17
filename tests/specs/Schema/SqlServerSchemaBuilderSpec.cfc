@@ -328,6 +328,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function timestampWithNullable() {
+        return [ "CREATE TABLE [posts] ([posted_date] DATETIME2)" ];
+    }
+
     function defaultForNumber() {
         return [ "CREATE TABLE [users] ([experience] INTEGER NOT NULL CONSTRAINT [df_users_experience] DEFAULT 100)" ];
     }

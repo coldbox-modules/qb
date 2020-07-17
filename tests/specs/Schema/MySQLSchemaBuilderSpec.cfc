@@ -165,7 +165,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function nullableTimestamps() {
-        return [ "CREATE TABLE `posts` (`createdDate` TIMESTAMP, `modifiedDate` TIMESTAMP)" ];
+        return [
+            "CREATE TABLE `posts` (`createdDate` TIMESTAMP NULL DEFAULT NULL, `modifiedDate` TIMESTAMP NULL DEFAULT NULL)"
+        ];
     }
 
     function point() {
@@ -201,11 +203,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function softDeletes() {
-        return [ "CREATE TABLE `posts` (`deletedDate` TIMESTAMP)" ];
+        return [ "CREATE TABLE `posts` (`deletedDate` TIMESTAMP NULL DEFAULT NULL)" ];
     }
 
     function softDeletesTz() {
-        return [ "CREATE TABLE `posts` (`deletedDate` TIMESTAMP)" ];
+        return [ "CREATE TABLE `posts` (`deletedDate` TIMESTAMP NULL DEFAULT NULL)" ];
     }
 
     function string() {
@@ -238,6 +240,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function timestamp() {
         return [ "CREATE TABLE `posts` (`posted_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)" ];
+    }
+
+    function timestampWithNullable() {
+        return [ "CREATE TABLE `posts` (`posted_date` TIMESTAMP NULL DEFAULT NULL)" ];
     }
 
     function timestamps() {
@@ -472,7 +478,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function renameMultipleColumns() {
         return [
             "ALTER TABLE `users` CHANGE `name` `username` NVARCHAR(255) NOT NULL",
-            "ALTER TABLE `users` CHANGE `purchase_date` `purchased_at` TIMESTAMP"
+            "ALTER TABLE `users` CHANGE `purchase_date` `purchased_at` TIMESTAMP NULL DEFAULT NULL"
         ];
     }
 
@@ -483,7 +489,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function modifyMultipleColumns() {
         return [
             "ALTER TABLE `users` CHANGE `name` `name` TEXT NOT NULL",
-            "ALTER TABLE `users` CHANGE `purchase_date` `purchased_date` TIMESTAMP"
+            "ALTER TABLE `users` CHANGE `purchase_date` `purchased_date` TIMESTAMP NULL DEFAULT NULL"
         ];
     }
 
@@ -503,7 +509,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
             "ALTER TABLE `users` DROP COLUMN `is_active`",
             "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL",
             "ALTER TABLE `users` CHANGE `name` `username` NVARCHAR(255) NOT NULL",
-            "ALTER TABLE `users` CHANGE `purchase_date` `purchase_date` TIMESTAMP",
+            "ALTER TABLE `users` CHANGE `purchase_date` `purchase_date` TIMESTAMP NULL DEFAULT NULL",
             "ALTER TABLE `users` ADD CONSTRAINT `unq_users_username` UNIQUE (`username`)",
             "ALTER TABLE `users` ADD CONSTRAINT `unq_users_email` UNIQUE (`email`)",
             "ALTER TABLE `users` DROP INDEX `idx_users_created_date`",

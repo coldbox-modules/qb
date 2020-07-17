@@ -747,6 +747,19 @@ component extends="testbox.system.BaseSpec" {
                     }, timestamp() );
                 } );
 
+                it( "timestampWithNullable", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "posts",
+                            function( table ) {
+                                table.timestamp( "posted_date" ).nullable();
+                            },
+                            {},
+                            false
+                        );
+                    }, timestampWithNullable() );
+                } );
+
                 it( "timestampTz", function() {
                     testCase( function( schema ) {
                         return schema.create(

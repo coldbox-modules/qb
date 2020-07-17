@@ -336,6 +336,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)" ];
     }
 
+    function timestampWithNullable() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP)" ];
+    }
+
     function nullable() {
         return [ "CREATE TABLE ""users"" (""id"" CHAR(36))" ];
     }

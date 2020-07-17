@@ -112,10 +112,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function generateDefault( column ) {
         if (
             column.getDefault() == "" &&
-            column.getType().findNoCase( "TIMESTAMP" ) > 0 &&
-            !column.getNullable()
+            column.getType().findNoCase( "TIMESTAMP" ) > 0
         ) {
-            column.withCurrent();
+            if ( column.getNullable() ) {
+                return "NULL DEFAULT NULL";
+            } else {
+                column.withCurrent();
+            }
         }
         return super.generateDefault( column );
     }

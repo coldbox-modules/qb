@@ -1,6 +1,21 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**
+     * Creates a new Oracle Query Grammar.
+     *
+     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
+     *
+     * @return qb.models.Grammars.OracleGrammar
+     */
+    public OracleGrammar function init( qb.models.Query.QueryUtils utils ) {
+        super.init( argumentsCollection = arguments );
+
+        variables.tableAliasOperator = " ";
+
+        return this;
+    }
+
+    /**
      * Runs a query through `queryExecute`.
      * This function exists so that platform-specific grammars can override it if needed.
      *
@@ -152,7 +167,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return column.getSql();
         }
 
-        if ( isInstanceOf( column, "qb.models.Schema.TableIndex" ) ) {
+        try {
+            if ( !column.isColumn() ) {
+                throw( message = "Not a Column" );
+            }
+        } catch ( any e ) {
+            // exception happens when isColumn returns false or is not a method on the column object
             throw(
                 type = "InvalidColumn",
                 message = "Recieved a TableIndex instead of a Column when trying to create a Column.",
@@ -160,6 +180,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             );
         }
 
+        // Oracle: Default value must come before column constraints
         return arrayToList(
             arrayFilter(
                 [

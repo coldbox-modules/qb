@@ -342,7 +342,7 @@ component displayname="QueryBuilder" accessors="true" {
             callback( arguments.query );
         }
         return selectRaw(
-            "( #arguments.query.toSQL()# ) AS #getGrammar().wrapAlias( arguments.alias )#",
+            getGrammar().wrapTable( "(#arguments.query.toSQL()#) AS #arguments.alias#" ),
             arguments.query.getBindings()
         );
     }
@@ -474,7 +474,7 @@ component displayname="QueryBuilder" accessors="true" {
         mergeBindings( arguments.input );
 
         // generate the derived table SQL
-        return this.fromRaw( "(#arguments.input.toSQL()#) AS #getGrammar().wrapAlias( arguments.alias )#" );
+        return this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
     }
 
     /*******************************************************************************\
@@ -777,7 +777,9 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         // create the table reference
-        arguments.table = "(#arguments.input.toSQL()#) AS #getGrammar().wrapAlias( arguments.alias )#";
+        arguments.table = getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" );
+
+
 
         // merge bindings
         mergeBindings( arguments.input );
@@ -867,7 +869,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         // create the table reference
-        var table = raw( "(#arguments.input.toSQL()#) AS #getGrammar().wrapAlias( arguments.alias )#" );
+        var table = raw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
 
         // merge bindings
         mergeBindings( arguments.input );

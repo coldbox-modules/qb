@@ -784,7 +784,12 @@ component displayname="Grammar" accessors="true" singleton {
         var alias = "";
         // Quick check to see if we should bother to use a regex to look for a table alias
         if ( table.find( " " ) ) {
-            var matches = reFindNoCase( "(.*?)(?:\s(?:AS\s){0,1})([^\)\s]+)$", table, 1, true );
+            var matches = reFindNoCase(
+                "(.*?)(?:\s(?:AS\s){0,1})([^\)\s]+)$",
+                table,
+                1,
+                true
+            );
             if ( matches.pos.len() >= 3 ) {
                 alias = mid( table, matches.pos[ 3 ], matches.len[ 3 ] );
                 table = mid( table, matches.pos[ 2 ], matches.len[ 2 ] );

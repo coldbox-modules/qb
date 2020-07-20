@@ -28,6 +28,11 @@ component displayname="Grammar" accessors="true" singleton {
     property name="tablePrefix" type="string" default="";
 
     /**
+     * Table alias operator for the grammar.
+     */
+    property name="tableAliasOperator" type="string" default=" AS ";
+
+    /**
      * The different components of a select statement in the order of compilation.
      */
     variables.selectComponents = [
@@ -56,6 +61,7 @@ component displayname="Grammar" accessors="true" singleton {
         param arguments.utils = new qb.models.Query.QueryUtils();
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
+        variables.tableAliasOperator = " AS ";
         // These are overwritten by WireBox, if it exists.
         variables.interceptorService = {
             "processState": function() {
@@ -776,24 +782,27 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         var alias = "";
-        if ( table.findNoCase( " as " ) > 0 ) {
-            var matches = reFindNoCase( "(.*)(?:\sAS\s)(.*)", table, 1, true );
+        // Quick check to see if we should bother to use a regex to look for a table alias
+        if ( table.find( " " ) ) {
+            var matches = reFindNoCase( "(.*?)(?:\s(?:AS\s){0,1})([^\)\s]+)$", table, 1, true );
             if ( matches.pos.len() >= 3 ) {
                 alias = mid( table, matches.pos[ 3 ], matches.len[ 3 ] );
                 table = mid( table, matches.pos[ 2 ], matches.len[ 2 ] );
             }
-        } else if ( table.findNoCase( " " ) > 0 ) {
-            alias = listGetAt( table, 2, " " );
-            table = listGetAt( table, 1, " " );
         }
-
-        table = table
-            .listToArray( "." )
-            .map( function( tablePart, index ) {
-                return wrapValue( index == 1 ? getTablePrefix() & tablePart : tablePart );
-            } )
-            .toList( "." );
-        return alias == "" ? table : table & " AS " & wrapValue( getTablePrefix() & alias );
+        if ( getUtils().isNotSubQuery( table ) ) {
+            table = table
+                .listToArray( "." )
+                .map( function( tablePart, index, tableParts ) {
+                    // Add the tableprefix when we get to the last element
+                    if ( index == tableParts.len() ) {
+                        return wrapValue( getTablePrefix() & tablePart );
+                    }
+                    return wrapValue( tablePart );
+                } )
+                .toList( "." );
+        }
+        return alias == "" ? table : table & getTableAliasOperator() & wrapAlias( getTablePrefix() & alias );
     }
 
     /**

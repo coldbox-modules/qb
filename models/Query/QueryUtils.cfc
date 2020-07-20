@@ -121,6 +121,31 @@ component displayname="QueryUtils" accessors="true" {
     }
 
     /**
+     * Returns true if a value is a subquery.
+     *
+     * @value The value to check if it is a subquery
+     *
+     * @return boolean
+     */
+    public boolean function isSubQuery( required any value ) {
+        // Includes quick check for a "(" to avoid the regex to look for the subquery pattern if possible
+        return isSimpleValue( arguments.value ) &&
+        arguments.value.find( "(" ) &&
+        arguments.value.reFindNoCase( "^\s*\(.+\)(\s|\sAS\s){0,1}[^\(\s]*\s*$" );
+    }
+
+    /**
+     * Returns true if a value is not a subquery.
+     *
+     * @value The value to check if it is a subquery
+     *
+     * @return boolean
+     */
+    public boolean function isNotSubQuery( required any value ) {
+        return !isSubQuery( value );
+    }
+
+    /**
      * Converts a query object to an array of structs.
      *
      * @q The query to convert.

@@ -1,3 +1,11 @@
+# v7.9.9
+## 21 Jul 2020 — 21:08:35 UTC
+
+### fix
+
++ __OracleGrammar:__ Correcly wrap all subqueries and aliases ([3e9210f](https://github.com/coldbox-modules/qb/commit/3e9210fc7561011d6829e48972865e6c5e05198b))
+
+
 # v7.9.8
 ## 17 Jul 2020 — 21:07:34 UTC
 

@@ -807,7 +807,10 @@ component displayname="Grammar" accessors="true" singleton {
                 } )
                 .toList( "." );
         }
-        return alias == "" ? table : table & getTableAliasOperator() & wrapAlias( getTablePrefix() & alias );
+        if ( !alias.len() ) {
+            return table;
+        }
+        return table & getTableAliasOperator() & wrapAlias( getTablePrefix() & alias );
     }
 
     /**
@@ -848,7 +851,10 @@ component displayname="Grammar" accessors="true" singleton {
             .listToArray( "." )
             .map( wrapValue )
             .toList( "." );
-        return alias == "" ? arguments.column : arguments.column & " AS " & wrapValue( alias );
+        if ( !alias.len() ) {
+            return arguments.column;
+        }
+        return arguments.column & " AS " & wrapValue( alias );
     }
 
     /**

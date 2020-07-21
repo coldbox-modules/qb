@@ -34,7 +34,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function parseColumnAliasInWhereSubselect() {
         return {
-            "sql": "SELECT ""U"".*, ""USER_ROLES"".""ROLEID"", ""ROLES"".""ROLECODE"" FROM ""USERS"" AS ""U"" INNER JOIN ""USER_ROLES"" ON ""USER_ROLES"".""USERID"" = ""U"".""USERID"" LEFT JOIN ""ROLES"" ON ""USER_ROLES"".""ROLEID"" = ""ROLES"".""ROLEID"" WHERE ""USER_ROLES"".""ROLEID"" = (SELECT ""ROLEID"" FROM ""ROLES"" WHERE ""ROLECODE"" = ?)",
+            "sql": "SELECT ""U"".*, ""USER_ROLES"".""ROLEID"", ""ROLES"".""ROLECODE"" FROM ""USERS"" ""U"" INNER JOIN ""USER_ROLES"" ON ""USER_ROLES"".""USERID"" = ""U"".""USERID"" LEFT JOIN ""ROLES"" ON ""USER_ROLES"".""ROLEID"" = ""ROLES"".""ROLEID"" WHERE ""USER_ROLES"".""ROLEID"" = (SELECT ""ROLEID"" FROM ""ROLES"" WHERE ""ROLECODE"" = ?)",
             "bindings": [ "SYSADMIN" ]
         };
     }
@@ -56,16 +56,16 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function subSelect() {
-        return "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"" ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""";
+        return "SELECT ""NAME"", (SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"") ""LATESTUPDATEDDATE"" FROM ""USERS""";
     }
 
     function subSelectQueryObject() {
-        return "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"" ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""";
+        return "SELECT ""NAME"", (SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"") ""LATESTUPDATEDDATE"" FROM ""USERS""";
     }
 
     function subSelectWithBindings() {
         return {
-            sql: "SELECT ""NAME"", ( SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ? ) AS ""LATESTUPDATEDDATE"" FROM ""USERS""",
+            sql: "SELECT ""NAME"", (SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ?) ""LATESTUPDATEDDATE"" FROM ""USERS""",
             bindings: [ 1 ]
         };
     }
@@ -80,7 +80,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function fromDerivedTable() {
         return {
-            sql: "SELECT * FROM (SELECT ""ID"", ""NAME"" FROM ""USERS"" WHERE ""AGE"" >= ?) AS ""U""",
+            sql: "SELECT * FROM (SELECT ""ID"", ""NAME"" FROM ""USERS"" WHERE ""AGE"" >= ?) ""U""",
             bindings: [ 21 ]
         };
     }
@@ -94,7 +94,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function tablePrefixWithAlias() {
-        return "SELECT * FROM ""PREFIX_USERS"" AS ""PREFIX_PEOPLE""";
+        return "SELECT * FROM ""PREFIX_USERS"" ""PREFIX_PEOPLE""";
     }
 
     function columnAliasWithAs() {
@@ -106,11 +106,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function tableAliasWithAs() {
-        return "SELECT * FROM ""USERS"" AS ""PEOPLE""";
+        return "SELECT * FROM ""USERS"" ""PEOPLE""";
     }
 
     function tableAliasWithoutAs() {
-        return "SELECT * FROM ""USERS"" AS ""PEOPLE""";
+        return "SELECT * FROM ""USERS"" ""PEOPLE""";
     }
 
     function basicWhere() {
@@ -267,7 +267,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function multipleJoins() {
-        return "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" INNER JOIN ""ADDRESSES"" AS ""A"" ON ""A"".""CONTACT_ID"" = ""CONTACTS"".""ID""";
+        return "SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" INNER JOIN ""ADDRESSES"" ""A"" ON ""A"".""CONTACT_ID"" = ""CONTACTS"".""ID""";
     }
 
     function joinWithWhere() {
@@ -358,28 +358,28 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function joinSub() {
         return {
-            sql: "SELECT * FROM ""USERS"" AS ""U"" INNER JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) AS ""C"" ON ""U"".""ID"" = ""C"".""ID""",
+            sql: "SELECT * FROM ""USERS"" ""U"" INNER JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) ""C"" ON ""U"".""ID"" = ""C"".""ID""",
             bindings: [ 1, 2, 3 ]
         };
     }
 
     function leftJoinSub() {
         return {
-            sql: "SELECT * FROM ""USERS"" AS ""U"" LEFT JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) AS ""C"" ON ""U"".""ID"" = ""C"".""ID""",
+            sql: "SELECT * FROM ""USERS"" ""U"" LEFT JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) ""C"" ON ""U"".""ID"" = ""C"".""ID""",
             bindings: [ 1, 2, 3 ]
         };
     }
 
     function rightJoinSub() {
         return {
-            sql: "SELECT * FROM ""USERS"" AS ""U"" RIGHT JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) AS ""C"" ON ""U"".""ID"" = ""C"".""ID""",
+            sql: "SELECT * FROM ""USERS"" ""U"" RIGHT JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) ""C"" ON ""U"".""ID"" = ""C"".""ID""",
             bindings: [ 1, 2, 3 ]
         };
     }
 
     function crossJoinSub() {
         return {
-            sql: "SELECT * FROM ""USERS"" AS ""U"" CROSS JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) AS ""C""",
+            sql: "SELECT * FROM ""USERS"" ""U"" CROSS JOIN (SELECT ""ID"" FROM ""CONTACTS"" WHERE ""ID"" NOT IN (?, ?, ?)) ""C""",
             bindings: [ 1, 2, 3 ]
         };
     }

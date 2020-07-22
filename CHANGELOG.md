@@ -1,3 +1,11 @@
+# v7.10.0
+## 22 Jul 2020 — 04:57:44 UTC
+
+### feat
+
++ __QueryBuilder:__ Expose nested where functions ([71ca350](https://github.com/coldbox-modules/qb/commit/71ca350808db662f3636c8b56f0dc13df892a414))
+
+
 # v7.9.9
 ## 21 Jul 2020 — 21:08:35 UTC
 

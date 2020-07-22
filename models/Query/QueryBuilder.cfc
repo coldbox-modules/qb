@@ -1363,7 +1363,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.QueryBuilder
      */
-    private QueryBuilder function whereNested( required callback, combinator = "and" ) {
+    public QueryBuilder function whereNested( required callback, combinator = "and" ) {
         var query = forNestedWhere();
         callback( query );
         return addNestedWhereQuery( query, combinator );
@@ -1377,7 +1377,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.QueryBuilder
      */
-    private QueryBuilder function addNestedWhereQuery( required QueryBuilder query, string combinator = "and" ) {
+    public QueryBuilder function addNestedWhereQuery( required QueryBuilder query, string combinator = "and" ) {
         if ( !query.getWheres().isEmpty() ) {
             variables.wheres.append( { type: "nested", query: arguments.query, combinator: arguments.combinator } );
             addBindings( query.getBindings(), "where" );
@@ -1390,7 +1390,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.QueryBuilder
      */
-    private QueryBuilder function forNestedWhere() {
+    public QueryBuilder function forNestedWhere() {
         var query = newQuery();
         return query.from( getFrom() );
     }

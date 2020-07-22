@@ -104,6 +104,33 @@ component extends="testbox.system.BaseSpec" {
                             builder.from( "users" ).selectRaw( [ "substr( foo, 6 )", "trim( bar )" ] );
                         }, selectRawArray() );
                     } );
+
+                    it( "can clear the selected columns for a query", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .select( [ "foo", "bar" ] )
+                                .clearSelect();
+                        }, clearSelect() );
+                    } );
+
+                    it( "can reselect the columns for a query", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .select( [ "foo", "bar" ] )
+                                .reselect( "baz" );
+                        }, reselect() );
+                    } );
+
+                    it( "can reselect the columns for a query with raw expressions", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .select( [ "foo", "bar" ] )
+                                .reselectRaw( [ "substr( foo, 6 )", "trim( bar )" ] );
+                        }, reselectRaw() );
+                    } );
                 } );
 
                 describe( "sub-selects", function() {

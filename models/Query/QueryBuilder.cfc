@@ -375,7 +375,7 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Adds a Expression to the already selected columns.
+     * Adds an Expression or array of expressions to the already selected columns.
      *
      * @expression A raw query expression or array of expressions to add to the query.
      *
@@ -395,6 +395,54 @@ component displayname="QueryBuilder" accessors="true" {
             }
         }
         return this;
+    }
+
+    /**
+     * Clears out the selected columns for a query along with any configured select bindings.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function clearSelect() {
+        variables.columns = [ "*" ];
+        clearBindings( only = [ "select" ] );
+        return this;
+    }
+
+    /**
+     * Clears out the selected columns for a query along with any configured select bindings.
+     * Then sets a selection of columns to select from the query.
+     *
+     * @columns A single column, a list or columns (comma-separated), or an array of columns. Default: "*".
+     *
+     * Individual columns can contain fully-qualified names (i.e. "some_table.some_column"),
+     * fully-qualified names with table aliases (i.e. "alias.some_column"),
+     * and even set column aliases themselves (i.e. "some_column AS c")
+     * Each value will be wrapped correctly, according to the database grammar being used.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function reselect( any columns = "*" ) {
+        clearSelect();
+        return select( argumentCollection = arguments );
+    }
+
+    /**
+     * Clears out the selected columns for a query along with any configured select bindings.
+     * Then adds an Expression or array of expressions to the already selected columns.
+     *
+     * @expression A raw query expression or array of expressions to add to the query.
+     *
+     * Individual columns can contain fully-qualified names (i.e. "some_table.some_column"),
+     * fully-qualified names with table aliases (i.e. "alias.some_column"),
+     * and even set column aliases themselves (i.e. "some_column AS c")
+     * Each value will be wrapped correctly, according to the database grammar being used.
+     * If no columns have been set, this column will overwrite the global "*".
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function reselectRaw( required any expression, array bindings = [] ) {
+        clearSelect();
+        return selectRaw( argumentCollection = arguments );
     }
 
     /********************************************************************************\

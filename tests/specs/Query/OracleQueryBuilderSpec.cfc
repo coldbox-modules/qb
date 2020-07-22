@@ -55,6 +55,18 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT substr( foo, 6 ), trim( bar ) FROM ""USERS""";
     }
 
+    function clearSelect() {
+        return "SELECT * FROM ""USERS""";
+    }
+
+    function reselect() {
+        return "SELECT ""BAZ"" FROM ""USERS""";
+    }
+
+    function reselectRaw() {
+        return "SELECT substr( foo, 6 ), trim( bar ) FROM ""USERS""";
+    }
+
     function subSelect() {
         return "SELECT ""NAME"", (SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"") ""LATESTUPDATEDDATE"" FROM ""USERS""";
     }

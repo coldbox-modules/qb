@@ -2126,23 +2126,93 @@ component displayname="QueryBuilder" accessors="true" {
      * When is a useful helper method that introduces if / else control flow without breaking chainability.
      * When the `condition` is true, the `onTrue` callback is triggered.  If the `condition` is false and an `onFalse` callback is passed, it is triggered.  Otherwise, the query is returned unmodified.
      *
-     * @condition A boolean condition that if true will trigger the `onTrue` callback. If not true, the `onFalse` callback will trigger if it was passed. Otherwise, the query is returned unmodified.
-     * @onTrue A closure that will be triggered if the `condition` is true.
-     * @onFalse A closure that will be triggered if the `condition` is false.
+     * @condition       A boolean condition that if true will trigger the `onTrue` callback. If not true, the `onFalse` callback will trigger if it was passed. Otherwise, the query is returned unmodified.
+     * @onTrue          A closure that will be triggered if the `condition` is true.
+     * @onFalse         A closure that will be triggered if the `condition` is false.
+     * @withoutScoping  Flag to turn off the automatic scoping of where clauses during the callback.
      *
-     * @return qb.models.Query.QueryBuilder
+     * @return          qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function when( required boolean condition, onTrue, onFalse ) {
+    public QueryBuilder function when(
+        required boolean condition,
+        required function onTrue,
+        function onFalse,
+        boolean withoutScoping = false
+    ) {
         var defaultCallback = function( q ) {
             return q;
         };
-        onFalse = isNull( onFalse ) ? defaultCallback : onFalse;
-        if ( condition ) {
-            onTrue( this );
+        arguments.onFalse = isNull( arguments.onFalse ) ? defaultCallback : arguments.onFalse;
+
+        if ( arguments.withoutScoping ) {
+            if ( arguments.condition ) {
+                arguments.onTrue( this );
+            } else {
+                arguments.onFalse( this );
+            }
         } else {
-            onFalse( this );
+            withScoping( function() {
+                if ( condition ) {
+                    onTrue( this );
+                } else {
+                    onFalse( this );
+                }
+            } );
+        }
+
+        return this;
+    }
+
+    /**
+     * Runs a callback then checks if any where clauses should be scoped
+     *
+     * @callback  The callback to run and then check if where clauses need to be scoped.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function withScoping( required function callback ) {
+        var originalWhereCount = this.getWheres().len();
+        arguments.callback();
+        if ( this.getWheres().len() > originalWhereCount ) {
+            addNewWheresWithinGroup( originalWhereCount );
         }
         return this;
+    }
+
+    /**
+     * Adds a new nested where clause for the wheres added in a scope.
+     * It only does this when there is an OR combinator inside the scope.
+     *
+     * @originalWhereCount  The number of where clauses before the scope was added.
+     */
+    private void function addNewWheresWithinGroup( required numeric originalWhereCount ) {
+        var allWheres = this.getWheres();
+        this.setWheres( [] );
+
+        if ( arguments.originalWhereCount > 0 ) {
+            groupWhereSliceForScope( arraySlice( allWheres, 1, arguments.originalWhereCount ) );
+        }
+
+        groupWhereSliceForScope( arraySlice( allWheres, arguments.originalWhereCount + 1 ) );
+    }
+
+    /**
+     * Checks if a where slice needs to be grouped in parenthesis.
+     * It only does this when there is an OR combinator inside the scope.
+     *
+     * @whereSlice  The array of where clauses to maybe be grouped.
+     */
+    private void function groupWhereSliceForScope( required array whereSlice ) {
+        var hasOrCombinator = false;
+        for ( var where in arguments.whereSlice ) {
+            if ( compareNoCase( where.combinator, "OR" ) == 0 ) {
+                this.addNestedWhereQuery( this.forNestedWhere().setWheres( arguments.whereSlice ) );
+                return;
+            }
+        }
+        var newWheres = this.getWheres();
+        arrayAppend( newWheres, arguments.whereSlice, true );
+        this.setWheres( newWheres );
     }
 
     /**

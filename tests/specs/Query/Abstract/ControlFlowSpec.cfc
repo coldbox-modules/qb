@@ -60,6 +60,66 @@ component extends="testbox.system.BaseSpec" {
                             .where( "email", "foo" );
                     }, { sql: "SELECT * FROM ""users"" WHERE ""id"" = ? AND ""email"" = ?", bindings: [ 1, "foo" ] } );
                 } );
+
+                it( "wraps the wheres if an OR combinator is used inside the callback", function() {
+                    testCase(
+                        function( builder ) {
+                            builder
+                                .select( "*" )
+                                .from( "users" )
+                                .where( "email", "foo" )
+                                .when( true, function( query ) {
+                                    query.where( "id", "=", 1 ).orWhere( "id", "=", 2 );
+                                } );
+                        },
+                        {
+                            sql: "SELECT * FROM ""users"" WHERE ""email"" = ? AND (""id"" = ? OR ""id"" = ?)",
+                            bindings: [ "foo", 1, 2 ]
+                        }
+                    );
+                } );
+
+                it( "can skip the wrapping of wheres if an OR combinator is used inside the callback", function() {
+                    testCase(
+                        function( builder ) {
+                            builder
+                                .select( "*" )
+                                .from( "users" )
+                                .where( "email", "foo" )
+                                .when(
+                                    condition = true,
+                                    onTrue = function( query ) {
+                                        query.where( "id", "=", 1 ).orWhere( "id", "=", 2 );
+                                    },
+                                    withoutScoping = true
+                                );
+                        },
+                        {
+                            sql: "SELECT * FROM ""users"" WHERE ""email"" = ? AND ""id"" = ? OR ""id"" = ?",
+                            bindings: [ "foo", 1, 2 ]
+                        }
+                    );
+                } );
+
+                it( "does not double wrap the wheres if an the wheres are already wrapped inside the callback", function() {
+                    testCase(
+                        function( builder ) {
+                            builder
+                                .select( "*" )
+                                .from( "users" )
+                                .where( "email", "foo" )
+                                .when( true, function( query ) {
+                                    query.where( function( q2 ) {
+                                        q2.where( "id", "=", 1 ).orWhere( "id", "=", 2 );
+                                    } );
+                                } );
+                        },
+                        {
+                            sql: "SELECT * FROM ""users"" WHERE ""email"" = ? AND (""id"" = ? OR ""id"" = ?)",
+                            bindings: [ "foo", 1, 2 ]
+                        }
+                    );
+                } );
             } );
 
             describe( "tap", function() {

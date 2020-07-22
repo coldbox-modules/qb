@@ -1365,6 +1365,15 @@ component extends="testbox.system.BaseSpec" {
                                 }, orderByClearOrders() );
                             } );
 
+                            it( "can reorder a query", function() {
+                                testCase( function( builder ) {
+                                    builder
+                                        .from( "users" )
+                                        .orderBy( [ "last_name", "favorite_color" ] )
+                                        .reorder( "age" );
+                                }, reorder() );
+                            } );
+
                             it( "as pipe delimited strings", function() {
                                 testCase( function( builder ) {
                                     builder

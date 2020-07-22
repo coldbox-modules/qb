@@ -1868,6 +1868,36 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    /**
+     * Clears the currently configured orders for the query.
+     * Then it adds the passed in orders to the query.
+     *
+     * @column    The name of the column(s) to order by.
+     *            An expression (`builder.raw()`) can be passed as well.
+     *            An array can be passed with any combination of simple values,
+     *            array, struct, or list for each entry in the array
+     *
+     *            An example with all possible value styles:
+     *                column = [
+     *                    "last_name",
+     *                    [ "age", "desc" ],
+     *                    { column = "favorite_color", direction = "desc" },
+     *                    "height|desc"
+     *                ];
+     *            The column argument can also just accept a comman delimited list
+     *            with a pipe ( | ) as the secondary delimiter denoting the direction
+     *            of the order by. The pipe delimiter is also used when parsing the
+     *            column argument when it is passed as an array and the entry in the
+     *            array is a pipe delimited string.
+     * @direction The direction by which to order the query.  Accepts "asc" OR "desc". Default: "asc". If column argument is an array this argument will be used as the default value for all entries in the column list or array that fail to specify a direction for a speicifc column.
+     *
+     * @return    qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function reorder( required any column, string direction = "asc" ) {
+        clearOrders();
+        return orderBy( argumentCollection = arguments );
+    }
+
     /*******************************************************************************\
     |         UNION functions                                                       |
     \*******************************************************************************/

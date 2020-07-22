@@ -1,3 +1,16 @@
+# v8.0.0
+## 22 Jul 2020 — 16:39:51 UTC
+
+### BREAKING
+
++ __QueryBuilder:__ Automatic where scoping with OR clauses in when callbacks ([0d6292d](https://github.com/coldbox-modules/qb/commit/0d6292d3bc7d149bb5fbaa001c9a666826b016cd))
+
+### feat
+
++ __QueryBuilder:__ Add reselect methods ([81d987d](https://github.com/coldbox-modules/qb/commit/81d987d837e0f51dee517b7f9095ecdf6288e77f))
++ __QueryBuilder:__ Add a reorder method ([69d6c5d](https://github.com/coldbox-modules/qb/commit/69d6c5d19c4fe53f88496bc270680cef403e382d))
+
+
 # v7.10.0
 ## 22 Jul 2020 — 04:57:44 UTC
 

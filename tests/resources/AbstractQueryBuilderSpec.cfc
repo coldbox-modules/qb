@@ -1375,6 +1375,21 @@ component extends="testbox.system.BaseSpec" {
                         }, orderByBuilderInstanceDescending() );
                     } );
 
+                    it( "can order by a builder instance with bindings", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" )
+                                        .where( "created_date", ">", "2020-01-01 00:00:00" )
+                                );
+                        }, orderByBuilderWithBindings() );
+                    } );
+
                     describe( "can accept an array for the column argument", function() {
                         describe( "with the array values", function() {
                             it( "as simple strings", function() {

@@ -203,6 +203,7 @@ component displayname="QueryBuilder" accessors="true" {
         "select": [],
         "join": [],
         "where": [],
+        "orderBy": [],
         "union": [],
         "insert": [],
         "insertRaw": [],
@@ -1903,6 +1904,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         variables.orders.append( { direction: arguments.direction, query: arguments.query } );
+        addBindings( arguments.query.getBindings(), "orderBy" );
         return this;
     }
 
@@ -2422,6 +2424,7 @@ component displayname="QueryBuilder" accessors="true" {
             "select",
             "join",
             "where",
+            "orderBy",
             "union"
         ];
 
@@ -2455,12 +2458,13 @@ component displayname="QueryBuilder" accessors="true" {
         if ( arguments.only.isEmpty() ) {
             arguments.only = [
                 "commonTables",
+                "update",
+                "insert",
                 "select",
                 "join",
                 "where",
-                "union",
-                "insert",
-                "update"
+                "orderBy",
+                "union"
             ];
         }
 

@@ -732,6 +732,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS"" ORDER BY (SELECT MAX(created_date) FROM ""LOGINS"" WHERE ""USERS"".""ID"" = ""LOGINS"".""USER_ID"") DESC";
     }
 
+    function orderByBuilderWithBindings() {
+        return {
+            sql: "SELECT * FROM ""USERS"" ORDER BY (SELECT MAX(created_date) FROM ""LOGINS"" WHERE ""USERS"".""ID"" = ""LOGINS"".""USER_ID"" AND ""CREATED_DATE"" > ?) ASC",
+            bindings: [ "2020-01-01 00:00:00" ]
+        };
+    }
+
     private function getBuilder() {
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.OracleGrammar" ).init();
         var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" ).init( grammar );

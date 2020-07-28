@@ -1,3 +1,12 @@
+# v8.0.1
+## 28 Jul 2020 — 05:33:09 UTC
+
+### fix
+
++ __QueryBuilder:__ Add bindings from orderBySub expressions
+ ([77213a6](https://github.com/coldbox-modules/qb/commit/77213a6fcbd8800dea54d262c8b09adc7cf5cc8e))
+
+
 # v8.0.0
 ## 22 Jul 2020 — 16:39:51 UTC
 

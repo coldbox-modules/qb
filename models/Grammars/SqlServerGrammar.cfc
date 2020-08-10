@@ -391,13 +391,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "DECIMAL(#column.getLength()#,#column.getPrecision()#)";
     }
 
-	function typeFloat( column ) {
-		if ( column.getPrecision() != 0 ) {
-			return "FLOAT(#column.getPrecision()#)";
-		}
+    function typeFloat( column ) {
+        if ( column.getPrecision() != 0 ) {
+            return "FLOAT(#column.getPrecision()#)";
+        }
 
-		return "FLOAT";
-	}
+        return "FLOAT";
+    }
 
     function typeInteger( column ) {
         if ( !isNull( column.getPrecision() ) ) {

@@ -1,3 +1,12 @@
+# v8.0.2
+## 13 Aug 2020 — 19:46:21 UTC
+
+### fix
+
++ __QueryBuilder:__ Clear order by bindings when calling clearOrders
+ ([f1e941a](https://github.com/coldbox-modules/qb/commit/f1e941abd1263ff77558491b9a0c2bee9eb6c658))
+
+
 # v8.0.1
 ## 28 Jul 2020 — 05:33:09 UTC
 

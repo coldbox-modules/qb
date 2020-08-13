@@ -1915,6 +1915,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public QueryBuilder function clearOrders() {
         variables.orders = [];
+        clearBindings( only = [ "orderBy" ] );
         return this;
     }
 

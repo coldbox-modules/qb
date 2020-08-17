@@ -2415,19 +2415,26 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Returns a flat array of bindings.  Used as the parameter list for `queryExecute`.
      *
+     * @excpet An array of binding types to ignore
+     *
      * @return array of bindings
      */
-    public array function getBindings() {
-        var bindingOrder = [
-            "commonTables",
-            "update",
-            "insert",
-            "select",
-            "join",
-            "where",
-            "orderBy",
-            "union"
-        ];
+    public array function getBindings( array except = [] ) {
+        var bindingOrder = arrayFilter(
+            [
+                "commonTables",
+                "update",
+                "insert",
+                "select",
+                "join",
+                "where",
+                "orderBy",
+                "union"
+            ],
+            function( type ) {
+                return !arrayContainsNoCase( except, type );
+            }
+        );
 
         var flatBindings = [];
         for ( var key in bindingOrder ) {
@@ -2809,7 +2816,7 @@ component displayname="QueryBuilder" accessors="true" {
         structAppend( arguments.options, getDefaultOptions(), false );
         var result = grammar.runQuery(
             sql,
-            getBindings(),
+            getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] ),
             arguments.options,
             returnObject
         );

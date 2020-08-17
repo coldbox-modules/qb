@@ -1,3 +1,14 @@
+# v8.0.3
+## 17 Aug 2020 — 16:40:49 UTC
+
+### fix
+
++ __QueryBuilder:__ Ignore select bindings for aggregate queries
+ ([8a3a181](https://github.com/coldbox-modules/qb/commit/8a3a181ebac97c7f842c3900c9c050294895da78))
++ __BaseGrammer:__ Allow spaces in table aliases. ([b06d690](https://github.com/coldbox-modules/qb/commit/b06d6903cf57d1a34dd64ce1b4dd56d6d40919b5))
++ __SqlServerGrammar:__ Split FLOAT and DECIMAL column types ([82da682](https://github.com/coldbox-modules/qb/commit/82da682dbf8d8c8903e223df582939408cc83df5))
+
+
 # v8.0.2
 ## 13 Aug 2020 — 19:46:21 UTC
 

@@ -81,19 +81,19 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function float() {
-        return [ "CREATE TABLE [employees] ([salary] DECIMAL(10,0) NOT NULL)" ];
+        return [ "CREATE TABLE [employees] ([salary] FLOAT NOT NULL)" ];
     }
 
     function floatWithLength() {
-        return [ "CREATE TABLE [employees] ([salary] DECIMAL(3,0) NOT NULL)" ];
+        return [ "CREATE TABLE [employees] ([salary] FLOAT NOT NULL)" ];
     }
 
     function floatWithPrecision() {
-        return [ "CREATE TABLE [employees] ([salary] DECIMAL(10,2) NOT NULL)" ];
+        return [ "CREATE TABLE [employees] ([salary] FLOAT(2) NOT NULL)" ];
     }
 
     function floatWithLengthAndPrecision() {
-        return [ "CREATE TABLE [employees] ([salary] DECIMAL(3,2) NOT NULL)" ];
+        return [ "CREATE TABLE [employees] ([salary] FLOAT(2) NOT NULL)" ];
     }
 
     function increments() {

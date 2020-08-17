@@ -387,8 +387,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "NVARCHAR(255)";
     }
 
-    function typeFloat( column ) {
+    function typeDecimal( column ) {
         return "DECIMAL(#column.getLength()#,#column.getPrecision()#)";
+    }
+
+    function typeFloat( column ) {
+        if ( column.getPrecision() != 0 ) {
+            return "FLOAT(#column.getPrecision()#)";
+        }
+
+        return "FLOAT";
     }
 
     function typeInteger( column ) {

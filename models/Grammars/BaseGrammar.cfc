@@ -782,6 +782,8 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         var alias = "";
+        // trim table to prevent incorrect " " matching
+        arguments.table = trim( arguments.table );
         // Quick check to see if we should bother to use a regex to look for a table alias
         if ( table.find( " " ) ) {
             var matches = reFindNoCase(

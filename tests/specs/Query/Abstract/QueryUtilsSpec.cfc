@@ -24,7 +24,12 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
             } );
 
             it( "dates", function() {
+                variables.mockBuilder.$("getStrictDateDetection").$results(false,false,true,true);
                 expect( utils.inferSqlType( now() ) ).toBe( "CF_SQL_TIMESTAMP" );
+                expect( utils.inferSqlType( "06 12345" ) ).toBe( "CF_SQL_TIMESTAMP" );
+                //last two with strict dateDetection
+                expect( utils.inferSqlType( now() ) ).toBe( "CF_SQL_TIMESTAMP" );
+                expect( utils.inferSqlType( "06 12345" ) ).toBe( "CF_SQL_VARCHAR" );
             } );
 
             describe( "it infers the sql type from the members of an array", function() {

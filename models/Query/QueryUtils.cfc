@@ -61,7 +61,7 @@ component displayname="QueryUtils" accessors="true" {
             return "CF_SQL_NUMERIC";
         }
 
-        if ( isDate( value ) ) {
+        if ( checkIsActuallyDate ( value ) ) {
             return "CF_SQL_TIMESTAMP";
         }
 
@@ -248,6 +248,13 @@ component displayname="QueryUtils" accessors="true" {
         return initial;
     }
 
+     /**
+     * Detects if value is numeric based on className
+     *
+     * @value The value 
+     *
+     * @return boolean
+     */
     private boolean function checkIsActuallyNumeric( required any value ) {
         return isNull( arguments.value ) || (
             isSimpleValue( arguments.value ) && arrayContainsNoCase(
@@ -263,6 +270,30 @@ component displayname="QueryUtils" accessors="true" {
             )
         );
     }
+
+    /**
+     * Detects if value is a Date based on Isdate and/or className
+     *
+     * @value The value 
+     *
+     * @return boolean
+     */
+    private boolean function checkIsActuallyDate( required any value ) {
+        if ( variables.builder.getStrictDateDetection() ) {
+            return isNull ( arguments.value ) || (
+                isDate( arguments.value) && arrayContainsNoCase(
+                    [
+                        "coldfusion.runtime.OleDateTime",
+                        "lucee.runtime.type.dt.DateTimeImpl"
+                    ],
+                    arguments.value.getClass().name
+                )
+            );
+        } else {
+            return isDate( arguments.value );
+        }
+    }
+
 
     /** Utility functions to assist with preventing duplicate joins. Adapted from cflib.org **/
     /**

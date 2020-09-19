@@ -6,7 +6,7 @@
         }
     },
     "app":{
-        "cfengine":"adobe@2016"
+        "cfengine":"lucee@5"
     },
     "directoryBrowsing":"true"
 }

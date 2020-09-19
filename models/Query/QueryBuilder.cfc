@@ -32,14 +32,6 @@ component displayname="QueryBuilder" accessors="true" {
     property name="preventDuplicateJoins";
 
     /**
-     * strictDateDetection
-     * If true, cfqueryparams will only be autodetected as Dates when it is a coldfusion dateTime object (not strings)
-     * if false, cfqueryparams will be autodetected as Date based on the cf function IsDate.
-     * @default false
-     */
-    property name="strictDateDetection";
-
-    /**
      * paginationCollector
      * A component or struct with a `generateWithResults` method.
      * The `generate` method will recieve the following arguments:

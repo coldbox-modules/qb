@@ -20,12 +20,14 @@ component {
     }
 
     function onLoad() {
+
+        binder.map( alias = "QueryUtils@qb" )
+            .initArg( name = "strictDateDetection", value = settings.strictDateDetection );
         binder.map( alias = "QueryBuilder@qb", force = true )
             .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", ref = settings.defaultGrammar )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
-            .initArg( name = "strictDateDetection", value = settings.strictDateDetection )
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat );
 
         binder.map( alias = "SchemaBuilder@qb", force = true )

@@ -9,6 +9,11 @@ component displayname="QueryUtils" accessors="true" {
     property name="builder";
 
     /**
+     * qb strictDateDetection so we can do some conditional behaviour in data type detections
+     */
+    property name = "strictDateDetection" default=false;
+
+    /**
      * Extract a binding from a value.
      *
      * @value The value from which to extract the binding
@@ -279,7 +284,7 @@ component displayname="QueryUtils" accessors="true" {
      * @return boolean
      */
     private boolean function checkIsActuallyDate( required any value ) {
-        if ( variables.builder.getStrictDateDetection() ) {
+        if ( variables.StrictDateDetection ) {
             return isNull ( arguments.value ) || (
                 isDate( arguments.value) && arrayContainsNoCase(
                     [

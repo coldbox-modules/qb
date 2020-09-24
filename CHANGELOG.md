@@ -1,3 +1,16 @@
+# v8.1.0
+## 24 Sep 2020 — 17:19:43 UTC
+
+### feat
+
++ __QueryUtils:__ Introduce optional strict date detection ([827f2e8](https://github.com/coldbox-modules/qb/commit/827f2e807876b071b5b05a32d894eb362d647d3a))
+
+### fix
+
++ __QueryBuilder:__ Allow for bindings in orderByRaw
+ ([5a97a7f](https://github.com/coldbox-modules/qb/commit/5a97a7f97ed4c081f31d276d5c3e01ae1941e7b7))
+
+
 # v8.0.3
 ## 17 Aug 2020 — 16:40:49 UTC
 

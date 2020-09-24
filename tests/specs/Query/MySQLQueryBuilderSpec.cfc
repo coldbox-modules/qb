@@ -430,6 +430,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM `users` ORDER BY DATE(created_at)";
     }
 
+    function orderByRawWithBindings() {
+        return { "sql": "SELECT * FROM `users` ORDER BY CASE WHEN id = ? THEN 1 ELSE 0 END DESC", "bindings": [ 1 ] };
+    }
+
     function orderByArray() {
         return "SELECT * FROM `users` ORDER BY `last_name` ASC, `age` ASC, `favorite_color` ASC";
     }

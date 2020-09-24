@@ -1270,6 +1270,12 @@ component extends="testbox.system.BaseSpec" {
                         }, orderByRaw() );
                     } );
 
+                    it( "can accept bindings in orderByRaw", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByRaw( "CASE WHEN id = ? THEN 1 ELSE 0 END DESC", [ 1 ] );
+                        }, orderByRawWithBindings() );
+                    } );
+
                     it( "can order by a subselect", function() {
                         testCase( function( builder ) {
                             builder

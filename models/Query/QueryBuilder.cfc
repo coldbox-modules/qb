@@ -1884,7 +1884,15 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function orderByRaw( required any sql ) {
+    public QueryBuilder function orderByRaw( required any sql, array bindings = [] ) {
+        if ( !arrayIsEmpty( arguments.bindings ) ) {
+            addBindings(
+                arguments.bindings.map( function( value ) {
+                    return variables.utils.extractBinding( arguments.value );
+                } ),
+                "orderBy"
+            );
+        }
         return orderBy( new Expression( arguments.sql ) );
     }
 

@@ -25,6 +25,13 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             it( "dates", function() {
                 expect( utils.inferSqlType( now() ) ).toBe( "CF_SQL_TIMESTAMP" );
+                if ( isLucee() ) {
+                    expect( utils.inferSqlType( "06 12345" ) ).toBe( "CF_SQL_TIMESTAMP" );
+                }
+                variables.utils.setStrictDateDetection( true );
+                expect( utils.inferSqlType( now() ) ).toBe( "CF_SQL_TIMESTAMP" );
+                expect( utils.inferSqlType( "06 12345" ) ).toBe( "CF_SQL_VARCHAR" );
+                variables.utils.setStrictDateDetection( false );
             } );
 
             describe( "it infers the sql type from the members of an array", function() {
@@ -143,6 +150,9 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
         return server.keyExists( "coldfusion" ) &&
         !server.keyExists( "lucee" ) &&
         left( server.coldfusion.productversion, 4 ) == "2016";
+    }
+    private boolean function isLucee() {
+        return server.keyExists( "lucee" );
     }
 
 }

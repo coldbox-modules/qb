@@ -9,6 +9,11 @@ component displayname="QueryUtils" accessors="true" {
     property name="builder";
 
     /**
+     * qb strictDateDetection so we can do some conditional behaviour in data type detections
+     */
+    property name="strictDateDetection" default="false";
+
+    /**
      * Extract a binding from a value.
      *
      * @value The value from which to extract the binding
@@ -61,7 +66,7 @@ component displayname="QueryUtils" accessors="true" {
             return "CF_SQL_NUMERIC";
         }
 
-        if ( isDate( value ) ) {
+        if ( checkIsActuallyDate( value ) ) {
             return "CF_SQL_TIMESTAMP";
         }
 
@@ -248,6 +253,13 @@ component displayname="QueryUtils" accessors="true" {
         return initial;
     }
 
+    /**
+     * Detects if value is numeric based on className
+     *
+     * @value The value
+     *
+     * @return boolean
+     */
     private boolean function checkIsActuallyNumeric( required any value ) {
         return isNull( arguments.value ) || (
             isSimpleValue( arguments.value ) && arrayContainsNoCase(
@@ -263,6 +275,27 @@ component displayname="QueryUtils" accessors="true" {
             )
         );
     }
+
+    /**
+     * Detects if value is a Date based on Isdate and/or className
+     *
+     * @value The value
+     *
+     * @return boolean
+     */
+    private boolean function checkIsActuallyDate( required any value ) {
+        if ( variables.strictDateDetection ) {
+            return isNull( arguments.value ) || (
+                isDate( arguments.value ) && arrayContainsNoCase(
+                    [ "OleDateTime", "DateTimeImpl" ],
+                    listLast( getMetadata( arguments.value ), "." )
+                )
+            );
+        } else {
+            return isDate( arguments.value );
+        }
+    }
+
 
     /** Utility functions to assist with preventing duplicate joins. Adapted from cflib.org **/
     /**

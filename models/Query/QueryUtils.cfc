@@ -11,7 +11,7 @@ component displayname="QueryUtils" accessors="true" {
     /**
      * qb strictDateDetection so we can do some conditional behaviour in data type detections
      */
-    property name="strictDateDetection" default=false;
+    property name="strictDateDetection" default="false";
 
     /**
      * Extract a binding from a value.
@@ -284,11 +284,11 @@ component displayname="QueryUtils" accessors="true" {
      * @return boolean
      */
     private boolean function checkIsActuallyDate( required any value ) {
-        if ( variables.StrictDateDetection ) {
+        if ( variables.strictDateDetection ) {
             return isNull( arguments.value ) || (
                 isDate( arguments.value ) && arrayContainsNoCase(
-                    [ "coldfusion.runtime.OleDateTime", "lucee.runtime.type.dt.DateTimeImpl" ],
-                    arguments.value.getClass().name
+                    [ "OleDateTime", "DateTimeImpl" ],
+                    listLast( getMetadata( arguments.value ), "." )
                 )
             );
         } else {

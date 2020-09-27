@@ -2943,11 +2943,34 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function dump() {
-        param arguments.showBindings = false;
-        arguments.var = toSQL( showBindings = arguments.showBindings );
-        structDelete( arguments, "showBindings" );
-        writeDump( argumentCollection = arguments );
+    public QueryBuilder function dump(
+        boolean showBindings = false,
+        string output = "browser",
+        string format = "text",
+        boolean abort = false,
+        string label = "",
+        boolean metainfo = false,
+        numeric top = 9999,
+        string show = "",
+        string hide = "",
+        numeric keys = 9999,
+        boolean expand = true,
+        boolean showUDFs = true
+    ) {
+        writeDump(
+            var = toSQL( showBindings = arguments.showBindings ),
+            output = arguments.output,
+            format = arguments.format,
+            abort = arguments.abort,
+            label = arguments.label,
+            metainfo = arguments.metainfo,
+            top = arguments.top,
+            show = arguments.show,
+            hide = arguments.hide,
+            keys = arguments.keys,
+            expand = arguments.expand,
+            showUDFs = arguments.showUDFs
+        );
         return this;
     }
 

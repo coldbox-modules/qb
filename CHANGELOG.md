@@ -1,3 +1,11 @@
+# v8.2.0
+## 27 Sep 2020 — 03:08:28 UTC
+
+### feat
+
++ __QueryBuilder:__ Add a dump command to aid in debugging a query while chaining ([6fe518c](https://github.com/coldbox-modules/qb/commit/6fe518c86d108d7d34faf577251489b7a02af0a8))
+
+
 # v8.1.0
 ## 24 Sep 2020 — 17:19:43 UTC
 

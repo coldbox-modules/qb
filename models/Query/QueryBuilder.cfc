@@ -2938,6 +2938,20 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Dumps out the query using `writeDump` then returns the query instance for continued chaining.
+     * Accepts all arguments that can be passed to `writeDump` as well as `showBindings` for the `toSQL` call.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function dump() {
+        param arguments.showBindings = false;
+        arguments.var = toSQL( showBindings = arguments.showBindings );
+        structDelete( arguments, "showBindings" );
+        writeDump( argumentCollection = arguments );
+        return this;
+    }
+
+    /**
      * Sets the return format for the query.
      * The return format can be a simple string like "query" to return queries or "array" to return an array of structs.
      * Alternative, the return format can be a closure.  The closure is passed the query as the only argument.  The result of the closure is returned as the result of the query.

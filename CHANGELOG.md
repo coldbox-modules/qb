@@ -1,3 +1,12 @@
+# v8.2.2
+## 01 Oct 2020 — 04:22:26 UTC
+
+### fix
+
++ __QueryBuilder:__ Use html as the default dump format
+ ([043ddb5](https://github.com/coldbox-modules/qb/commit/043ddb5538f174912d62a96fe0bf049286c8debd))
+
+
 # v8.2.1
 ## 01 Oct 2020 — 04:04:03 UTC
 

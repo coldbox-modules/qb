@@ -1,3 +1,12 @@
+# v8.2.1
+## 01 Oct 2020 — 04:04:03 UTC
+
+### fix
+
++ __QueryUtils:__ Use strictDateDetection setting in constructor
+ ([76ae59f](https://github.com/coldbox-modules/qb/commit/76ae59f0852a7356102a3692f192aec446cc2533))
+
+
 # v8.2.0
 ## 27 Sep 2020 — 03:08:28 UTC
 

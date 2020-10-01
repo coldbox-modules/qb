@@ -2946,7 +2946,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function dump(
         boolean showBindings = false,
         string output = "browser",
-        string format = "text",
+        string format = "html",
         boolean abort = false,
         string label = "",
         boolean metainfo = false,

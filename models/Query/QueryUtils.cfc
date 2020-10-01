@@ -14,6 +14,19 @@ component displayname="QueryUtils" accessors="true" {
     property name="strictDateDetection" default="false";
 
     /**
+     * Creates a new QueryUtils helper.
+     *
+     * @strictDateDetection  Flag to only parse date objects as timestamps.
+     *                       If false, strings that pass `isDate` are also treated as timestamps.
+     *
+     * @return               qb.models.Query.QueryUtils
+     */
+    public QueryUtils function init( boolean strictDateDetection = false ) {
+        variables.strictDateDetection = arguments.strictDateDetection;
+        return this;
+    }
+
+    /**
      * Extract a binding from a value.
      *
      * @value The value from which to extract the binding

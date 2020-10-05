@@ -11,7 +11,8 @@ component {
             defaultGrammar = "AutoDiscover@qb",
             defaultReturnFormat = "array",
             preventDuplicateJoins = false,
-            strictDateDetection = false
+            strictDateDetection = false,
+            numericSQLType = "CF_SQL_NUMERIC"
         };
 
         interceptorSettings = {
@@ -21,8 +22,11 @@ component {
 
     function onLoad() {
 
-        binder.map( alias = "QueryUtils@qb" )
-            .initArg( name = "strictDateDetection", value = settings.strictDateDetection );
+        binder.map( alias = "QueryUtils@qb", force=true )
+            .to( "qb.models.Query.QueryUtils" )
+            .initArg( name = "strictDateDetection", value = settings.strictDateDetection )
+            .initArg( name = "numericSQLType", value = settings.numericSQLType );
+        
         binder.map( alias = "QueryBuilder@qb", force = true )
             .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", ref = settings.defaultGrammar )

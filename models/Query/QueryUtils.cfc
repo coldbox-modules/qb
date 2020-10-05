@@ -9,20 +9,20 @@ component displayname="QueryUtils" accessors="true" {
     property name="builder";
 
     /**
-     * qb strictDateDetection so we can do some conditional behaviour in data type detections
-     */
-    property name="strictDateDetection" default="false";
-
-    /**
      * Creates a new QueryUtils helper.
      *
      * @strictDateDetection  Flag to only parse date objects as timestamps.
      *                       If false, strings that pass `isDate` are also treated as timestamps.
+     * @numericSQLType       Allows overriding inferred numeric SQL type default by adding a setting in coldbox.cdc module settings
      *
      * @return               qb.models.Query.QueryUtils
      */
-    public QueryUtils function init( boolean strictDateDetection = false ) {
+    public QueryUtils function init(
+        Boolean strictDateDetection = false,
+        String numericSQLType = "CF_SQL_NUMERIC"
+    ) {
         variables.strictDateDetection = arguments.strictDateDetection;
+        variables.numericSQLType = arguments.numericSQLType;
         return this;
     }
 
@@ -65,6 +65,7 @@ component displayname="QueryUtils" accessors="true" {
      * @return string
      */
     public string function inferSqlType( required any value ) {
+
         if ( isArray( value ) ) {
             return arraySame(
                 value,
@@ -76,7 +77,7 @@ component displayname="QueryUtils" accessors="true" {
         }
 
         if ( checkIsActuallyNumeric( value ) ) {
-            return "CF_SQL_NUMERIC";
+            return variables.numericSQLType;
         }
 
         if ( checkIsActuallyDate( value ) ) {

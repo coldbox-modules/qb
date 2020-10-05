@@ -27,10 +27,7 @@ component displayname="QueryUtils" accessors="true" {
      *
      * @return               qb.models.Query.QueryUtils
      */
-    public QueryUtils function init(
-        Boolean strictDateDetection = false,
-        String numericSQLType = "CF_SQL_NUMERIC"
-    ) {
+    public QueryUtils function init( Boolean strictDateDetection = false, String numericSQLType = "CF_SQL_NUMERIC" ) {
         variables.strictDateDetection = arguments.strictDateDetection;
         variables.numericSQLType = arguments.numericSQLType;
         return this;
@@ -75,7 +72,6 @@ component displayname="QueryUtils" accessors="true" {
      * @return string
      */
     public string function inferSqlType( required any value ) {
-
         if ( isArray( value ) ) {
             return arraySame(
                 value,

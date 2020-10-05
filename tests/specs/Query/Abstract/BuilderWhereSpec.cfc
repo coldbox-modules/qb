@@ -1,4 +1,5 @@
 component extends="testbox.system.BaseSpec" {
+
     function run() {
         describe( "where methods", function() {
             beforeEach( function() {
@@ -14,43 +15,53 @@ component extends="testbox.system.BaseSpec" {
             describe( "where", function() {
                 it( "specifices a where clause", function() {
                     query.where( "::some column::", "=", "::some value::" );
-                    expect( query.getWheres() ).toBe( [ {
-                        column = "::some column::",
-                        operator = "=",
-                        value = "::some value::",
-                        combinator = "and",
-                        type = "basic"
-                    } ] );
+                    expect( query.getWheres() ).toBe( [
+                        {
+                            column: "::some column::",
+                            operator: "=",
+                            value: "::some value::",
+                            combinator: "and",
+                            type: "basic"
+                        }
+                    ] );
                 } );
 
                 it( "only infers the = when only two arguments", function() {
                     query.where( "::some column::", "::some value::" );
-                    expect( query.getWheres() ).toBe( [ {
-                        column = "::some column::",
-                        operator = "=",
-                        value = "::some value::",
-                        combinator = "and",
-                        type = "basic"
-                    } ] );
+                    expect( query.getWheres() ).toBe( [
+                        {
+                            column: "::some column::",
+                            operator: "=",
+                            value: "::some value::",
+                            combinator: "and",
+                            type: "basic"
+                        }
+                    ] );
                 } );
 
                 it( "can be specify the boolean combinator", function() {
-                    query.where( "::some column::", "=", "::some value::" )
-                         .where( "::another column::", "=", "::another value::", "or" );
+                    query
+                        .where( "::some column::", "=", "::some value::" )
+                        .where(
+                            "::another column::",
+                            "=",
+                            "::another value::",
+                            "or"
+                        );
                     expect( query.getWheres() ).toBe( [
                         {
-                            column = "::some column::",
-                            operator = "=",
-                            value = "::some value::",
-                            combinator = "and",
-                            type = "basic"
+                            column: "::some column::",
+                            operator: "=",
+                            value: "::some value::",
+                            combinator: "and",
+                            type: "basic"
                         },
                         {
-                            column = "::another column::",
-                            operator = "=",
-                            value = "::another value::",
-                            combinator = "or",
-                            type = "basic"
+                            column: "::another column::",
+                            operator: "=",
+                            value: "::another value::",
+                            combinator: "or",
+                            type: "basic"
                         }
                     ] );
                 } );
@@ -114,30 +125,34 @@ component extends="testbox.system.BaseSpec" {
                     it( "translates whereColumn in to where(""column""", function() {
                         query.whereSomeColumn( "::some value::" );
 
-                        expect( query.getWheres() ).toBe( [ {
-                            column = "somecolumn",
-                            operator = "=",
-                            value = "::some value::",
-                            combinator = "and",
-                            type = "basic"
-                        } ] );
+                        expect( query.getWheres() ).toBe( [
+                            {
+                                column: "somecolumn",
+                                operator: "=",
+                                value: "::some value::",
+                                combinator: "and",
+                                type: "basic"
+                            }
+                        ] );
                     } );
 
                     it( "also translates orWhereColumn in to orWhere(""column""", function() {
                         query.orWhereSomeColumn( "::some value::" );
 
-                        expect( query.getWheres() ).toBe( [ {
-                            column = "somecolumn",
-                            operator = "=",
-                            value = "::some value::",
-                            combinator = "or",
-                            type = "basic"
-                        } ] );
+                        expect( query.getWheres() ).toBe( [
+                            {
+                                column: "somecolumn",
+                                operator: "=",
+                                value: "::some value::",
+                                combinator: "or",
+                                type: "basic"
+                            }
+                        ] );
                     } );
 
                     it( "returns the query instance to continue chaining", function() {
                         var q = query.whereSomeColumn( "::some value::" );
-                        expect( q ).toBeInstanceOf( "qb.models.Query.QueryBuilder" );
+                        expect( q ).toBeInstanceOf( "QueryBuilder" );
                     } );
                 } );
 
@@ -145,13 +160,11 @@ component extends="testbox.system.BaseSpec" {
                     it( "throws an exception on illegal operators", function() {
                         expect( function() {
                             query.where( "::some column::", "::invalid operator::", "::some value::" );
-                        } ).toThrow(
-                            type = "InvalidSQLType",
-                            regex = "Illegal operator"
-                        );
+                        } ).toThrow( type = "InvalidSQLType", regex = "Illegal operator" );
                     } );
                 } );
             } );
         } );
     }
+
 }

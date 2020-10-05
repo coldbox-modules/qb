@@ -1,6 +1,6 @@
-testbox
-modules
-node_modules
-tests/results/TEST.properties
+/testbox/
+/modules/
+tests/results
 Engine.war
 *.sublime-workspace
+.tmp

@@ -1,4 +1,5 @@
 component extends="testbox.system.BaseSpec" {
+
     function run() {
         describe( "join clause", function() {
             beforeEach( function() {
@@ -6,16 +7,30 @@ component extends="testbox.system.BaseSpec" {
             } );
             describe( "initialization", function() {
                 it( "requires a parentQuery, type, and a table", function() {
-                    expect( function() { new qb.models.Query.JoinClause(); } ).toThrow();
-                    expect( function() { new qb.models.Query.JoinClause( "inner" ); } ).toThrow();
-                    expect( function() { new qb.models.Query.JoinClause( "inner", "sometable" ); } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause();
+                    } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( "inner" );
+                    } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( "inner", "sometable" );
+                    } ).toThrow();
                 } );
 
                 it( "validates the type is a valid sql join type", function() {
-                    expect( function() { new qb.models.Query.JoinClause( query, "gibberish", "sometable" ); } ).toThrow();
-                    expect( function() { new qb.models.Query.JoinClause( query, "left typo", "sometable" ); } ).toThrow();
-                    expect( function() { new qb.models.Query.JoinClause( query, "left", "sometable" ); } ).notToThrow();
-                    expect( function() { new qb.models.Query.JoinClause( query, "left outer", "sometable" ); } ).notToThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( query, "gibberish", "sometable" );
+                    } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( query, "left typo", "sometable" );
+                    } ).toThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( query, "left", "sometable" );
+                    } ).notToThrow();
+                    expect( function() {
+                        new qb.models.Query.JoinClause( query, "left outer", "sometable" );
+                    } ).notToThrow();
                 } );
             } );
 
@@ -32,7 +47,13 @@ component extends="testbox.system.BaseSpec" {
 
                 describe( "on()", function() {
                     it( "can add a single join condition", function() {
-                        join.on( "first.id", "=", "second.first_id", "and", false );
+                        join.on(
+                            "first.id",
+                            "=",
+                            "second.first_id",
+                            "and",
+                            false
+                        );
 
                         var clauses = join.getWheres();
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
@@ -96,9 +117,15 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
 
                         var clause = clauses[ 1 ];
-                        expect( clause.first ).toBe( "first.another_value", "First column should be [first.another_value]" );
+                        expect( clause.first ).toBe(
+                            "first.another_value",
+                            "First column should be [first.another_value]"
+                        );
                         expect( clause.operator ).toBe( ">=", "Operator should be [>=]" );
-                        expect( clause.second ).toBe( "second.another_value", "First column should be [second.another_value]" );
+                        expect( clause.second ).toBe(
+                            "second.another_value",
+                            "First column should be [second.another_value]"
+                        );
                         expect( clause.combinator ).toBe( "or" );
                     } );
                 } );
@@ -160,7 +187,95 @@ component extends="testbox.system.BaseSpec" {
                         expect( newJoin.getTable() ).toBe( join.getTable() );
                     } );
                 } );
+
+                describe( "getMementoForComparison", function() {
+                    beforeEach( function() {
+                        variables.qb = new qb.models.Query.QueryBuilder( preventDuplicateJoins = true ).from(
+                            new qb.models.Query.QueryBuilder( preventDuplicateJOins = true )
+                                .select( "FK_otherTable" )
+                                .from( "second_table" )
+                        );
+
+                        variables.otherQb = new qb.models.Query.QueryBuilder( preventDuplicateJoins = true ).from(
+                            "third_table"
+                        );
+
+                        variables.joinOther = new qb.models.Query.JoinClause( qb, "inner", otherQb );
+                    } );
+
+                    afterEach( function() {
+                        structDelete( variables, "qb" );
+                        structDelete( variables, "otherQb" );
+                    } );
+
+                    it( "can produce a memento for a table with a QB object as a FROM", function() {
+                        expect( qb.getMementoForComparison().from ).toBe(
+                            "SELECT ""FK_otherTable"" FROM ""second_table"""
+                        );
+                    } );
+
+                    it( "can produce a memento for a joinClause", function() {
+                        expect( joinOther.getMementoForComparison().table ).toBe( "SELECT * FROM ""third_table""" );
+                    } );
+                } );
+
+                describe( "preventDuplicateJoins", function() {
+                    beforeEach( function() {
+                        variables.qb = new qb.models.Query.QueryBuilder( preventDuplicateJoins = true );
+                        variables.joinOther = new qb.models.Query.JoinClause( query, "inner", "second" );
+                        getMockBox().prepareMock( joinOther );
+                    } );
+
+                    afterEach( function() {
+                        structDelete( variables, "joinOther" );
+                        structDelete( variables, "qb" );
+                    } );
+
+                    it( "can match two identical, simple joins", function() {
+                        expect( variables.join.isEqualTo( variables.joinOther ) ).toBeTrue();
+                    } );
+
+                    it( "can tell that an inner join does not match a left join", function() {
+                        variables.joinOther.setType( "left" );
+                        expect( variables.join.isEqualTo( variables.joinOther ) ).toBeFalse();
+                    } );
+
+                    it( "can tell that the same kind of join on two different tables do not match", function() {
+                        variables.joinOther.setTable( "third" );
+                        expect( variables.join.isEqualTo( variables.joinOther ) ).toBeFalse();
+                    } );
+
+                    it( "can tell that two joins on the same table with different conditions do not match", function() {
+                        join.on( "first.id", "=", "second.first_id" );
+                        joinOther.on( "first.locale", "=", "second.locale" );
+                        expect( variables.join.isEqualTo( variables.joinOther ) ).toBeFalse();
+                    } );
+
+                    it( "will prevent an identical join from being added when preventDuplicateJoins is true", function() {
+                        variables.qb.join( variables.join );
+                        variables.qb.join( variables.joinOther );
+                        expect( variables.qb.getJoins().len() ).toBe( 1 );
+                    } );
+
+                    it( "will prevent an identical join from being added using the closure syntax when preventDuplicateJoins is true", function() {
+                        variables.qb.join( "secondTable", function( j ) {
+                            j.on( "secondTable.id", "firstTable.secondId" );
+                        } );
+                        variables.qb.join( "secondTable", function( j ) {
+                            j.on( "secondTable.id", "firstTable.secondId" );
+                        } );
+                        expect( variables.qb.getJoins().len() ).toBe( 1 );
+                    } );
+
+                    it( "will allow an identical join from being added when preventDuplicateJoins is false", function() {
+                        variables.qb.setPreventDuplicateJoins( false );
+                        variables.qb.join( variables.join );
+                        variables.qb.join( variables.joinOther );
+                        expect( variables.qb.getJoins().len() ).toBe( 2 );
+                    } );
+                } );
             } );
         } );
     }
+
 }

@@ -9,7 +9,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function complicatedTable() {
-        return [ "CREATE TABLE ""users"" (""id"" SERIAL NOT NULL, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INTEGER NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""), CONSTRAINT ""fk_users_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NO ACTION ON DELETE CASCADE)" ];
+        return [
+            "CREATE TABLE ""users"" (""id"" SERIAL NOT NULL, ""username"" VARCHAR(255) NOT NULL, ""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, ""password"" VARCHAR(100) NOT NULL, ""country_id"" INTEGER NOT NULL, ""created_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modified_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""), CONSTRAINT ""fk_users_country_id"" FOREIGN KEY (""country_id"") REFERENCES ""countries"" (""id"") ON UPDATE NO ACTION ON DELETE CASCADE)"
+        ];
     }
 
     function bigIncrements() {
@@ -52,6 +54,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL)" ];
     }
 
+    function datetimeTz() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
+    }
+
     function decimal() {
         return [ "CREATE TABLE ""employees"" (""salary"" DECIMAL(10,0) NOT NULL)" ];
     }
@@ -70,7 +76,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM (""S"", ""M"", ""L"", ""XL"", ""XXL"")",
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "CREATE TABLE ""employees"" (""tshirt_size"" tshirt_size NOT NULL)"
         ];
     }
@@ -115,6 +121,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return longText();
     }
 
+    function lineString() {
+        return [ "CREATE TABLE ""users"" (""positions"" GEOGRAPHY(LINESTRING, 4326) NOT NULL)" ];
+    }
+
     function mediumIncrements() {
         return [ "CREATE TABLE ""users"" (""id"" SERIAL NOT NULL, CONSTRAINT ""pk_users_id"" PRIMARY KEY (""id""))" ];
     }
@@ -131,6 +141,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""posts"" (""body"" TEXT NOT NULL)" ];
     }
 
+    function money() {
+        return [ "CREATE TABLE ""transactions"" (""amount"" MONEY NOT NULL)" ];
+    }
+
+    function smallMoney() {
+        return [ "CREATE TABLE ""transactions"" (""amount"" MONEY NOT NULL)" ];
+    }
+
     function morphs() {
         return [
             "CREATE TABLE ""tags"" (""taggable_id"" INTEGER NOT NULL, ""taggable_type"" VARCHAR(255) NOT NULL)",
@@ -145,8 +163,26 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function nullableTimestamps() {
+        return [ "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP, ""modifiedDate"" TIMESTAMP)" ];
+    }
+
+    function point() {
+        return [ "CREATE TABLE ""users"" (""position"" GEOGRAPHY(POINT, 4326) NOT NULL)" ];
+    }
+
+    function polygon() {
+        return [ "CREATE TABLE ""users"" (""positions"" GEOGRAPHY(POLYGON, 4326) NOT NULL)" ];
+    }
+
     function raw() {
         return [ "CREATE TABLE ""users"" (id BLOB NOT NULL)" ];
+    }
+
+    function rawInAlter() {
+        return [
+            "ALTER TABLE ""registrars"" ADD COLUMN HasDNSSecAPI bit NOT NULL CONSTRAINT DF_registrars_HasDNSSecAPI DEFAULT (0)"
+        ];
     }
 
     function smallIncrements() {
@@ -159,6 +195,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function smallIntegerWithPrecision() {
         return [ "CREATE TABLE ""users"" (""age"" NUMERIC(5) NOT NULL)" ];
+    }
+
+    function softDeletes() {
+        return [ "CREATE TABLE ""posts"" (""deletedDate"" TIMESTAMP)" ];
+    }
+
+    function softDeletesTz() {
+        return [ "CREATE TABLE ""posts"" (""deletedDate"" TIMESTAMP WITH TIME ZONE)" ];
     }
 
     function string() {
@@ -185,8 +229,28 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""recurring_tasks"" (""fire_time"" TIME NOT NULL)" ];
     }
 
+    function timeTz() {
+        return [ "CREATE TABLE ""recurring_tasks"" (""fire_time"" TIME WITH TIME ZONE NOT NULL)" ];
+    }
+
     function timestamp() {
         return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL)" ];
+    }
+
+    function timestamps() {
+        return [
+            "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modifiedDate"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+        ];
+    }
+
+    function timestampTz() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP WITH TIME ZONE NOT NULL)" ];
+    }
+
+    function timestampsTz() {
+        return [
+            "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modifiedDate"" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+        ];
     }
 
     function tinyIncrements() {
@@ -268,6 +332,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""users"" (""country"" VARCHAR(255) NOT NULL DEFAULT 'USA')" ];
     }
 
+    function timestampWithCurrent() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)" ];
+    }
+
+    function timestampWithNullable() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP)" ];
+    }
+
     function nullable() {
         return [ "CREATE TABLE ""users"" (""id"" CHAR(36))" ];
     }
@@ -281,15 +353,21 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function tableUnique() {
-        return [ "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_users_username"" UNIQUE (""username""))" ];
+        return [
+            "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_users_username"" UNIQUE (""username""))"
+        ];
     }
 
     function uniqueOverridingName() {
-        return [ "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_uname"" UNIQUE (""username""))" ];
+        return [
+            "CREATE TABLE ""users"" (""username"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_uname"" UNIQUE (""username""))"
+        ];
     }
 
     function uniqueMultipleColumns() {
-        return [ "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_users_first_name_last_name"" UNIQUE (""first_name"", ""last_name""))" ];
+        return [
+            "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""unq_users_first_name_last_name"" UNIQUE (""first_name"", ""last_name""))"
+        ];
     }
 
     function addConstraint() {
@@ -304,7 +382,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function renameConstraint() {
-        return [ "ALTER TABLE ""users"" RENAME CONSTRAINT ""unq_users_first_name_last_name"" TO ""unq_users_full_name""" ];
+        return [
+            "ALTER TABLE ""users"" RENAME CONSTRAINT ""unq_users_first_name_last_name"" TO ""unq_users_full_name"""
+        ];
     }
 
     function dropConstraintFromName() {
@@ -341,35 +421,51 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function columnPrimaryKey() {
-        return [ "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_uuid"" PRIMARY KEY (""uuid""))" ];
+        return [
+            "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_uuid"" PRIMARY KEY (""uuid""))"
+        ];
     }
 
     function tablePrimaryKey() {
-        return [ "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_uuid"" PRIMARY KEY (""uuid""))" ];
+        return [
+            "CREATE TABLE ""users"" (""uuid"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_uuid"" PRIMARY KEY (""uuid""))"
+        ];
     }
 
     function compositePrimaryKey() {
-        return [ "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_first_name_last_name"" PRIMARY KEY (""first_name"", ""last_name""))" ];
+        return [
+            "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_users_first_name_last_name"" PRIMARY KEY (""first_name"", ""last_name""))"
+        ];
     }
 
     function overridePrimaryKeyIndexName() {
-        return [ "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_full_name"" PRIMARY KEY (""first_name"", ""last_name""))" ];
+        return [
+            "CREATE TABLE ""users"" (""first_name"" VARCHAR(255) NOT NULL, ""last_name"" VARCHAR(255) NOT NULL, CONSTRAINT ""pk_full_name"" PRIMARY KEY (""first_name"", ""last_name""))"
+        ];
     }
 
     function columnForeignKey() {
-        return [ "CREATE TABLE ""posts"" (""author_id"" INTEGER NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE ""posts"" (""author_id"" INTEGER NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)"
+        ];
     }
 
     function tableForeignKey() {
-        return [ "CREATE TABLE ""posts"" (""author_id"" INTEGER NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE ""posts"" (""author_id"" INTEGER NOT NULL, CONSTRAINT ""fk_posts_author_id"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)"
+        ];
     }
 
     function overrideColumnForeignKeyIndexName() {
-        return [ "CREATE TABLE ""posts"" (""author_id"" INTEGER NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE ""posts"" (""author_id"" INTEGER NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)"
+        ];
     }
 
     function overrideTableForeignKeyIndexName() {
-        return [ "CREATE TABLE ""posts"" (""author_id"" INTEGER NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE ""posts"" (""author_id"" INTEGER NOT NULL, CONSTRAINT ""fk_author"" FOREIGN KEY (""author_id"") REFERENCES ""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)"
+        ];
     }
 
     function renameTable() {
@@ -400,14 +496,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function addColumn() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM (""S"", ""M"", ""L"", ""XL"", ""XXL"")",
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL"
         ];
     }
 
     function addMultiple() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM (""S"", ""M"", ""L"", ""XL"", ""XXL"")",
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL",
             "ALTER TABLE ""users"" ADD COLUMN ""is_active"" BOOLEAN NOT NULL"
         ];
@@ -415,7 +511,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function complicatedModify() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM (""S"", ""M"", ""L"", ""XL"", ""XXL"")",
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "ALTER TABLE ""users"" DROP COLUMN ""is_active"" CASCADE",
             "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL",
             "ALTER TABLE ""users"" RENAME COLUMN ""name"" TO ""username""",
@@ -439,11 +535,19 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE ""users"" DROP COLUMN ""username"" CASCADE" ];
     }
 
+    function dropColumnWithColumn() {
+        return [ "ALTER TABLE ""users"" DROP COLUMN ""username"" CASCADE" ];
+    }
+
     function dropsMultipleColumns() {
         return [
             "ALTER TABLE ""users"" DROP COLUMN ""username"" CASCADE",
             "ALTER TABLE ""users"" DROP COLUMN ""password"" CASCADE"
         ];
+    }
+
+    function dropColumnWithConstraint() {
+        return [ "ALTER TABLE ""users"" DROP COLUMN ""someFlag"" CASCADE" ];
     }
 
     function hasTable() {
@@ -459,16 +563,32 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasColumnInSchema() {
-        return [ "SELECT 1 FROM ""information_schema"".""columns"" WHERE ""table_name"" = ? AND ""column_name"" = ? AND ""table_schema"" = ?" ];
+        return [
+            "SELECT 1 FROM ""information_schema"".""columns"" WHERE ""table_name"" = ? AND ""column_name"" = ? AND ""table_schema"" = ?"
+        ];
+    }
+
+    function createView() {
+        return [ "CREATE VIEW ""active_users"" AS (SELECT * FROM ""users"" WHERE ""active"" = ?)" ];
+    }
+
+    function alterView() {
+        return [
+            "DROP VIEW ""active_users""",
+            "CREATE VIEW ""active_users"" AS (SELECT * FROM ""users"" WHERE ""active"" = ?)"
+        ];
+    }
+
+    function dropView() {
+        return [ "DROP VIEW ""active_users""" ];
     }
 
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
-        arguments.mockGrammar = isNull( arguments.mockGrammar ) ?
-            getMockBox().createMock( "qb.models.Grammars.PostgresGrammar" ).init( utils ) :
-            arguments.mockGrammar;
-        var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
-            .init( arguments.mockGrammar );
+        arguments.mockGrammar = isNull( arguments.mockGrammar ) ? getMockBox()
+            .createMock( "qb.models.Grammars.PostgresGrammar" )
+            .init( utils ) : arguments.mockGrammar;
+        var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" ).init( arguments.mockGrammar );
         variables.mockGrammar = arguments.mockGrammar;
         return builder;
     }

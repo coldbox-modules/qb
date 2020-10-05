@@ -6,6 +6,7 @@
         }
     },
     "app":{
-        "cfengine":"adobe@11"
-    }
+        "cfengine":"lucee@5"
+    },
+    "directoryBrowsing":"true"
 }

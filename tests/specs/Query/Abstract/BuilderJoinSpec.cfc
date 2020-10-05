@@ -1,4 +1,5 @@
 component extends="testbox.system.BaseSpec" {
+
     function run() {
         describe( "join methods", function() {
             beforeEach( function() {
@@ -6,17 +7,24 @@ component extends="testbox.system.BaseSpec" {
                 getMockBox().prepareMock( query );
                 variables.utils = new qb.models.Query.QueryUtils();
                 query.$property( propertyName = "utils", mock = utils );
-                var mockJoinClause = getMockBox()
-                    .prepareMock( new qb.models.Query.JoinClause( query, "inner", "second" ) );
+                var mockJoinClause = getMockBox().prepareMock(
+                    new qb.models.Query.JoinClause( query, "inner", "second" )
+                );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
             } );
 
             it( "does a simple inner join", function() {
-                var mockJoinClause = getMockBox()
-                    .prepareMock( new qb.models.Query.JoinClause( query, "inner", "second" ) );
+                var mockJoinClause = getMockBox().prepareMock(
+                    new qb.models.Query.JoinClause( query, "inner", "second" )
+                );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
 
-                query.join( "second", "first.id", "=", "second.first_id" );
+                query.join(
+                    "second",
+                    "first.id",
+                    "=",
+                    "second.first_id"
+                );
 
                 var joins = query.getJoins();
                 expect( arrayLen( joins ) ).toBe( 1, "Only one join should exist" );
@@ -38,11 +46,17 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "does a left join", function() {
-                var mockJoinClause = getMockBox()
-                    .prepareMock( new qb.models.Query.JoinClause( query, "left", "second" ) );
+                var mockJoinClause = getMockBox().prepareMock(
+                    new qb.models.Query.JoinClause( query, "left", "second" )
+                );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
 
-                query.leftJoin( "second", "first.id", "=", "second.first_id" );
+                query.leftJoin(
+                    "second",
+                    "first.id",
+                    "=",
+                    "second.first_id"
+                );
 
                 var joins = query.getJoins();
                 expect( arrayLen( joins ) ).toBe( 1, "Only one join should exist" );
@@ -64,11 +78,17 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "does a right join", function() {
-                var mockJoinClause = getMockBox()
-                    .prepareMock( new qb.models.Query.JoinClause( query, "right", "second" ) );
+                var mockJoinClause = getMockBox().prepareMock(
+                    new qb.models.Query.JoinClause( query, "right", "second" )
+                );
                 mockJoinClause.$property( propertyName = "utils", mock = utils );
 
-                query.rightJoin( "second", "first.id", "=", "second.first_id" );
+                query.rightJoin(
+                    "second",
+                    "first.id",
+                    "=",
+                    "second.first_id"
+                );
 
                 var joins = query.getJoins();
                 expect( arrayLen( joins ) ).toBe( 1, "Only one join should exist" );
@@ -91,8 +111,7 @@ component extends="testbox.system.BaseSpec" {
 
             it( "can use a callback to specify advanced join clauses", function() {
                 query.join( "second", function( join ) {
-                    join.on( "first.id", "=", "second.first_id" )
-                        .on( "first.locale", "=", "second.locale" );
+                    join.on( "first.id", "=", "second.first_id" ).on( "first.locale", "=", "second.locale" );
                 } );
 
                 var joins = query.getJoins();
@@ -123,8 +142,7 @@ component extends="testbox.system.BaseSpec" {
 
             it( "can pass the callback as the second parameter when using positional parameters", function() {
                 query.join( "second", function( join ) {
-                    join.on( "first.id", "=", "second.first_id" )
-                        .on( "first.locale", "=", "second.locale" );
+                    join.on( "first.id", "=", "second.first_id" ).on( "first.locale", "=", "second.locale" );
                 } );
 
                 var joins = query.getJoins();
@@ -167,4 +185,5 @@ component extends="testbox.system.BaseSpec" {
             } );
         } );
     }
+
 }

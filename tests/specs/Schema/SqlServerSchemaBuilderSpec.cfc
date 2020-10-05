@@ -9,7 +9,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function complicatedTable() {
-        return [ "CREATE TABLE [users] ([id] INTEGER NOT NULL IDENTITY, [username] NVARCHAR(255) NOT NULL, [first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, [password] NVARCHAR(100) NOT NULL, [country_id] INTEGER NOT NULL, [created_date] DATETIME2 NOT NULL CONSTRAINT [df_users_created_date] DEFAULT CURRENT_TIMESTAMP, [modified_date] DATETIME2 NOT NULL CONSTRAINT [df_users_modified_date] DEFAULT CURRENT_TIMESTAMP, CONSTRAINT [pk_users_id] PRIMARY KEY ([id]), CONSTRAINT [fk_users_country_id] FOREIGN KEY ([country_id]) REFERENCES [countries] ([id]) ON UPDATE NO ACTION ON DELETE CASCADE)" ];
+        return [
+            "CREATE TABLE [users] ([id] INTEGER NOT NULL IDENTITY, [username] NVARCHAR(255) NOT NULL, [first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, [password] NVARCHAR(100) NOT NULL, [country_id] INTEGER NOT NULL, [created_date] DATETIME2 NOT NULL CONSTRAINT [df_users_created_date] DEFAULT CURRENT_TIMESTAMP, [modified_date] DATETIME2 NOT NULL CONSTRAINT [df_users_modified_date] DEFAULT CURRENT_TIMESTAMP, CONSTRAINT [pk_users_id] PRIMARY KEY ([id]), CONSTRAINT [fk_users_country_id] FOREIGN KEY ([country_id]) REFERENCES [countries] ([id]) ON UPDATE NO ACTION ON DELETE CASCADE)"
+        ];
     }
 
     function bigIncrements() {
@@ -52,6 +54,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [posts] ([posted_date] DATETIME2 NOT NULL)" ];
     }
 
+    function datetimeTz() {
+        return [ "CREATE TABLE [posts] ([posted_date] DATETIMEOFFSET NOT NULL)" ];
+    }
+
     function decimal() {
         return [ "CREATE TABLE [employees] ([salary] DECIMAL(10,0) NOT NULL)" ];
     }
@@ -69,23 +75,25 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function enum() {
-        return [ "CREATE TABLE [employees] ([tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_employees_tshirt_size] CHECK ([tshirt_size] IN ('S', 'M', 'L', 'XL', 'XXL')))" ];
+        return [
+            "CREATE TABLE [employees] ([tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_employees_tshirt_size] CHECK ([tshirt_size] IN ('S', 'M', 'L', 'XL', 'XXL')))"
+        ];
     }
 
     function float() {
-        return [ "CREATE TABLE [employees] ([salary] DECIMAL(10,0) NOT NULL)" ];
+        return [ "CREATE TABLE [employees] ([salary] FLOAT NOT NULL)" ];
     }
 
     function floatWithLength() {
-        return [ "CREATE TABLE [employees] ([salary] DECIMAL(3,0) NOT NULL)" ];
+        return [ "CREATE TABLE [employees] ([salary] FLOAT NOT NULL)" ];
     }
 
     function floatWithPrecision() {
-        return [ "CREATE TABLE [employees] ([salary] DECIMAL(10,2) NOT NULL)" ];
+        return [ "CREATE TABLE [employees] ([salary] FLOAT(2) NOT NULL)" ];
     }
 
     function floatWithLengthAndPrecision() {
-        return [ "CREATE TABLE [employees] ([salary] DECIMAL(3,2) NOT NULL)" ];
+        return [ "CREATE TABLE [employees] ([salary] FLOAT(2) NOT NULL)" ];
     }
 
     function increments() {
@@ -102,6 +110,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function json() {
         return [ "CREATE TABLE [users] ([personalizations] NVARCHAR(MAX) NOT NULL)" ];
+    }
+
+    function lineString() {
+        return [ "CREATE TABLE [users] ([positions] GEOGRAPHY NOT NULL)" ];
     }
 
     function longText() {
@@ -132,16 +144,46 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [posts] ([body] NVARCHAR(MAX) NOT NULL)" ];
     }
 
+    function money() {
+        return [ "CREATE TABLE [transactions] ([amount] MONEY NOT NULL)" ];
+    }
+
+    function smallMoney() {
+        return [ "CREATE TABLE [transactions] ([amount] SMALLMONEY NOT NULL)" ];
+    }
+
     function morphs() {
-        return [ "CREATE TABLE [tags] ([taggable_id] INTEGER NOT NULL, [taggable_type] VARCHAR(255) NOT NULL, INDEX [taggable_index] ([taggable_id], [taggable_type]))" ];
+        return [
+            "CREATE TABLE [tags] ([taggable_id] INTEGER NOT NULL, [taggable_type] VARCHAR(255) NOT NULL, INDEX [taggable_index] ([taggable_id], [taggable_type]))"
+        ];
     }
 
     function nullableMorphs() {
-        return [ "CREATE TABLE [tags] ([taggable_id] INTEGER, [taggable_type] VARCHAR(255), INDEX [taggable_index] ([taggable_id], [taggable_type]))" ];
+        return [
+            "CREATE TABLE [tags] ([taggable_id] INTEGER, [taggable_type] VARCHAR(255), INDEX [taggable_index] ([taggable_id], [taggable_type]))"
+        ];
+    }
+
+    function nullableTimestamps() {
+        return [ "CREATE TABLE [posts] ([createdDate] DATETIME2, [modifiedDate] DATETIME2)" ];
+    }
+
+    function point() {
+        return [ "CREATE TABLE [users] ([position] GEOGRAPHY NOT NULL)" ];
+    }
+
+    function polygon() {
+        return [ "CREATE TABLE [users] ([positions] GEOGRAPHY NOT NULL)" ];
     }
 
     function raw() {
         return [ "CREATE TABLE [users] (id BLOB NOT NULL)" ];
+    }
+
+    function rawInAlter() {
+        return [
+            "ALTER TABLE [registrars] ADD HasDNSSecAPI bit NOT NULL CONSTRAINT DF_registrars_HasDNSSecAPI DEFAULT (0)"
+        ];
     }
 
     function smallIncrements() {
@@ -154,6 +196,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function smallIntegerWithPrecision() {
         return [ "CREATE TABLE [users] ([age] NUMERIC(5) NOT NULL)" ];
+    }
+
+    function softDeletes() {
+        return [ "CREATE TABLE [posts] ([deletedDate] DATETIME2)" ];
+    }
+
+    function softDeletesTz() {
+        return [ "CREATE TABLE [posts] ([deletedDate] DATETIMEOFFSET)" ];
     }
 
     function string() {
@@ -180,8 +230,28 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [recurring_tasks] ([fire_time] TIME NOT NULL)" ];
     }
 
+    function timeTz() {
+        return [ "CREATE TABLE [recurring_tasks] ([fire_time] TIME NOT NULL)" ];
+    }
+
     function timestamp() {
         return [ "CREATE TABLE [posts] ([posted_date] DATETIME2 NOT NULL)" ];
+    }
+
+    function timestampTz() {
+        return [ "CREATE TABLE [posts] ([posted_date] DATETIMEOFFSET NOT NULL)" ];
+    }
+
+    function timestamps() {
+        return [
+            "CREATE TABLE [posts] ([createdDate] DATETIME2 NOT NULL CONSTRAINT [df_posts_createdDate] DEFAULT CURRENT_TIMESTAMP, [modifiedDate] DATETIME2 NOT NULL CONSTRAINT [df_posts_modifiedDate] DEFAULT CURRENT_TIMESTAMP)"
+        ];
+    }
+
+    function timestampsTz() {
+        return [
+            "CREATE TABLE [posts] ([createdDate] DATETIMEOFFSET NOT NULL CONSTRAINT [df_posts_createdDate] DEFAULT CURRENT_TIMESTAMP, [modifiedDate] DATETIMEOFFSET NOT NULL CONSTRAINT [df_posts_modifiedDate] DEFAULT CURRENT_TIMESTAMP)"
+        ];
     }
 
     function tinyIncrements() {
@@ -241,9 +311,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function comment() {
-        return [
-            "CREATE TABLE [users] ([active] BIT NOT NULL)"
-        ];
+        return [ "CREATE TABLE [users] ([active] BIT NOT NULL)" ];
     }
 
     function defaultForChar() {
@@ -252,6 +320,16 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function defaultForBoolean() {
         return [ "CREATE TABLE [users] ([active] BIT NOT NULL CONSTRAINT [df_users_active] DEFAULT 1)" ];
+    }
+
+    function timestampWithCurrent() {
+        return [
+            "CREATE TABLE [posts] ([posted_date] DATETIME2 NOT NULL CONSTRAINT [df_posts_posted_date] DEFAULT CURRENT_TIMESTAMP)"
+        ];
+    }
+
+    function timestampWithNullable() {
+        return [ "CREATE TABLE [posts] ([posted_date] DATETIME2)" ];
     }
 
     function defaultForNumber() {
@@ -275,15 +353,21 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function tableUnique() {
-        return [ "CREATE TABLE [users] ([username] NVARCHAR(255) NOT NULL, CONSTRAINT [unq_users_username] UNIQUE ([username]))" ];
+        return [
+            "CREATE TABLE [users] ([username] NVARCHAR(255) NOT NULL, CONSTRAINT [unq_users_username] UNIQUE ([username]))"
+        ];
     }
 
     function uniqueOverridingName() {
-        return [ "CREATE TABLE [users] ([username] NVARCHAR(255) NOT NULL, CONSTRAINT [unq_uname] UNIQUE ([username]))" ];
+        return [
+            "CREATE TABLE [users] ([username] NVARCHAR(255) NOT NULL, CONSTRAINT [unq_uname] UNIQUE ([username]))"
+        ];
     }
 
     function uniqueMultipleColumns() {
-        return [ "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, CONSTRAINT [unq_users_first_name_last_name] UNIQUE ([first_name], [last_name]))" ];
+        return [
+            "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, CONSTRAINT [unq_users_first_name_last_name] UNIQUE ([first_name], [last_name]))"
+        ];
     }
 
     function addConstraint() {
@@ -314,47 +398,69 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function basicIndex() {
-        return [ "CREATE TABLE [users] ([published_date] DATETIME2 NOT NULL, INDEX [idx_users_published_date] ([published_date]))" ];
+        return [
+            "CREATE TABLE [users] ([published_date] DATETIME2 NOT NULL, INDEX [idx_users_published_date] ([published_date]))"
+        ];
     }
 
     function compositeIndex() {
-        return [ "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, INDEX [idx_users_first_name_last_name] ([first_name], [last_name]))" ];
+        return [
+            "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, INDEX [idx_users_first_name_last_name] ([first_name], [last_name]))"
+        ];
     }
 
     function overrideIndexName() {
-        return [ "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, INDEX [index_full_name] ([first_name], [last_name]))" ];
+        return [
+            "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, INDEX [index_full_name] ([first_name], [last_name]))"
+        ];
     }
 
     function columnPrimaryKey() {
-        return [ "CREATE TABLE [users] ([uuid] VARCHAR(255) NOT NULL, CONSTRAINT [pk_users_uuid] PRIMARY KEY ([uuid]))" ];
+        return [
+            "CREATE TABLE [users] ([uuid] VARCHAR(255) NOT NULL, CONSTRAINT [pk_users_uuid] PRIMARY KEY ([uuid]))"
+        ];
     }
 
     function tablePrimaryKey() {
-        return [ "CREATE TABLE [users] ([uuid] VARCHAR(255) NOT NULL, CONSTRAINT [pk_users_uuid] PRIMARY KEY ([uuid]))" ];
+        return [
+            "CREATE TABLE [users] ([uuid] VARCHAR(255) NOT NULL, CONSTRAINT [pk_users_uuid] PRIMARY KEY ([uuid]))"
+        ];
     }
 
     function compositePrimaryKey() {
-        return [ "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, CONSTRAINT [pk_users_first_name_last_name] PRIMARY KEY ([first_name], [last_name]))" ];
+        return [
+            "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, CONSTRAINT [pk_users_first_name_last_name] PRIMARY KEY ([first_name], [last_name]))"
+        ];
     }
 
     function overridePrimaryKeyIndexName() {
-        return [ "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, CONSTRAINT [pk_full_name] PRIMARY KEY ([first_name], [last_name]))" ];
+        return [
+            "CREATE TABLE [users] ([first_name] NVARCHAR(255) NOT NULL, [last_name] NVARCHAR(255) NOT NULL, CONSTRAINT [pk_full_name] PRIMARY KEY ([first_name], [last_name]))"
+        ];
     }
 
     function columnForeignKey() {
-        return [ "CREATE TABLE [posts] ([author_id] INTEGER NOT NULL, CONSTRAINT [fk_posts_author_id] FOREIGN KEY ([author_id]) REFERENCES [users] ([id]) ON UPDATE NO ACTION ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE [posts] ([author_id] INTEGER NOT NULL, CONSTRAINT [fk_posts_author_id] FOREIGN KEY ([author_id]) REFERENCES [users] ([id]) ON UPDATE NO ACTION ON DELETE NO ACTION)"
+        ];
     }
 
     function tableForeignKey() {
-        return [ "CREATE TABLE [posts] ([author_id] INTEGER NOT NULL, CONSTRAINT [fk_posts_author_id] FOREIGN KEY ([author_id]) REFERENCES [users] ([id]) ON UPDATE NO ACTION ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE [posts] ([author_id] INTEGER NOT NULL, CONSTRAINT [fk_posts_author_id] FOREIGN KEY ([author_id]) REFERENCES [users] ([id]) ON UPDATE NO ACTION ON DELETE NO ACTION)"
+        ];
     }
 
     function overrideColumnForeignKeyIndexName() {
-        return [ "CREATE TABLE [posts] ([author_id] INTEGER NOT NULL, CONSTRAINT [fk_author] FOREIGN KEY ([author_id]) REFERENCES [users] ([id]) ON UPDATE NO ACTION ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE [posts] ([author_id] INTEGER NOT NULL, CONSTRAINT [fk_author] FOREIGN KEY ([author_id]) REFERENCES [users] ([id]) ON UPDATE NO ACTION ON DELETE NO ACTION)"
+        ];
     }
 
     function overrideTableForeignKeyIndexName() {
-        return [ "CREATE TABLE [posts] ([author_id] INTEGER NOT NULL, CONSTRAINT [fk_author] FOREIGN KEY ([author_id]) REFERENCES [users] ([id]) ON UPDATE NO ACTION ON DELETE NO ACTION)" ];
+        return [
+            "CREATE TABLE [posts] ([author_id] INTEGER NOT NULL, CONSTRAINT [fk_author] FOREIGN KEY ([author_id]) REFERENCES [users] ([id]) ON UPDATE NO ACTION ON DELETE NO ACTION)"
+        ];
     }
 
     function renameTable() {
@@ -421,10 +527,18 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE [users] DROP COLUMN [username]" ];
     }
 
+    function dropColumnWithColumn() {
+        return [ "ALTER TABLE [users] DROP COLUMN [username]" ];
+    }
+
     function dropsMultipleColumns() {
+        return [ "ALTER TABLE [users] DROP COLUMN [username]", "ALTER TABLE [users] DROP COLUMN [password]" ];
+    }
+
+    function dropColumnWithConstraint() {
         return [
-            "ALTER TABLE [users] DROP COLUMN [username]",
-            "ALTER TABLE [users] DROP COLUMN [password]"
+            "ALTER TABLE [users] DROP CONSTRAINT [df_users_someFlag]",
+            "ALTER TABLE [users] DROP COLUMN [someFlag]"
         ];
     }
 
@@ -441,16 +555,32 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasColumnInSchema() {
-        return [ "SELECT 1 FROM [information_schema].[columns] WHERE [table_name] = ? AND [column_name] = ? AND [table_schema] = ?" ];
+        return [
+            "SELECT 1 FROM [information_schema].[columns] WHERE [table_name] = ? AND [column_name] = ? AND [table_schema] = ?"
+        ];
+    }
+
+    function createView() {
+        return [ "CREATE VIEW [active_users] AS (SELECT * FROM [users] WHERE [active] = ?)" ];
+    }
+
+    function alterView() {
+        return [
+            "DROP VIEW [active_users]",
+            "CREATE VIEW [active_users] AS (SELECT * FROM [users] WHERE [active] = ?)"
+        ];
+    }
+
+    function dropView() {
+        return [ "DROP VIEW [active_users]" ];
     }
 
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
-        arguments.mockGrammar = isNull( arguments.mockGrammar ) ?
-            getMockBox().createMock( "qb.models.Grammars.MSSQLGrammar" ).init( utils ) :
-            arguments.mockGrammar;
-        var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" )
-            .init( arguments.mockGrammar );
+        arguments.mockGrammar = isNull( arguments.mockGrammar ) ? getMockBox()
+            .createMock( "qb.models.Grammars.SqlServerGrammar" )
+            .init( utils ) : arguments.mockGrammar;
+        var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" ).init( arguments.mockGrammar );
         variables.mockGrammar = arguments.mockGrammar;
         return builder;
     }

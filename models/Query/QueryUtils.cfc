@@ -9,6 +9,16 @@ component displayname="QueryUtils" accessors="true" {
     property name="builder";
 
     /**
+     * qb strictDateDetection so we can do some conditional behaviour in data type detections
+     */
+    property name="strictDateDetection" default="false";
+
+    /**
+     * allow overriding default numeric SQL type inferral
+     */
+    property name="numericSQLType" default="CF_SQL_NUMERIC";
+
+    /**
      * Creates a new QueryUtils helper.
      *
      * @strictDateDetection  Flag to only parse date objects as timestamps.

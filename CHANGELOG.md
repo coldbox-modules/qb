@@ -1,3 +1,11 @@
+# v8.3.0
+## 29 Oct 2020 — 22:52:21 UTC
+
+### feat
+
++ __QueryUtils:__ Introduce a setting to specify the default numeric sql type ([8f102c9](https://github.com/coldbox-modules/qb/commit/8f102c9a40cb1fc6918c106cb8c766102100124e))
+
+
 # v8.2.2
 ## 01 Oct 2020 — 04:22:26 UTC
 

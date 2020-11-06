@@ -104,6 +104,111 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
         } );
+
+        describe( "simple pagination", function() {
+            it( "returns the default pagination object", function() {
+                var builder = getBuilder();
+                var expectedResults = [];
+                for ( var i = 1; i <= 26; i++ ) {
+                    expectedResults.append( { "id": i } );
+                }
+                var expectedQuery = queryNew( "id", "integer", expectedResults );
+                builder.$( "runQuery", expectedQuery );
+
+                var results = builder.from( "users" ).simplePaginate();
+
+                expect( results ).toBe( {
+                    "pagination": {
+                        "maxRows": 25,
+                        "offset": 0,
+                        "page": 1,
+                        "hasMore": true
+                    },
+                    "results": expectedResults.slice( 1, 25 )
+                } );
+            } );
+
+            it( "can get results for subsequent pages", function() {
+                var builder = getBuilder();
+                var expectedResults = [];
+                for ( var i = 26; i <= 45; i++ ) {
+                    expectedResults.append( { "id": i } );
+                }
+                var expectedQuery = queryNew( "id", "integer", expectedResults );
+                builder.$( "runQuery", expectedQuery );
+
+                var results = builder.from( "users" ).simplePaginate( page = 2 );
+
+                expect( results ).toBe( {
+                    "pagination": {
+                        "maxRows": 25,
+                        "offset": 25,
+                        "page": 2,
+                        "hasMore": false
+                    },
+                    "results": expectedResults
+                } );
+            } );
+
+            it( "can provide a custom amount per page", function() {
+                var builder = getBuilder();
+                var expectedResults = [];
+                for ( var i = 1; i <= 11; i++ ) {
+                    expectedResults.append( { "id": i } );
+                }
+                var expectedQuery = queryNew( "id", "integer", expectedResults );
+                builder.$( "runQuery", expectedQuery );
+
+                var results = builder.from( "users" ).simplePaginate( page = 1, maxRows = 10 );
+
+                expect( results ).toBe( {
+                    "pagination": {
+                        "maxRows": 10,
+                        "offset": 0,
+                        "page": 1,
+                        "hasMore": true
+                    },
+                    "results": expectedResults.slice( 1, 10 )
+                } );
+            } );
+
+            it( "can provide a custom paginator shell", function() {
+                var builder = getBuilder();
+                builder.setPaginationCollector( {
+                    "generateWithResults": function( totalRecords, results, page, maxRows ) {
+                        return {
+                            "total": totalRecords,
+                            "pageNumber": page,
+                            "limit": maxRows,
+                            "data": results
+                        };
+                    },
+                    "generateSimpleWithResults": function( results, page, maxRows ) {
+                        return {
+                            "next": results.len() > maxRows,
+                            "pageNumber": page,
+                            "limit": maxRows,
+                            "data": results
+                        };
+                    }
+                } );
+                var expectedResults = [];
+                for ( var i = 1; i <= 20; i++ ) {
+                    expectedResults.append( { "id": i } );
+                }
+                var expectedQuery = queryNew( "id", "integer", expectedResults );
+                builder.$( "runQuery", expectedQuery );
+
+                var results = builder.from( "users" ).simplePaginate();
+
+                expect( results ).toBe( {
+                    "next": false,
+                    "pageNumber": 1,
+                    "limit": 25,
+                    "data": expectedResults
+                } );
+            } );
+        } );
     }
 
     private function getBuilder() {

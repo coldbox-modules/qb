@@ -34,8 +34,13 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * paginationCollector
      * A component or struct with a `generateWithResults` method.
-     * The `generate` method will recieve the following arguments:
+     * The `generateWithResults` method will recieve the following arguments:
      * - `totalRecords`
+     * - `results`
+     * - `page`
+     * - `maxRows`
+     * and a `generateSimpleWithResults` method.
+     * The `generateSimpleWithResults` method will recieve the following arguments:
      * - `results`
      * - `page`
      * - `maxRows`
@@ -243,7 +248,7 @@ component displayname="QueryBuilder" accessors="true" {
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
         preventDuplicateJoins = false,
-        paginationCollector = new qb.modules.cbpaginator.models.Pagination(),
+        paginationCollector = new cbpaginator.models.Pagination(),
         columnFormatter,
         parentQuery,
         defaultOptions = {}
@@ -2123,6 +2128,26 @@ component displayname="QueryBuilder" accessors="true" {
         var results = forPage( page, maxRows ).get( options = options );
         return getPaginationCollector().generateWithResults(
             totalRecords = totalRecords,
+            results = results,
+            page = arguments.page,
+            maxRows = arguments.maxRows
+        );
+    }
+
+    /**
+     * Executes the configured query for the given page and maxRows.
+     * A pagination collector will be returned with the simple paginated results.
+     * This method avoids calling `count` for times when the count is unneeded or performance-intensive.
+     *
+     * @page    The page of results to return.
+     * @maxRows The number of rows to return.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return  PaginationCollector
+     */
+    public any function simplePaginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
+        var results = forPage( page, maxRows + 1 ).get( options = options );
+        return getPaginationCollector().generateSimpleWithResults(
             results = results,
             page = arguments.page,
             maxRows = arguments.maxRows

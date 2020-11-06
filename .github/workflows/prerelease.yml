@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.4.3
@@ -46,8 +44,10 @@ jobs:
   #   env:
   #     GA_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
   #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v2
+      # - name: Checkout Repository
+      #   uses: actions/checkout@v2
+      #   with:
+      #     fetch-depth: 0
 
   #     - name: Setup Java JDK
   #       uses: actions/setup-java@v1.4.3

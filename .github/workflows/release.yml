@@ -70,7 +70,9 @@ jobs:
         run: box semantic-release
 
       - name: Generate API Docs
-        run: box run-script generateAPIDocs
+        run: |
+          box install commandbox-docbox
+          box run-script generateAPIDocs
 
       - name: Get Current Version
         id: current_version

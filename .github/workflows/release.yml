@@ -74,7 +74,7 @@ jobs:
 
       - name: Get Current Version
         id: current_version
-        run: echo "::set-output name=version::`cat $TRAVIS_BUILD_DIR/box.json | jq '.version' -r`"
+        run: echo "::set-output name=version::`cat box.json | jq '.version' -r`"
 
       # - name: Upload API Docs to S3
       #   uses: jakejarvis/s3-sync-action@master
@@ -85,4 +85,4 @@ jobs:
       #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       #     SOURCE_DIR: ".tmp/apidocs"
-      #     DEST_DIR: "coldbox-modules/qb/${{ steps.current_version.version }}"
+      #     DEST_DIR: "${{ github.repository }}/${{ steps.current_version.version }}"

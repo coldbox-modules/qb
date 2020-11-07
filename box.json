@@ -6,7 +6,7 @@
     "documentation":"https://github.com/coldbox-modules/qb",
     "location":"forgeboxStorage",
     "scripts":{
-        "generateAPIDocs":"rm .tmp --recurse --force && docbox generate mapping=qb excludes=test|ModuleConfig strategy-outputDir=.tmp/apidocs strategy-projectTitle=qb",
+        "generateAPIDocs":"touch .tmp && rm .tmp --recurse --force && docbox generate mapping=qb excludes=test|ModuleConfig strategy-outputDir=.tmp/apidocs strategy-projectTitle=qb",
         "commitAPIDocs":"run-script generateAPIDocs && !git add docs/apidocs/* && !git commit -m 'Updated API Docs'",
         "format":"cfformat run models/**/*.cfc,tests/resources/**/*.cfc,tests/specs/**/*.cfc --overwrite",
         "format:check":"cfformat check models/**/*.cfc,tests/resources/**/*.cfc,tests/specs/**/*.cfc"

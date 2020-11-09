@@ -2146,7 +2146,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return  PaginationCollector
      */
     public any function simplePaginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
-        var results = forPage( page, maxRows + 1 ).get( options = options );
+        var results = forPage( page, maxRows ).limit( maxRows + 1 ).get( options = options );
         return getPaginationCollector().generateSimpleWithResults(
             results = results,
             page = arguments.page,

@@ -1,3 +1,5 @@
+name: Cron
+
 on:
   schedule:
     - cron:  0 0 * * 1
@@ -11,6 +13,7 @@ jobs:
       matrix:
         cfengine: ["lucee@5", "lucee@be", "adobe@2016", "adobe@2018", "adobe@be"]
         coldbox: ["coldbox@5", "coldbox@6", "coldbox@be"]
+        javaVersion: ["openjdk8", "openjdk11"]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -29,7 +32,7 @@ jobs:
           box install ${{ matrix.coldbox }} --noSave
       
       - name: Start server
-        run: box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
+        run: box server start cfengine=${{ matrix.cfengine }} javaVersion=${{ matrix.javaVersion }} --noSaveSettings
 
       - name: Run TestBox Tests
         run: box testbox run

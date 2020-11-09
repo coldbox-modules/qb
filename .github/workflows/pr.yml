@@ -1,3 +1,5 @@
+name: PRs and Branches
+
 on:
   push:
     branches-ignore:

@@ -978,7 +978,7 @@ component extends="testbox.system.BaseSpec" {
                             {},
                             false
                         );
-                    }, uuid() );
+                    }, this.uuid() );
                 } );
             } );
 

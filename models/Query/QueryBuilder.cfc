@@ -12,7 +12,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Query utilities shared across multiple models.
      */
-    property name="utils" inject="QueryUtils@qb";
+    property name="utils";
 
     /**
      * returnFormat callback

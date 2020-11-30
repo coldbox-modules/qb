@@ -139,6 +139,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "NCHAR(#column.getLength()#)";
     }
 
+    function typeLongText( column ) {
+        return "LONGTEXT";
+    }    
+
     function typeLineString( column ) {
         return "LINESTRING";
     }

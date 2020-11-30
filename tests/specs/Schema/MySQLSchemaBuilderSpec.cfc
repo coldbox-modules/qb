@@ -119,7 +119,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function longText() {
-        return [ "CREATE TABLE `posts` (`body` TEXT NOT NULL)" ];
+        return [ "CREATE TABLE `posts` (`body` LONGTEXT NOT NULL)" ];
     }
 
     function UnicodeLongText() {

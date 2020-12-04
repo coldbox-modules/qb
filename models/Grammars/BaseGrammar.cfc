@@ -59,9 +59,9 @@ component displayname="Grammar" accessors="true" singleton {
      */
     public BaseGrammar function init( qb.models.Query.QueryUtils utils ) {
         param arguments.utils = new qb.models.Query.QueryUtils();
-		var app_settings = getApplicationSettings();
+	var app_settings = getApplicationSettings();
         variables.utils = arguments.utils;
-		variables.defaultdatasource = app_settings.datasource;
+	variables.defaultdatasource = app_settings.datasource;
         variables.tablePrefix = "";
         variables.tableAliasOperator = " AS ";
         // These are overwritten by WireBox, if it exists.

@@ -59,7 +59,9 @@ component displayname="Grammar" accessors="true" singleton {
      */
     public BaseGrammar function init( qb.models.Query.QueryUtils utils ) {
         param arguments.utils = new qb.models.Query.QueryUtils();
+		var app_settings = getApplicationSettings();
         variables.utils = arguments.utils;
+		variables.defaultdatasource = app_settings.datasource;
         variables.tablePrefix = "";
         variables.tableAliasOperator = " AS ";
         // These are overwritten by WireBox, if it exists.
@@ -99,7 +101,7 @@ component displayname="Grammar" accessors="true" singleton {
         };
         tryPreInterceptor( data );
         structAppend( data.options, { result: "local.result" }, true );
-        variables.log.debug( "Executing sql: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
+        variables.log.debug( "Executing sql on #(data.options.datasource ?: variables.defaultdatasource)#: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
         var startTick = getTickCount();
         var q = queryExecute( data.sql, data.bindings, data.options );
         data.executionTime = getTickCount() - startTick;

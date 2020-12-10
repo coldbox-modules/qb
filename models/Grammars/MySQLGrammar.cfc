@@ -150,5 +150,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function typePolygon( column ) {
         return "POLYGON";
     }
+    
+    function typeMediumText( column ) {
+        return "MEDIUMTEXT";
+    }
+
+    function typeLongText( column ) {
+        return "LONGTEXT";
+    }
 
 }

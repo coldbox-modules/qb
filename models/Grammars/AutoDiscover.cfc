@@ -6,13 +6,13 @@ component singleton {
     function autoDiscoverGrammar() {
         cfdbinfo( type = "Version", name = "local.dbInfo" );
 
-        switch( dbInfo.DATABASE_PRODUCTNAME ) {
+        switch ( dbInfo.DATABASE_PRODUCTNAME ) {
             case "MySQL":
                 return wirebox.getInstance( "MySQLGrammar@qb" );
             case "PostgreSQL":
                 return wirebox.getInstance( "PostgresGrammar@qb" );
             case "Microsoft SQL Server":
-                return wirebox.getInstance( "MSSQLGrammar@qb" );
+                return wirebox.getInstance( "SQLServerGrammar@qb" );
             case "Oracle":
                 return wirebox.getInstance( "OracleGrammar@qb" );
             default:
@@ -21,9 +21,10 @@ component singleton {
     }
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
-        if ( ! structKeyExists( variables, "grammar" ) ) {
+        if ( !structKeyExists( variables, "grammar" ) ) {
             variables.grammar = autoDiscoverGrammar();
         }
         return invoke( variables.grammar, missingMethodName, missingMethodArguments );
     }
+
 }

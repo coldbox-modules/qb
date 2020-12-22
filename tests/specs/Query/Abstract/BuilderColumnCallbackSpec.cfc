@@ -10,7 +10,7 @@ component extends="testbox.system.BaseSpec" {
 
             it( "does nothing by default", function() {
                 query.from( "users" ).where( "firstName", "=", "firstName" );
-                expect( query.toSQL() ).toBe( 'SELECT * FROM "users" WHERE "firstName" = ?' );
+                expect( query.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""firstName"" = ?" );
                 expect( query.getBindings()[ 1 ].value ).toBe( "firstName" );
             } );
 
@@ -19,9 +19,10 @@ component extends="testbox.system.BaseSpec" {
                     return reverse( column );
                 } );
                 query.from( "users" ).where( "firstName", "=", "firstName" );
-                expect( query.toSQL() ).toBe( 'SELECT * FROM "users" WHERE "emaNtsrif" = ?' );
+                expect( query.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""emaNtsrif"" = ?" );
                 expect( query.getBindings()[ 1 ].value ).toBe( "firstName" );
             } );
         } );
     }
+
 }

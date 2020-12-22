@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  tests:
+    name: Tests
+    if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        cfengine: ["lucee@5", "adobe@2016", "adobe@2018"]
+        coldbox: ["coldbox@5", "coldbox@6"]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 11 
+
+      - name: Set Up CommandBox
+        uses: elpete/setup-commandbox@v1.0.0
+      
+      - name: Install dependencies
+        run: |
+          box install
+          box install ${{ matrix.coldbox }} --noSave
+      
+      - name: Start server
+        run: box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
+
+      - name: Run TestBox Tests
+        run: box testbox run
+
+  release:
+    name: Semantic Release
+    if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"
+    needs: tests
+    runs-on: ubuntu-latest
+    env:
+      GA_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 11 
+
+      - name: Set Up CommandBox
+        uses: elpete/setup-commandbox@v1.0.0
+      
+      - name: Install and Configure Semantic Release
+        run: |
+          box install commandbox-semantic-release
+          box config set endpoints.forgebox.APIToken=${{ secrets.FORGEBOX_TOKEN }}
+          box config set modules.commandbox-semantic-release.plugins='{ "VerifyConditions": "GitHubActionsConditionsVerifier@commandbox-semantic-release", "FetchLastRelease": "ForgeBoxReleaseFetcher@commandbox-semantic-release", "RetrieveCommits": "JGitCommitsRetriever@commandbox-semantic-release", "ParseCommit": "ConventionalChangelogParser@commandbox-semantic-release", "FilterCommits": "DefaultCommitFilterer@commandbox-semantic-release", "AnalyzeCommits": "DefaultCommitAnalyzer@commandbox-semantic-release", "VerifyRelease": "NullReleaseVerifier@commandbox-semantic-release", "GenerateNotes": "GitHubMarkdownNotesGenerator@commandbox-semantic-release", "UpdateChangelog": "FileAppendChangelogUpdater@commandbox-semantic-release", "CommitArtifacts": "NullArtifactsCommitter@commandbox-semantic-release", "PublishRelease": "ForgeBoxReleasePublisher@commandbox-semantic-release", "PublicizeRelease": "GitHubReleasePublicizer@commandbox-semantic-release" }'
+      
+      - name: Run Semantic Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: box semantic-release
+
+      - name: Generate API Docs
+        run: |
+          box install commandbox-docbox
+          box run-script generateAPIDocs
+
+      - name: Get Current Version
+        id: current_version
+        run: echo "::set-output name=version::`cat box.json | jq '.version' -r`"
+
+      - name: Upload API Docs to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read
+        env:
+          AWS_S3_BUCKET: "apidocs.ortussolutions.com"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_SECRET }}
+          SOURCE_DIR: ".tmp/apidocs"
+          DEST_DIR: "${{ github.repository }}/${{ steps.current_version.outputs.version }}"

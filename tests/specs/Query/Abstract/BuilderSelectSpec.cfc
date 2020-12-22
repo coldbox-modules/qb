@@ -1,4 +1,5 @@
 component extends="testbox.system.BaseSpec" {
+
     function run() {
         describe( "select methods", function() {
             beforeEach( function() {
@@ -7,7 +8,7 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "select()", function() {
-                it ( "defaults to all columns", function() {
+                it( "defaults to all columns", function() {
                     expect( query.getColumns() ).toBe( [ "*" ] );
                 } );
 
@@ -22,13 +23,18 @@ component extends="testbox.system.BaseSpec" {
                         expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );
                     } );
 
-                    it( "using an array", function() {
-                        query.select( [ "::some_column::", "::another_column::" ] );
-                        expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );
+                    it( "trims a list before splitting it", function() {
+                        query.select(
+                            "
+                            ::some_column::, ::another_column::
+                            ,::third_column::
+                        "
+                        );
+                        expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::", "::third_column::" ] );
                     } );
 
-                    it( "using variadic parameters", function() {
-                        query.select( "::some_column::", "::another_column::" );
+                    it( "using an array", function() {
+                        query.select( [ "::some_column::", "::another_column::" ] );
                         expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::" ] );
                     } );
                 } );
@@ -55,25 +61,19 @@ component extends="testbox.system.BaseSpec" {
                         query.addSelect( [ "::another_column::", "::yet_another_column::" ] );
                         expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::", "::yet_another_column::" ] );
                     } );
-
-                    it( "using variadic parameters", function() {
-                        query.addSelect( "::another_column::", "::yet_another_column::" );
-                        expect( query.getColumns() ).toBe( [ "::some_column::", "::another_column::", "::yet_another_column::" ] );
-                    } );
                 } );
             } );
 
             describe( "distinct()", function() {
                 it( "sets the distinct flag", function() {
-                    expect( query.getDistinct() ).toBe( false,
-                        "Queries are not distinct by default" );
+                    expect( query.getDistinct() ).toBe( false, "Queries are not distinct by default" );
 
                     query.distinct();
 
-                    expect( query.getDistinct() ).toBe( true,
-                        "Distinct should be set to true" );
+                    expect( query.getDistinct() ).toBe( true, "Distinct should be set to true" );
                 } );
             } );
         } );
     }
+
 }

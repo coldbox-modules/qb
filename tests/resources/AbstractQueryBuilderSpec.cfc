@@ -16,12 +16,6 @@ component extends="testbox.system.BaseSpec" {
                         }, selectSpecificColumn() );
                     } );
 
-                    it( "can select multiple columns using variadic parameters", function() {
-                        testCase( function( builder ) {
-                            builder.select( "id", "name" ).from( "users" );
-                        }, selectMultipleVariadic() );
-                    } );
-
                     it( "can select multiple columns using an array", function() {
                         testCase( function( builder ) {
                             builder.select( [ "name", builder.raw( "COUNT(*)" ) ] ).from( "users" );
@@ -46,7 +40,10 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can select distinct records", function() {
                         testCase( function( builder ) {
-                            builder.distinct().select( "foo", "bar" ).from( "users" );
+                            builder
+                                .distinct()
+                                .select( [ "foo", "bar" ] )
+                                .from( "users" );
                         }, selectDistinct() );
                     } );
 
@@ -54,6 +51,34 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder.select( "foo as bar" ).from( "users" );
                         }, parseColumnAlias() );
+                    } );
+
+                    it( "can parse column aliases in where clauses", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select( "users.foo" )
+                                .from( "users" )
+                                .where( "users.foo", "bar" );
+                        }, parseColumnAliasInWhere() );
+                    } );
+
+                    it( "can parse column aliases in where clauses with subselects", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users u" )
+                                .select( "u.*, user_roles.roleid, roles.rolecode" )
+                                .join( "user_roles", "user_roles.userid", "u.userid" )
+                                .leftjoin( "roles", "user_roles.roleid", "roles.roleid" )
+                                .where(
+                                    "user_roles.roleid",
+                                    "=",
+                                    function( q ) {
+                                        q.select( "roleid" )
+                                            .from( "roles" )
+                                            .where( "rolecode", "SYSADMIN" );
+                                    }
+                                );
+                        }, parseColumnAliasInWhereSubselect() );
                     } );
 
                     it( "wraps columns and aliases correctly", function() {
@@ -73,6 +98,39 @@ component extends="testbox.system.BaseSpec" {
                             builder.selectRaw( "substr( foo, 6 )" ).from( "users" );
                         }, selectRaw() );
                     } );
+
+                    it( "can select multiple raw values with `selectRaw` when passing in an array", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).selectRaw( [ "substr( foo, 6 )", "trim( bar )" ] );
+                        }, selectRawArray() );
+                    } );
+
+                    it( "can clear the selected columns for a query", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .select( [ "foo", "bar" ] )
+                                .clearSelect();
+                        }, clearSelect() );
+                    } );
+
+                    it( "can reselect the columns for a query", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .select( [ "foo", "bar" ] )
+                                .reselect( "baz" );
+                        }, reselect() );
+                    } );
+
+                    it( "can reselect the columns for a query with raw expressions", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .select( [ "foo", "bar" ] )
+                                .reselectRaw( [ "substr( foo, 6 )", "trim( bar )" ] );
+                        }, reselectRaw() );
+                    } );
                 } );
 
                 describe( "sub-selects", function() {
@@ -82,7 +140,8 @@ component extends="testbox.system.BaseSpec" {
                                 .from( "users" )
                                 .select( "name" )
                                 .subSelect( "latestUpdatedDate", function( q ) {
-                                    return q.from( "posts" )
+                                    return q
+                                        .from( "posts" )
                                         .selectRaw( "MAX(updated_date)" )
                                         .whereColumn( "posts.user_id", "users.id" );
                                 } );
@@ -94,10 +153,14 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .select( "name" )
-                                .subSelect( "latestUpdatedDate", builder.newQuery()
-                                    .from( "posts" )
-                                    .selectRaw( "MAX(updated_date)" )
-                                    .whereColumn( "posts.user_id", "users.id" ) );
+                                .subSelect(
+                                    "latestUpdatedDate",
+                                    builder
+                                        .newQuery()
+                                        .from( "posts" )
+                                        .selectRaw( "MAX(updated_date)" )
+                                        .whereColumn( "posts.user_id", "users.id" )
+                                );
                         }, subSelectQueryObject() );
                     } );
 
@@ -107,7 +170,8 @@ component extends="testbox.system.BaseSpec" {
                                 .from( "users" )
                                 .select( "name" )
                                 .subSelect( "latestUpdatedDate", function( q ) {
-                                    return q.from( "posts" )
+                                    return q
+                                        .from( "posts" )
                                         .selectRaw( "MAX(updated_date)" )
                                         .where( "posts.user_id", 1 );
                                 } );
@@ -124,7 +188,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can specify a Expression object as the input for from", function() {
                         testCase( function( builder ) {
-                            builder.from( builder.raw("Test (nolock)") );
+                            builder.from( builder.raw( "Test (nolock)" ) );
                         }, fromRaw() );
                     } );
 
@@ -136,7 +200,7 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can specify a Expression object as the input for table", function() {
                         testCase( function( builder ) {
-                            builder.table( builder.raw("Test (nolock)") );
+                            builder.table( builder.raw( "Test (nolock)" ) );
                         }, fromRaw() );
                     } );
 
@@ -148,13 +212,16 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can add bindings to fromRaw", function() {
                         testCase( function( builder ) {
-                            builder.fromRaw( "Test (nolock)", [1, 2, 3] );
-                        }, {sql: fromRaw(), bindings: [1, 2, 3]} );
+                            builder.fromRaw( "Test (nolock)", [ 1, 2, 3 ] );
+                        }, { sql: fromRaw(), bindings: [ 1, 2, 3 ] } );
                     } );
 
                     it( "can specify the table using fromSub as QueryBuilder", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id", "name").from("users").where( "age", ">=", "21" );
+                            var derivedTable = getBuilder()
+                                .select( [ "id", "name" ] )
+                                .from( "users" )
+                                .where( "age", ">=", "21" );
 
                             builder.fromSub( "u", derivedTable );
                         }, fromDerivedTable() );
@@ -162,8 +229,10 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can specify the table using fromSub as a closure", function() {
                         testCase( function( builder ) {
-                            builder.fromSub( "u", function (q){
-                                q.select("id", "name").from("users").where( "age", ">=", "21" );
+                            builder.fromSub( "u", function( q ) {
+                                q.select( [ "id", "name" ] )
+                                    .from( "users" )
+                                    .where( "age", ">=", "21" );
                             } );
                         }, fromDerivedTable() );
                     } );
@@ -219,8 +288,24 @@ component extends="testbox.system.BaseSpec" {
                     describe( "basic wheres", function() {
                         it( "can add a where statement", function() {
                             testCase( function( builder ) {
-                                builder.select( "*" ).from( "users" ).where( "id", "=", 1 );
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .where( "id", "=", 1 );
                             }, basicWhere() );
+                        } );
+
+                        it( "can add a where statement with a query param struct", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .where(
+                                        "createdDate",
+                                        ">=",
+                                        { value: "01/01/2019", cfsqltype: "CF_SQL_TIMESTAMP" }
+                                    );
+                            }, basicWhereWithQueryParamStruct() );
                         } );
 
                         it( "can add or where statements", function() {
@@ -245,7 +330,10 @@ component extends="testbox.system.BaseSpec" {
 
                         it( "can add raw where statements", function() {
                             testCase( function( builder ) {
-                                builder.select( "*" ).from( "users" ).whereRaw( "id = ? OR email = ?", [ 1, "foo" ] );
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereRaw( "id = ? OR email = ?", [ 1, "foo" ] );
                             }, whereRaw() );
                         } );
 
@@ -296,12 +384,34 @@ component extends="testbox.system.BaseSpec" {
                                     .select( "*" )
                                     .from( "users" )
                                     .where( "email", "foo" )
-                                    .orWhere( "id", "=", function( q ) {
-                                        q.select( q.raw( "MAX(id)" ) )
-                                            .from( "users" )
-                                            .where( "email", "bar" );
-                                    } );
+                                    .orWhere(
+                                        "id",
+                                        "=",
+                                        function( q ) {
+                                            q.select( q.raw( "MAX(id)" ) )
+                                                .from( "users" )
+                                                .where( "email", "bar" );
+                                        }
+                                    );
                             }, whereSubSelect() );
+                        } );
+
+                        it( "can configure a where with a builder instance", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .where( "email", "foo" )
+                                    .orWhere(
+                                        "id",
+                                        "=",
+                                        builder
+                                            .newQuery()
+                                            .select( builder.raw( "MAX(id)" ) )
+                                            .from( "users" )
+                                            .where( "email", "bar" )
+                                    );
+                            }, whereBuilderInstance() );
                         } );
                     } );
 
@@ -314,7 +424,7 @@ component extends="testbox.system.BaseSpec" {
                                     .whereExists( function( q ) {
                                         q.select( q.raw( 1 ) )
                                             .from( "products" )
-                                            .where( "products.id", "=", q.raw( "orders.id" ) );
+                                            .whereColumn( "products.id", "orders.id" );
                                     } );
                             }, whereExists() );
                         } );
@@ -328,7 +438,7 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhereExists( function( q ) {
                                         q.select( q.raw( 1 ) )
                                             .from( "products" )
-                                            .where( "products.id", "=", q.raw( "orders.id" ) );
+                                            .whereColumn( "products.id", "orders.id" );
                                     } );
                             }, orWhereExists() );
                         } );
@@ -341,7 +451,7 @@ component extends="testbox.system.BaseSpec" {
                                     .whereNotExists( function( q ) {
                                         q.select( q.raw( 1 ) )
                                             .from( "products" )
-                                            .where( "products.id", "=", q.raw( "orders.id" ) );
+                                            .whereColumn( "products.id", "orders.id" );
                                     } );
                             }, whereNotExists() );
                         } );
@@ -355,16 +465,34 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhereNotExists( function( q ) {
                                         q.select( q.raw( 1 ) )
                                             .from( "products" )
-                                            .where( "products.id", "=", q.raw( "orders.id" ) );
+                                            .whereColumn( "products.id", "orders.id" );
                                     } );
                             }, orWhereNotExists() );
+                        } );
+
+                        it( "can add a where exists clause using a builder instance", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "orders" )
+                                    .whereExists(
+                                        builder
+                                            .newQuery()
+                                            .select( builder.raw( 1 ) )
+                                            .from( "products" )
+                                            .whereColumn( "products.id", "orders.id" )
+                                    );
+                            }, whereExistsBuilderInstance() );
                         } );
                     } );
 
                     describe( "where null", function() {
                         it( "can add where null statements", function() {
                             testCase( function( builder ) {
-                                builder.select( "*" ).from( "users" ).whereNull( "id" );
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereNull( "id" );
                             }, whereNull() );
                         } );
 
@@ -380,7 +508,10 @@ component extends="testbox.system.BaseSpec" {
 
                         it( "can add where not null statements", function() {
                             testCase( function( builder ) {
-                                builder.select( "*" ).from( "users" ).whereNotNull( "id" );
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereNotNull( "id" );
                             }, whereNotNull() );
                         } );
 
@@ -393,19 +524,129 @@ component extends="testbox.system.BaseSpec" {
                                     .orWhereNotNull( "id" );
                             }, orWhereNotNull() );
                         } );
+
+                        it( "can add a where null with a subselect", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereNull( function( q ) {
+                                        q.selectRaw( "MAX(created_date)" )
+                                            .from( "logins" )
+                                            .whereColumn( "logins.user_id", "users.id" );
+                                    } );
+                            }, whereNullSubselect() );
+                        } );
+
+                        it( "can add a where null with a builder instance", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereNull(
+                                        builder
+                                            .newQuery()
+                                            .selectRaw( "MAX(created_date)" )
+                                            .from( "logins" )
+                                            .whereColumn( "logins.user_id", "users.id" )
+                                    );
+                            }, whereNullSubquery() );
+                        } );
                     } );
 
                     describe( "where between", function() {
                         it( "can add where between statements", function() {
                             testCase( function( builder ) {
-                                builder.select( "*" ).from( "users" ).whereBetween( "id", 1, 2 );
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween( "id", 1, 2 );
                             }, whereBetween() );
+                        } );
+
+                        it( "can add where between statements with query param structs", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "createdDate",
+                                        { value: "1/1/2019", cfsqltype: "CF_SQL_TIMESTAMP" },
+                                        { value: "12/31/2019", cfsqltype: "CF_SQL_TIMESTAMP" }
+                                    );
+                            }, whereBetweenWithQueryParamStructs() );
                         } );
 
                         it( "can add where not between statements", function() {
                             testCase( function( builder ) {
-                                builder.select( "*" ).from( "users" ).whereNotBetween( "id", 1, 2 );
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereNotBetween( "id", 1, 2 );
                             }, whereNotBetween() );
+                        } );
+
+                        it( "can add where between statements using closures", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "id",
+                                        function( q ) {
+                                            q.select( q.raw( "MIN(id)" ) )
+                                                .from( "users" )
+                                                .where( "email", "bar" );
+                                        },
+                                        function( q ) {
+                                            q.select( q.raw( "MAX(id)" ) )
+                                                .from( "users" )
+                                                .where( "email", "bar" );
+                                        }
+                                    );
+                            }, whereBetweenClosures() );
+                        } );
+
+                        it( "can add where between statements using builder instances", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "id",
+                                        builder
+                                            .newQuery()
+                                            .select( builder.raw( "MIN(id)" ) )
+                                            .from( "users" )
+                                            .where( "email", "bar" ),
+                                        builder
+                                            .newQuery()
+                                            .select( builder.raw( "MAX(id)" ) )
+                                            .from( "users" )
+                                            .where( "email", "bar" )
+                                    );
+                            }, whereBetweenBuilderInstances() );
+                        } );
+
+                        it( "can add where between statements using both closures and builder instances", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "id",
+                                        function( q ) {
+                                            q.select( q.raw( "MIN(id)" ) )
+                                                .from( "users" )
+                                                .where( "email", "bar" );
+                                        },
+                                        builder
+                                            .newQuery()
+                                            .select( builder.raw( "MAX(id)" ) )
+                                            .from( "users" )
+                                            .where( "email", "bar" )
+                                    );
+                            }, whereBetweenMixed() );
                         } );
                     } );
 
@@ -422,9 +663,20 @@ component extends="testbox.system.BaseSpec" {
                             }, whereInArray() );
                         } );
 
+                        it( "can add where in statements from an array", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .from( "users" )
+                                    .whereIn( "id", [ 1, { value: 2, cfsqltype: "CF_SQL_INTEGER" }, 3 ] );
+                            }, whereInArrayOfQueryParamStructs() );
+                        } );
+
                         it( "can add or where in statements", function() {
                             testCase( function( builder ) {
-                                builder.from( "users" ).where( "email", "foo" ).orWhereIn( "id", [ 1, 2, 3 ] );
+                                builder
+                                    .from( "users" )
+                                    .where( "email", "foo" )
+                                    .orWhereIn( "id", [ 1, 2, 3 ] );
                             }, orWhereIn() );
                         } );
 
@@ -448,10 +700,37 @@ component extends="testbox.system.BaseSpec" {
 
                         it( "handles sub selects in 'in' statements", function() {
                             testCase( function( builder ) {
-                                builder.from( "users" ).whereIn( "id", function( q ) {
-                                    q.select( "id" ).from( "users" ).where( "age", ">", 25 );
-                                } );
+                                builder
+                                    .from( "users" )
+                                    .whereIn( "id", function( q ) {
+                                        q.select( "id" )
+                                            .from( "users" )
+                                            .where( "age", ">", 25 );
+                                    } );
                             }, whereInSubselect() );
+                        } );
+
+                        it( "handles builder instances in 'in' statements", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .from( "users" )
+                                    .whereIn(
+                                        "id",
+                                        builder
+                                            .newQuery()
+                                            .select( "id" )
+                                            .from( "users" )
+                                            .where( "age", ">", 25 )
+                                    );
+                            }, whereInBuilderInstance() );
+                        } );
+                    } );
+
+                    describe( "where like", function() {
+                        it( "can add like statements using a shortcut method", function() {
+                            testCase( function( builder ) {
+                                builder.from( "users" ).whereLike( "username", "Jo%" );
+                            }, whereLike() );
                         } );
                     } );
                 } );
@@ -459,19 +738,40 @@ component extends="testbox.system.BaseSpec" {
                 describe( "joins", function() {
                     it( "can inner join", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).join( "contacts", "users.id", "=", "contacts.id" );
+                            builder
+                                .from( "users" )
+                                .join(
+                                    "contacts",
+                                    "users.id",
+                                    "=",
+                                    "contacts.id"
+                                );
                         }, innerJoin() );
                     } );
 
                     it( "can inner join on table as expression", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).join( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                            builder
+                                .from( "users" )
+                                .join(
+                                    builder.raw( "contacts (nolock)" ),
+                                    "users.id",
+                                    "=",
+                                    "contacts.id"
+                                );
                         }, innerJoinRaw() );
                     } );
 
                     it( "can inner join on raw sql", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).joinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                            builder
+                                .from( "users" )
+                                .joinRaw(
+                                    "contacts (nolock)",
+                                    "users.id",
+                                    "=",
+                                    "contacts.id"
+                                );
                         }, innerJoinRaw() );
                     } );
 
@@ -492,8 +792,33 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can join with where bindings instead of columns", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).joinWhere( "contacts", "contacts.balance", "<", 100 );
+                            builder
+                                .from( "users" )
+                                .joinWhere(
+                                    "contacts",
+                                    "contacts.balance",
+                                    "<",
+                                    100
+                                );
                         }, joinWithWhere() );
+                    } );
+
+                    it( "can join with a callback", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .join( "contacts", function( j ) {
+                                    j.on( "users.id", "=", "contacts.id" );
+                                } );
+                        }, innerJoinCallback() );
+                    } );
+
+                    it( "can join with a standalone join clause", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .join( builder.newJoin( "contacts" ).on( "users.id", "=", "contacts.id" ) );
+                        }, innerJoinWithJoinInstance() );
                     } );
 
                     it( "can left join", function() {
@@ -504,14 +829,38 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can left join on table as expression", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).leftJoin( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                            builder
+                                .from( "users" )
+                                .leftJoin(
+                                    builder.raw( "contacts (nolock)" ),
+                                    "users.id",
+                                    "=",
+                                    "contacts.id"
+                                );
                         }, leftJoinRaw() );
                     } );
 
                     it( "can left join on raw sql", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).leftJoinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                            builder
+                                .from( "users" )
+                                .leftJoinRaw(
+                                    "contacts (nolock)",
+                                    "users.id",
+                                    "=",
+                                    "contacts.id"
+                                );
                         }, leftJoinRaw() );
+                    } );
+
+                    it( "can left join using a nested query", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .leftJoin( "orders", function( j ) {
+                                    j.on( "users.id", "=", "orders.user_id" );
+                                } );
+                        }, leftJoinNested() );
                     } );
 
                     it( "can right join", function() {
@@ -522,13 +871,27 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can right join on table as expression", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).rightJoin( builder.raw("contacts (nolock)"), "users.id", "=", "contacts.id" );
+                            builder
+                                .from( "users" )
+                                .rightJoin(
+                                    builder.raw( "contacts (nolock)" ),
+                                    "users.id",
+                                    "=",
+                                    "contacts.id"
+                                );
                         }, rightJoinRaw() );
                     } );
 
                     it( "can right join on raw sql", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).rightJoinRaw( "contacts (nolock)", "users.id", "=", "contacts.id" );
+                            builder
+                                .from( "users" )
+                                .rightJoinRaw(
+                                    "contacts (nolock)",
+                                    "users.id",
+                                    "=",
+                                    "contacts.id"
+                                );
                         }, rightJoinRaw() );
                     } );
 
@@ -540,13 +903,13 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can cross join on table as expression", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).crossJoin( builder.raw("contacts (nolock)") );
+                            builder.from( "users" ).crossJoin( builder.raw( "contacts (nolock)" ) );
                         }, crossJoinRaw() );
                     } );
 
                     it( "can cross join on raw sql", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).crossJoinRaw( "contacts (nolock)");
+                            builder.from( "users" ).crossJoinRaw( "contacts (nolock)" );
                         }, crossJoinRaw() );
                     } );
 
@@ -567,8 +930,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .join( "contacts", function( j ) {
-                                    j.on( "users.id", "=", "contacts.id" )
-                                        .whereNull( "contacts.deleted_date" );
+                                    j.on( "users.id", "=", "contacts.id" ).whereNull( "contacts.deleted_date" );
                                 } );
                         }, joinWithWhereNull() );
                     } );
@@ -578,8 +940,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .join( "contacts", function( j ) {
-                                    j.on( "users.id", "=", "contacts.id" )
-                                        .orWhereNull( "contacts.deleted_date" );
+                                    j.on( "users.id", "=", "contacts.id" ).orWhereNull( "contacts.deleted_date" );
                                 } );
                         }, joinWithOrWhereNull() );
                     } );
@@ -589,8 +950,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .join( "contacts", function( j ) {
-                                    j.on( "users.id", "=", "contacts.id" )
-                                        .whereNotNull( "contacts.deleted_date" );
+                                    j.on( "users.id", "=", "contacts.id" ).whereNotNull( "contacts.deleted_date" );
                                 } );
                         }, joinWithWhereNotNull() );
                     } );
@@ -600,8 +960,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .join( "contacts", function( j ) {
-                                    j.on( "users.id", "=", "contacts.id" )
-                                        .orWhereNotNull( "contacts.deleted_date" );
+                                    j.on( "users.id", "=", "contacts.id" ).orWhereNotNull( "contacts.deleted_date" );
                                 } );
                         }, joinWithOrWhereNotNull() );
                     } );
@@ -611,8 +970,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .join( "contacts", function( j ) {
-                                    j.on( "users.id", "=", "contacts.id" )
-                                        .whereIn( "contacts.id", [ 1, 2, 3 ] );
+                                    j.on( "users.id", "=", "contacts.id" ).whereIn( "contacts.id", [ 1, 2, 3 ] );
                                 } );
                         }, joinWithWhereIn() );
                     } );
@@ -622,8 +980,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .join( "contacts", function( j ) {
-                                    j.on( "users.id", "=", "contacts.id" )
-                                        .orWhereIn( "contacts.id", [ 1, 2, 3 ] );
+                                    j.on( "users.id", "=", "contacts.id" ).orWhereIn( "contacts.id", [ 1, 2, 3 ] );
                                 } );
                         }, joinWithOrWhereIn() );
                     } );
@@ -633,8 +990,7 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .join( "contacts", function( j ) {
-                                    j.on( "users.id", "=", "contacts.id" )
-                                        .whereNotIn( "contacts.id", [ 1, 2, 3 ] );
+                                    j.on( "users.id", "=", "contacts.id" ).whereNotIn( "contacts.id", [ 1, 2, 3 ] );
                                 } );
                         }, joinWithWhereNotIn() );
                     } );
@@ -644,19 +1000,27 @@ component extends="testbox.system.BaseSpec" {
                             builder
                                 .from( "users" )
                                 .join( "contacts", function( j ) {
-                                    j.on( "users.id", "=", "contacts.id" )
-                                        .orWhereNotIn( "contacts.id", [ 1, 2, 3 ] );
+                                    j.on( "users.id", "=", "contacts.id" ).orWhereNotIn( "contacts.id", [ 1, 2, 3 ] );
                                 } );
                         }, joinWithOrWhereNotIn() );
                     } );
 
                     it( "can inner join to a derived table with joinSub using a QueryBuilder object", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                            var derivedTable = getBuilder()
+                                .select( "id" )
+                                .from( "contacts" )
+                                .whereNotIn( "id", [ 1, 2, 3 ] );
 
                             builder
                                 .from( "users as u" )
-                                .joinSub( "c", derivedTable, "u.id", "=", "c.id");
+                                .joinSub(
+                                    "c",
+                                    derivedTable,
+                                    "u.id",
+                                    "=",
+                                    "c.id"
+                                );
                         }, joinSub() );
                     } );
 
@@ -664,29 +1028,47 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "users as u" )
-                                .joinSub( "c", function (qb){
-                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
-                                }, "u.id", "=", "c.id");
+                                .joinSub(
+                                    "c",
+                                    function( qb ) {
+                                        qb.select( "id" )
+                                            .from( "contacts" )
+                                            .whereNotIn( "id", [ 1, 2, 3 ] );
+                                    },
+                                    "u.id",
+                                    "=",
+                                    "c.id"
+                                );
                         }, joinSub() );
                     } );
 
                     it( "can inner join to a derived table with joinSub using the shorthand", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                            var derivedTable = getBuilder()
+                                .select( "id" )
+                                .from( "contacts" )
+                                .whereNotIn( "id", [ 1, 2, 3 ] );
 
-                            builder
-                                .from( "users as u" )
-                                .joinSub( "c", derivedTable, "u.id", "c.id");
+                            builder.from( "users as u" ).joinSub( "c", derivedTable, "u.id", "c.id" );
                         }, joinSub() );
                     } );
 
                     it( "can left join to a derived table with joinSub using a QueryBuilder object", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                            var derivedTable = getBuilder()
+                                .select( "id" )
+                                .from( "contacts" )
+                                .whereNotIn( "id", [ 1, 2, 3 ] );
 
                             builder
                                 .from( "users as u" )
-                                .leftJoinSub( "c", derivedTable, "u.id", "=", "c.id");
+                                .leftJoinSub(
+                                    "c",
+                                    derivedTable,
+                                    "u.id",
+                                    "=",
+                                    "c.id"
+                                );
                         }, leftJoinSub() );
                     } );
 
@@ -694,29 +1076,47 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "users as u" )
-                                .leftJoinSub( "c", function (qb){
-                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
-                                }, "u.id", "=", "c.id");
+                                .leftJoinSub(
+                                    "c",
+                                    function( qb ) {
+                                        qb.select( "id" )
+                                            .from( "contacts" )
+                                            .whereNotIn( "id", [ 1, 2, 3 ] );
+                                    },
+                                    "u.id",
+                                    "=",
+                                    "c.id"
+                                );
                         }, leftJoinSub() );
                     } );
 
                     it( "can left join to a derived table with joinSub using the shorthand", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                            var derivedTable = getBuilder()
+                                .select( "id" )
+                                .from( "contacts" )
+                                .whereNotIn( "id", [ 1, 2, 3 ] );
 
-                            builder
-                                .from( "users as u" )
-                                .leftJoinSub( "c", derivedTable, "u.id", "c.id");
+                            builder.from( "users as u" ).leftJoinSub( "c", derivedTable, "u.id", "c.id" );
                         }, leftJoinSub() );
                     } );
 
                     it( "can right join to a derived table with joinSub using a QueryBuilder object", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                            var derivedTable = getBuilder()
+                                .select( "id" )
+                                .from( "contacts" )
+                                .whereNotIn( "id", [ 1, 2, 3 ] );
 
                             builder
                                 .from( "users as u" )
-                                .rightJoinSub( "c", derivedTable, "u.id", "=", "c.id");
+                                .rightJoinSub(
+                                    "c",
+                                    derivedTable,
+                                    "u.id",
+                                    "=",
+                                    "c.id"
+                                );
                         }, rightJoinSub() );
                     } );
 
@@ -724,29 +1124,39 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "users as u" )
-                                .rightJoinSub( "c", function (qb){
-                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
-                                }, "u.id", "=", "c.id");
+                                .rightJoinSub(
+                                    "c",
+                                    function( qb ) {
+                                        qb.select( "id" )
+                                            .from( "contacts" )
+                                            .whereNotIn( "id", [ 1, 2, 3 ] );
+                                    },
+                                    "u.id",
+                                    "=",
+                                    "c.id"
+                                );
                         }, rightJoinSub() );
                     } );
 
                     it( "can right join to a derived table with joinSub using the shorthand", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                            var derivedTable = getBuilder()
+                                .select( "id" )
+                                .from( "contacts" )
+                                .whereNotIn( "id", [ 1, 2, 3 ] );
 
-                            builder
-                                .from( "users as u" )
-                                .rightJoinSub( "c", derivedTable, "u.id", "c.id");
+                            builder.from( "users as u" ).rightJoinSub( "c", derivedTable, "u.id", "c.id" );
                         }, rightJoinSub() );
                     } );
 
                     it( "can cross join to a derived table with joinSub using a QueryBuilder object", function() {
                         testCase( function( builder ) {
-                            var derivedTable = getBuilder().select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
+                            var derivedTable = getBuilder()
+                                .select( "id" )
+                                .from( "contacts" )
+                                .whereNotIn( "id", [ 1, 2, 3 ] );
 
-                            builder
-                                .from( "users as u" )
-                                .crossJoinSub( "c", derivedTable);
+                            builder.from( "users as u" ).crossJoinSub( "c", derivedTable );
                         }, crossJoinSub() );
                     } );
 
@@ -754,9 +1164,11 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "users as u" )
-                                .crossJoinSub( "c", function (qb){
-                                    qb.select("id").from("contacts").whereNotIn( "id", [ 1, 2, 3 ] );
-                                });
+                                .crossJoinSub( "c", function( qb ) {
+                                    qb.select( "id" )
+                                        .from( "contacts" )
+                                        .whereNotIn( "id", [ 1, 2, 3 ] );
+                                } );
                         }, crossJoinSub() );
                     } );
                 } );
@@ -764,7 +1176,10 @@ component extends="testbox.system.BaseSpec" {
                 describe( "group bys", function() {
                     it( "can add a simple group by", function() {
                         testCase( function( builder ) {
-                            builder.select( "*" ).from( "users" ).groupBy( "email" );
+                            builder
+                                .select( "*" )
+                                .from( "users" )
+                                .groupBy( "email" );
                         }, groupBy() );
                     } );
 
@@ -816,15 +1231,30 @@ component extends="testbox.system.BaseSpec" {
                         }, orderBy() );
                     } );
 
+                    it( "can add a simple order by using the asc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByAsc( "email" );
+                        }, orderBy() );
+                    } );
+
                     it( "can order in descending order", function() {
                         testCase( function( builder ) {
                             builder.from( "users" ).orderBy( "email", "desc" );
                         }, orderByDesc() );
                     } );
 
+                    it( "can order in descending order using the desc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByDesc( "email" );
+                        }, orderByDesc() );
+                    } );
+
                     it( "combines all order by calls", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).orderBy( "id" ).orderBy( "email", "desc" );
+                            builder
+                                .from( "users" )
+                                .orderBy( "id" )
+                                .orderBy( "email", "desc" );
                         }, combinesOrderBy() );
                     } );
 
@@ -832,6 +1262,138 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder.from( "users" ).orderBy( builder.raw( "DATE(created_at)" ) );
                         }, orderByRaw() );
+                    } );
+
+                    it( "has an orderByRaw shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByRaw( "DATE(created_at)" );
+                        }, orderByRaw() );
+                    } );
+
+                    it( "can accept bindings in orderByRaw", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByRaw( "CASE WHEN id = ? THEN 1 ELSE 0 END DESC", [ 1 ] );
+                        }, orderByRawWithBindings() );
+                    } );
+
+                    it( "can order by a subselect", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy( function( q ) {
+                                    q.selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" );
+                                } );
+                        }, orderBySubselect() );
+                    } );
+
+                    it( "can order by a subselect using the asc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderByAsc( function( q ) {
+                                    q.selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" );
+                                } );
+                        }, orderBySubselect() );
+                    } );
+
+                    it( "can order by a subselect descending", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy( function( q ) {
+                                    q.selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" );
+                                }, "desc" );
+                        }, orderBySubselectDescending() );
+                    } );
+
+                    it( "can order by a subselect descending using the desc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderByDesc( function( q ) {
+                                    q.selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" );
+                                } );
+                        }, orderBySubselectDescending() );
+                    } );
+
+                    it( "can order by a builder instance", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" )
+                                );
+                        }, orderByBuilderInstance() );
+                    } );
+
+                    it( "can order by a builder instance using the asc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderByAsc(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" )
+                                );
+                        }, orderByBuilderInstance() );
+                    } );
+
+                    it( "can order by a builder instance descending", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" ),
+                                    "desc"
+                                );
+                        }, orderByBuilderInstanceDescending() );
+                    } );
+
+                    it( "can order by a builder instance descending using the desc shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderByDesc(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" )
+                                );
+                        }, orderByBuilderInstanceDescending() );
+                    } );
+
+                    it( "can order by a builder instance with bindings", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy(
+                                    builder
+                                        .newQuery()
+                                        .selectRaw( "MAX(created_date)" )
+                                        .from( "logins" )
+                                        .whereColumn( "users.id", "logins.user_id" )
+                                        .where( "created_date", ">", "2020-01-01 00:00:00" )
+                                );
+                        }, orderByBuilderWithBindings() );
                     } );
 
                     describe( "can accept an array for the column argument", function() {
@@ -842,9 +1404,29 @@ component extends="testbox.system.BaseSpec" {
                                 }, orderByArray() );
                             } );
 
+                            it( "can clear already configured orders", function() {
+                                testCase( function( builder ) {
+                                    builder
+                                        .from( "users" )
+                                        .orderBy( [ "last_name", "age", "favorite_color" ] )
+                                        .clearOrders();
+                                }, orderByClearOrders() );
+                            } );
+
+                            it( "can reorder a query", function() {
+                                testCase( function( builder ) {
+                                    builder
+                                        .from( "users" )
+                                        .orderBy( [ "last_name", "favorite_color" ] )
+                                        .reorder( "age" );
+                                }, reorder() );
+                            } );
+
                             it( "as pipe delimited strings", function() {
                                 testCase( function( builder ) {
-                                    builder.from( "users" ).orderBy( [ "last_name|desc", "age|asc", "favorite_color|desc" ] );
+                                    builder
+                                        .from( "users" )
+                                        .orderBy( [ "last_name|desc", "age|asc", "favorite_color|desc" ] );
                                 }, orderByPipeDelimited() );
                             } );
 
@@ -852,11 +1434,7 @@ component extends="testbox.system.BaseSpec" {
                                 testCase( function( builder ) {
                                     builder
                                         .from( "users" )
-                                        .orderBy( [
-                                            [ "last_name", "desc" ],
-                                            [ "age", "asc" ],
-                                            [ "favorite_color" ]
-                                        ] );
+                                        .orderBy( [ [ "last_name", "desc" ], [ "age", "asc" ], [ "favorite_color" ] ] );
                                 }, orderByArrayOfArrays() );
                             } );
 
@@ -868,7 +1446,13 @@ component extends="testbox.system.BaseSpec" {
                                             [ "last_name", "desc" ],
                                             [ "age", "asc" ],
                                             [ "favorite_color" ],
-                                            [ "height", "asc", "will", "be", "ignored" ]
+                                            [
+                                                "height",
+                                                "asc",
+                                                "will",
+                                                "be",
+                                                "ignored"
+                                            ]
                                         ] );
                                 }, orderByArrayOfArraysIgnoringExtraValues() );
                             } );
@@ -882,10 +1466,10 @@ component extends="testbox.system.BaseSpec" {
                                             [ "age", "forward" ],
                                             "favorite_color|backward",
                                             "favorite_food|desc",
-                                            { column = "height", direction = "tallest" },
-                                            { column = "weight", direction = "desc" },
+                                            { column: "height", direction: "tallest" },
+                                            { column: "weight", direction: "desc" },
                                             builder.raw( "DATE(created_at)" ),
-                                            { column = builder.raw( "DATE(modified_at)" ), direction = "desc" } //desc will be ignored in this case because it's an expression
+                                            { column: builder.raw( "DATE(modified_at)" ), direction: "desc" } // desc will be ignored in this case because it's an expression
                                         ] );
                                 }, orderByComplex() );
                             } );
@@ -896,16 +1480,14 @@ component extends="testbox.system.BaseSpec" {
                                         .from( "users" )
                                         .orderBy( [
                                             builder.raw( "DATE(created_at)" ),
-                                            { column = builder.raw( "DATE(modified_at)" ) }
+                                            { column: builder.raw( "DATE(modified_at)" ) }
                                         ] );
                                 }, orderByRawInStruct() );
                             } );
 
                             it( "as simple strings OR pipe delimited strings intermingled", function() {
                                 testCase( function( builder ) {
-                                    builder
-                                        .from( "users" )
-                                        .orderBy( [ "last_name", "age|desc", "favorite_color" ] );
+                                    builder.from( "users" ).orderBy( [ "last_name", "age|desc", "favorite_color" ] );
                                 }, orderByMixSimpleAndPipeDelimited() );
                             } );
 
@@ -913,11 +1495,14 @@ component extends="testbox.system.BaseSpec" {
                                 testCase( function( builder ) {
                                     builder
                                         .from( "users" )
-                                        .orderBy( [
-                                            { column = "last_name" },
-                                            { column = "age", direction = "asc" },
-                                            { column = "favorite_color", direction = "desc" }
-                                        ], "desc" );
+                                        .orderBy(
+                                            [
+                                                { column: "last_name" },
+                                                { column: "age", direction: "asc" },
+                                                { column: "favorite_color", direction: "desc" }
+                                            ],
+                                            "desc"
+                                        );
                                 }, orderByStruct() );
                             } );
 
@@ -925,15 +1510,15 @@ component extends="testbox.system.BaseSpec" {
                                 testCase( function( builder ) {
                                     builder
                                         .from( "users" )
-                                        .orderBy( [
-                                            "last_name",
-                                            "age|desc"
-                                        ] )
-                                        .orderBy( "favorite_color", "desc" )
-                                        .orderBy( column = [ { column = "height" }, { column = "weight", direction = "asc" } ], direction = "desc" )
+                                        .orderBy( "last_name,age desc" )
+                                        .orderBy( "favorite_color desc" )
+                                        .orderBy(
+                                            column = [ { column: "height" }, { column: "weight", direction: "asc" } ],
+                                            direction = "desc"
+                                        )
                                         .orderBy( column = "eye_color", direction = "desc" )
                                         .orderBy( [
-                                            { column = "is_athletic", direction = "desc", extraKey = "ignored" },
+                                            { column: "is_athletic", direction: "desc", extraKey: "ignored" },
                                             builder.raw( "DATE(created_at)" )
                                         ] )
                                         .orderBy( builder.raw( "DATE(modified_at)" ) );
@@ -949,21 +1534,21 @@ component extends="testbox.system.BaseSpec" {
                                             "age|desc",
                                             [ "eye_color", "desc" ],
                                             [ "hair_color" ],
-                                            { column = "is_musical" },
-                                            { column = "is_athletic", direction = "desc", extraKey = "ignored" },
+                                            { column: "is_musical" },
+                                            { column: "is_athletic", direction: "desc", extraKey: "ignored" },
                                             builder.raw( "DATE(created_at)" ),
-                                            { column = builder.raw( "DATE(modified_at)" ), direction = "desc" } // direction is ignored because it should be RAW
+                                            { column: builder.raw( "DATE(modified_at)" ), direction: "desc" } // direction is ignored because it should be RAW
                                         ] );
                                 }, orderByMixed() );
-                            });
-                        });
-                    });
+                            } );
+                        } );
+                    } );
 
                     describe( "can accept a comma delimited list for the column argument", function() {
                         describe( "with the list values", function() {
                             it( "as simple column names that inherit the default direction", function() {
                                 testCase( function( builder ) {
-                                    builder.from( "users" ).orderBy( "last_name,age,favorite_color");
+                                    builder.from( "users" ).orderBy( "last_name,age,favorite_color" );
                                 }, orderByList() );
                             } );
 
@@ -992,38 +1577,42 @@ component extends="testbox.system.BaseSpec" {
                     it( "can union multiple statements using a closure", function() {
                         testCase( function( builder ) {
                             builder
-                                .select("name")
+                                .select( "name" )
                                 .from( "users" )
                                 .where( "id", 1 )
-                                .union(function (q){
-                                    q
-                                        .select("name")
-                                        .from("users")
+                                .union( function( q ) {
+                                    q.select( "name" )
+                                        .from( "users" )
                                         .where( "id", 2 )
                                     ;
-                                })
-                                .union(function (q){
-                                    q
-                                        .select("name")
-                                        .from("users")
+                                } )
+                                .union( function( q ) {
+                                    q.select( "name" )
+                                        .from( "users" )
                                         .where( "id", 3 )
                                     ;
-                                })
+                                } )
                             ;
                         }, union() );
                     } );
 
                     it( "can union multiple statements using a QueryBuilder instance", function() {
                         testCase( function( builder ) {
-                            var union2 = getBuilder().select("name").from("users").where( "id", 2 );
-                            var union3 = getBuilder().select("name").from("users").where( "id", 3 );
+                            var union2 = getBuilder()
+                                .select( "name" )
+                                .from( "users" )
+                                .where( "id", 2 );
+                            var union3 = getBuilder()
+                                .select( "name" )
+                                .from( "users" )
+                                .where( "id", 3 );
 
                             builder
-                                .select("name")
+                                .select( "name" )
                                 .from( "users" )
                                 .where( "id", 1 )
-                                .union(union2)
-                                .union(union3)
+                                .union( union2 )
+                                .union( union3 )
                             ;
                         }, union() );
                     } );
@@ -1031,24 +1620,22 @@ component extends="testbox.system.BaseSpec" {
                     it( "union can contain order by on main query only", function() {
                         testCase( function( builder ) {
                             builder
-                                .select("name")
+                                .select( "name" )
                                 .from( "users" )
                                 .where( "id", 1 )
-                                .union(function (q){
-                                    q
-                                        .select("name")
-                                        .from("users")
+                                .union( function( q ) {
+                                    q.select( "name" )
+                                        .from( "users" )
                                         .where( "id", 2 )
                                     ;
-                                })
-                                .union(function (q){
-                                    q
-                                        .select("name")
-                                        .from("users")
+                                } )
+                                .union( function( q ) {
+                                    q.select( "name" )
+                                        .from( "users" )
                                         .where( "id", 3 )
                                     ;
-                                })
-                                .orderBy("name")
+                                } )
+                                .orderBy( "name" )
                             ;
                         }, unionOrderBy() );
                     } );
@@ -1057,37 +1644,33 @@ component extends="testbox.system.BaseSpec" {
                         var builder = getBuilder();
 
                         builder
-                            .select("name")
+                            .select( "name" )
                             .from( "users" )
                             .where( "id", 1 )
-                            .union(function (q){
-                                q
-                                    .select("name")
-                                    .from("users")
+                            .union( function( q ) {
+                                q.select( "name" )
+                                    .from( "users" )
                                     .where( "id", 2 )
-                                    .orderBy("name")
+                                    .orderBy( "name" )
                                 ;
-                            })
-                            .union(function (q){
-                                q
-                                    .select("name")
-                                    .from("users")
+                            } )
+                            .union( function( q ) {
+                                q.select( "name" )
+                                    .from( "users" )
                                     .where( "id", 3 )
                                 ;
-                            })
-                            .orderBy("name")
+                            } )
+                            .orderBy( "name" )
                         ;
 
 
                         try {
                             var statements = builder.toSql();
-                        }
-                        catch ( any e ) {
-                            // Darn ACF nests the exception message. 😠
+                        } catch ( any e ) {
+                            // Darn ACF nests the exception message. ðŸ˜ 
                             if ( e.message == "An exception occurred while calling the function map." ) {
                                 expect( e.detail ).toBe( "The ORDER BY clause is not allowed in a UNION statement." );
-                            }
-                            else {
+                            } else {
                                 expect( e.message ).toBe( "The ORDER BY clause is not allowed in a UNION statement." );
                             }
                             return;
@@ -1098,57 +1681,60 @@ component extends="testbox.system.BaseSpec" {
                     it( "can union all multiple statements using a closure", function() {
                         testCase( function( builder ) {
                             builder
-                                .select("name")
+                                .select( "name" )
                                 .from( "users" )
                                 .where( "id", 1 )
-                                .unionAll(function (q){
-                                    q
-                                        .select("name")
-                                        .from("users")
+                                .unionAll( function( q ) {
+                                    q.select( "name" )
+                                        .from( "users" )
                                         .where( "id", 2 )
                                     ;
-                                })
-                                .unionAll(function (q){
-                                    q
-                                        .select("name")
-                                        .from("users")
+                                } )
+                                .unionAll( function( q ) {
+                                    q.select( "name" )
+                                        .from( "users" )
                                         .where( "id", 3 )
                                     ;
-                                })
+                                } )
                             ;
                         }, unionAll() );
                     } );
 
                     it( "can union all multiple statements using a QueryBuilder instance", function() {
                         testCase( function( builder ) {
-                            var union2 = getBuilder().select("name").from("users").where( "id", 2 );
-                            var union3 = getBuilder().select("name").from("users").where( "id", 3 );
+                            var union2 = getBuilder()
+                                .select( "name" )
+                                .from( "users" )
+                                .where( "id", 2 );
+                            var union3 = getBuilder()
+                                .select( "name" )
+                                .from( "users" )
+                                .where( "id", 3 );
 
                             builder
-                                .select("name")
+                                .select( "name" )
                                 .from( "users" )
                                 .where( "id", 1 )
-                                .unionAll(union2)
-                                .unionAll(union3)
+                                .unionAll( union2 )
+                                .unionAll( union3 )
                             ;
                         }, unionAll() );
-                    }) ;
+                    } );
                 } );
 
                 describe( "common table expressions (i.e. CTEs)", function() {
                     it( "can create CTE from closure", function() {
                         testCase( function( builder ) {
                             builder
-                                .with("UsersCTE", function (q){
-                                    q
-                                        .select( "*" )
+                                .with( "UsersCTE", function( q ) {
+                                    q.select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
                                     ;
-                                })
+                                } )
                                 .from( "UsersCTE" )
-                                .whereNotIn("user.id", [1, 2])
+                                .whereNotIn( "user.id", [ 1, 2 ] )
                             ;
                         }, commonTableExpression() );
                     } );
@@ -1163,9 +1749,9 @@ component extends="testbox.system.BaseSpec" {
                             ;
 
                             builder
-                                .with("UsersCTE", cte)
+                                .with( "UsersCTE", cte )
                                 .from( "UsersCTE" )
-                                .whereNotIn("user.id", [1, 2])
+                                .whereNotIn( "user.id", [ 1, 2 ] )
                             ;
                         }, commonTableExpression() );
                     } );
@@ -1174,15 +1760,14 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "UsersCTE" )
-                                .whereNotIn("user.id", [1, 2])
-                                .with("UsersCTE", function (q){
-                                    q
-                                        .select( "*" )
+                                .whereNotIn( "user.id", [ 1, 2 ] )
+                                .with( "UsersCTE", function( q ) {
+                                    q.select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
                                     ;
-                                })
+                                } )
                             ;
                         }, commonTableExpression() );
                     } );
@@ -1190,16 +1775,15 @@ component extends="testbox.system.BaseSpec" {
                     it( "can create recursive CTE", function() {
                         testCase( function( builder ) {
                             builder
-                                .withRecursive("UsersCTE", function (q){
-                                    q
-                                        .select( "*" )
+                                .withRecursive( "UsersCTE", function( q ) {
+                                    q.select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
                                     ;
-                                })
+                                } )
                                 .from( "UsersCTE" )
-                                .whereNotIn("user.id", [1, 2])
+                                .whereNotIn( "user.id", [ 1, 2 ] )
                             ;
                         }, commonTableExpressionWithRecursive() );
                     } );
@@ -1207,22 +1791,19 @@ component extends="testbox.system.BaseSpec" {
                     it( "can create multiple CTEs where the second CTE is not recursive", function() {
                         testCase( function( builder ) {
                             builder
-                                .withRecursive("UsersCTE", function (q){
-                                    q
-                                        .select( "*" )
+                                .withRecursive( "UsersCTE", function( q ) {
+                                    q.select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
                                     ;
-                                })
-                                .with("OrderCTE", function (q){
-                                    q
-                                        .from( "orders" )
-                                        .where( "created", ">", "2018-04-30" )
+                                } )
+                                .with( "OrderCTE", function( q ) {
+                                    q.from( "orders" ).where( "created", ">", "2018-04-30" )
                                     ;
-                                })
+                                } )
                                 .from( "UsersCTE" )
-                                .whereNotIn("user.id", [1, 2])
+                                .whereNotIn( "user.id", [ 1, 2 ] )
                             ;
                         }, commonTableExpressionMultipleCTEsWithRecursive() );
                     } );
@@ -1231,21 +1812,18 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "UsersCTE" )
-                                .whereNotIn("user.id", [1, 2])
-                                .with("OrderCTE", function (q){
-                                    q
-                                        .from( "orders" )
-                                        .where( "created", ">", "2018-04-30" )
+                                .whereNotIn( "user.id", [ 1, 2 ] )
+                                .with( "OrderCTE", function( q ) {
+                                    q.from( "orders" ).where( "created", ">", "2018-04-30" )
                                     ;
-                                })
-                                .withRecursive("UsersCTE", function (q){
-                                    q
-                                        .select( "*" )
+                                } )
+                                .withRecursive( "UsersCTE", function( q ) {
+                                    q.select( "*" )
                                         .from( "users" )
                                         .join( "contacts", "users.id", "contacts.id" )
                                         .where( "users.age", ">", 25 )
                                     ;
-                                })
+                                } )
                             ;
                         }, commonTableExpressionBindingOrder() );
                     } );
@@ -1274,7 +1852,10 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "can offset with an order by", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).orderBy( "id" ).offset( 3 );
+                            builder
+                                .from( "users" )
+                                .orderBy( "id" )
+                                .offset( 3 );
                         }, offsetWithOrderBy() );
                     } );
                 } );
@@ -1297,91 +1878,135 @@ component extends="testbox.system.BaseSpec" {
             describe( "insert statements", function() {
                 it( "can insert a struct of data into a table", function() {
                     testCase( function( builder ) {
-                        return builder.from( "users" ).insert( values = { "email" = "foo" }, toSql = true );
+                        return builder.from( "users" ).insert( values = { "email": "foo" }, toSql = true );
                     }, insertSingleColumn() );
                 } );
 
                 it( "can insert a struct of data with multiple columns into a table", function() {
                     testCase( function( builder ) {
-                        return builder.from( "users" ).insert( values = { "email" = "foo", "name" = "bar" }, toSql = true );
+                        return builder
+                            .from( "users" )
+                            .insert( values = { "email": "foo", "name": "bar" }, toSql = true );
                     }, insertMultipleColumns() );
                 } );
 
                 it( "can batch insert multiple records", function() {
                     testCase( function( builder ) {
-                        return builder.from( "users" ).insert( values = [
-                            { "email" = "foo", "name" = "bar" },
-                            { "email" = "baz", "name" = "bleh" }
-                        ], toSql = true );
+                        return builder
+                            .from( "users" )
+                            .insert(
+                                values = [ { "email": "foo", "name": "bar" }, { "email": "baz", "name": "bleh" } ],
+                                toSql = true
+                            );
                     }, batchInsert() );
                 } );
 
                 it( "can insert with returning", function() {
                     testCase( function( builder ) {
-                        return builder.from( "users" ).returning( "id" ).insert( values = {
-                            "email" = "foo",
-                            "name" = "bar"
-                        }, toSql = true );
+                        return builder
+                            .from( "users" )
+                            .returning( "id" )
+                            .insert( values = { "email": "foo", "name": "bar" }, toSql = true );
                     }, returning() );
+                } );
+
+                it( "returning ignores table qualifiers", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .setColumnFormatter( function( column ) {
+                                return "tablePrefix." & column;
+                            } )
+                            .from( "users" )
+                            .returning( "id" )
+                            .insert( values = { "email": "foo", "name": "bar" }, toSql = true );
+                    }, returningIgnoresTableQualifiers() );
+                } );
+
+                it( "can insert with raw values", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .insert(
+                                values = { "email": "john@example.com", "created_date": builder.raw( "now()" ) },
+                                toSql = true
+                            );
+                    }, insertWithRaw() );
+                } );
+
+                it( "can insert with null values", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .insert(
+                                values = { "email": "john@example.com", "optional_field": javacast( "null", "" ) },
+                                toSql = true
+                            );
+                    }, insertWithNull() );
                 } );
             } );
 
             describe( "update statements", function() {
                 it( "can update all records in a table", function() {
                     testCase( function( builder ) {
-                        return builder.from( "users" )
-                            .update( values = {
-                                "email" = "foo",
-                                "name" = "bar"
-                            }, toSql = true );
+                        return builder
+                            .from( "users" )
+                            .update( values = { "email": "foo", "name": "bar" }, toSql = true );
                     }, updateAllRecords() );
                 } );
 
                 it( "can be constrained by a where statement", function() {
                     testCase( function( builder ) {
-                        return builder.from( "users" )
+                        return builder
+                            .from( "users" )
                             .whereId( 1 )
-                            .update( values = {
-                                "email" = "foo",
-                                "name" = "bar"
-                            }, toSql = true );
+                            .update( values = { "email": "foo", "name": "bar" }, toSql = true );
                     }, updateWithWhere() );
                 } );
 
                 it( "can use an expression in an update", function() {
                     testCase( function( builder ) {
-                        return builder.from( "hits" )
+                        return builder
+                            .from( "hits" )
                             .where( "page", "someUrl" )
-                            .update( values = {
-                                "count" = builder.raw( "count + 1" )
-                            }, toSql = true );
+                            .update( values = { "count": builder.raw( "count + 1" ) }, toSql = true );
                     }, updateWithRaw() );
+                } );
+
+                it( "can add incrementally with addUpdate", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .whereId( 1 )
+                            .addUpdate( { "email": "foo", "name": "bar" } )
+                            .when( true, function( q ) {
+                                q.addUpdate( { "foo": "yes" } );
+                            } )
+                            .when( false, function( q ) {
+                                q.addUpdate( { "bar": "no" } );
+                            } )
+                            .update( toSql = true );
+                    }, addUpdate() );
                 } );
             } );
 
             describe( "updateOrInsert statements", function() {
                 it( "inserts a new record when the where clause does not bring back any records", function() {
                     testCase( function( builder ) {
-                        grammar.$( "runQuery", queryNew( "id", "varchar", [] ) );
-                        return builder.from( "users" )
+                        grammar.$( "runQuery", queryNew( "aggregate", "varchar", [ { "aggregate": 0 } ] ) );
+                        return builder
+                            .from( "users" )
                             .where( "email", "foo" )
-                            .updateOrInsert(
-                                values = { "name" = "baz" },
-                                toSql = true
-                            );
+                            .updateOrInsert( values = { "name": "baz" }, toSql = true );
                     }, updateOrInsertNotExists() );
                 } );
 
                 it( "updates an existing record when the where clause brings back at least one record", function() {
                     testCase( function( builder ) {
-                        grammar.$( "runQuery", queryNew( "id", "varchar", [ { "id" = 1 } ] ) );
-                        // builder.$( "exists", true );
-                        return builder.from( "users" )
+                        grammar.$( "runQuery", queryNew( "aggregate", "varchar", [ { "aggregate": 5 } ] ) );
+                        return builder
+                            .from( "users" )
                             .where( "email", "foo" )
-                            .updateOrInsert(
-                                values = { "name" = "baz" },
-                                toSql = true
-                            );
+                            .updateOrInsert( values = { "name": "baz" }, toSql = true );
                     }, updateOrInsertExists() );
                 } );
             } );
@@ -1401,7 +2026,8 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "can be constrained with a where statement", function() {
                     testCase( function( builder ) {
-                        return builder.from( "users" )
+                        return builder
+                            .from( "users" )
                             .where( "email", "foo" )
                             .delete( toSql = true );
                     }, deleteWhere() );
@@ -1414,25 +2040,20 @@ component extends="testbox.system.BaseSpec" {
         try {
             var builder = getBuilder();
             var sql = callback( builder );
-            if ( ! isNull( sql ) ) {
-                if ( ! isSimpleValue( sql ) ) {
+            if ( !isNull( sql ) ) {
+                if ( !isSimpleValue( sql ) ) {
                     sql = sql.toSQL();
                 }
-            }
-            else {
+            } else {
                 sql = builder.toSQL();
             }
             if ( isSimpleValue( expected ) ) {
-                expected = {
-                    sql = expected,
-                    bindings = []
-                };
+                expected = { sql: expected, bindings: [] };
             }
             expect( sql ).toBeWithCase( expected.sql );
             expect( getTestBindings( builder ) ).toBe( expected.bindings );
-        }
-        catch ( any e ) {
-            if ( ! isSimpleValue( expected ) && structKeyExists( expected, "exception" ) ) {
+        } catch ( any e ) {
+            if ( !isSimpleValue( expected ) && structKeyExists( expected, "exception" ) ) {
                 expect( e.type ).toBe( expected.exception );
                 return;
             }
@@ -1445,9 +2066,19 @@ component extends="testbox.system.BaseSpec" {
     }
 
     private array function getTestBindings( builder ) {
-        return builder.getBindings().map( function( binding ) {
-            return binding.value;
-        } );
+        return builder
+            .getBindings()
+            .map( function( binding ) {
+                if ( builder.getUtils().isExpression( binding ) ) {
+                    return binding.getSQL();
+                } else {
+                    if ( binding.null ) {
+                        return "NULL";
+                    } else {
+                        return binding.value;
+                    }
+                }
+            } );
     }
 
 }

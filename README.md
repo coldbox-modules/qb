@@ -1,5 +1,4 @@
 # qb
-[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors)
 [![Build Status](https://img.shields.io/travis/coldbox-modules/qb/master.svg?style=flat-square)](https://travis-ci.org/coldbox-modules/qb)
 
 ## Introduction
@@ -14,8 +13,8 @@ Using qb, you can:
 
 ## Requirements
 
-+ Adobe ColdFusion 11+
-+ Lucee 4.5+
++ Adobe ColdFusion 2016+
++ Lucee 5+
 
 ## Installation
 

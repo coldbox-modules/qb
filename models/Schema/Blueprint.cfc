@@ -68,13 +68,18 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function datetimeTz( name ) {
+        arguments.type = "datetimeTz";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function decimal( name, length = 10, precision = 0 ) {
         arguments.type = "decimal";
         return appendColumn( argumentCollection = arguments );
     }
 
     function enum( name, values ) {
-        prependCommand( "addType", { name = name, values = values } );
+        prependCommand( "addType", { name: name, values: values } );
         arguments.type = "enum";
         return appendColumn( argumentCollection = arguments );
     }
@@ -108,7 +113,7 @@ component accessors="true" {
 
     function unicodeLongText( name ) {
         arguments.type = "unicodeLongText";
-        return appendColumn( argumentCollection = arguments);
+        return appendColumn( argumentCollection = arguments );
     }
 
     function mediumIncrements( name, indexName ) {
@@ -133,31 +138,55 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function lineString( name ) {
+        arguments.type = "lineString";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function money( name ) {
+        arguments.type = "money";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function smallMoney( name ) {
+        arguments.type = "smallMoney";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function morphs( name ) {
         unsignedInteger( "#name#_id" );
         string( "#name#_type" );
-        appendIndex(
-            type = "basic",
-            name = "#name#_index",
-            columns = [ "#name#_id", "#name#_type" ]
-        );
+        appendIndex( type = "basic", name = "#name#_index", columns = [ "#name#_id", "#name#_type" ] );
         return this;
     }
 
     function nullableMorphs( name ) {
         unsignedInteger( "#name#_id" ).nullable();
         string( "#name#_type" ).nullable();
-        appendIndex(
-            type = "basic",
-            name = "#name#_index",
-            columns = [ "#name#_id", "#name#_type" ]
-        );
+        appendIndex( type = "basic", name = "#name#_index", columns = [ "#name#_id", "#name#_type" ] );
         return this;
     }
 
-    function raw( sql ) {
-        variables.columns.append( new qb.models.Query.Expression( sql ) );
+    function nullableTimestamps() {
+        appendColumn( name = "createdDate", type = "timestamp", nullable = true );
+        appendColumn( name = "modifiedDate", type = "timestamp", nullable = true );
         return this;
+    }
+
+    function point( name ) {
+        arguments.type = "point";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function polygon( name ) {
+        arguments.type = "polygon";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function raw( sql ) {
+        var expression = new qb.models.Query.Expression( sql );
+        variables.columns.append( expression );
+        return expression;
     }
 
     function smallIncrements( name, indexName ) {
@@ -172,6 +201,16 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function softDeletes() {
+        appendColumn( name = "deletedDate", type = "timestamp", nullable = true );
+        return this;
+    }
+
+    function softDeletesTz() {
+        appendColumn( name = "deletedDate", type = "timestampTz", nullable = true );
+        return this;
+    }
+
     function string( name, length ) {
         arguments.type = "string";
         if ( isNull( arguments.length ) ) {
@@ -180,7 +219,7 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
-     function unicodeString( name, length ) {
+    function unicodeString( name, length ) {
         arguments.type = "unicodeString";
         if ( isNull( arguments.length ) ) {
             arguments.length = getSchemaBuilder().getDefaultStringLength();
@@ -203,9 +242,31 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    function timeTz( name ) {
+        arguments.type = "timeTz";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     function timestamp( name ) {
         arguments.type = "timestamp";
         return appendColumn( argumentCollection = arguments );
+    }
+
+    function timestamps() {
+        appendColumn( name = "createdDate", type = "timestamp" ).withCurrent();
+        appendColumn( name = "modifiedDate", type = "timestamp" ).withCurrent();
+        return this;
+    }
+
+    function timestampTz( name ) {
+        arguments.type = "timestampTz";
+        return appendColumn( argumentCollection = arguments );
+    }
+
+    function timestampsTz() {
+        appendColumn( name = "createdDate", type = "timestampTz" ).withCurrent();
+        appendColumn( name = "modifiedDate", type = "timestampTz" ).withCurrent();
+        return this;
     }
 
     function tinyIncrements( name, indexName ) {
@@ -258,15 +319,15 @@ component accessors="true" {
     ===================================*/
 
     /**
-    * Create a foreign key constraint from one or more columns.
-    * Follow up this call with calls to the `TableIndex` `references` and `onTable` methods.
-    *
-    * @columns The column or array of columns that references a key or keys on another table.
-    * @name    The name of the foreign key constraint.
-    *          Default: A generated name consisting of the table name and column name(s).
-    *
-    * @returns The created TableIndex instance.
-    */
+     * Create a foreign key constraint from one or more columns.
+     * Follow up this call with calls to the `TableIndex` `references` and `onTable` methods.
+     *
+     * @columns The column or array of columns that references a key or keys on another table.
+     * @name    The name of the foreign key constraint.
+     *          Default: A generated name consisting of the table name and column name(s).
+     *
+     * @returns The created TableIndex instance.
+     */
     function foreignKey( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "fk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
@@ -274,14 +335,14 @@ component accessors="true" {
     }
 
     /**
-    * Create a generic index from one or more columns.
-    *
-    * @columns The column or array of columns that make up the index.
-    * @name    The name of the index constraint.
-    *          Default: A generated name consisting of the table name and column name(s).
-    *
-    * @returns The created TableIndex instance.
-    */
+     * Create a generic index from one or more columns.
+     *
+     * @columns The column or array of columns that make up the index.
+     * @name    The name of the index constraint.
+     *          Default: A generated name consisting of the table name and column name(s).
+     *
+     * @returns The created TableIndex instance.
+     */
     function index( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "idx_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
@@ -289,14 +350,14 @@ component accessors="true" {
     }
 
     /**
-    * Create a primary key constraint from one or more columns.
-    *
-    * @columns The column or array of columns that make up the primary key.
-    * @name    The name of the primary key constraint.
-    *          Default: A generated name consisting of the table name and column name(s).
-    *
-    * @returns The created TableIndex instance.
-    */
+     * Create a primary key constraint from one or more columns.
+     *
+     * @columns The column or array of columns that make up the primary key.
+     * @name    The name of the primary key constraint.
+     *          Default: A generated name consisting of the table name and column name(s).
+     *
+     * @returns The created TableIndex instance.
+     */
     function primaryKey( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "pk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
@@ -304,14 +365,14 @@ component accessors="true" {
     }
 
     /**
-    * Create a unique constraint from one or more columns.
-    *
-    * @columns The column or array of columns that make up the unique constraint.
-    * @name    The name of the unique constraint.
-    *          Default: A generated name consisting of the table name and column name(s).
-    *
-    * @returns The created TableIndex instance.
-    */
+     * Create a unique constraint from one or more columns.
+     *
+     * @columns The column or array of columns that make up the unique constraint.
+     * @name    The name of the unique constraint.
+     *          Default: A generated name consisting of the table name and column name(s).
+     *
+     * @returns The created TableIndex instance.
+     */
     function unique( columns, name ) {
         arguments.columns = isArray( columns ) ? columns : [ columns ];
         arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
@@ -319,14 +380,14 @@ component accessors="true" {
     }
 
     /**
-    * Create a default constraint from a column.
-    *
-    * @columns The column that makes up the default constraint.
-    * @name    The name of the default constraint.
-    *          Default: A generated name consisting of the table name and column name.
-    *
-    * @returns The created TableIndex instance.
-    */
+     * Create a default constraint from a column.
+     *
+     * @columns The column that makes up the default constraint.
+     * @name    The name of the default constraint.
+     *          Default: A generated name consisting of the table name and column name.
+     *
+     * @returns The created TableIndex instance.
+     */
     function default( column, name ) {
         arguments.name = isNull( name ) ? "df_#getTable()#_#column#" : arguments.name;
         return createIndex( type = "default", columns = column, name = name );
@@ -338,58 +399,56 @@ component accessors="true" {
     ======================================*/
 
     function addColumn( column ) {
-        addCommand( "addColumn", { column = column } );
+        addCommand( "addColumn", { column: column } );
         return this;
     }
 
     function dropColumn( name ) {
-        addCommand( "dropColumn", { name = name } );
+        addCommand( "dropColumn", { name: name } );
         return this;
     }
 
     function modifyColumn( name, column ) {
-        addCommand( "modifyColumn", { from = name, to = column } );
+        addCommand( "modifyColumn", { from: name, to: column } );
         return this;
     }
 
     function renameColumn( name, column ) {
-        addCommand( "renameColumn", { from = name, to = column } );
+        addCommand( "renameColumn", { from: name, to: column } );
         return this;
     }
 
     function addConstraint( constraint ) {
-        addCommand( "addConstraint", { index = constraint } );
+        addCommand( "addConstraint", { index: constraint } );
         return this;
     }
 
     function dropConstraint( name ) {
-        if ( ! isSimpleValue( name ) ) {
+        if ( !isSimpleValue( name ) ) {
             dropConstraint( name.getName() );
-        }
-        else {
-            addCommand( "dropConstraint", { name = name } );
+        } else {
+            addCommand( "dropConstraint", { name: name } );
         }
         return this;
     }
 
     function dropForeignKey( name ) {
-        if ( ! isSimpleValue( name ) ) {
+        if ( !isSimpleValue( name ) ) {
             dropForeignKey( name.getName() );
-        }
-        else {
-            addCommand( "dropForeignKey", { name = name } );
+        } else {
+            addCommand( "dropForeignKey", { name: name } );
         }
         return this;
     }
 
     function renameConstraint( oldName, newName ) {
-        if ( ! isSimpleValue( arguments.oldName ) ) {
+        if ( !isSimpleValue( arguments.oldName ) ) {
             arguments.oldName = dropConstraint( arguments.oldName.getName() );
         }
-        if ( ! isSimpleValue( arguments.newName ) ) {
+        if ( !isSimpleValue( arguments.newName ) ) {
             arguments.newName = dropConstraint( arguments.newName.getName() );
         }
-        addCommand( "renameConstraint", { from = arguments.oldName, to = arguments.newName } );
+        addCommand( "renameConstraint", { from: arguments.oldName, to: arguments.newName } );
         return this;
     }
 
@@ -413,11 +472,11 @@ component accessors="true" {
         var newColumn = new Column( this );
         var indexMetadata = getMetadata( newColumn );
         var functionNames = indexMetadata.functions.map( function( func ) {
-            return lcase( func.name );
+            return lCase( func.name );
         } );
         for ( var arg in arguments ) {
-            if ( functionNames.contains( lcase( "set#arg#" ) ) && ! isNull( arguments[ arg ] ) ) {
-                invoke( newColumn, "set#arg#", { 1 = arguments[ arg ] } );
+            if ( functionNames.contains( lCase( "set#arg#" ) ) && !isNull( arguments[ arg ] ) ) {
+                invoke( newColumn, "set#arg#", { 1: arguments[ arg ] } );
             }
         }
         variables.columns.append( newColumn );
@@ -434,11 +493,11 @@ component accessors="true" {
         var newIndex = new TableIndex( this );
         var indexMetadata = getMetadata( newIndex );
         var functionNames = indexMetadata.functions.map( function( func ) {
-            return lcase( func.name );
+            return lCase( func.name );
         } );
         for ( var arg in arguments ) {
-            if ( functionNames.contains( lcase( "set#arg#" ) ) ) {
-                invoke( newIndex, "set#arg#", { 1 = arguments[ arg ] } );
+            if ( functionNames.contains( lCase( "set#arg#" ) ) ) {
+                invoke( newIndex, "set#arg#", { 1: arguments[ arg ] } );
             }
         }
         return newIndex;
@@ -449,12 +508,13 @@ component accessors="true" {
         // we use a for loop here because we can potentially modify this array while looping over it.
         for ( var i = 1; i <= variables.commands.len(); i++ ) {
             var command = variables.commands[ i ];
-            var result = invoke( getGrammar(), "compile#command.getType()#", {
-                blueprint = this,
-                commandParameters = command.getParameters()
-            } );
-            if ( result != "" ) {
-                statements.append( result );
+            var result = invoke(
+                getGrammar(),
+                "compile#command.getType()#",
+                { blueprint: this, commandParameters: command.getParameters() }
+            );
+            if ( isArray( result ) || ( isSimpleValue( result ) && result != "" ) ) {
+                statements.append( result, true );
             }
         }
         return statements;

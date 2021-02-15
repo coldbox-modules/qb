@@ -141,7 +141,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function mediumText() {
-        return [ "CREATE TABLE `posts` (`body` TEXT NOT NULL)" ];
+        return [ "CREATE TABLE `posts` (`body` MEDIUMTEXT NOT NULL)" ];
     }
 
     function money() {

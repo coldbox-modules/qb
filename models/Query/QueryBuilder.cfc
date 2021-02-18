@@ -980,7 +980,7 @@ component displayname="QueryBuilder" accessors="true" {
         if (
             !this
                 .getUtils()
-                .structCompare( this.getMementOForComparison(), arguments.otherQB.getMementoForComparison() )
+                .structCompare( this.getMementoForComparison(), arguments.otherQB.getMementoForComparison() )
         ) {
             return false;
         }
@@ -1057,12 +1057,24 @@ component displayname="QueryBuilder" accessors="true" {
 
         if ( !isJoin() ) {
             if ( !isCustomFunction( variables.from ) ) {
-                memento[ "from" ] = ( isSimpleValue( getFrom() ) ? getFrom() : getFrom().toSQL() );
+                if ( getUtils().isExpression( getFrom() ) ) {
+                    memento[ "from" ] = getFrom().getSQL();
+                } else if ( getUtils().isBuilder( getFrom() ) ) {
+                    memento[ "from" ] = getFrom().toSQL();
+                } else {
+                    memento[ "from" ] = getFrom();
+                }
             }
         } else {
             memento[ "type" ] = variables.type;
             if ( !isCustomFunction( getTable() ) ) {
-                memento[ "table" ] = ( isSimpleValue( getTable() ) ? getTable() : getTable().toSQL() );
+                if ( getUtils().isExpression( getTable() ) ) {
+                    memento[ "table" ] = getTable().getSQL();
+                } else if ( getUtils().isBuilder( getTable() ) ) {
+                    memento[ "table" ] = getTable().toSQL();
+                } else {
+                    memento[ "table" ] = getTable();
+                }
             }
         }
 

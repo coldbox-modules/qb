@@ -1911,6 +1911,21 @@ component extends="testbox.system.BaseSpec" {
                         }, forPageWithLessThanZeroValues() );
                     } );
                 } );
+
+                describe( "reset", function() {
+                    it( "can reset the query to default values", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .where( "active", 1 )
+                                .orderByAsc( "createdDate" )
+                                .forPage( 3, 15 )
+                                .reset()
+                                .from( "otherTable" );
+                        }, reset() );
+                    } );
+                } );
             } );
 
             describe( "insert statements", function() {

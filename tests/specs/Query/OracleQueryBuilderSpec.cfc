@@ -768,6 +768,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function reset() {
+        return "SELECT * FROM ""OTHERTABLE""";
+    }
+
     private function getBuilder() {
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.OracleGrammar" ).init();
         var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" ).init( grammar );

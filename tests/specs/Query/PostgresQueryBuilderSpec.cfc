@@ -762,6 +762,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function reset() {
+        return "SELECT * FROM ""otherTable""";
+    }
+
     private function getBuilder() {
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.PostgresGrammar" ).init();
         var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" ).init( grammar );

@@ -293,20 +293,44 @@ component displayname="QueryBuilder" accessors="true" {
      * @return void
      */
     private void function setDefaultValues() {
-        variables.commonTables = [];
         variables.distinct = false;
         variables.aggregate = {};
         variables.columns = [ "*" ];
+        variables.from = "";
+        variables.lockType = "none";
+        variables.lockValue = "";
         variables.joins = [];
         variables.wheres = [];
         variables.groups = [];
         variables.havings = [];
-        variables.orders = [];
         variables.unions = [];
+        variables.orders = [];
+        variables.commonTables = [];
+        variables.limitValue = javacast( "null", "" );
+        variables.offsetValue = javacast( "null", "" );
         variables.returning = [];
         variables.updates = {};
-        variables.lockType = "none";
-        variables.lockValue = "";
+        variables.bindings = {
+            "commonTables": [],
+            "select": [],
+            "join": [],
+            "where": [],
+            "orderBy": [],
+            "union": [],
+            "insert": [],
+            "insertRaw": [],
+            "update": []
+        };
+    }
+
+    /**
+     * Resets the query builder instance.
+     *
+     * @return QueryBuilder
+     */
+    public QueryBuilder function reset() {
+        setDefaultValues();
+        return this;
     }
 
     /**********************************************************************************************\

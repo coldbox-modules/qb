@@ -52,6 +52,18 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""CLASSIFICATIONS"" (""ABBREVIATION"" CHAR(3) NOT NULL)" ];
     }
 
+    function computedStored() {
+        return [
+            "CREATE TABLE ""PRODUCTS"" (""PRICE"" NUMBER(10, 0) NOT NULL, ""TAX"" NUMBER(10, 0) GENERATED ALWAYS AS (price * 0.0675))"
+        ];
+    }
+
+    function computedVirtual() {
+        return [
+            "CREATE TABLE ""PRODUCTS"" (""PRICE"" NUMBER(10, 0) NOT NULL, ""TAX"" NUMBER(10, 0) GENERATED ALWAYS AS (price * 0.0675) VIRTUAL)"
+        ];
+    }
+
     function date() {
         return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" DATE NOT NULL)" ];
     }

@@ -46,6 +46,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [classifications] ([abbreviation] NCHAR(3) NOT NULL)" ];
     }
 
+    function computedStored() {
+        return [ "CREATE TABLE [products] ([price] INTEGER NOT NULL, [tax] AS (price * 0.0675) PERSISTED)" ];
+    }
+
+    function computedVirtual() {
+        return [ "CREATE TABLE [products] ([price] INTEGER NOT NULL, [tax] AS (price * 0.0675))" ];
+    }
+
     function date() {
         return [ "CREATE TABLE [posts] ([posted_date] DATE NOT NULL)" ];
     }

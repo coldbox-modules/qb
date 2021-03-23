@@ -45,12 +45,59 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     =              Schema               =
     ===================================*/
 
+    function compileCreateColumn( column, blueprint ) {
+        if ( utils.isExpression( column ) ) {
+            return column.getSql();
+        }
+
+        try {
+            if ( !column.isColumn() ) {
+                throw( message = "Not a Column" );
+            }
+        } catch ( any e ) {
+            // exception happens when isColumn returns false or is not a method on the column object
+            throw(
+                type = "InvalidColumn",
+                message = "Recieved a TableIndex instead of a Column when trying to create a Column.",
+                detail = "Did you maybe try to add a column and a constraint in an ALTER clause at the same time? Split those up in to separate addColumn and addConstraint commands."
+            );
+        }
+
+        return arrayToList(
+            arrayFilter(
+                [
+                    wrapColumn( column.getName() ),
+                    generateType( column, blueprint ),
+                    modifyUnsigned( column ),
+                    generateNullConstraint( column ),
+                    generateComputed( column ),
+                    generateUniqueConstraint( column, blueprint ),
+                    generateAutoIncrement( column, blueprint ),
+                    generateDefault( column, blueprint ),
+                    generateComment( column, blueprint )
+                ],
+                function( item ) {
+                    return item != "";
+                }
+            ),
+            " "
+        );
+    }
+
     function generateUniqueConstraint( column ) {
         return column.getUnique() ? "UNIQUE" : "";
     }
 
     function modifyUnsigned( column ) {
         return "";
+    }
+
+    function generateComputed( column ) {
+        if ( column.getComputedType() == "none" ) {
+            return "";
+        }
+
+        return "GENERATED ALWAYS AS (#column.getComputedDefinition()#) STORED";
     }
 
     function generateAutoIncrement( column ) {

@@ -47,7 +47,8 @@ component displayname="Grammar" accessors="true" singleton {
         "unions",
         "orders",
         "limitValue",
-        "offsetValue"
+        "offsetValue",
+        "lockType"
     ];
 
     /**
@@ -656,6 +657,29 @@ component displayname="Grammar" accessors="true" singleton {
             return "";
         }
         return "OFFSET #offsetValue#";
+    }
+
+    /**
+     * Compiles the lock portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @lockType The lock type to compile.
+     *
+     * @return string
+     */
+    private string function compileLockType( required query, required string lockType ) {
+        switch ( arguments.lockType ) {
+            case "shared":
+                return "LOCK IN SHARE MODE";
+            case "update":
+                return "FOR UPDATE";
+            case "custom":
+                return arguments.query.getLockValue();
+            case "none":
+            case "nolock":
+            default:
+                return "";
+        }
     }
 
     /**

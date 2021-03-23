@@ -94,6 +94,22 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM (SELECT `id`, `name` FROM `users` WHERE `age` >= ?) AS `u`", bindings: [ 21 ] };
     }
 
+    function noLock() {
+        return { sql: "SELECT * FROM `users` WHERE `id` = ?", bindings: [ 1 ] };
+    }
+
+    function sharedLock() {
+        return { sql: "SELECT * FROM `users` WHERE `id` = ? LOCK IN SHARE MODE", bindings: [ 1 ] };
+    }
+
+    function lockForUpdate() {
+        return { sql: "SELECT * FROM `users` WHERE `id` = ? FOR UPDATE", bindings: [ 1 ] };
+    }
+
+    function lockArbitraryString() {
+        return { sql: "SELECT * FROM `users` WHERE `id` = ? foobar", bindings: [ 1 ] };
+    }
+
     function table() {
         return "SELECT * FROM `users`";
     }

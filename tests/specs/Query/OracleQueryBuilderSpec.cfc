@@ -97,6 +97,31 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function noLock() {
+        return { "sql": "SELECT * FROM ""USERS"" WHERE ""ID"" = ?", "bindings": [ 1 ] };
+    }
+
+    function sharedLock() {
+        return {
+            "sql": "LOCK TABLE ""USERS"" IN SHARE MODE NOWAIT; SELECT * FROM ""USERS"" WHERE ""ID"" = ?",
+            "bindings": [ 1 ]
+        };
+    }
+
+    function lockForUpdate() {
+        return {
+            "sql": "LOCK TABLE ""USERS"" IN ROW EXCLUSIVE MODE NOWAIT; SELECT * FROM ""USERS"" WHERE ""ID"" = ?",
+            "bindings": [ 1 ]
+        };
+    }
+
+    function lockArbitraryString() {
+        return {
+            "sql": "LOCK TABLE ""USERS"" IN foobar MODE NOWAIT; SELECT * FROM ""USERS"" WHERE ""ID"" = ?",
+            "bindings": [ 1 ]
+        };
+    }
+
     function table() {
         return "SELECT * FROM ""USERS""";
     }

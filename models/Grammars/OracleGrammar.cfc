@@ -42,8 +42,43 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      */
     public string function compileSelect( required QueryBuilder query ) {
         var sql = super.compileSelect( argumentCollection = arguments );
+        sql = compileOracleLimitAndOffset( query, sql );
+        return compileOracleLockType( query, sql );
+    }
 
-        return compileOracleLimitAndOffset( query, sql );
+    /**
+     * Compiles the lock portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @lockType The lock type to compile.
+     *
+     * @return string
+     */
+    private string function compileLockType( required query, required string lockType ) {
+        return ""; // Oracle grammar adds it as an additional statement before the select statement.
+    }
+
+    /**
+     * Compiles the lock portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @lockType The lock type to compile.
+     *
+     * @return string
+     */
+    private string function compileOracleLockType( required query, required string sql ) {
+        switch ( arguments.query.getLockType() ) {
+            case "shared":
+                return "LOCK TABLE #wrapTable( arguments.query.getFrom() )# IN SHARE MODE NOWAIT; #arguments.sql#";
+            case "update":
+                return "LOCK TABLE #wrapTable( arguments.query.getFrom() )# IN ROW EXCLUSIVE MODE NOWAIT; #arguments.sql#";
+            case "custom":
+                return "LOCK TABLE #wrapTable( arguments.query.getFrom() )# IN #arguments.query.getLockValue()# MODE NOWAIT; #arguments.sql#";
+            case "none":
+            case "nolock":
+            default:
+                return arguments.sql;
+        }
     }
 
     /**

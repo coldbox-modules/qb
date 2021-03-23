@@ -13,6 +13,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         "aggregate",
         "columns",
         "from",
+        "lockType",
         "joins",
         "wheres",
         "groups",
@@ -99,6 +100,30 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             select &= "TOP (#query.getLimitValue()#) ";
         }
         return select & columns.map( wrapColumn ).toList( ", " );
+    }
+
+    /**
+     * Compiles the lock portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @lockType The lock type to compile.
+     *
+     * @return string
+     */
+    private string function compileLockType( required query, required string lockType ) {
+        switch ( arguments.lockType ) {
+            case "nolock":
+                return "WITH (NOLOCK)";
+            case "shared":
+                return "WITH (ROWLOCK,HOLDLOCK)";
+            case "update":
+                return "WITH (ROWLOCK,UPDLOCK,HOLDLOCK)";
+            case "custom":
+                return arguments.query.getLockValue();
+            case "none":
+            default:
+                return "";
+        }
     }
 
     /**

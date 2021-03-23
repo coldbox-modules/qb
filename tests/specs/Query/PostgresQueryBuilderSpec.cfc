@@ -97,6 +97,22 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function noLock() {
+        return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ?", "bindings": [ 1 ] };
+    }
+
+    function sharedLock() {
+        return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ? FOR SHARE", "bindings": [ 1 ] };
+    }
+
+    function lockForUpdate() {
+        return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ? FOR UPDATE", "bindings": [ 1 ] };
+    }
+
+    function lockArbitraryString() {
+        return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ? foobar", "bindings": [ 1 ] };
+    }
+
     function table() {
         return "SELECT * FROM ""users""";
     }

@@ -238,6 +238,44 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
+                describe( "locking", function() {
+                    it( "can set no lock", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .noLock();
+                        }, noLock() );
+                    } );
+
+                    it( "can set a shared lock", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .sharedLock();
+                        }, sharedLock() );
+                    } );
+
+                    it( "can lock for update", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .lockForUpdate();
+                        }, lockForUpdate() );
+                    } );
+
+                    it( "can pass an arbitrary string to lock", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .lock( "foobar" );
+                        }, lockArbitraryString() );
+                    } );
+                } );
+
                 describe( "using table prefixes", function() {
                     it( "can perform a basic select with a table prefix", function() {
                         testCase( function( builder ) {

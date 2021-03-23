@@ -96,6 +96,17 @@ component displayname="QueryBuilder" accessors="true" {
     property name="from" type="string";
 
     /**
+     * The type of lock for the table. Default: `none`
+     * Expected values are `none`, `nolock`, `shared`, `update`, and `custom`.
+     */
+    property name="lockType" type="string";
+
+    /**
+     * The value for a custom lock.
+     */
+    property name="lockValue" type="string";
+
+    /**
      * An array of JOIN statements.
      * @default []
      */
@@ -294,6 +305,8 @@ component displayname="QueryBuilder" accessors="true" {
         variables.unions = [];
         variables.returning = [];
         variables.updates = {};
+        variables.lockType = "none";
+        variables.lockValue = "";
     }
 
     /**********************************************************************************************\
@@ -529,6 +542,40 @@ component displayname="QueryBuilder" accessors="true" {
 
         // generate the derived table SQL
         return this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
+    }
+
+    /*******************************************************************************\
+    |                               LOCK functions                                  |
+    \*******************************************************************************/
+
+    public QueryBuilder function lock( required string value ) {
+        variables.lockType = "custom";
+        variables.lockValue = arguments.value;
+        return this;
+    }
+
+    public QueryBuilder function noLock() {
+        variables.lockType = "nolock";
+        variables.lockValue = "";
+        return this;
+    }
+
+    public QueryBuilder function sharedLock() {
+        variables.lockType = "shared";
+        variables.lockValue = "";
+        return this;
+    }
+
+    public QueryBuilder function lockForUpdate() {
+        variables.lockType = "update";
+        variables.lockValue = "";
+        return this;
+    }
+
+    public QueryBuilder function clearLock() {
+        variables.lockType = "none";
+        variables.lockValue = "";
+        return this;
     }
 
     /*******************************************************************************\

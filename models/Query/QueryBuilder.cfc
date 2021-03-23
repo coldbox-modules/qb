@@ -3167,7 +3167,7 @@ component displayname="QueryBuilder" accessors="true" {
         var result = callback();
         setAggregate( originalAggregate );
         setOrders( originalOrders );
-        return isNumeric( result ) ? result : 0;
+        return result;
     }
 
     /**

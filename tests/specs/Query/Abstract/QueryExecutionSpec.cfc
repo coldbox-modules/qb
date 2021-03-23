@@ -556,6 +556,27 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );
+
+                it( "can return the max date of a table", function() {
+                    var builder = getBuilder();
+                    var expectedMax = now();
+                    var expectedQuery = queryNew( "aggregate", "timestamp", [ { aggregate: expectedMax } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT MAX(""login_date"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).max( "login_date" );
+
+                    expect( results ).toBe( expectedMax );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT MAX(""login_date"") AS ""aggregate"" FROM ""users""", options: {} } );
+
+                    expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                } );
             } );
 
             describe( "min", function() {

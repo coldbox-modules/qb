@@ -962,6 +962,7 @@ component displayname="Grammar" accessors="true" singleton {
                     wrapColumn( column.getName() ),
                     generateType( column, blueprint ),
                     modifyUnsigned( column ),
+                    generateComputed( column ),
                     generateNullConstraint( column ),
                     generateUniqueConstraint( column, blueprint ),
                     generateAutoIncrement( column, blueprint ),
@@ -986,6 +987,16 @@ component displayname="Grammar" accessors="true" singleton {
 
     function modifyUnsigned( column ) {
         return column.getUnsigned() ? "UNSIGNED" : "";
+    }
+
+    function generateComputed( column ) {
+        if ( column.getComputedType() == "none" ) {
+            return "";
+        }
+
+        return "GENERATED ALWAYS AS (#column.getComputedDefinition()#) " & (
+            column.getComputedType() == "virtual" ? "VIRTUAL" : "STORED"
+        );
     }
 
     function generateAutoIncrement( column, blueprint ) {

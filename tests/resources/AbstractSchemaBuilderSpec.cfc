@@ -157,6 +157,34 @@ component extends="testbox.system.BaseSpec" {
                     }, charWithLength() );
                 } );
 
+                it( "computed (stored)", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "products",
+                            function( table ) {
+                                table.integer( "price" );
+                                table.integer( "tax" ).storedAs( "price * 0.0675" );
+                            },
+                            {},
+                            false
+                        );
+                    }, computedStored() );
+                } );
+
+                it( "computed (virtual)", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "products",
+                            function( table ) {
+                                table.integer( "price" );
+                                table.integer( "tax" ).virtualAs( "price * 0.0675" );
+                            },
+                            {},
+                            false
+                        );
+                    }, computedVirtual() );
+                } );
+
                 it( "date", function() {
                     testCase( function( schema ) {
                         return schema.create(

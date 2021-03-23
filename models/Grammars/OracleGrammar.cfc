@@ -222,6 +222,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                     wrapColumn( column.getName() ),
                     generateType( column, blueprint ),
                     modifyUnsigned( column ),
+                    generateComputed( column ),
                     generateAutoIncrement( column, blueprint ),
                     generateDefault( column ),
                     generateNullConstraint( column ),
@@ -332,8 +333,22 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "";
     }
 
+    function generateNullConstraint( column ) {
+        return ( column.getNullable() || column.getComputedType() != "none" ) ? "" : "NOT NULL";
+    }
+
     function modifyUnsigned( column ) {
         return "";
+    }
+
+    function generateComputed( column ) {
+        if ( column.getComputedType() == "none" ) {
+            return "";
+        }
+
+        return "GENERATED ALWAYS AS (#column.getComputedDefinition()#)" & (
+            column.getComputedType() == "virtual" ? " VIRTUAL" : ""
+        );
     }
 
     function generateAutoIncrement( column, blueprint ) {

@@ -234,8 +234,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         );
     }
 
+    function generateType( column, blueprint ) {
+        if ( column.getComputedType() != "none" ) {
+            return "";
+        }
+        return super.generateType( argumentCollection = arguments );
+    }
+
+    function generateNullConstraint( column ) {
+        return ( column.getNullable() || column.getComputedType() != "none" ) ? "" : "NOT NULL";
+    }
+
     function modifyUnsigned( column ) {
         return "";
+    }
+
+    function generateComputed( column ) {
+        if ( column.getComputedType() == "none" ) {
+            return "";
+        }
+
+        return "AS (#column.getComputedDefinition()#)" & ( column.getComputedType() == "virtual" ? "" : " PERSISTED" );
     }
 
     function generateAutoIncrement( column ) {

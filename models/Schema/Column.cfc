@@ -66,6 +66,16 @@ component accessors="true" {
     property name="values";
 
     /**
+     * The computed column type, if any.  Defaults to `none`.
+     */
+    property name="computedType" default="none";
+
+    /**
+     * The definition of the computed column, if any.
+     */
+    property name="computedDefinition";
+
+    /**
      * Create a new column representation.
      *
      * @blueprint The blueprint object creating this column.
@@ -75,6 +85,8 @@ component accessors="true" {
     function init( blueprint ) {
         setBlueprint( blueprint );
         variables.values = [];
+        variables.computedType = "none";
+        variables.computedDefinition = "";
         return this;
     }
 
@@ -177,6 +189,32 @@ component accessors="true" {
      */
     function withCurrent() {
         setDefault( "CURRENT_TIMESTAMP" );
+        return this;
+    }
+
+    /**
+     * Marks the column as a stored computed column.
+     *
+     * @expression  The SQL used to define the computed column.
+     *
+     * @returns     Column
+     */
+    function storedAs( required string expression ) {
+        variables.computedType = "stored";
+        variables.computedDefinition = arguments.expression;
+        return this;
+    }
+
+    /**
+     * Marks the column as a virtual computed column.
+     *
+     * @expression  The SQL used to define the computed column.
+     *
+     * @returns     Column
+     */
+    function virtualAs( required string expression ) {
+        variables.computedType = "virtual";
+        variables.computedDefinition = arguments.expression;
         return this;
     }
 

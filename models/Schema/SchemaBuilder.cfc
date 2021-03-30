@@ -22,7 +22,7 @@ component accessors="true" singleton {
      *
      * @returns The schema builder instance.
      */
-    public SchemaBuilder function init( required BaseGrammar grammar ) {
+    public SchemaBuilder function init( required any grammar ) {
         variables.grammar = arguments.grammar;
         return this;
     }

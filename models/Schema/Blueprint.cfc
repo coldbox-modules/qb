@@ -12,7 +12,7 @@ component accessors="true" {
     property name="creating" default="false";
     property name="ifExists" default="false";
 
-    public Blueprint function init( required SchemaBuilder schemaBuilder, required BaseGrammar grammar ) {
+    public Blueprint function init( required SchemaBuilder schemaBuilder, required any grammar ) {
         setSchemaBuilder( schemaBuilder );
         setGrammar( grammar );
 

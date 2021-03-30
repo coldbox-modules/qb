@@ -92,7 +92,10 @@ component accessors="true" {
 
     public Column function populate( struct args = {} ) {
         for ( var arg in arguments.args ) {
-            if ( structKeyExists( variables, "set#arg#" ) && !isNull( arguments.args[ arg ] ) ) {
+            if (
+                ( structKeyExists( variables, "set#arg#" ) || structKeyExists( this, "set#arg#" ) ) &&
+                !isNull( arguments.args[ arg ] )
+            ) {
                 invoke( this, "set#arg#", { 1: arguments.args[ arg ] } );
             }
         }

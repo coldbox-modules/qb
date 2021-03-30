@@ -49,8 +49,17 @@ component accessors="true" {
      *
      * @returns A TableIndex instance.
      */
-    function init() {
+    public TableIndex function init() {
         variables.columns = [];
+        return this;
+    }
+
+    public TableIndex function populate( struct args = {} ) {
+        for ( var arg in arguments.args ) {
+            if ( structKeyExists( variables, "set#arg#" ) && !isNull( arguments.args[ arg ] ) ) {
+                invoke( this, "set#arg#", { 1: arguments.args[ arg ] } );
+            }
+        }
         return this;
     }
 
@@ -62,9 +71,8 @@ component accessors="true" {
      *
      * @returns The TableIndex instance.
      */
-    function references( columns ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        setColumns( columns );
+    public TableIndex function references( required any columns ) {
+        setColumns( arrayWrap( arguments.columns ) );
         return this;
     }
 
@@ -76,8 +84,8 @@ component accessors="true" {
      *
      * @returns The TableIndex instance.
      */
-    function onTable( table ) {
-        setTable( table );
+    public TableIndex function onTable( required string table ) {
+        setTable( arguments.table );
         return this;
     }
 
@@ -89,8 +97,8 @@ component accessors="true" {
      *
      * @returns The TableIndex instance.
      */
-    function onUpdate( option ) {
-        setOnUpdate( option );
+    public TableIndex function onUpdate( required string option ) {
+        setOnUpdate( arguments.option );
         return this;
     }
 
@@ -102,8 +110,8 @@ component accessors="true" {
      *
      * @returns The TableIndex instance.
      */
-    function onDelete( option ) {
-        setOnDelete( option );
+    public TableIndex function onDelete( required string option ) {
+        setOnDelete( arguments.option );
         return this;
     }
 
@@ -114,9 +122,13 @@ component accessors="true" {
      *
      * @returns The TableIndex instance.
      */
-    function setColumns( columns ) {
-        variables.columns = isArray( arguments.columns ) ? arguments.columns : [ arguments.columns ];
+    public TableIndex function setColumns( required any columns ) {
+        variables.columns = arrayWrap( arguments.columns );
         return this;
+    }
+
+    private array function arrayWrap( required any value ) {
+        return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
     }
 
 }

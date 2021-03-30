@@ -12,7 +12,7 @@ component accessors="true" {
     property name="creating" default="false";
     property name="ifExists" default="false";
 
-    function init( schemaBuilder, grammar ) {
+    public Blueprint function init( required SchemaBuilder schemaBuilder, required BaseGrammar grammar ) {
         setSchemaBuilder( schemaBuilder );
         setGrammar( grammar );
 
@@ -20,6 +20,7 @@ component accessors="true" {
         setDropColumns( [] );
         setCommands( [] );
         setIndexes( [] );
+
         return this;
     }
 
@@ -29,284 +30,292 @@ component accessors="true" {
     =            Column Types            =
     ====================================*/
 
-    function bigIncrements( name, indexName ) {
+    public Column function bigIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        appendIndex( type = "primary", columns = name, name = indexName );
+        param arguments.indexName = "pk_#getTable()#_#name#";
+        appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedBigInteger( argumentCollection = arguments );
     }
 
-    function bigInteger( name, precision ) {
+    public Column function bigInteger( required string name, numeric precision ) {
         arguments.type = "bigInteger";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function bit( name, length = 1 ) {
+    public Column function bit( required string name, numeric length = 1 ) {
         arguments.type = "bit";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function boolean( name ) {
+    public Column function boolean( required string name ) {
         arguments.length = 1;
         arguments.type = "boolean";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function char( name, length = 1 ) {
-        arguments.length = arguments.length > 255 ? 255 : arguments.length;
+    public Column function char( required string name, numeric length = 1 ) {
+        arguments.length = clamp( 1, arguments.length, 255 );
         arguments.type = "char";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function date( name ) {
+    public Column function date( required string name ) {
         arguments.type = "date";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function datetime( name ) {
+    public Column function datetime( required string name ) {
         arguments.type = "datetime";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function datetimeTz( name ) {
+    public Column function datetimeTz( required string name ) {
         arguments.type = "datetimeTz";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function decimal( name, length = 10, precision = 0 ) {
+    public Column function decimal( required string name, numeric length = 10, numeric precision = 0 ) {
         arguments.type = "decimal";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function enum( name, values ) {
-        prependCommand( "addType", { name: name, values: values } );
+    public Column function enum( required string name, required array values ) {
+        prependCommand( "addType", { name: arguments.name, values: arguments.values } );
         arguments.type = "enum";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function float( name, length = 10, precision = 0 ) {
+    public Column function float( required string name, numeric length = 10, numeric precision = 0 ) {
         arguments.type = "float";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function increments( name, indexName ) {
+    public Column function increments( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        appendIndex( type = "primary", columns = name, name = indexName );
+        param arguments.indexName = "pk_#getTable()#_#name#";
+        appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedInteger( argumentCollection = arguments );
     }
 
-    function integer( name, precision ) {
+    public Column function integer( required string name, numeric precision ) {
         arguments.type = "integer";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function json( name ) {
+    public Column function json( required string name ) {
         arguments.type = "json";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function longText( name ) {
+    public Column function longText( required string name ) {
         arguments.type = "longText";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function unicodeLongText( name ) {
+    public Column function unicodeLongText( required string name ) {
         arguments.type = "unicodeLongText";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function mediumIncrements( name, indexName ) {
+    public Column function mediumIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        appendIndex( type = "primary", columns = name, name = indexName );
+        param arguments.indexName = "pk_#getTable()#_#name#";
+        appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedMediumInteger( argumentCollection = arguments );
     }
 
-    function mediumInteger( name, precision ) {
+    public Column function mediumInteger( required string name, numeric precision ) {
         arguments.type = "mediumInteger";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function mediumText( name ) {
+    public Column function mediumText( required string name ) {
         arguments.type = "mediumText";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function unicodeMediumText( name ) {
+    public Column function unicodeMediumText( required string name ) {
         arguments.type = "unicodeMediumText";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function lineString( name ) {
+    public Column function lineString( required string name ) {
         arguments.type = "lineString";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function money( name ) {
+    public Column function money( required string name ) {
         arguments.type = "money";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function smallMoney( name ) {
+    public Column function smallMoney( required string name ) {
         arguments.type = "smallMoney";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function morphs( name ) {
-        unsignedInteger( "#name#_id" );
-        string( "#name#_type" );
-        appendIndex( type = "basic", name = "#name#_index", columns = [ "#name#_id", "#name#_type" ] );
+    public Blueprint function morphs( required string name ) {
+        var morphIdColumnName = arguments.name & "_id";
+        var morphTypeColumnName = arguments.name & "_type";
+        unsignedInteger( morphIdColumnName );
+        string( morphTypeColumnName );
+        appendIndex(
+            type = "basic",
+            name = "#arguments.name#_index",
+            columns = [ morphIdColumnName, morphTypeColumnName ]
+        );
         return this;
     }
 
-    function nullableMorphs( name ) {
-        unsignedInteger( "#name#_id" ).nullable();
-        string( "#name#_type" ).nullable();
-        appendIndex( type = "basic", name = "#name#_index", columns = [ "#name#_id", "#name#_type" ] );
+    public Blueprint function nullableMorphs( required string name ) {
+        var morphIdColumnName = arguments.name & "_id";
+        var morphTypeColumnName = arguments.name & "_type";
+        unsignedInteger( morphIdColumnName ).nullable();
+        string( morphTypeColumnName ).nullable();
+        appendIndex(
+            type = "basic",
+            name = "#arguments.name#_index",
+            columns = [ morphIdColumnName, morphTypeColumnName ]
+        );
         return this;
     }
 
-    function nullableTimestamps() {
+    public Blueprint function nullableTimestamps() {
         appendColumn( name = "createdDate", type = "timestamp", nullable = true );
         appendColumn( name = "modifiedDate", type = "timestamp", nullable = true );
         return this;
     }
 
-    function point( name ) {
+    public Column function point( required string name ) {
         arguments.type = "point";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function polygon( name ) {
+    public Column function polygon( required string name ) {
         arguments.type = "polygon";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function raw( sql ) {
-        var expression = new qb.models.Query.Expression( sql );
+    public Expression function raw( sql ) {
+        var expression = new qb.models.Query.Expression( arguments.sql );
         variables.columns.append( expression );
         return expression;
     }
 
-    function smallIncrements( name, indexName ) {
+    public Column function smallIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        appendIndex( type = "primary", columns = name, name = indexName );
+        param arguments.indexName = "pk_#getTable()#_#name#";
+        appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedSmallInteger( argumentCollection = arguments );
     }
 
-    function smallInteger( name, precision ) {
+    public Column function smallInteger( required string name, numeric precision ) {
         arguments.type = "smallInteger";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function softDeletes() {
+    public Blueprint function softDeletes() {
         appendColumn( name = "deletedDate", type = "timestamp", nullable = true );
         return this;
     }
 
-    function softDeletesTz() {
+    public Blueprint function softDeletesTz() {
         appendColumn( name = "deletedDate", type = "timestampTz", nullable = true );
         return this;
     }
 
-    function string( name, length ) {
+    public Column function string( required string name, numeric length ) {
         arguments.type = "string";
-        if ( isNull( arguments.length ) ) {
-            arguments.length = getSchemaBuilder().getDefaultStringLength();
-        }
+        param arguments.length = getSchemaBuilder().getDefaultStringLength();
         return appendColumn( argumentCollection = arguments );
     }
 
-    function unicodeString( name, length ) {
+    public Column function unicodeString( required string name, numeric length ) {
         arguments.type = "unicodeString";
-        if ( isNull( arguments.length ) ) {
-            arguments.length = getSchemaBuilder().getDefaultStringLength();
-        }
+        param arguments.length = getSchemaBuilder().getDefaultStringLength();
         return appendColumn( argumentCollection = arguments );
     }
 
-    function text( name ) {
+    public Column function text( required string name ) {
         arguments.type = "text";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function unicodeText( name ) {
+    public Column function unicodeText( required string name ) {
         arguments.type = "unicodeText";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function time( name ) {
+    public Column function time( required string name ) {
         arguments.type = "time";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function timeTz( name ) {
+    public Column function timeTz( required string name ) {
         arguments.type = "timeTz";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function timestamp( name ) {
+    public Column function timestamp( required string name ) {
         arguments.type = "timestamp";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function timestamps() {
+    public Blueprint function timestamps() {
         appendColumn( name = "createdDate", type = "timestamp" ).withCurrent();
         appendColumn( name = "modifiedDate", type = "timestamp" ).withCurrent();
         return this;
     }
 
-    function timestampTz( name ) {
+    public Column function timestampTz( required string name ) {
         arguments.type = "timestampTz";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function timestampsTz() {
+    public Blueprint function timestampsTz() {
         appendColumn( name = "createdDate", type = "timestampTz" ).withCurrent();
         appendColumn( name = "modifiedDate", type = "timestampTz" ).withCurrent();
         return this;
     }
 
-    function tinyIncrements( name, indexName ) {
+    public Column function tinyIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        arguments.indexName = isNull( indexName ) ? "pk_#getTable()#_#name#" : arguments.indexName;
-        appendIndex( type = "primary", columns = name, name = indexName );
+        param arguments.indexName = "pk_#getTable()#_#name#";
+        appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedTinyInteger( argumentCollection = arguments );
     }
 
-    function tinyInteger( name, precision ) {
+    public Column function tinyInteger( required string name, numeric precision ) {
         arguments.type = "tinyInteger";
         return appendColumn( argumentCollection = arguments );
     }
 
-    function unsignedBigInteger( name, precision ) {
+    public Column function unsignedBigInteger( required string name, numeric precision ) {
         arguments.unsigned = true;
         return bigInteger( argumentCollection = arguments );
     }
 
-    function unsignedInteger( name, precision ) {
+    public Column function unsignedInteger( required string name, numeric precision ) {
         arguments.unsigned = true;
         return integer( argumentCollection = arguments );
     }
 
-    function unsignedMediumInteger( name, precision ) {
+    public Column function unsignedMediumInteger( required string name, numeric precision ) {
         arguments.unsigned = true;
         return mediumInteger( argumentCollection = arguments );
     }
 
-    function unsignedSmallInteger( name, precision ) {
+    public Column function unsignedSmallInteger( required string name, numeric precision ) {
         arguments.unsigned = true;
         return smallInteger( argumentCollection = arguments );
     }
 
-    function unsignedTinyInteger( name, precision ) {
+    public Column function unsignedTinyInteger( required string name, numeric precision ) {
         arguments.unsigned = true;
         return tinyInteger( argumentCollection = arguments );
     }
 
-    function uuid( name ) {
+    public Column function uuid( required string name ) {
         arguments.type = "UUID";
         arguments.length = 36;
         return appendColumn( argumentCollection = arguments );
@@ -328,10 +337,10 @@ component accessors="true" {
      *
      * @returns The created TableIndex instance.
      */
-    function foreignKey( columns, name ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "fk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return appendIndex( type = "foreign", foreignKey = columns, name = name );
+    public TableIndex function foreignKey( required any columns, string name ) {
+        arguments.columns = arrayWrap( arguments.columns );
+        param arguments.name = "fk_#getTable()#_#arrayToList( columns, "_" )#";
+        return appendIndex( type = "foreign", foreignKey = arguments.columns, name = arguments.name );
     }
 
     /**
@@ -343,10 +352,10 @@ component accessors="true" {
      *
      * @returns The created TableIndex instance.
      */
-    function index( columns, name ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "idx_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return appendIndex( type = "basic", columns = columns, name = name );
+    public TableIndex function index( required any columns, string name ) {
+        arguments.columns = arrayWrap( arguments.columns );
+        param arguments.name = "idx_#getTable()#_#arrayToList( columns, "_" )#";
+        return appendIndex( type = "basic", columns = arguments.columns, name = arguments.name );
     }
 
     /**
@@ -358,10 +367,10 @@ component accessors="true" {
      *
      * @returns The created TableIndex instance.
      */
-    function primaryKey( columns, name ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "pk_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return appendIndex( type = "primary", columns = columns, name = name );
+    public TableIndex function primaryKey( required any columns, string name ) {
+        arguments.columns = arrayWrap( arguments.columns );
+        param arguments.name = "pk_#getTable()#_#arrayToList( columns, "_" )#";
+        return appendIndex( type = "primary", columns = arguments.columns, name = arguments.name );
     }
 
     /**
@@ -373,10 +382,10 @@ component accessors="true" {
      *
      * @returns The created TableIndex instance.
      */
-    function unique( columns, name ) {
-        arguments.columns = isArray( columns ) ? columns : [ columns ];
-        arguments.name = isNull( name ) ? "unq_#getTable()#_#arrayToList( columns, "_" )#" : arguments.name;
-        return appendIndex( type = "unique", columns = columns, name = name );
+    public TableIndex function unique( required any columns, string name ) {
+        arguments.columns = arrayWrap( arguments.columns );
+        param arguments.name = "unq_#getTable()#_#arrayToList( columns, "_" )#";
+        return appendIndex( type = "unique", columns = arguments.columns, name = arguments.name );
     }
 
     /**
@@ -388,9 +397,9 @@ component accessors="true" {
      *
      * @returns The created TableIndex instance.
      */
-    function default( column, name ) {
-        arguments.name = isNull( name ) ? "df_#getTable()#_#column#" : arguments.name;
-        return createIndex( type = "default", columns = column, name = name );
+    public TableIndex function default( required string column, string name ) {
+        param arguments.name = "df_#getTable()#_#column#";
+        return createIndex( type = "default", columns = arguments.column, name = arguments.name );
     }
 
 
@@ -398,50 +407,50 @@ component accessors="true" {
     =            Alter Commands            =
     ======================================*/
 
-    function addColumn( column ) {
-        addCommand( "addColumn", { column: column } );
+    public Blueprint function addColumn( required any column ) {
+        addCommand( "addColumn", { column: arguments.column } );
         return this;
     }
 
-    function dropColumn( name ) {
-        addCommand( "dropColumn", { name: name } );
+    public Blueprint function dropColumn( required any name ) {
+        addCommand( "dropColumn", { name: arguments.name } );
         return this;
     }
 
-    function modifyColumn( name, column ) {
-        addCommand( "modifyColumn", { from: name, to: column } );
+    public Blueprint function modifyColumn( required any name, required any column ) {
+        addCommand( "modifyColumn", { from: arguments.name, to: arguments.column } );
         return this;
     }
 
-    function renameColumn( name, column ) {
-        addCommand( "renameColumn", { from: name, to: column } );
+    public Blueprint function renameColumn( required any name, required any column ) {
+        addCommand( "renameColumn", { from: arguments.name, to: arguments.column } );
         return this;
     }
 
-    function addConstraint( constraint ) {
-        addCommand( "addConstraint", { index: constraint } );
+    public Blueprint function addConstraint( required TableIndex constraint ) {
+        addCommand( "addConstraint", { index: arguments.constraint } );
         return this;
     }
 
-    function dropConstraint( name ) {
-        if ( !isSimpleValue( name ) ) {
-            dropConstraint( name.getName() );
+    public Blueprint function dropConstraint( required any name ) {
+        if ( !isSimpleValue( arguments.name ) ) {
+            dropConstraint( arguments.name.getName() );
         } else {
-            addCommand( "dropConstraint", { name: name } );
+            addCommand( "dropConstraint", { name: arguments.name } );
         }
         return this;
     }
 
-    function dropForeignKey( name ) {
-        if ( !isSimpleValue( name ) ) {
-            dropForeignKey( name.getName() );
+    public Blueprint function dropForeignKey( required any name ) {
+        if ( !isSimpleValue( arguments.name ) ) {
+            dropForeignKey( arguments.name.getName() );
         } else {
-            addCommand( "dropForeignKey", { name: name } );
+            addCommand( "dropForeignKey", { name: arguments.name } );
         }
         return this;
     }
 
-    function renameConstraint( oldName, newName ) {
+    public Blueprint function renameConstraint( required any oldName, required any newName ) {
         if ( !isSimpleValue( arguments.oldName ) ) {
             arguments.oldName = dropConstraint( arguments.oldName.getName() );
         }
@@ -458,52 +467,36 @@ component accessors="true" {
     =            Command Helpers            =
     =======================================*/
 
-    function addCommand( command, parameters = [] ) {
-        variables.commands.append( new SchemaCommand( type = command, parameters = parameters ) );
+    public Blueprint function addCommand( required string command, struct parameters = {} ) {
+        variables.commands.append( new SchemaCommand( type = arguments.command, parameters = arguments.parameters ) );
         return this;
     }
 
-    function prependCommand( command, parameters = [] ) {
-        variables.commands.prepend( new SchemaCommand( type = command, parameters = parameters ) );
+    public Blueprint function prependCommand( required string command, struct parameters = {} ) {
+        variables.commands.prepend( new SchemaCommand( type = arguments.command, parameters = arguments.parameters ) );
         return this;
     }
 
-    function appendColumn() {
+    public Column function appendColumn() {
         var newColumn = new Column( this );
-        var indexMetadata = getMetadata( newColumn );
-        var functionNames = indexMetadata.functions.map( function( func ) {
-            return lCase( func.name );
-        } );
-        for ( var arg in arguments ) {
-            if ( functionNames.contains( lCase( "set#arg#" ) ) && !isNull( arguments[ arg ] ) ) {
-                invoke( newColumn, "set#arg#", { 1: arguments[ arg ] } );
-            }
-        }
+        newColumn.populate( arguments );
         variables.columns.append( newColumn );
         return newColumn;
     }
 
-    function appendIndex() {
+    public TableIndex function appendIndex() {
         var newIndex = createIndex( argumentCollection = arguments );
         variables.indexes.append( newIndex );
         return newIndex;
     }
 
-    function createIndex() {
+    public TableIndex function createIndex() {
         var newIndex = new TableIndex( this );
-        var indexMetadata = getMetadata( newIndex );
-        var functionNames = indexMetadata.functions.map( function( func ) {
-            return lCase( func.name );
-        } );
-        for ( var arg in arguments ) {
-            if ( functionNames.contains( lCase( "set#arg#" ) ) ) {
-                invoke( newIndex, "set#arg#", { 1: arguments[ arg ] } );
-            }
-        }
+        newIndex.populate( arguments );
         return newIndex;
     }
 
-    function toSql() {
+    public array function toSql() {
         var statements = [];
         // we use a for loop here because we can potentially modify this array while looping over it.
         for ( var i = 1; i <= variables.commands.len(); i++ ) {
@@ -518,6 +511,16 @@ component accessors="true" {
             }
         }
         return statements;
+    }
+
+    private array function arrayWrap( required any value ) {
+        return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+    }
+
+    private numeric function clamp( required numeric lowerLimit, required numeric result, required numeric upperLimit ) {
+        arguments.result = ceiling( arguments.result );
+        arguments.result = min( arguments.result, arguments.upperLimit );
+        return max( arguments.lowerLimit, arguments.result );
     }
 
 }

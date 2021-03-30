@@ -360,10 +360,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var columnName = uCase( column.getName() );
         var sequenceName = "SEQ_#table#";
         var triggerName = "TRG_#table#";
-        blueprint.addCommand( "raw", "CREATE SEQUENCE ""#sequenceName#""" );
+        blueprint.addCommand( "raw", { "sql": "CREATE SEQUENCE ""#sequenceName#""" } );
         blueprint.addCommand(
             "raw",
-            "CREATE OR REPLACE TRIGGER ""#triggerName#"" BEFORE INSERT ON ""#table#"" FOR EACH ROW WHEN (new.""#columnName#"" IS NULL) BEGIN SELECT ""#sequenceName#"".NEXTVAL INTO :new.""#columnName#"" FROM dual; END"
+            {
+                "sql": "CREATE OR REPLACE TRIGGER ""#triggerName#"" BEFORE INSERT ON ""#table#"" FOR EACH ROW WHEN (new.""#columnName#"" IS NULL) BEGIN SELECT ""#sequenceName#"".NEXTVAL INTO :new.""#columnName#"" FROM dual; END"
+            }
         );
         return "";
     }

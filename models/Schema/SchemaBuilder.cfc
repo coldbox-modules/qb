@@ -22,7 +22,7 @@ component accessors="true" singleton {
      *
      * @returns The schema builder instance.
      */
-    function init( grammar ) {
+    public SchemaBuilder function init( required any grammar ) {
         variables.grammar = arguments.grammar;
         return this;
     }
@@ -38,18 +38,18 @@ component accessors="true" singleton {
      *
      * @returns  The blueprint instance
      */
-    function create(
-        table,
-        callback,
-        options = {},
-        execute = true
+    public Blueprint function create(
+        required string table,
+        required function callback,
+        struct options = {},
+        boolean execute = true
     ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "create" );
         blueprint.setCreating( true );
-        blueprint.setTable( table );
-        callback( blueprint );
-        if ( execute ) {
+        blueprint.setTable( arguments.table );
+        arguments.callback( blueprint );
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -59,21 +59,21 @@ component accessors="true" singleton {
         return blueprint;
     }
 
-    function createView(
+    public Blueprint function createView(
         required string view,
-        required any callback,
+        required function callback,
         struct options = {},
         boolean execute = true
     ) {
         var query = new models.Query.QueryBuilder( getGrammar() );
-        callback( query );
+        arguments.callback( query );
 
         var blueprint = new Blueprint( this, getGrammar() );
-        blueprint.addCommand( "createView", [ query ] );
+        blueprint.addCommand( "createView", { query: query } );
         blueprint.setCreating( true );
         blueprint.setTable( arguments.view );
 
-        if ( execute ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -89,21 +89,21 @@ component accessors="true" singleton {
         return blueprint;
     }
 
-    function alterView(
+    public Blueprint function alterView(
         required string view,
-        required any callback,
+        required function callback,
         struct options = {},
         boolean execute = true
     ) {
         var query = new models.Query.QueryBuilder( getGrammar() );
-        callback( query );
+        arguments.callback( query );
 
         var blueprint = new Blueprint( this, getGrammar() );
-        blueprint.addCommand( "alterView", [ query ] );
+        blueprint.addCommand( "alterView", { query: query } );
         blueprint.setCreating( true );
         blueprint.setTable( arguments.view );
 
-        if ( execute ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -119,12 +119,12 @@ component accessors="true" singleton {
         return blueprint;
     }
 
-    function dropView( required string view, struct options = {}, boolean execute = true ) {
+    public Blueprint function dropView( required string view, struct options = {}, boolean execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "dropView" );
         blueprint.setTable( arguments.view );
 
-        if ( execute ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -149,11 +149,11 @@ component accessors="true" singleton {
      *
      * @returns  The blueprint instance
      */
-    function drop( table, options = {}, execute = true ) {
+    public Blueprint function drop( required string table, struct options = {}, boolean execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
-        blueprint.setTable( table );
-        if ( execute ) {
+        blueprint.setTable( arguments.table );
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -172,12 +172,12 @@ component accessors="true" singleton {
      *
      * @returns  The blueprint instance
      */
-    function dropIfExists( table, options = {}, execute = true ) {
+    public Blueprint function dropIfExists( required string table, struct options = {}, boolean execute = true ) {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
-        blueprint.setTable( table );
+        blueprint.setTable( arguments.table );
         blueprint.setIfExists( true );
-        if ( execute ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -198,16 +198,16 @@ component accessors="true" singleton {
      *
      * @returns  The blueprint instance
      */
-    function alter(
-        table,
-        callback,
-        options = {},
-        execute = true
+    public Blueprint function alter(
+        required string table,
+        required function callback,
+        struct options = {},
+        boolean execute = true
     ) {
         var blueprint = new Blueprint( this, getGrammar() );
-        blueprint.setTable( table );
-        callback( blueprint );
-        if ( execute ) {
+        blueprint.setTable( arguments.table );
+        arguments.callback( blueprint );
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -227,16 +227,16 @@ component accessors="true" singleton {
      *
      * @returns  The blueprint instance
      */
-    function rename(
-        from,
-        to,
-        options = {},
-        execute = true
+    public Blueprint function rename(
+        required string from,
+        required string to,
+        struct options = {},
+        boolean execute = true
     ) {
         var blueprint = new Blueprint( this, getGrammar() );
-        blueprint.setTable( from );
-        blueprint.addCommand( "renameTable", { to: to } );
-        if ( execute ) {
+        blueprint.setTable( arguments.from );
+        blueprint.addCommand( "renameTable", { to: arguments.to } );
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -257,11 +257,11 @@ component accessors="true" singleton {
      *
      * @returns  The blueprint instance
      */
-    function renameTable(
-        from,
-        to,
-        options = {},
-        execute = true
+    public Blueprint function renameTable(
+        required string from,
+        required string to,
+        struct options = {},
+        boolean execute = true
     ) {
         return rename( argumentCollection = arguments );
     }
@@ -276,19 +276,24 @@ component accessors="true" singleton {
      *
      * @returns  The blueprint instance
      */
-    function hasTable(
-        name,
-        schema = "",
-        options = {},
-        execute = true
+    public any function hasTable(
+        required string name,
+        string schema = "",
+        struct options = {},
+        boolean execute = true
     ) {
-        var args = [ name ];
-        if ( schema != "" ) {
-            arrayAppend( args, schema );
+        var args = [ arguments.name ];
+        if ( arguments.schema != "" ) {
+            arrayAppend( args, arguments.schema );
         }
-        var sql = getGrammar().compileTableExists( name, schema );
-        if ( execute ) {
-            var q = getGrammar().runQuery( sql, args, options, "query" );
+        var sql = getGrammar().compileTableExists( arguments.name, arguments.schema );
+        if ( arguments.execute ) {
+            var q = getGrammar().runQuery(
+                sql,
+                args,
+                arguments.options,
+                "query"
+            );
             return q.RecordCount > 0;
         }
         return sql;
@@ -305,20 +310,25 @@ component accessors="true" singleton {
      *
      * @returns  The blueprint instance
      */
-    function hasColumn(
-        table,
-        column,
-        schema = "",
-        options = {},
-        execute = true
+    public any function hasColumn(
+        required string table,
+        required string column,
+        string schema = "",
+        struct options = {},
+        boolean execute = true
     ) {
-        var args = [ table, column ];
-        if ( schema != "" ) {
-            arrayAppend( args, schema );
+        var args = [ arguments.table, arguments.column ];
+        if ( arguments.schema != "" ) {
+            arrayAppend( args, arguments.schema );
         }
-        var sql = getGrammar().compileColumnExists( table, column, schema );
-        if ( execute ) {
-            var q = getGrammar().runQuery( sql, args, options, "query" );
+        var sql = getGrammar().compileColumnExists( arguments.table, arguments.column, arguments.schema );
+        if ( arguments.execute ) {
+            var q = getGrammar().runQuery(
+                sql,
+                args,
+                arguments.options,
+                "query"
+            );
             return q.RecordCount > 0;
         }
         return sql;
@@ -332,9 +342,9 @@ component accessors="true" singleton {
      *
      * @returns The array of executed statements.
      */
-    function dropAllObjects( options = {}, execute = true, schema = "" ) {
-        var statements = getGrammar().compileDropAllObjects( options, schema );
-        if ( execute ) {
+    public array function dropAllObjects( struct options = {}, boolean execute = true, string schema = "" ) {
+        var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema );
+        if ( arguments.execute ) {
             statements.each( function( statement ) {
                 getGrammar().runQuery( statement, [], options, "result" );
             } );
@@ -350,10 +360,15 @@ component accessors="true" singleton {
      *
      * @returns The executed sql statement.
      */
-    function enableForeignKeyConstraints( options = {}, execute = true ) {
-        var statement = getGrammar().compileEnableForeignKeyConstraints( options );
-        if ( execute ) {
-            getGrammar().runQuery( statement, [], options, "result" );
+    public string function enableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
+        var statement = getGrammar().compileEnableForeignKeyConstraints( arguments.options );
+        if ( arguments.execute ) {
+            getGrammar().runQuery(
+                statement,
+                [],
+                arguments.options,
+                "result"
+            );
         }
         return statement;
     }
@@ -366,10 +381,15 @@ component accessors="true" singleton {
      *
      * @returns The executed sql statement.
      */
-    function disableForeignKeyConstraints( options = {}, execute = true ) {
-        var statement = getGrammar().compileDisableForeignKeyConstraints( options );
-        if ( execute ) {
-            getGrammar().runQuery( statement, [], options, "result" );
+    public string function disableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
+        var statement = getGrammar().compileDisableForeignKeyConstraints( arguments.options );
+        if ( arguments.execute ) {
+            getGrammar().runQuery(
+                statement,
+                [],
+                arguments.options,
+                "result"
+            );
         }
         return statement;
     }

@@ -82,11 +82,23 @@ component accessors="true" {
      *
      * @returns   The Column instance.
      */
-    function init( blueprint ) {
-        setBlueprint( blueprint );
+    public Column function init( required Blueprint blueprint ) {
+        setBlueprint( arguments.blueprint );
         variables.values = [];
         variables.computedType = "none";
         variables.computedDefinition = "";
+        return this;
+    }
+
+    public Column function populate( struct args = {} ) {
+        for ( var arg in arguments.args ) {
+            if (
+                ( structKeyExists( variables, "set#arg#" ) || structKeyExists( this, "set#arg#" ) ) &&
+                !isNull( arguments.args[ arg ] )
+            ) {
+                invoke( this, "set#arg#", { 1: arguments.args[ arg ] } );
+            }
+        }
         return this;
     }
 
@@ -97,8 +109,8 @@ component accessors="true" {
      *
      * @returns The Column instance.
      */
-    function comment( comment ) {
-        setComment( comment );
+    public Column function comment( required string comment ) {
+        setComment( arguments.comment );
         return this;
     }
 
@@ -109,8 +121,8 @@ component accessors="true" {
      *
      * @returns The Column instance.
      */
-    function default( value ) {
-        setDefault( value );
+    public Column function default( required string value ) {
+        setDefault( arguments.value );
         return this;
     }
 
@@ -119,7 +131,7 @@ component accessors="true" {
      *
      * @returns The Column instance.
      */
-    function nullable() {
+    public Column function nullable() {
         setNullable( true );
         return this;
     }
@@ -132,8 +144,8 @@ component accessors="true" {
      *
      * @returns   The TableIndex instance created.
      */
-    function primaryKey( indexName ) {
-        arguments.indexName = isNull( arguments.indexName ) ? "pk_#getBlueprint().getTable()#_#getName()#" : arguments.indexName;
+    public TableIndex function primaryKey( string indexName ) {
+        param arguments.indexName = "pk_#getBlueprint().getTable()#_#getName()#";
         return getBlueprint().appendIndex( type = "primary", columns = getName(), name = arguments.indexName );
     }
 
@@ -146,7 +158,7 @@ component accessors="true" {
      *
      * @returns The TableIndex instance created.
      */
-    function references( column ) {
+    public TableIndex function references( required string column ) {
         return getBlueprint().appendIndex(
             type = "foreign",
             columns = [ column ],
@@ -160,7 +172,7 @@ component accessors="true" {
      *
      * @returns The Column instance.
      */
-    function unsigned() {
+    public Column function unsigned() {
         setUnsigned( true );
         return this;
     }
@@ -170,7 +182,7 @@ component accessors="true" {
      *
      * @returns The Column instance.
      */
-    function unique() {
+    public Column function unique() {
         setUnique( true );
         return this;
     }
@@ -178,7 +190,7 @@ component accessors="true" {
     /**
      * @returns true if the object is a column
      */
-    function isColumn() {
+    public boolean function isColumn() {
         return true;
     }
 
@@ -187,7 +199,7 @@ component accessors="true" {
      *
      * @returns Column
      */
-    function withCurrent() {
+    public Column function withCurrent() {
         setDefault( "CURRENT_TIMESTAMP" );
         return this;
     }
@@ -199,7 +211,7 @@ component accessors="true" {
      *
      * @returns     Column
      */
-    function storedAs( required string expression ) {
+    public Column function storedAs( required string expression ) {
         variables.computedType = "stored";
         variables.computedDefinition = arguments.expression;
         return this;
@@ -212,7 +224,7 @@ component accessors="true" {
      *
      * @returns     Column
      */
-    function virtualAs( required string expression ) {
+    public Column function virtualAs( required string expression ) {
         variables.computedType = "virtual";
         variables.computedDefinition = arguments.expression;
         return this;

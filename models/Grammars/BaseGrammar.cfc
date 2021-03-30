@@ -909,7 +909,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function compileRaw( blueprint, commandParameters ) {
-        return commandParameters;
+        return commandParameters[ "sql" ];
     }
 
     /*=========================================
@@ -1410,7 +1410,7 @@ component displayname="Grammar" accessors="true" singleton {
     ===================================*/
 
     function compileCreateView( blueprint, commandParameters ) {
-        var query = commandParameters[ 1 ];
+        var query = commandParameters[ "query" ];
         return "CREATE VIEW #wrapTable( blueprint.getTable() )# AS (#compileSelect( query )#)";
     }
 

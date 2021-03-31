@@ -19,17 +19,28 @@ component displayname="QueryUtils" accessors="true" {
     property name="numericSQLType" default="CF_SQL_NUMERIC";
 
     /**
+     * Automatically add a scale to floating point bindings.
+     */
+    property name="autoAddScale" default="true";
+
+    /**
      * Creates a new QueryUtils helper.
      *
      * @strictDateDetection  Flag to only parse date objects as timestamps.
      *                       If false, strings that pass `isDate` are also treated as timestamps.
-     * @numericSQLType       Allows overriding inferred numeric SQL type default by adding a setting in coldbox.cdc module settings
+     * @numericSQLType       Allows overriding inferred numeric SQL type default by adding a setting in coldbox.cfc module settings
+     * @autoAddScale         Automatically add a scale to floating point bindings.
      *
      * @return               qb.models.Query.QueryUtils
      */
-    public QueryUtils function init( Boolean strictDateDetection = false, String numericSQLType = "CF_SQL_NUMERIC" ) {
+    public QueryUtils function init(
+        boolean strictDateDetection = false,
+        string numericSQLType = "CF_SQL_NUMERIC",
+        boolean autoAddScale = true
+    ) {
         variables.strictDateDetection = arguments.strictDateDetection;
         variables.numericSQLType = arguments.numericSQLType;
+        variables.autoAddScale = arguments.autoAddScale;
         return this;
     }
 
@@ -60,6 +71,10 @@ component displayname="QueryUtils" accessors="true" {
         }
 
         structAppend( binding, { cfsqltype: inferSqlType( binding.value ), list: false, null: false }, false );
+
+        if ( variables.autoAddScale && isFloatingPoint( binding ) ) {
+            param binding.scale = calculateNumberOfDecimalDigits( binding );
+        }
 
         return binding;
     }
@@ -415,6 +430,29 @@ component displayname="QueryUtils" accessors="true" {
         }
 
         return true;
+    }
+
+    private boolean function isFloatingPoint( required struct binding ) {
+        return arguments.binding.cfsqltype.findNoCase( "decimal" ) > 0 ||
+        arguments.binding.cfsqltype.findNoCase( "double" ) > 0 ||
+        arguments.binding.cfsqltype.findNoCase( "float" ) > 0 ||
+        arguments.binding.cfsqltype.findNoCase( "money" ) > 0 ||
+        arguments.binding.cfsqltype.findNoCase( "money4" ) > 0 ||
+        (
+            arguments.binding.cfsqltype.findNoCase( "numeric" ) > 0 && arguments.binding.value
+                .toString()
+                .findNoCase( "." ) > 0
+        );
+    }
+
+    private numeric function calculateNumberOfDecimalDigits( required struct binding ) {
+        var numString = arguments.binding.value.toString();
+        var numStringParts = listToArray( numString, "." );
+        if ( numStringParts.len() != 2 ) {
+            return 0;
+        }
+        var decimalPortion = numStringParts[ 2 ];
+        return len( decimalPortion );
     }
 
 }

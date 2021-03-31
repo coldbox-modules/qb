@@ -8,14 +8,15 @@ component {
 
     function configure() {
         settings = {
-            defaultGrammar: "AutoDiscover@qb",
-            defaultReturnFormat: "array",
-            preventDuplicateJoins: false,
-            strictDateDetection: false,
-            numericSQLType: "CF_SQL_NUMERIC"
+            "defaultGrammar": "AutoDiscover@qb",
+            "defaultReturnFormat": "array",
+            "preventDuplicateJoins": false,
+            "strictDateDetection": false,
+            "numericSQLType": "CF_SQL_NUMERIC",
+            "autoAddScale": true
         };
 
-        interceptorSettings = { customInterceptionPoints: "preQBExecute,postQBExecute" };
+        interceptorSettings = { "customInterceptionPoints": "preQBExecute,postQBExecute" };
     }
 
     function onLoad() {

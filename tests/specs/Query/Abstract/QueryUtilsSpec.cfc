@@ -66,6 +66,57 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( binding.list ).toBe( false );
                 expect( binding.null ).toBe( false );
             } );
+
+            it( "automatically sets a scale if needed", function() {
+                var binding = utils.extractBinding( { "value": 3.14159, "cfsqltype": "CF_SQL_DECIMAL" } );
+
+                expect( binding ).toBeStruct();
+                expect( binding.value ).toBe( 3.14159 );
+                expect( binding.cfsqltype ).toBe( "CF_SQL_DECIMAL" );
+                expect( binding ).toHaveKey( "scale" );
+                expect( binding.scale ).toBe( 5 );
+                expect( binding.list ).toBe( false );
+                expect( binding.null ).toBe( false );
+            } );
+
+            it( "does not set a scale for integers", function() {
+                var binding = utils.extractBinding( { "value": 3.14159, "cfsqltype": "CF_SQL_INTEGER" } );
+
+                expect( binding ).toBeStruct();
+                expect( binding.value ).toBe( 3.14159 );
+                expect( binding.cfsqltype ).toBe( "CF_SQL_INTEGER" );
+                expect( binding ).notToHaveKey( "scale" );
+                expect( binding.list ).toBe( false );
+                expect( binding.null ).toBe( false );
+            } );
+
+            it( "does not set a scale when autoSetScale is set to false", function() {
+                try {
+                    utils.setAutoAddScale( false );
+                    var binding = utils.extractBinding( { "value": 3.14159, "cfsqltype": "CF_SQL_DECIMAL" } );
+
+                    expect( binding ).toBeStruct();
+                    expect( binding.value ).toBe( 3.14159 );
+                    expect( binding.cfsqltype ).toBe( "CF_SQL_DECIMAL" );
+                    expect( binding ).notToHaveKey( "scale" );
+                    expect( binding.list ).toBe( false );
+                    expect( binding.null ).toBe( false );
+                } finally {
+                    utils.setAutoAddScale( true );
+                }
+            } );
+
+            it( "uses a passed in scale if provided", function() {
+                var binding = utils.extractBinding( { "value": 3.14159, "cfsqltype": "CF_SQL_DECIMAL", "scale": 2 } );
+
+                expect( binding ).toBeStruct();
+                expect( binding.value ).toBe( 3.14159 );
+                expect( binding.cfsqltype ).toBe( "CF_SQL_DECIMAL" );
+                expect( binding ).toHaveKey( "scale" );
+                expect( binding.scale ).toBe( 2 );
+                expect( binding.list ).toBe( false );
+                expect( binding.null ).toBe( false );
+            } );
         } );
 
         describe( "queryToArrayOfStructs()", function() {

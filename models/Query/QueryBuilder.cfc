@@ -2486,7 +2486,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return query
      */
     public any function updateOrInsert( required struct values, struct options = {}, boolean toSql = false ) {
-        if ( exists() ) {
+        if ( exists( options = arguments.options ) ) {
             return this.limit( 1 ).update( argumentCollection = arguments );
         }
 

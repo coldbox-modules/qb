@@ -224,7 +224,7 @@ component displayname="Grammar" accessors="true" singleton {
         if ( !query.getAggregate().isEmpty() ) {
             return "";
         }
-        var select = query.getDistinct() ? "SELECT DISTINCT " : "SELECT ";
+        var select = query.getDistinct() && query.getAggregate().isEmpty() ? "SELECT DISTINCT " : "SELECT ";
         return select & columns.map( wrapColumn ).toList( ", " );
     }
 
@@ -762,7 +762,7 @@ component displayname="Grammar" accessors="true" singleton {
         if ( aggregate.isEmpty() ) {
             return "";
         }
-        return "SELECT #uCase( aggregate.type )#(#wrapColumn( aggregate.column )#) AS ""aggregate""";
+        return "SELECT #uCase( aggregate.type )#(#query.getDistinct() ? "DISTINCT " : ""##wrapColumn( aggregate.column )#) AS ""aggregate""";
     }
 
     /**

@@ -533,6 +533,28 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );
+
+                it( "correctly orders a distinct count", function() {
+                    var builder = getBuilder();
+                    var expectedCount = 1;
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT COUNT(DISTINCT ""name"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder
+                        .from( "users" )
+                        .distinct()
+                        .count( "name" );
+
+                    expect( results ).toBe( expectedCount );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COUNT(DISTINCT ""name"") AS ""aggregate"" FROM ""users""", options: {} } );
+                } );
             } );
 
             describe( "max", function() {

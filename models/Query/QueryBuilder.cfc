@@ -1611,6 +1611,20 @@ component displayname="QueryBuilder" accessors="true" {
         return where( argumentCollection = arguments );
     }
 
+    /**
+     * Adds a WHERE NOT LIKE clause to the query.
+     *
+     * @column The name of the column with which to constrain the query.
+     * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function whereNotLike( column, value, string combinator = "and" ) {
+        arguments.operator = "not like";
+        return where( argumentCollection = arguments );
+    }
+
     /*******************************************************************************\
     |         GROUP BY / HAVING / ORDER BY / LIMIT / OFFSET clause functions        |
     \*******************************************************************************/

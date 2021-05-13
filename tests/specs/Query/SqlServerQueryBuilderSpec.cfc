@@ -260,6 +260,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM [users] WHERE [username] LIKE ?", bindings: [ "Jo%" ] };
     }
 
+    function whereNotLike() {
+        return { sql: "SELECT * FROM [users] WHERE [username] NOT LIKE ?", bindings: [ "Jo%" ] };
+    }
+
     function innerJoin() {
         return "SELECT * FROM [users] INNER JOIN [contacts] ON [users].[id] = [contacts].[id]";
     }

@@ -733,6 +733,14 @@ component extends="testbox.system.BaseSpec" {
                             }, whereLike() );
                         } );
                     } );
+
+                    describe( "where not like", function() {
+                        it( "can add not like statements using a shortcut method", function() {
+                            testCase( function( builder ) {
+                                builder.from( "users" ).whereNotLike( "username", "Jo%" );
+                            }, whereNotLike() );
+                        } );
+                    } );
                 } );
 
                 describe( "joins", function() {

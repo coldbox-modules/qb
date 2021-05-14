@@ -6,7 +6,10 @@
         }
     },
     "app":{
-        "cfengine":"lucee@5"
+        "cfengine":"adobe@2018"
     },
-    "directoryBrowsing":"true"
+    "directoryBrowsing":"true",
+    "JVM":{
+        "heapSize":"4096"
+    }
 }

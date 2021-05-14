@@ -764,11 +764,17 @@ component extends="testbox.system.BaseSpec" {
                         } );
                     } );
 
-                    describe( "where like", function() {
+                    describe( "where like shortcuts", function() {
                         it( "can add like statements using a shortcut method", function() {
                             testCase( function( builder ) {
                                 builder.from( "users" ).whereLike( "username", "Jo%" );
                             }, whereLike() );
+                        } );
+
+                        it( "can add where not like statements using a shortcut method", function() {
+                            testCase( function( builder ) {
+                                builder.from( "users" ).whereNotLike( "username", "Jo%" );
+                            }, whereNotLike() );
                         } );
                     } );
                 } );

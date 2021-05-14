@@ -111,6 +111,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             throw( type = "UnsupportedOperation", message = "This grammar does not support a RETURNING clause" );
         }
 
+        var multiple = arguments.values.len() > 1;
+
         var columnsString = arguments.columns
             .map( function( column ) {
                 return wrapColumn( column.formatted );
@@ -130,7 +132,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                     .toList( ", " ) & ")";
             } )
             .toList( " " );
-        return trim( "INSERT ALL #placeholderString# SELECT 1 FROM dual" );
+        return trim( "INSERT#multiple ? " ALL" : ""# #placeholderString##multiple ? " SELECT 1 FROM dual" : ""#" );
     }
 
     /**

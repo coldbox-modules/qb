@@ -610,14 +610,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function insertSingleColumn() {
-        return { sql: "INSERT ALL INTO ""USERS"" (""EMAIL"") VALUES (?) SELECT 1 FROM dual", bindings: [ "foo" ] };
+        return { sql: "INSERT INTO ""USERS"" (""EMAIL"") VALUES (?)", bindings: [ "foo" ] };
     }
 
     function insertMultipleColumns() {
-        return {
-            sql: "INSERT ALL INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?) SELECT 1 FROM dual",
-            bindings: [ "foo", "bar" ]
-        };
+        return { sql: "INSERT INTO ""USERS"" (""EMAIL"", ""NAME"") VALUES (?, ?)", bindings: [ "foo", "bar" ] };
     }
 
     function batchInsert() {
@@ -629,14 +626,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function insertWithRaw() {
         return {
-            sql: "INSERT ALL INTO ""USERS"" (""CREATED_DATE"", ""EMAIL"") VALUES (now(), ?) SELECT 1 FROM dual",
+            sql: "INSERT INTO ""USERS"" (""CREATED_DATE"", ""EMAIL"") VALUES (now(), ?)",
             bindings: [ "john@example.com" ]
         };
     }
 
     function insertWithNull() {
         return {
-            sql: "INSERT ALL INTO ""USERS"" (""EMAIL"", ""OPTIONAL_FIELD"") VALUES (?, ?) SELECT 1 FROM dual",
+            sql: "INSERT INTO ""USERS"" (""EMAIL"", ""OPTIONAL_FIELD"") VALUES (?, ?)",
             bindings: [ "john@example.com", "NULL" ]
         };
     }
@@ -672,7 +669,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function updateOrInsertNotExists() {
-        return { sql: "INSERT ALL INTO ""USERS"" (""NAME"") VALUES (?) SELECT 1 FROM dual", bindings: [ "baz" ] };
+        return { sql: "INSERT INTO ""USERS"" (""NAME"") VALUES (?)", bindings: [ "baz" ] };
     }
 
     function updateOrInsertExists() {

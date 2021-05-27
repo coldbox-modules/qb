@@ -170,6 +170,10 @@ component displayname="QueryBuilder" accessors="true" {
      */
     property name="updates" type="struct";
 
+    /**
+     * Used to quickly identify QueryBuilder instances
+     * instead of resorting to `isInstanceOf` which is slow.
+     */
     this.isBuilder = true;
 
     /**
@@ -572,30 +576,57 @@ component displayname="QueryBuilder" accessors="true" {
     |                               LOCK functions                                  |
     \*******************************************************************************/
 
+    /**
+     * Adds a custom lock directive to the query.
+     *
+     * @value The custom lock directive to add to the query.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function lock( required string value ) {
         variables.lockType = "custom";
         variables.lockValue = arguments.value;
         return this;
     }
 
+    /**
+     * Adds a nolock directive to the query.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function noLock() {
         variables.lockType = "nolock";
         variables.lockValue = "";
         return this;
     }
 
+    /**
+     * Adds a shared lock directive to the query.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function sharedLock() {
         variables.lockType = "shared";
         variables.lockValue = "";
         return this;
     }
 
+    /**
+     * Adds a lock for update directive to the query.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function lockForUpdate() {
         variables.lockType = "update";
         variables.lockValue = "";
         return this;
     }
 
+    /**
+     * Clears any lock directive on the query.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
     public QueryBuilder function clearLock() {
         variables.lockType = "none";
         variables.lockValue = "";

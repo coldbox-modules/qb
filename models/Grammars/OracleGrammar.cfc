@@ -8,7 +8,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return qb.models.Grammars.OracleGrammar
      */
     public OracleGrammar function init( qb.models.Query.QueryUtils utils ) {
-        super.init( argumentsCollection = arguments );
+        super.init( argumentCollection = arguments );
 
         variables.tableAliasOperator = " ";
 

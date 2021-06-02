@@ -10,6 +10,12 @@ component accessors="true" singleton {
     property name="grammar";
 
     /**
+     * A struct of default options for the query builder.
+     * These options will be merged with any options passed.
+     */
+    property name="defaultOptions";
+
+    /**
      * Default length for strings used by the Blueprint.
      * Can be overridden with `setDefaultStringLength( length )`
      */
@@ -19,11 +25,14 @@ component accessors="true" singleton {
      * Create a new schema builder.
      *
      * @grammar The specific grammar that will compile the builder statements.
+     * @defaultOptions  The default queryExecute options to use for this
+     *                  builder. This will be merged in each execution.
      *
      * @returns The schema builder instance.
      */
-    public SchemaBuilder function init( required any grammar ) {
+    public SchemaBuilder function init( required any grammar, defaultOptions = {} ) {
         variables.grammar = arguments.grammar;
+        variables.defaultOptions = arguments.defaultOptions;
         return this;
     }
 
@@ -44,6 +53,7 @@ component accessors="true" singleton {
         struct options = {},
         boolean execute = true
     ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "create" );
         blueprint.setCreating( true );
@@ -65,6 +75,7 @@ component accessors="true" singleton {
         struct options = {},
         boolean execute = true
     ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var query = new models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
@@ -95,6 +106,7 @@ component accessors="true" singleton {
         struct options = {},
         boolean execute = true
     ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var query = new models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
@@ -120,6 +132,7 @@ component accessors="true" singleton {
     }
 
     public Blueprint function dropView( required string view, struct options = {}, boolean execute = true ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "dropView" );
         blueprint.setTable( arguments.view );
@@ -150,6 +163,7 @@ component accessors="true" singleton {
      * @returns  The blueprint instance
      */
     public Blueprint function drop( required string table, struct options = {}, boolean execute = true ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
         blueprint.setTable( arguments.table );
@@ -173,6 +187,7 @@ component accessors="true" singleton {
      * @returns  The blueprint instance
      */
     public Blueprint function dropIfExists( required string table, struct options = {}, boolean execute = true ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
         blueprint.setTable( arguments.table );
@@ -204,6 +219,7 @@ component accessors="true" singleton {
         struct options = {},
         boolean execute = true
     ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( arguments.table );
         arguments.callback( blueprint );
@@ -233,6 +249,7 @@ component accessors="true" singleton {
         struct options = {},
         boolean execute = true
     ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( arguments.from );
         blueprint.addCommand( "renameTable", { to: arguments.to } );
@@ -263,6 +280,7 @@ component accessors="true" singleton {
         struct options = {},
         boolean execute = true
     ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         return rename( argumentCollection = arguments );
     }
 
@@ -282,6 +300,7 @@ component accessors="true" singleton {
         struct options = {},
         boolean execute = true
     ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var args = [ arguments.name ];
         if ( arguments.schema != "" ) {
             arrayAppend( args, arguments.schema );
@@ -317,6 +336,7 @@ component accessors="true" singleton {
         struct options = {},
         boolean execute = true
     ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var args = [ arguments.table, arguments.column ];
         if ( arguments.schema != "" ) {
             arrayAppend( args, arguments.schema );
@@ -343,6 +363,7 @@ component accessors="true" singleton {
      * @returns The array of executed statements.
      */
     public array function dropAllObjects( struct options = {}, boolean execute = true, string schema = "" ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema );
         if ( arguments.execute ) {
             statements.each( function( statement ) {
@@ -361,6 +382,7 @@ component accessors="true" singleton {
      * @returns The executed sql statement.
      */
     public string function enableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var statement = getGrammar().compileEnableForeignKeyConstraints( arguments.options );
         if ( arguments.execute ) {
             getGrammar().runQuery(
@@ -382,6 +404,7 @@ component accessors="true" singleton {
      * @returns The executed sql statement.
      */
     public string function disableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
         var statement = getGrammar().compileDisableForeignKeyConstraints( arguments.options );
         if ( arguments.execute ) {
             getGrammar().runQuery(

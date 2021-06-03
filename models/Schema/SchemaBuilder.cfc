@@ -30,7 +30,7 @@ component accessors="true" singleton {
      *
      * @returns The schema builder instance.
      */
-    public SchemaBuilder function init( required any grammar, defaultOptions = {} ) {
+    public SchemaBuilder function init( required any grammar, struct defaultOptions = {} ) {
         variables.grammar = arguments.grammar;
         variables.defaultOptions = arguments.defaultOptions;
         return this;

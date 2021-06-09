@@ -3,7 +3,8 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "join clause", function() {
             beforeEach( function() {
-                variables.query = getMockBox().createMock( "qb.models.Query.QueryBuilder" );
+                variables.mockGrammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" );
+                variables.qb = new qb.models.Query.QueryBuilder( variables.mockGrammar );
             } );
             describe( "initialization", function() {
                 it( "requires a parentQuery, type, and a table", function() {
@@ -20,23 +21,23 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "validates the type is a valid sql join type", function() {
                     expect( function() {
-                        new qb.models.Query.JoinClause( query, "gibberish", "sometable" );
+                        new qb.models.Query.JoinClause( qb, "gibberish", "sometable" );
                     } ).toThrow();
                     expect( function() {
-                        new qb.models.Query.JoinClause( query, "left typo", "sometable" );
+                        new qb.models.Query.JoinClause( qb, "left typo", "sometable" );
                     } ).toThrow();
+                    // expect( function() {
+                    new qb.models.Query.JoinClause( qb, "left", "sometable" );
+                    // } ).notToThrow();
                     expect( function() {
-                        new qb.models.Query.JoinClause( query, "left", "sometable" );
-                    } ).notToThrow();
-                    expect( function() {
-                        new qb.models.Query.JoinClause( query, "left outer", "sometable" );
+                        new qb.models.Query.JoinClause( qb, "left outer", "sometable" );
                     } ).notToThrow();
                 } );
             } );
 
             describe( "adding join conditions", function() {
                 beforeEach( function() {
-                    variables.join = new qb.models.Query.JoinClause( query, "inner", "second" );
+                    variables.join = new qb.models.Query.JoinClause( qb, "inner", "second" );
                     getMockBox().prepareMock( join );
                     join.$property( propertyName = "utils", mock = new qb.models.Query.QueryUtils() );
                 } );
@@ -246,7 +247,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( "preventDuplicateJoins", function() {
                     beforeEach( function() {
                         variables.qb = new qb.models.Query.QueryBuilder( preventDuplicateJoins = true );
-                        variables.joinOther = new qb.models.Query.JoinClause( query, "inner", "second" );
+                        variables.joinOther = new qb.models.Query.JoinClause( qb, "inner", "second" );
                         getMockBox().prepareMock( joinOther );
                     } );
 

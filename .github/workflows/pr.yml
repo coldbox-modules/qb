@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Tests
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         cfengine: ["lucee@5", "adobe@2016", "adobe@2018"]
         coldbox: ["coldbox@5", "coldbox@6"]
@@ -48,7 +48,7 @@ jobs:
       
       - name: Start server
         env:
-          lucee.full.null.​support: ${{ matrix.fullNullSupport }}
+          LUCEE_FULL_NULL_SUPPORT: ${{ matrix.fullNullSupport }}
         run: box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
 
       - name: Run TestBox Tests

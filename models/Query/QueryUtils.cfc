@@ -378,6 +378,15 @@ component displayname="QueryUtils" accessors="true" {
                 if ( !local.result ) {
                     return false;
                 }
+            } else if (
+                ( isClosure( arguments.LeftStruct[ key ] ) || isCustomFunction( arguments.LeftStruct[ key ] ) ) &&
+                ( isClosure( arguments.RightStruct[ key ] ) || isCustomFunction( arguments.RightStruct[ key ] ) )
+            ) {
+                var leftFn = arguments.LeftStruct[ key ];
+                var rightFn = arguments.RightStruct[ key ];
+                if ( leftFn() != rightFn() ) {
+                    return false;
+                }
             }
             // A simple type comparison here
             else {

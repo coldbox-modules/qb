@@ -1560,7 +1560,11 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public QueryBuilder function forNestedWhere() {
         var query = newQuery();
-        return query.from( getFrom() );
+        return query.from( {
+            toString: function() {
+                return getFrom();
+            }
+        } );
     }
 
     /**
@@ -2424,7 +2428,7 @@ component displayname="QueryBuilder" accessors="true" {
         var columns = arguments.values[ 1 ]
             .keyArray()
             .map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
+                var formatted = listLast( evaluateToString( applyColumnFormatter( column ) ), "." );
                 return { "original": column, "formatted": formatted };
             } );
         columns.sort( function( a, b ) {
@@ -2462,7 +2466,7 @@ component displayname="QueryBuilder" accessors="true" {
     function returning( required any columns ) {
         variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
         variables.returning = variables.returning.map( function( column ) {
-            return listLast( applyColumnFormatter( column ), "." );
+            return listLast( evaluateToString( applyColumnFormatter( column ) ), "." );
         } );
         return this;
     }
@@ -2483,7 +2487,7 @@ component displayname="QueryBuilder" accessors="true" {
         var updateArray = arguments.values
             .keyArray()
             .map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
+                var formatted = listLast( evaluateToString( applyColumnFormatter( column ) ), "." );
                 return { original: column, formatted: formatted };
             } );
 
@@ -2861,7 +2865,7 @@ component displayname="QueryBuilder" accessors="true" {
         struct options = {}
     ) {
         return withReturnFormat( "query", function() {
-            var formattedColumn = applyColumnFormatter( column );
+            var formattedColumn = evaluateToString( applyColumnFormatter( column ) );
             select( formattedColumn );
             var data = first( options = options );
             if ( structIsEmpty( data ) ) {
@@ -2889,7 +2893,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public array function values( required string column, struct options = {} ) {
         return withReturnFormat( "query", function() {
-            var formattedColumn = applyColumnFormatter( column );
+            var formattedColumn = evaluateToString( applyColumnFormatter( column ) );
             select( formattedColumn );
             var result = get( options = options );
             var columnName = listLast( formattedColumn, "." );
@@ -3234,7 +3238,7 @@ component displayname="QueryBuilder" accessors="true" {
                 return trim( item );
             } );
         } catch ( any e ) {
-            return arguments.listOrArray;
+            return [ arguments.listOrArray ];
         }
     }
 
@@ -3384,7 +3388,18 @@ component displayname="QueryBuilder" accessors="true" {
      * @returns  The formatted column.
      */
     function applyColumnFormatter( column ) {
-        return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
+        return isSimpleValue( column ) ? {
+            toString: function() {
+                return variables.columnFormatter( column );
+            }
+        } : column;
+    }
+
+    public string function evaluateToString( required any value ) {
+        while ( !isValid( "string", arguments.value ) ) {
+            arguments.value = arguments.value.toString();
+        }
+        return arguments.value;
     }
 
 }

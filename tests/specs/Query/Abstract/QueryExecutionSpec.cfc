@@ -78,7 +78,7 @@ component extends="testbox.system.BaseSpec" {
 
                     builder.select( "id" ).from( "users" );
                     builder.get( "name" );
-                    expect( builder.getColumns() ).toBe( [ "id" ] );
+                    expect( builder.getColumns().map( builder.evaluateToString ) ).toBe( [ "id" ] );
                 } );
             } );
 
@@ -504,7 +504,7 @@ component extends="testbox.system.BaseSpec" {
                     builder.select( [ "id", "name" ] ).from( "users" );
                     builder.from( "users" ).count();
 
-                    expect( builder.getColumns() ).toBe( [ "id", "name" ] );
+                    expect( builder.getColumns().map( builder.evaluateToString ) ).toBe( [ "id", "name" ] );
                 } );
 
                 it( "ignores orders in the aggregate query and sets them back afterward", function() {
@@ -518,7 +518,14 @@ component extends="testbox.system.BaseSpec" {
                     builder.from( "users" ).orderBy( "name" );
                     builder.from( "users" ).count();
 
-                    expect( builder.getOrders() ).toBe( [ { "column": "name", "direction": "asc" } ] );
+                    expect(
+                        builder
+                            .getOrders()
+                            .map( function( order ) {
+                                order.column = builder.evaluateToString( order.column );
+                                return order;
+                            } )
+                    ).toBe( [ { "column": "name", "direction": "asc" } ] );
                 } );
 
                 it( "should clear out the aggregate properties after an aggregate has been executed", function() {

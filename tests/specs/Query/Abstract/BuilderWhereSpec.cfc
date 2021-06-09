@@ -3,19 +3,19 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "where methods", function() {
             beforeEach( function() {
-                variables.query = new qb.models.Query.QueryBuilder();
-                getMockBox().prepareMock( query );
-                query.$property( propertyName = "utils", mock = new qb.models.Query.QueryUtils() );
+                variables.qb = new qb.models.Query.QueryBuilder();
+                getMockBox().prepareMock( qb );
+                qb.$property( propertyName = "utils", mock = new qb.models.Query.QueryUtils() );
             } );
 
             it( "defaults to empty", function() {
-                expect( query.getWheres() ).toBeEmpty( "Default `wheres` should be empty." );
+                expect( qb.getWheres().map( resolveWheres ) ).toBeEmpty( "Default `wheres` should be empty." );
             } );
 
             describe( "where", function() {
                 it( "specifices a where clause", function() {
-                    query.where( "::some column::", "=", "::some value::" );
-                    expect( query.getWheres() ).toBe( [
+                    qb.where( "::some column::", "=", "::some value::" );
+                    expect( qb.getWheres().map( resolveWheres ) ).toBe( [
                         {
                             column: "::some column::",
                             operator: "=",
@@ -27,8 +27,8 @@ component extends="testbox.system.BaseSpec" {
                 } );
 
                 it( "only infers the = when only two arguments", function() {
-                    query.where( "::some column::", "::some value::" );
-                    expect( query.getWheres() ).toBe( [
+                    qb.where( "::some column::", "::some value::" );
+                    expect( qb.getWheres().map( resolveWheres ) ).toBe( [
                         {
                             column: "::some column::",
                             operator: "=",
@@ -40,15 +40,14 @@ component extends="testbox.system.BaseSpec" {
                 } );
 
                 it( "can be specify the boolean combinator", function() {
-                    query
-                        .where( "::some column::", "=", "::some value::" )
+                    qb.where( "::some column::", "=", "::some value::" )
                         .where(
                             "::another column::",
                             "=",
                             "::another value::",
                             "or"
                         );
-                    expect( query.getWheres() ).toBe( [
+                    expect( qb.getWheres().map( resolveWheres ) ).toBe( [
                         {
                             column: "::some column::",
                             operator: "=",
@@ -68,9 +67,9 @@ component extends="testbox.system.BaseSpec" {
 
                 describe( "specialized where methods", function() {
                     it( "has a whereIn shortcut", function() {
-                        query.whereIn( "::some column::", [ "::value one::", "::value two::" ] );
+                        qb.whereIn( "::some column::", [ "::value one::", "::value two::" ] );
 
-                        var wheres = query.getWheres();
+                        var wheres = qb.getWheres().map( resolveWheres );
                         expect( wheres ).toBeArray();
                         expect( arrayLen( wheres ) ).toBe( 1, "1 where clause should exist" );
                         var where = wheres[ 1 ];
@@ -81,9 +80,9 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "has a whereNotIn shortcut", function() {
-                        query.whereNotIn( "::some column::", [ "::value one::", "::value two::" ] );
+                        qb.whereNotIn( "::some column::", [ "::value one::", "::value two::" ] );
 
-                        var wheres = query.getWheres();
+                        var wheres = qb.getWheres().map( resolveWheres );
                         expect( wheres ).toBeArray();
                         expect( arrayLen( wheres ) ).toBe( 1, "1 where clause should exist" );
                         var where = wheres[ 1 ];
@@ -94,9 +93,9 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "has a orWhere shortcut", function() {
-                        query.orWhere( "::some column::", "<>", "::some value::" );
+                        qb.orWhere( "::some column::", "<>", "::some value::" );
 
-                        var wheres = query.getWheres();
+                        var wheres = qb.getWheres().map( resolveWheres );
                         expect( wheres ).toBeArray();
                         expect( arrayLen( wheres ) ).toBe( 1, "1 where clause should exist" );
                         var where = wheres[ 1 ];
@@ -110,9 +109,9 @@ component extends="testbox.system.BaseSpec" {
 
                 describe( "bindings", function() {
                     it( "adds the bindings for where statements received", function() {
-                        query.where( "::some column::", "=", "::some value::" );
+                        qb.where( "::some column::", "=", "::some value::" );
 
-                        var bindings = query.getRawBindings().where;
+                        var bindings = qb.getRawBindings().where;
                         expect( bindings ).toBeArray();
                         expect( arrayLen( bindings ) ).toBe( 1, "1 binding should exist" );
                         var binding = bindings[ 1 ];
@@ -123,9 +122,9 @@ component extends="testbox.system.BaseSpec" {
 
                 describe( "dynamic where statements", function() {
                     it( "translates whereColumn in to where(""column""", function() {
-                        query.whereSomeColumn( "::some value::" );
+                        qb.whereSomeColumn( "::some value::" );
 
-                        expect( query.getWheres() ).toBe( [
+                        expect( qb.getWheres().map( resolveWheres ) ).toBe( [
                             {
                                 column: "somecolumn",
                                 operator: "=",
@@ -137,9 +136,9 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "also translates orWhereColumn in to orWhere(""column""", function() {
-                        query.orWhereSomeColumn( "::some value::" );
+                        qb.orWhereSomeColumn( "::some value::" );
 
-                        expect( query.getWheres() ).toBe( [
+                        expect( qb.getWheres().map( resolveWheres ) ).toBe( [
                             {
                                 column: "somecolumn",
                                 operator: "=",
@@ -151,7 +150,7 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "returns the query instance to continue chaining", function() {
-                        var q = query.whereSomeColumn( "::some value::" );
+                        var q = qb.whereSomeColumn( "::some value::" );
                         expect( q ).toBeInstanceOf( "QueryBuilder" );
                     } );
                 } );
@@ -159,12 +158,19 @@ component extends="testbox.system.BaseSpec" {
                 describe( "operators", function() {
                     it( "throws an exception on illegal operators", function() {
                         expect( function() {
-                            query.where( "::some column::", "::invalid operator::", "::some value::" );
+                            qb.where( "::some column::", "::invalid operator::", "::some value::" );
                         } ).toThrow( type = "InvalidSQLType", regex = "Illegal operator" );
                     } );
                 } );
             } );
         } );
+    }
+
+    private struct function resolveWheres( where ) {
+        if ( where.keyExists( "column" ) ) {
+            where.column = variables.qb.evaluateToString( where.column );
+        }
+        return where;
     }
 
 }

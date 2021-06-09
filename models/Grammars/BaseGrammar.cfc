@@ -856,7 +856,7 @@ component displayname="Grammar" accessors="true" singleton {
             return trim( arguments.column.getSQL() );
         }
 
-        arguments.column = trim( arguments.column );
+        arguments.column = trim( evaluateToString( arguments.column ) );
         var alias = "";
         if ( arguments.column.findNoCase( " as " ) > 0 ) {
             var matches = reFindNoCase(
@@ -1558,6 +1558,13 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileAddType() {
         return "";
+    }
+
+    public string function evaluateToString( required any value ) {
+        while ( !isValid( "string", arguments.value ) ) {
+            arguments.value = arguments.value.toString();
+        }
+        return arguments.value;
     }
 
 }

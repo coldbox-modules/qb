@@ -173,8 +173,8 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                     .where( "bar", "baz" );
                 var queryTwo = queryOne.clone();
                 expect( queryTwo.getFrom() ).toBe( "foo" );
-                expect( queryTwo.getColumns() ).toBe( [ "one", "two" ] );
-                expect( queryTwo.getWheres() ).toBe( [
+                expect( queryTwo.getColumns().map( queryTwo.evaluateToString ) ).toBe( [ "one", "two" ] );
+                expect( queryTwo.getWheres().map( resolveWheres( queryTwo ) ) ).toBe( [
                     {
                         column: "bar",
                         combinator: "and",
@@ -202,8 +202,18 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
         !server.keyExists( "lucee" ) &&
         left( server.coldfusion.productversion, 4 ) == "2016";
     }
+
     private boolean function isLucee() {
         return server.keyExists( "lucee" );
+    }
+
+    private function function resolveWheres( qb ) {
+        return function( where ) {
+            if ( where.keyExists( "column" ) ) {
+                where.column = qb.evaluateToString( where.column );
+            }
+            return where;
+        };
     }
 
 }

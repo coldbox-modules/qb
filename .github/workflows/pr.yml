@@ -21,6 +21,10 @@ jobs:
       matrix:
         cfengine: ["lucee@5", "adobe@2016", "adobe@2018"]
         coldbox: ["coldbox@5", "coldbox@6"]
+        fullNullSupport: [false]
+        include:
+          - cfengine: "lucee@5"
+            fullNullSupport: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -39,6 +43,8 @@ jobs:
           box install ${{ matrix.coldbox }} --noSave
       
       - name: Start server
+        env:
+          lucee.full.null.​support: ${{ matrix.fullNullSupport }}
         run: box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
 
       - name: Run TestBox Tests

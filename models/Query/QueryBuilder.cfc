@@ -264,7 +264,7 @@ component displayname="QueryBuilder" accessors="true" {
         returnFormat = "array",
         preventDuplicateJoins = false,
         paginationCollector = new cbpaginator.models.Pagination(),
-        columnFormatter = null,
+        columnFormatter,
         parentQuery,
         defaultOptions = {}
     ) {

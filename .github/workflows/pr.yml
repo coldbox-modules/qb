@@ -24,6 +24,10 @@ jobs:
         fullNullSupport: [false]
         include:
           - cfengine: "lucee@5"
+            coldbox: "coldbox@5"
+            fullNullSupport: true
+          - cfengine: "lucee@5"
+            coldbox: "coldbox@6"
             fullNullSupport: true
     steps:
       - name: Checkout Repository

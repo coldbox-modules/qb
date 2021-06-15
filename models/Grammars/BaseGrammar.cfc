@@ -33,6 +33,14 @@ component displayname="Grammar" accessors="true" singleton {
     property name="tableAliasOperator" type="string" default=" AS ";
 
     /**
+     * columnFormatter callback
+     * If provided, each column is passed to it before being added to the query.
+     * Provides a hook for libraries like Quick to influence columns names.
+     * @default Identity
+     */
+    property name="columnFormatter";
+
+    /**
      * The different components of a select statement in the order of compilation.
      */
     variables.selectComponents = [
@@ -58,9 +66,15 @@ component displayname="Grammar" accessors="true" singleton {
      *
      * @return qb.models.Grammars.BaseGrammar
      */
-    public BaseGrammar function init( qb.models.Query.QueryUtils utils ) {
+    public BaseGrammar function init( qb.models.Query.QueryUtils utils, columnFormatter ) {
         param arguments.utils = new qb.models.Query.QueryUtils();
+        if ( isNull( arguments.columnFormatter ) ) {
+            arguments.columnFormatter = function( column ) {
+                return column;
+            };
+        }
         variables.utils = arguments.utils;
+        variables.columnFormatter = arguments.columnFormatter;
         variables.tablePrefix = "";
         variables.tableAliasOperator = " AS ";
         // These are overwritten by WireBox, if it exists.
@@ -694,7 +708,8 @@ component displayname="Grammar" accessors="true" singleton {
     public string function compileInsert( required any query, required array columns, required array values ) {
         var columnsString = arguments.columns
             .map( function( column ) {
-                return wrapColumn( column.formatted );
+                var wrapped = wrapColumn( column.formatted );
+                return listLen( wrapped, "." ) > 1 ? listRest( wrapped, "." ) : wrapped;
             } )
             .toList( ", " );
 
@@ -856,7 +871,7 @@ component displayname="Grammar" accessors="true" singleton {
             return trim( arguments.column.getSQL() );
         }
 
-        arguments.column = trim( arguments.column );
+        arguments.column = trim( applyColumnFormatter( arguments.column ) );
         var alias = "";
         if ( arguments.column.findNoCase( " as " ) > 0 ) {
             var matches = reFindNoCase(
@@ -1558,6 +1573,17 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileAddType() {
         return "";
+    }
+
+    /**
+     * Applies a column formatter to a column, if one is set.
+     *
+     * @column   The column to format.
+     *
+     * @returns  The formatted column.
+     */
+    public any function applyColumnFormatter( column ) {
+        return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
     }
 
 }

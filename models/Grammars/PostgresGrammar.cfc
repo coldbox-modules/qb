@@ -35,7 +35,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     public string function compileInsert( required QueryBuilder query, required array columns, required array values ) {
         var returningColumns = query
             .getReturning()
-            .map( wrapColumn )
+            .map( function( column ) {
+                var formatted = wrapColumn( column );
+                return listLen( formatted, "." ) > 1 ? listRest( formatted, "." ) : formatted;
+            } )
             .toList( ", " );
         var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
         return super.compileInsert( argumentCollection = arguments ) & returningClause;

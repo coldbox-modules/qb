@@ -3,7 +3,8 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "join clause", function() {
             beforeEach( function() {
-                variables.query = getMockBox().createMock( "qb.models.Query.QueryBuilder" );
+                variables.grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" );
+                variables.query = new qb.models.Query.QueryBuilder( variables.grammar );
             } );
             describe( "initialization", function() {
                 it( "requires a parentQuery, type, and a table", function() {

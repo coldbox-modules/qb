@@ -2113,6 +2113,7 @@ component extends="testbox.system.BaseSpec" {
             expect( getTestBindings( builder ) ).toBe( expected.bindings );
         } catch ( any e ) {
             if ( !isSimpleValue( expected ) && structKeyExists( expected, "exception" ) ) {
+                debug( e );
                 expect( e.type ).toBe( expected.exception );
                 return;
             }

@@ -280,6 +280,7 @@ component displayname="QueryBuilder" accessors="true" {
             };
         }
         setPaginationCollector( arguments.paginationCollector );
+        variables.grammar.setColumnFormatter( arguments.columnFormatter );
         setColumnFormatter( arguments.columnFormatter );
         if ( !isNull( arguments.parentQuery ) ) {
             setParentQuery( arguments.parentQuery );
@@ -365,9 +366,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function select( any columns = "*" ) {
-        variables.columns = normalizeToArray( arguments.columns ).map( function( column ) {
-            return applyColumnFormatter( column );
-        } );
+        variables.columns = normalizeToArray( arguments.columns );
         if ( variables.columns.isEmpty() ) {
             variables.columns = [ "*" ];
         }
@@ -414,9 +413,7 @@ component displayname="QueryBuilder" accessors="true" {
         ) {
             variables.columns = [];
         }
-        var newColumns = normalizeToArray( arguments.columns ).map( function( column ) {
-            return applyColumnFormatter( column );
-        } );
+        var newColumns = normalizeToArray( arguments.columns );
         arrayAppend( variables.columns, newColumns, true );
         return this;
     }
@@ -1248,7 +1245,7 @@ component displayname="QueryBuilder" accessors="true" {
         arrayAppend(
             variables.wheres,
             {
-                column: applyColumnFormatter( arguments.column ),
+                column: arguments.column,
                 operator: arguments.operator,
                 value: arguments.value,
                 combinator: arguments.combinator,
@@ -1302,7 +1299,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
         variables.wheres.append( {
             type: "sub",
-            column: applyColumnFormatter( arguments.column ),
+            column: arguments.column,
             operator: arguments.operator,
             query: arguments.query,
             combinator: arguments.combinator
@@ -1355,7 +1352,7 @@ component displayname="QueryBuilder" accessors="true" {
         var type = negate ? "notIn" : "in";
         variables.wheres.append( {
             type: type,
-            column: applyColumnFormatter( arguments.column ),
+            column: arguments.column,
             values: arguments.values,
             combinator: arguments.combinator
         } );
@@ -1396,7 +1393,7 @@ component displayname="QueryBuilder" accessors="true" {
         var type = negate ? "notInSub" : "inSub";
         variables.wheres.append( {
             type: type,
-            column: applyColumnFormatter( arguments.column ),
+            column: arguments.column,
             query: arguments.query,
             combinator: arguments.combinator
         } );
@@ -1466,9 +1463,9 @@ component displayname="QueryBuilder" accessors="true" {
 
         variables.wheres.append( {
             type: "column",
-            first: applyColumnFormatter( arguments.first ),
+            first: arguments.first,
             operator: arguments.operator,
-            second: applyColumnFormatter( arguments.second ),
+            second: arguments.second,
             combinator: arguments.combinator
         } );
 
@@ -1582,7 +1579,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         var type = negate ? "notNull" : "null";
-        variables.wheres.append( { type: type, column: applyColumnFormatter( arguments.column ), combinator: arguments.combinator } );
+        variables.wheres.append( { type: type, column: arguments.column, combinator: arguments.combinator } );
         return this;
     }
 
@@ -1674,7 +1671,7 @@ component displayname="QueryBuilder" accessors="true" {
 
         variables.wheres.append( {
             type: type,
-            column: applyColumnFormatter( arguments.column ),
+            column: arguments.column,
             start: arguments.start,
             end: arguments.end,
             combinator: arguments.combinator
@@ -1744,7 +1741,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function groupBy( required groups ) {
         var groupBys = normalizeToArray( arguments.groups );
         for ( var groupBy in groupBys ) {
-            variables.groups.append( applyColumnFormatter( groupBy ) );
+            variables.groups.append( groupBy );
         }
         return this;
     }
@@ -1778,7 +1775,7 @@ component displayname="QueryBuilder" accessors="true" {
         arrayAppend(
             variables.havings,
             {
-                column: applyColumnFormatter( arguments.column ),
+                column: arguments.column,
                 operator: arguments.operator,
                 value: arguments.value,
                 combinator: arguments.combinator
@@ -1918,7 +1915,7 @@ component displayname="QueryBuilder" accessors="true" {
             }
 
             // now append the simple value column name and determined direction
-            variables.orders.append( { direction: dir, column: applyColumnFormatter( colName ) } );
+            variables.orders.append( { direction: dir, column: colName } );
             return this;
         }
 
@@ -1931,7 +1928,7 @@ component displayname="QueryBuilder" accessors="true" {
                 var dir = (
                     structKeyExists( column, "direction" ) && arrayFindNoCase( variables.directions, column.direction )
                 ) ? column.direction : direction;
-                variables.orders.append( { direction: dir, column: applyColumnFormatter( column.column ) } );
+                variables.orders.append( { direction: dir, column: column.column } );
             }
             return this;
         }
@@ -1941,12 +1938,12 @@ component displayname="QueryBuilder" accessors="true" {
             // assume position 1 is the column name and position 2 if it exists and is a valid direction ( asc | desc ) use it.
             variables.orders.append( {
                 direction: ( arrayLen( column ) == 2 && arrayFindNoCase( variables.directions, column[ 2 ] ) ) ? column[ 2 ] : direction,
-                column: applyColumnFormatter( column[ 1 ] )
+                column: column[ 1 ]
             } );
             return this;
         }
 
-        variables.orders.append( { direction: direction, column: applyColumnFormatter( column ) } );
+        variables.orders.append( { direction: direction, column: column } );
         return this;
     }
 
@@ -2165,7 +2162,7 @@ component displayname="QueryBuilder" accessors="true" {
             {
                 name: arguments.name,
                 query: arguments.input,
-                columns: arguments.columns.map( applyColumnFormatter ),
+                columns: arguments.columns,
                 recursive: arguments.recursive
             }
         );
@@ -2461,9 +2458,6 @@ component displayname="QueryBuilder" accessors="true" {
 
     function returning( required any columns ) {
         variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
-        variables.returning = variables.returning.map( function( column ) {
-            return listLast( applyColumnFormatter( column ), "." );
-        } );
         return this;
     }
 
@@ -2483,6 +2477,7 @@ component displayname="QueryBuilder" accessors="true" {
         var updateArray = arguments.values
             .keyArray()
             .map( function( column ) {
+                // TODO: Fix this
                 var formatted = listLast( applyColumnFormatter( column ), "." );
                 return { original: column, formatted: formatted };
             } );
@@ -3164,6 +3159,26 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    public QueryBuilder function setColumnFormatter( required function columnFormatter ) {
+        variables.grammar.setColumnFormatter( arguments.columnFormatter );
+        return this;
+    }
+
+    public any function getColumnFormatter() {
+        return variables.grammar.getColumnFormatter();
+    }
+
+    /**
+     * Applies a column formatter to a column, if one is set.
+     *
+     * @column   The column to format.
+     *
+     * @returns  The formatted column.
+     */
+    private any function applyColumnFormatter( column ) {
+        return variables.grammar.applyColumnFormatter( argumentCollection = arguments );
+    }
+
     /**
      * Runs the code inside the callback with the return format specified and then sets the return format back to its original value.
      *
@@ -3374,17 +3389,6 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         throw( type = "QBMissingMethod", message = "Method does not exist on QueryBuilder [#missingMethodName#]" );
-    }
-
-    /**
-     * Applies a column formatter to a column, if one is set.
-     *
-     * @column   The column to format.
-     *
-     * @returns  The formatted column.
-     */
-    function applyColumnFormatter( column ) {
-        return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
     }
 
 }

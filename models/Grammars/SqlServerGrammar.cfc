@@ -36,13 +36,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     public string function compileInsert( required query, required array columns, required array values ) {
         var columnsString = arguments.columns
             .map( function( column ) {
-                return wrapColumn( column.formatted );
+                var formatted = wrapColumn( column.formatted );
+                return listLen( formatted, "." ) > 1 ? listRest( formatted, "." ) : formatted;
             } )
             .toList( ", " );
         var returningColumns = query
             .getReturning()
             .map( function( column ) {
-                return "INSERTED." & wrapColumn( column );
+                var formatted = wrapColumn( column );
+                return "INSERTED." & ( listLen( formatted, "." ) > 1 ? listRest( formatted, "." ) : formatted );
             } )
             .toList( ", " );
         var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";

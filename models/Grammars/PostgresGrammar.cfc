@@ -10,7 +10,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     public PostgresGrammar function init( qb.models.Query.QueryUtils utils ) {
         super.init( argumentCollection = arguments );
         
-        variables.cteColumnsRequireParentheses = false;
+        variables.cteColumnsRequireParentheses = true;
 
         return this;
     }

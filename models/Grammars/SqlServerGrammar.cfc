@@ -24,6 +24,22 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         "limitValue"
     ];
 
+
+    /**
+     * Creates a new SQL Server Query Grammar.
+     *
+     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
+     *
+     * @return qb.models.Grammars.SqlServerGrammar
+     */
+    public SqlServerGrammar function init( qb.models.Query.QueryUtils utils ) {
+        super.init( argumentCollection = arguments );
+
+        variables.cteColumnsRequireParentheses = false;
+
+        return this;
+    }
+
     /**
      * Compile a Builder's query into an insert string.
      *

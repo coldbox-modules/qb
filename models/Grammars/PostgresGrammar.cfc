@@ -1,6 +1,21 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     /**
+     * Creates a new Postgres Query Grammar.
+     *
+     * @utils A collection of query utilities. Default: qb.models.Query.QueryUtils
+     *
+     * @return qb.models.Grammars.PostgresGrammar
+     */
+    public PostgresGrammar function init( qb.models.Query.QueryUtils utils ) {
+        super.init( argumentCollection = arguments );
+        
+        variables.cteColumnsRequireParentheses = false;
+
+        return this;
+    }
+    
+    /**
      * Compiles the lock portion of a sql statement.
      *
      * @query The Builder instance.

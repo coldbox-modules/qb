@@ -201,11 +201,7 @@ component displayname="Grammar" accessors="true" singleton {
                 hasRecursion = true;
             }
 
-            return wrapColumn( arguments.commonTable.name ) & (
-                len( columns ) ? " " & ( variables.cteColumnsRequireParentheses ? "(" : "" ) & columns & (
-                    variables.cteColumnsRequireParentheses ? ")" : ""
-                ) : ""
-            ) & " AS (" & sql & ")";
+            return wrapColumn( arguments.commonTable.name ) & ( len( columns ) ? " " & ( variables.cteColumnsRequireParentheses ? "(" : "" ) & columns & ( variables.cteColumnsRequireParentheses ? ")" : "" )  : "" ) & " AS (" & sql & ")";
         } );
 
         /*

@@ -546,6 +546,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function commonTableExpressionWithRecursiveWithColumns() {
+        return {
+            sql: "WITH RECURSIVE `UsersCTE` `usersId`,`contactsId` AS (SELECT `users`.`id` AS `usersId`, `contacts`.`id` AS `contactsId` FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)",
+            bindings: [ 25, 1, 2 ]
+        };
+    }
+
     function commonTableExpressionWithRecursive() {
         return {
             sql: "WITH RECURSIVE `UsersCTE` AS (SELECT * FROM `users` INNER JOIN `contacts` ON `users`.`id` = `contacts`.`id` WHERE `users`.`age` > ?) SELECT * FROM `UsersCTE` WHERE `user`.`id` NOT IN (?, ?)",

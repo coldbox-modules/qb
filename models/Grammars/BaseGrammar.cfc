@@ -63,6 +63,7 @@ component displayname="Grammar" accessors="true" singleton {
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
         variables.tableAliasOperator = " AS ";
+        variables.cteColumnsRequireParentheses = false;
         // These are overwritten by WireBox, if it exists.
         variables.interceptorService = {
             "processState": function() {
@@ -200,7 +201,11 @@ component displayname="Grammar" accessors="true" singleton {
                 hasRecursion = true;
             }
 
-            return wrapColumn( arguments.commonTable.name ) & ( len( columns ) ? " " & columns : "" ) & " AS (" & sql & ")";
+            return wrapColumn( arguments.commonTable.name ) & (
+                len( columns ) ? " " & ( variables.cteColumnsRequireParentheses ? "(" : "" ) & columns & (
+                    variables.cteColumnsRequireParentheses ? ")" : ""
+                ) : ""
+            ) & " AS (" & sql & ")";
         } );
 
         /*
@@ -890,7 +895,7 @@ component displayname="Grammar" accessors="true" singleton {
      *
      * @return string
      */
-    public string function wrapValue( required any value ) {
+    function wrapValue( required any value ) {
         if ( value == "*" ) {
             return value;
         }

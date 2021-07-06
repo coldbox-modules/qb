@@ -1832,6 +1832,26 @@ component extends="testbox.system.BaseSpec" {
                         }, commonTableExpressionWithRecursive() );
                     } );
 
+                    it( "properly handles recursive CTEs with included columns", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .withRecursive(
+                                    "UsersCTE",
+                                    function( q ) {
+                                        q.select( [ "users.id AS usersId", "contacts.id AS contactsId" ] )
+                                            .from( "users" )
+                                            .join( "contacts", "users.id", "contacts.id" )
+                                            .where( "users.age", ">", 25 )
+                                        ;
+                                    },
+                                    [ "usersId", "contactsId" ]
+                                )
+                                .from( "UsersCTE" )
+                                .whereNotIn( "user.id", [ 1, 2 ] )
+                            ;
+                        }, commonTableExpressionWithRecursiveWithColumns() );
+                    } );
+
                     it( "can create multiple CTEs where the second CTE is not recursive", function() {
                         testCase( function( builder ) {
                             builder
@@ -2109,6 +2129,7 @@ component extends="testbox.system.BaseSpec" {
             if ( isSimpleValue( expected ) ) {
                 expected = { sql: expected, bindings: [] };
             }
+            debug( sql );
             expect( sql ).toBeWithCase( expected.sql );
             expect( getTestBindings( builder ) ).toBe( expected.bindings );
         } catch ( any e ) {

@@ -571,6 +571,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function commonTableExpressionWithRecursiveWithColumns() {
+        return {
+            sql: "WITH ""USERSCTE"" ""USERSID"",""CONTACTSID"" AS (SELECT ""USERS"".""ID"" AS ""USERSID"", ""CONTACTS"".""ID"" AS ""CONTACTSID"" FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" WHERE ""USERS"".""AGE"" > ?) SELECT * FROM ""USERSCTE"" WHERE ""USER"".""ID"" NOT IN (?, ?)",
+            bindings: [ 25, 1, 2 ]
+        };
+    }
+
     function commonTableExpressionMultipleCTEsWithRecursive() {
         return {
             sql: "WITH ""USERSCTE"" AS (SELECT * FROM ""USERS"" INNER JOIN ""CONTACTS"" ON ""USERS"".""ID"" = ""CONTACTS"".""ID"" WHERE ""USERS"".""AGE"" > ?), ""ORDERCTE"" AS (SELECT * FROM ""ORDERS"" WHERE ""CREATED"" > ?) SELECT * FROM ""USERSCTE"" WHERE ""USER"".""ID"" NOT IN (?, ?)",
@@ -774,8 +781,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     private function getBuilder() {
-        variables.grammar = getMockBox().createMock( "qb.models.Grammars.OracleGrammar" ).init();
-        var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" ).init( grammar );
+        variables.grammar = prepareMock( new qb.models.Grammars.OracleGrammar() );
+        var builder = new qb.models.Query.QueryBuilder( variables.grammar );
         return builder;
     }
 

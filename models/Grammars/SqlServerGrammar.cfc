@@ -209,7 +209,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      *
      * @return string
      */
-    public string function wrapValue( required any value ) {
+    function wrapValue( required any value ) {
         if ( value == "*" ) {
             return value;
         }

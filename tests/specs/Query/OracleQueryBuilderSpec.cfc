@@ -781,8 +781,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     private function getBuilder() {
-        variables.grammar = getMockBox().createMock( "qb.models.Grammars.OracleGrammar" ).init();
-        var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" ).init( grammar );
+        variables.grammar = prepareMock( new qb.models.Grammars.OracleGrammar() );
+        var builder = new qb.models.Query.QueryBuilder( variables.grammar );
         return builder;
     }
 

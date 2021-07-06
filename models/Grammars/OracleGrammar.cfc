@@ -195,8 +195,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      *
      * @return string
      */
-    public string function wrapValue( required any value ) {
-        return super.wrapValue( uCase( arguments.value ) );
+    function wrapValue( required any value ) {
+        arguments.value = ucase( arguments.value );
+        if ( value == "*" ) {
+            return value;
+        }
+        return """#value#""";
     }
 
     function compileCreateColumn( column, blueprint ) {

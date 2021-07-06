@@ -895,7 +895,7 @@ component displayname="Grammar" accessors="true" singleton {
      *
      * @return string
      */
-    public string function wrapValue( required any value ) {
+    function wrapValue( required any value ) {
         if ( value == "*" ) {
             return value;
         }

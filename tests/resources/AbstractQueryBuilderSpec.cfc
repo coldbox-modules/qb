@@ -1833,16 +1833,19 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "properly handles recursive CTEs with included columns", function() {
-                        
                         testCase( function( builder ) {
                             builder
-                                .withRecursive( "UsersCTE", function( q ) {
-                                    q.select( [ "users.id AS usersId", "contacts.id AS contactsId" ] )
-                                        .from( "users" )
-                                        .join( "contacts", "users.id", "contacts.id" )
-                                        .where( "users.age", ">", 25 )
-                                    ;
-                                }, [ "usersId", "contactsId" ] )
+                                .withRecursive(
+                                    "UsersCTE",
+                                    function( q ) {
+                                        q.select( [ "users.id AS usersId", "contacts.id AS contactsId" ] )
+                                            .from( "users" )
+                                            .join( "contacts", "users.id", "contacts.id" )
+                                            .where( "users.age", ">", 25 )
+                                        ;
+                                    },
+                                    [ "usersId", "contactsId" ]
+                                )
                                 .from( "UsersCTE" )
                                 .whereNotIn( "user.id", [ 1, 2 ] )
                             ;

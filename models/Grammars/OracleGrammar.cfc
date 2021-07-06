@@ -195,7 +195,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      *
      * @return string
      */
-    private string function wrapValue( required any value ) {
+    public string function wrapValue( required any value ) {
         return super.wrapValue( uCase( arguments.value ) );
     }
 

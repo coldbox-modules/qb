@@ -3219,7 +3219,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    private numeric function withAggregate( required struct aggregate, required any callback ) {
+    private any function withAggregate( required struct aggregate, required any callback ) {
         var originalAggregate = getAggregate();
         var originalOrders = getOrders();
         setAggregate( arguments.aggregate );

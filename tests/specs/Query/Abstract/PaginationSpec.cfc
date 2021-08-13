@@ -26,6 +26,36 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            it( "can paginate a group by query", function() {
+                var builder = getBuilder();
+                var expectedResults = [];
+                for ( var i = 1; i <= 25; i++ ) {
+                    expectedResults.append( { "id": i } );
+                }
+                var expectedQuery = queryNew( "id", "integer", expectedResults );
+                builder.$( "runQuery", expectedQuery );
+
+                var nestedBuilder = getBuilder();
+                nestedBuilder.$( "count", 15 );
+                builder.$( "newQuery", nestedBuilder );
+
+                var results = builder
+                    .from( "users" )
+                    .groupBy( "lastName" )
+                    .paginate();
+
+                expect( results ).toBe( {
+                    "pagination": {
+                        "maxRows": 25,
+                        "offset": 0,
+                        "page": 1,
+                        "totalPages": 1,
+                        "totalRecords": 15
+                    },
+                    "results": expectedResults
+                } );
+            } );
+
             it( "can get results for subsequent pages", function() {
                 var builder = getBuilder();
                 var expectedResults = [];

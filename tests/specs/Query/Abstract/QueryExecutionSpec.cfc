@@ -388,7 +388,7 @@ component extends="testbox.system.BaseSpec" {
                     }
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args( sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options = {} )
                         .$results( queryNew( "aggregate", "varchar", [ { "aggregate": 257 } ] ) )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 0", options = {} )
@@ -425,7 +425,7 @@ component extends="testbox.system.BaseSpec" {
                     }
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args( sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options = {} )
                         .$results( queryNew( "aggregate", "varchar", [ { "aggregate": 257 } ] ) )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 0", options = {} )
@@ -461,7 +461,7 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args( sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options = {} )
                         .$results( expectedQuery );
 
                     var results = builder.from( "users" ).count();
@@ -471,7 +471,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COUNT(*) AS ""aggregate"" FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options: {} } );
                 } );
 
                 it( "can count a specific column", function() {
@@ -480,7 +480,10 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args(
+                            sql = "SELECT COALESCE(COUNT(""name""), 0) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        )
                         .$results( expectedQuery );
 
                     var results = builder.from( "users" ).count( "name" );
@@ -490,7 +493,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(COUNT(""name""), 0) AS ""aggregate"" FROM ""users""", options: {} } );
                 } );
 
                 it( "returns 0 if no records are returned", function() {
@@ -499,7 +502,10 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args(
+                            sql = "SELECT COALESCE(COUNT(""name""), 0) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        )
                         .$results( expectedQuery );
 
                     var results = builder.from( "users" ).count( "name" );
@@ -509,7 +515,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(COUNT(""name""), 0) AS ""aggregate"" FROM ""users""", options: {} } );
                 } );
 
                 it( "should maintain selected columns after an aggregate has been executed", function() {
@@ -517,7 +523,7 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: 1 } ] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args( sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options = {} )
                         .$results( expectedQuery );
 
                     builder.select( [ "id", "name" ] ).from( "users" );
@@ -531,7 +537,7 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: 1 } ] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args( sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options = {} )
                         .$results( expectedQuery );
 
                     builder.from( "users" ).orderBy( "name" );
@@ -545,7 +551,7 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: 1 } ] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(*) AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args( sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options = {} )
                         .$results( expectedQuery );
 
                     builder.from( "users" ).count();
@@ -559,7 +565,10 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT COUNT(DISTINCT ""name"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args(
+                            sql = "SELECT COALESCE(COUNT(DISTINCT ""name""), 0) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        )
                         .$results( expectedQuery );
 
                     var results = builder
@@ -572,7 +581,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COUNT(DISTINCT ""name"") AS ""aggregate"" FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(COUNT(DISTINCT ""name""), 0) AS ""aggregate"" FROM ""users""", options: {} } );
                 } );
             } );
 
@@ -650,7 +659,10 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedSum } ] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT SUM(""answers"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args(
+                            sql = "SELECT COALESCE(SUM(""answers""), 0) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        )
                         .$results( expectedQuery );
 
                     var results = builder.from( "users" ).sum( "answers" );
@@ -660,7 +672,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT SUM(""answers"") AS ""aggregate"" FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(SUM(""answers""), 0) AS ""aggregate"" FROM ""users""", options: {} } );
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );
@@ -671,7 +683,10 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "aggregate", "integer", [] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT SUM(""questions"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$args(
+                            sql = "SELECT COALESCE(SUM(""questions""), 0) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        )
                         .$results( expectedQuery );
 
                     var results = builder.from( "users" ).sum( "questions" );
@@ -681,7 +696,31 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT SUM(""questions"") AS ""aggregate"" FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(SUM(""questions""), 0) AS ""aggregate"" FROM ""users""", options: {} } );
+
+                    expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                } );
+
+                it( "returns 0 if a null record is returned", function() {
+                    var builder = getBuilder();
+                    var expectedSum = 0;
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { "aggregate": 0 } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COALESCE(SUM(""questions""), 0) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).sum( "questions" );
+
+                    expect( results ).toBe( expectedSum );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(SUM(""questions""), 0) AS ""aggregate"" FROM ""users""", options: {} } );
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );

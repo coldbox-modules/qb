@@ -767,7 +767,11 @@ component displayname="Grammar" accessors="true" singleton {
         if ( aggregate.isEmpty() ) {
             return "";
         }
-        return "SELECT #uCase( aggregate.type )#(#query.getDistinct() ? "DISTINCT " : ""##wrapColumn( aggregate.column )#) AS ""aggregate""";
+        var aggString = "#uCase( aggregate.type )#(#query.getDistinct() ? "DISTINCT " : ""##wrapColumn( aggregate.column )#)";
+        if ( aggregate.keyExists( "defaultValue" ) && !isNull( aggregate.defaultValue ) ) {
+            aggString = "COALESCE(#aggString#, #aggregate.defaultValue#)";
+        }
+        return "SELECT #aggString# AS ""aggregate""";
     }
 
     /**

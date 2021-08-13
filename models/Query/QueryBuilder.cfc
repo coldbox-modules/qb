@@ -2777,18 +2777,25 @@ component displayname="QueryBuilder" accessors="true" {
         struct options = {},
         any defaultValue
     ) {
-        return withAggregate( { type: type, column: column }, function() {
-            return withReturnFormat( "query", function() {
-                return withColumns( column, function() {
-                    var result = get( options = options );
-                    if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
-                        return defaultValue;
-                    } else {
-                        return result.aggregate;
-                    }
+        return withAggregate(
+            {
+                type: type,
+                column: column,
+                defaultValue: isNull( arguments.defaultValue ) ? javacast( "null", "" ) : arguments.defaultValue
+            },
+            function() {
+                return withReturnFormat( "query", function() {
+                    return withColumns( column, function() {
+                        var result = get( options = options );
+                        if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
+                            return defaultValue;
+                        } else {
+                            return result.aggregate;
+                        }
+                    } );
                 } );
-            } );
-        } );
+            }
+        );
     }
 
     /**

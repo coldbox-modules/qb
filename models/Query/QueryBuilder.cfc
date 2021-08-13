@@ -2713,6 +2713,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public numeric function count( string column = "*", struct options = {} ) {
         arguments.type = "count";
+        arguments.defaultValue = 0;
         return aggregateQuery( argumentCollection = arguments );
     }
 
@@ -2753,8 +2754,9 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    public any function sum( required string column, struct options = {} ) {
+    public numeric function sum( required string column, struct options = {} ) {
         arguments.type = "sum";
+        arguments.defaultValue = 0;
         return aggregateQuery( argumentCollection = arguments );
     }
 
@@ -2765,14 +2767,25 @@ component displayname="QueryBuilder" accessors="true" {
      * @type The aggregate type to execute.
      * @column The column on which to find the specified aggregate. Default: "*".
      * @options Any options to pass to `queryExecute`. Default: {}.
+     * @defaultValue An optional default value to use if the result is empty.
      *
      * @return any
      */
-    private any function aggregateQuery( required string type, required string column = "*", struct options = {} ) {
+    private any function aggregateQuery(
+        required string type,
+        required string column = "*",
+        struct options = {},
+        any defaultValue
+    ) {
         return withAggregate( { type: type, column: column }, function() {
             return withReturnFormat( "query", function() {
-                return withColumns( "*", function() {
-                    return get( options = options ).aggregate;
+                return withColumns( column, function() {
+                    var result = get( options = options );
+                    if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
+                        return defaultValue;
+                    } else {
+                        return result.aggregate;
+                    }
                 } );
             } );
         } );

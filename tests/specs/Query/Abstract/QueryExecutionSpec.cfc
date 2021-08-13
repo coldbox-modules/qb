@@ -493,6 +493,25 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""", options: {} } );
                 } );
 
+                it( "returns 0 if no records are returned", function() {
+                    var builder = getBuilder();
+                    var expectedCount = 0;
+                    var expectedQuery = queryNew( "aggregate", "integer", [] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).count( "name" );
+
+                    expect( results ).toBe( expectedCount );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COUNT(""name"") AS ""aggregate"" FROM ""users""", options: {} } );
+                } );
+
                 it( "should maintain selected columns after an aggregate has been executed", function() {
                     var builder = getBuilder();
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: 1 } ] );
@@ -642,6 +661,27 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT SUM(""answers"") AS ""aggregate"" FROM ""users""", options: {} } );
+
+                    expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                } );
+
+                it( "returns 0 if no records are returned", function() {
+                    var builder = getBuilder();
+                    var expectedSum = 0;
+                    var expectedQuery = queryNew( "aggregate", "integer", [] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT SUM(""questions"") AS ""aggregate"" FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).sum( "questions" );
+
+                    expect( results ).toBe( expectedSum );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT SUM(""questions"") AS ""aggregate"" FROM ""users""", options: {} } );
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );

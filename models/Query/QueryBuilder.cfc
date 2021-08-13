@@ -2252,7 +2252,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return  PaginationCollector
      */
     public any function paginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
-        var totalRecords = count( options = options );
+        var totalRecords = getCountForPagination( options = options );
         var results = forPage( page, maxRows ).get( options = options );
         return getPaginationCollector().generateWithResults(
             totalRecords = totalRecords,
@@ -2280,6 +2280,21 @@ component displayname="QueryBuilder" accessors="true" {
             page = arguments.page,
             maxRows = arguments.maxRows
         );
+    }
+
+    /**
+     * Gets the count for the pagination query.
+     * The execution method changes based on different query configurations.
+     *
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return  numeric
+     */
+    private numeric function getCountForPagination( struct options = {} ) {
+        if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() ) {
+            return newQuery().fromSub( "aggregate_table", this ).count( options = arguments.options );
+        }
+        return count( options = arguments.options );
     }
 
     /*******************************************************************************\

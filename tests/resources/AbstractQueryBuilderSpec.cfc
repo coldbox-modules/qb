@@ -2129,7 +2129,6 @@ component extends="testbox.system.BaseSpec" {
             if ( isSimpleValue( expected ) ) {
                 expected = { sql: expected, bindings: [] };
             }
-            debug( sql );
             expect( sql ).toBeWithCase( expected.sql );
             expect( getTestBindings( builder ) ).toBe( expected.bindings );
         } catch ( any e ) {

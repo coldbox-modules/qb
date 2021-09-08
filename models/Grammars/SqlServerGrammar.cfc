@@ -1,4 +1,4 @@
-component extends="qb.models.Grammars.BaseGrammar" singleton {
+component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
     /**
      * The parameter limit for SQL Server grammar.

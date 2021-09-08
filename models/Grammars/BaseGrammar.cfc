@@ -242,7 +242,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function compileFrom( required QueryBuilder query, required any from ) {
-        return "FROM " & wrapTable( from );
+        return "FROM " & wrapTable( arguments.from );
     }
 
     /**

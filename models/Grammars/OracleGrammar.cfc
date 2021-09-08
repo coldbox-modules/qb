@@ -135,6 +135,66 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return trim( "INSERT#multiple ? " ALL" : ""# #placeholderString##multiple ? " SELECT 1 FROM dual" : ""#" );
     }
 
+    public string function compileUpsert(
+        required QueryBuilder qb,
+        required array insertColumns,
+        required array values,
+        required array updateColumns,
+        required any updates,
+        required array target
+    ) {
+        var columnsString = arguments.insertColumns
+            .map( function( column ) {
+                return wrapColumn( column.formatted );
+            } )
+            .toList( ", " );
+
+        var valuesString = arrayToList(
+            arguments.insertColumns.map( function( column ) {
+                return wrapColumn( "QB_SRC.#column.formatted#" );
+            } ),
+            ", "
+        );
+
+        var placeholderString = arguments.values
+            .map( function( valueArray ) {
+                return "SELECT " & valueArray
+                    .map( function( item ) {
+                        if ( getUtils().isExpression( item ) ) {
+                            return item.getSQL();
+                        } else {
+                            return "?";
+                        }
+                    } )
+                    .toList( ", " ) & " FROM dual";
+            } )
+            .toList( " UNION ALL " );
+
+        var constraintString = arguments.target
+            .map( function( column ) {
+                return "#wrapColumn( "qb_target.#column.formatted#" )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+            } )
+            .toList( " AND " );
+
+        var updateList = "";
+        if ( isArray( arguments.updates ) ) {
+            updateList = arguments.updates
+                .map( function( column ) {
+                    return "#wrapColumn( column.formatted )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+                } )
+                .toList( ", " );
+        } else {
+            updateList = arguments.updateColumns
+                .map( function( column ) {
+                    var value = updates[ column.original ];
+                    return "#wrapColumn( column.formatted )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+                } )
+                .toList( ", " );
+        }
+
+        return "MERGE INTO #wrapTable( arguments.qb.getFrom() )# ""QB_TARGET"" USING (#placeholderString#) ""QB_SRC"" ON #constraintString# WHEN MATCHED THEN UPDATE SET #updateList# WHEN NOT MATCHED THEN INSERT (#columnsString#) VALUES (#valuesString#)";
+    }
+
     /**
      * Since Oracle doesn't know how to do a simple limit of offset without subquerys
      * add a subquery around the compiled value for the limit and the offset.

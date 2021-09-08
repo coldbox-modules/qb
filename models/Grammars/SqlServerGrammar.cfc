@@ -250,6 +250,59 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         );
     }
 
+    public string function compileUpsert(
+        required QueryBuilder qb,
+        required array insertColumns,
+        required array values,
+        required array updateColumns,
+        required any updates,
+        required array target
+    ) {
+        var columnsString = arguments.insertColumns
+            .map( function( column ) {
+                return wrapColumn( column.formatted );
+            } )
+            .toList( ", " );
+
+        var placeholderString = arguments.values
+            .map( function( valueArray ) {
+                return "(" & valueArray
+                    .map( function( item ) {
+                        if ( getUtils().isExpression( item ) ) {
+                            return item.getSQL();
+                        } else {
+                            return "?";
+                        }
+                    } )
+                    .toList( ", " ) & ")";
+            } )
+            .toList( ", " );
+
+        var constraintString = arguments.target
+            .map( function( column ) {
+                return "#wrapColumn( "qb_target.#column.formatted#" )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+            } )
+            .toList( " AND " );
+
+        var updateList = "";
+        if ( isArray( arguments.updates ) ) {
+            updateList = arguments.updates
+                .map( function( column ) {
+                    return "#wrapColumn( column.formatted )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+                } )
+                .toList( ", " );
+        } else {
+            updateList = arguments.updateColumns
+                .map( function( column ) {
+                    var value = updates[ column.original ];
+                    return "#wrapColumn( column.formatted )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+                } )
+                .toList( ", " );
+        }
+
+        return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING (VALUES #placeholderString#) AS [qb_src] (#columnsString#) ON #constraintString# WHEN MATCHED THEN UPDATE SET #updateList# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)";
+    }
+
     function generateType( column, blueprint ) {
         if ( column.getComputedType() != "none" ) {
             return "";

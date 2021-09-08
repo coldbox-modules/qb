@@ -2090,6 +2090,95 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            describe( "upsert statements", function() {
+                it( "can perform an upsert", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "users" )
+                            .upsert(
+                                values = {
+                                    "username": "foo",
+                                    "active": 1,
+                                    "createdDate": "2021-09-08 12:00:00",
+                                    "modifiedDate": "2021-09-08 12:00:00"
+                                },
+                                target = [ "username" ],
+                                update = [ "active", "modifiedDate" ],
+                                toSql = true
+                            );
+                    }, upsert() );
+                } );
+
+                it( "updates all values if none are passed to update", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "users" )
+                            .upsert(
+                                values = {
+                                    "username": "foo",
+                                    "active": 1,
+                                    "createdDate": "2021-09-08 12:00:00",
+                                    "modifiedDate": "2021-09-08 12:00:00"
+                                },
+                                target = [ "username" ],
+                                toSql = true
+                            );
+                    }, upsertAllValues() );
+                } );
+
+                it( "just performs an insert when given an empty struct or array to update", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "users" )
+                            .upsert(
+                                values = {
+                                    "username": "foo",
+                                    "active": 1,
+                                    "createdDate": "2021-09-08 12:00:00",
+                                    "modifiedDate": "2021-09-08 12:00:00"
+                                },
+                                target = [ "username" ],
+                                update = [],
+                                toSql = true
+                            );
+                    }, upsertEmptyUpdate() );
+                } );
+
+                it( "can specify specific update values", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "stats" )
+                            .upsert(
+                                values = [
+                                    { "postId": 1, "viewedDate": "2021-09-08", "views": 1 },
+                                    { "postId": 2, "viewedDate": "2021-09-08", "views": 1 }
+                                ],
+                                target = [ "postId", "viewedDate" ],
+                                update = { "views": builder.raw( "stats.views + 1" ) },
+                                toSql = true
+                            );
+                    }, upsertWithInsertedValue() );
+                } );
+
+                it( "can match the target as a single value", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "users" )
+                            .upsert(
+                                values = {
+                                    "username": "foo",
+                                    "active": 1,
+                                    "createdDate": "2021-09-08 12:00:00",
+                                    "modifiedDate": "2021-09-08 12:00:00"
+                                },
+                                target = "username",
+                                update = [ "active", "modifiedDate" ],
+                                toSql = true
+                            );
+                    }, upsertSingleTarget() );
+                } );
+            } );
+
             describe( "delete statements", function() {
                 it( "can delete an entire table", function() {
                     testCase( function( builder ) {
@@ -2129,7 +2218,6 @@ component extends="testbox.system.BaseSpec" {
             if ( isSimpleValue( expected ) ) {
                 expected = { sql: expected, bindings: [] };
             }
-            debug( sql );
             expect( sql ).toBeWithCase( expected.sql );
             expect( getTestBindings( builder ) ).toBe( expected.bindings );
         } catch ( any e ) {

@@ -2553,6 +2553,112 @@ component displayname="QueryBuilder" accessors="true" {
         return this.insert( argumentCollection = arguments );
     }
 
+
+    public any function upsert(
+        required any values,
+        required any target,
+        any update,
+        struct options = {},
+        boolean toSql = false
+    ) {
+        if ( arguments.values.isEmpty() ) {
+            return;
+        }
+
+        if ( !isArray( arguments.values ) ) {
+            if ( !isStruct( arguments.values ) ) {
+                throw(
+                    type = "InvalidSQLType",
+                    message = "Please pass a struct or an array of structs mapping columns to values"
+                );
+            }
+            arguments.values = arrayWrap( arguments.values );
+        }
+
+        if ( !isNull( arguments.update ) && arguments.update.isEmpty() ) {
+            return this.insert( values = arguments.values, options = arguments.options, toSql = arguments.toSql );
+        }
+
+        arguments.target = arrayWrap( arguments.target ).map( function( column ) {
+            var formatted = listLast( applyColumnFormatter( column ), "." );
+            return { "original": column, "formatted": formatted };
+        } );
+
+        var columns = arguments.values[ 1 ]
+            .keyArray()
+            .map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
+            } );
+
+        columns.sort( function( a, b ) {
+            return compareNoCase( a.formatted, b.formatted );
+        } );
+
+        var updateArray = [];
+        if ( isNull( arguments.update ) ) {
+            arguments.update = columns;
+        } else {
+            if ( isArray( arguments.update ) ) {
+                arguments.update = arguments.update.map( function( column ) {
+                    var formatted = listLast( applyColumnFormatter( column ), "." );
+                    return { "original": column, "formatted": formatted };
+                } );
+            }
+        }
+
+        if ( isArray( arguments.update ) ) {
+            updateArray = arguments.update;
+        } else {
+            updateArray = arguments.update
+                .keyArray()
+                .map( function( column ) {
+                    var formatted = listLast( applyColumnFormatter( column ), "." );
+                    return { original: column, formatted: formatted };
+                } );
+        }
+
+        updateArray.sort( function( a, b ) {
+            return compareNoCase( a.formatted, b.formatted );
+        } );
+
+        var newInsertBindings = arguments.values.map( function( value ) {
+            return columns.map( function( column ) {
+                return getUtils().extractBinding(
+                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" )
+                );
+            } );
+        } );
+
+        newInsertBindings.each( function( bindingsArray ) {
+            bindingsArray.each( function( binding ) {
+                if ( getUtils().isNotExpression( binding ) ) {
+                    addBindings( binding, "insert" );
+                } else {
+                    addBindings( binding, "insertRaw" );
+                }
+            } );
+        } );
+
+        var sql = getGrammar().compileUpsert(
+            this,
+            columns,
+            newInsertBindings,
+            updateArray,
+            arguments.update,
+            arguments.target
+        );
+
+        clearBindings( except = [ "insert", "update" ] );
+
+        if ( toSql ) {
+            return sql;
+        }
+
+        return runQuery( sql, arguments.options, "result" );
+    }
+
+
     /**
      * Deletes a record set.
      * This call must come after setting the query's table using `from` or `table`.

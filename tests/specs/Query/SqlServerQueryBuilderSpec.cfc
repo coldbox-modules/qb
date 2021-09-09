@@ -668,6 +668,68 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "UPDATE TOP (1) [users] SET [name] = ? WHERE [email] = ?", bindings: [ "baz", "foo" ] };
     }
 
+    function upsert() {
+        return {
+            sql: "MERGE [users] AS [qb_target] USING (VALUES (?, ?, ?, ?)) AS [qb_src] ([active], [createdDate], [modifiedDate], [username]) ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([active], [createdDate], [modifiedDate], [username]) VALUES ([active], [createdDate], [modifiedDate], [username])",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertAllValues() {
+        return {
+            sql: "MERGE [users] AS [qb_target] USING (VALUES (?, ?, ?, ?)) AS [qb_src] ([active], [createdDate], [modifiedDate], [username]) ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [createdDate] = [qb_src].[createdDate], [modifiedDate] = [qb_src].[modifiedDate], [username] = [qb_src].[username] WHEN NOT MATCHED BY TARGET THEN INSERT ([active], [createdDate], [modifiedDate], [username]) VALUES ([active], [createdDate], [modifiedDate], [username])",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertEmptyUpdate() {
+        return {
+            sql: "INSERT INTO [users] ([active], [createdDate], [modifiedDate], [username]) VALUES (?, ?, ?, ?)",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertWithInsertedValue() {
+        return {
+            sql: "MERGE [stats] AS [qb_target] USING (VALUES (?, ?, ?), (?, ?, ?)) AS [qb_src] ([postId], [viewedDate], [views]) ON [qb_target].[postId] = [qb_src].[postId] AND [qb_target].[viewedDate] = [qb_src].[viewedDate] WHEN MATCHED THEN UPDATE SET [views] = stats.views + 1 WHEN NOT MATCHED BY TARGET THEN INSERT ([postId], [viewedDate], [views]) VALUES ([postId], [viewedDate], [views])",
+            bindings: [
+                1,
+                "2021-09-08",
+                1,
+                2,
+                "2021-09-08",
+                1
+            ]
+        };
+    }
+
+    function upsertSingleTarget() {
+        return {
+            sql: "MERGE [users] AS [qb_target] USING (VALUES (?, ?, ?, ?)) AS [qb_src] ([active], [createdDate], [modifiedDate], [username]) ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([active], [createdDate], [modifiedDate], [username]) VALUES ([active], [createdDate], [modifiedDate], [username])",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM [users]";
     }

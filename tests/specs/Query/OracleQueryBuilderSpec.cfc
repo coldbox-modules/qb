@@ -683,6 +683,68 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "UPDATE ""USERS"" SET ""NAME"" = ? WHERE ""EMAIL"" = ?", bindings: [ "baz", "foo" ] };
     }
 
+    function upsert() {
+        return {
+            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ?, ?, ?, ? FROM dual) ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"", ""USERNAME"") VALUES (""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"", ""QB_SRC"".""USERNAME"")",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertAllValues() {
+        return {
+            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ?, ?, ?, ? FROM dual) ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""CREATEDDATE"" = ""QB_SRC"".""CREATEDDATE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"", ""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN NOT MATCHED THEN INSERT (""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"", ""USERNAME"") VALUES (""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"", ""QB_SRC"".""USERNAME"")",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertEmptyUpdate() {
+        return {
+            sql: "INSERT INTO ""USERS"" (""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"", ""USERNAME"") VALUES (?, ?, ?, ?)",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertWithInsertedValue() {
+        return {
+            sql: "MERGE INTO ""STATS"" ""QB_TARGET"" USING (SELECT ?, ?, ? FROM dual UNION ALL SELECT ?, ?, ? FROM dual) ""QB_SRC"" ON ""QB_TARGET"".""POSTID"" = ""QB_SRC"".""POSTID"" AND ""QB_TARGET"".""VIEWEDDATE"" = ""QB_SRC"".""VIEWEDDATE"" WHEN MATCHED THEN UPDATE SET ""VIEWS"" = stats.views + 1 WHEN NOT MATCHED THEN INSERT (""POSTID"", ""VIEWEDDATE"", ""VIEWS"") VALUES (""QB_SRC"".""POSTID"", ""QB_SRC"".""VIEWEDDATE"", ""QB_SRC"".""VIEWS"")",
+            bindings: [
+                1,
+                "2021-09-08",
+                1,
+                2,
+                "2021-09-08",
+                1
+            ]
+        };
+    }
+
+    function upsertSingleTarget() {
+        return {
+            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ?, ?, ?, ? FROM dual) ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"", ""USERNAME"") VALUES (""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"", ""QB_SRC"".""USERNAME"")",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM ""USERS""";
     }

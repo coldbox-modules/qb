@@ -101,6 +101,32 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return super.compileInsert( argumentCollection = arguments );
     }
 
+    public string function compileUpsert(
+        required QueryBuilder qb,
+        required array insertColumns,
+        required array values,
+        required array updateColumns,
+        required any updates
+    ) {
+        var insertString = this.compileInsert( arguments.qb, arguments.insertColumns, arguments.values );
+        var updateString = "";
+        if ( isArray( arguments.updates ) ) {
+            updateString = arguments.updateColumns
+                .map( function( column ) {
+                    return "#wrapValue( column.formatted )# = VALUES(#wrapValue( column.formatted )#)";
+                } )
+                .toList( ", " );
+        } else {
+            updateString = arguments.updateColumns
+                .map( function( column ) {
+                    var value = updates[ column.original ];
+                    return "#wrapValue( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
+                } )
+                .toList( ", " );
+        }
+        return insertString & " ON DUPLICATE KEY UPDATE #updateString#";
+    }
+
     function compileDisableForeignKeyConstraints() {
         return "SET FOREIGN_KEY_CHECKS=0";
     }

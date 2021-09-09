@@ -662,6 +662,68 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "UPDATE `users` SET `name` = ? WHERE `email` = ? LIMIT 1", bindings: [ "baz", "foo" ] };
     }
 
+    function upsert() {
+        return {
+            sql: "INSERT INTO `users` (`active`, `createdDate`, `modifiedDate`, `username`) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `modifiedDate` = VALUES(`modifiedDate`)",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertAllValues() {
+        return {
+            sql: "INSERT INTO `users` (`active`, `createdDate`, `modifiedDate`, `username`) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `createdDate` = VALUES(`createdDate`), `modifiedDate` = VALUES(`modifiedDate`), `username` = VALUES(`username`)",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertEmptyUpdate() {
+        return {
+            sql: "INSERT INTO `users` (`active`, `createdDate`, `modifiedDate`, `username`) VALUES (?, ?, ?, ?)",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
+    function upsertWithInsertedValue() {
+        return {
+            sql: "INSERT INTO `stats` (`postId`, `viewedDate`, `views`) VALUES (?, ?, ?), (?, ?, ?) ON DUPLICATE KEY UPDATE `views` = stats.views + 1",
+            bindings: [
+                1,
+                "2021-09-08",
+                1,
+                2,
+                "2021-09-08",
+                1
+            ]
+        };
+    }
+
+    function upsertSingleTarget() {
+        return {
+            sql: "INSERT INTO `users` (`active`, `createdDate`, `modifiedDate`, `username`) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `modifiedDate` = VALUES(`modifiedDate`)",
+            bindings: [
+                1,
+                "2021-09-08 12:00:00",
+                "2021-09-08 12:00:00",
+                "foo"
+            ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM `users`";
     }

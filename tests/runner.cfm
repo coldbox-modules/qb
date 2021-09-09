@@ -10,7 +10,7 @@
 <cfparam name="url.propertiesSummary" 	default="false" type="boolean">
 
 <!--- Code Coverage requires FusionReactor --->
-<cfparam name="url.coverageEnabled"					default="true">
+<cfparam name="url.coverageEnabled"					default="false">
 <cfparam name="url.coveragePathToCapture"			default="#expandPath( '/qb' )#">
 <cfparam name="url.coverageWhitelist"				default="">
 <cfparam name="url.coverageBlacklist"				default="/testbox,/tests,/docs,/modules">

@@ -14,6 +14,7 @@ jobs:
         cfengine: ["lucee@5", "lucee@be", "adobe@2016", "adobe@2018", "adobe@be"]
         coldbox: ["coldbox@5", "coldbox@6", "coldbox@be"]
         javaVersion: ["openjdk8", "openjdk11"]
+        fullNull: ["true", "false"]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -35,4 +36,6 @@ jobs:
         run: box server start cfengine=${{ matrix.cfengine }} javaVersion=${{ matrix.javaVersion }} --noSaveSettings
 
       - name: Run TestBox Tests
+        env:
+          FULL_NULL: ${{matrix.fullNull}}
         run: box testbox run

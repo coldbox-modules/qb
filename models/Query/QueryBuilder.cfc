@@ -2991,12 +2991,14 @@ component displayname="QueryBuilder" accessors="true" {
      * Returns the first value of a column in a query.
      *
      * @column The column for which to retrieve the value.
+     * @defaultValue The default value to use if no records are found.
+     * @throwWhenNotFound A flag to throw an exception if no records are found instead.
      * @options Any options to pass to `queryExecute`. Default: {}.
      *
      * @return any
      */
     public any function value(
-        required string column,
+        required any column,
         string defaultValue = "",
         boolean throwWhenNotFound = false,
         struct options = {}
@@ -3004,8 +3006,9 @@ component displayname="QueryBuilder" accessors="true" {
         return withReturnFormat( "query", function() {
             var formattedColumn = applyColumnFormatter( column );
             select( formattedColumn );
-            var data = first( options = options );
-            if ( structIsEmpty( data ) ) {
+            take( 1 );
+            var result = get( options = options );
+            if ( result.recordCount <= 0 ) {
                 if ( throwWhenNotFound ) {
                     throw(
                         type = "RecordCountException",
@@ -3015,9 +3018,29 @@ component displayname="QueryBuilder" accessors="true" {
                     return defaultValue;
                 }
             } else {
-                return data[ listLast( formattedColumn, "." ) ];
+                return result[ getMetadata( result )[ 1 ].name ][ 1 ];
             }
         } );
+    }
+
+    /**
+     * Returns the first value of a column in a query using an expression.
+     *
+     * @column The string to use as an expression to retrieve the value.
+     * @defaultValue The default value to use if no records are found.
+     * @throwWhenNotFound A flag to throw an exception if no records are found instead.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return any
+     */
+    public any function valueRaw(
+        required string column,
+        string defaultValue = "",
+        boolean throwWhenNotFound = false,
+        struct options = {}
+    ) {
+        arguments.column = raw( arguments.column );
+        return value( argumentCollection = arguments );
     }
 
     /**
@@ -3028,18 +3051,31 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    public array function values( required string column, struct options = {} ) {
+    public array function values( required any column, struct options = {} ) {
         return withReturnFormat( "query", function() {
             var formattedColumn = applyColumnFormatter( column );
             select( formattedColumn );
             var result = get( options = options );
-            var columnName = listLast( formattedColumn, "." );
+            var columnName = getMetadata( result )[ 1 ].name;
             var results = [];
             for ( var row in result ) {
                 results.append( row[ columnName ] );
             }
             return results;
         } );
+    }
+
+    /**
+     * Returns an array of values for a raw expression in a query.
+     *
+     * @column The sql to use as an expression to retrieve the values.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return any
+     */
+    public any function valuesRaw( required string column, struct options = {} ) {
+        arguments.column = raw( arguments.column );
+        return values( argumentCollection = arguments );
     }
 
     /**

@@ -269,6 +269,52 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""name"" FROM ""users"" LIMIT 1", options: {} } );
                 } );
+
+                it( "can call value using a raw expression", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "fullName", "varchar", [ { fullName: "John Doe" } ] );
+
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT CONCAT(fname, ' ', lname) AS fullName FROM ""users"" LIMIT 1",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    var results = builder
+                        .from( "users" )
+                        .value( builder.raw( "CONCAT(fname, ' ', lname) AS fullName" ) );
+
+                    expect( results ).toBe( "John Doe" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT CONCAT(fname, ' ', lname) AS fullName FROM ""users"" LIMIT 1", options: {} } );
+                } );
+
+                it( "can use the valueRaw shortcut method", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "fullName", "varchar", [ { fullName: "John Doe" } ] );
+
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT CONCAT(fname, ' ', lname) AS fullName FROM ""users"" LIMIT 1",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).valueRaw( "CONCAT(fname, ' ', lname) AS fullName" );
+
+                    expect( results ).toBe( "John Doe" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT CONCAT(fname, ' ', lname) AS fullName FROM ""users"" LIMIT 1", options: {} } );
+                } );
             } );
 
             describe( "values", function() {
@@ -326,6 +372,50 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""some_table"".""name"" FROM ""users""", options: {} } );
+                } );
+
+                it( "can call values with a raw expression", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew(
+                        "fullName",
+                        "varchar",
+                        [ { fullName: "John Doe" }, { fullName: "Jane Doe" } ]
+                    );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT CONCAT(fname, ' ', lname) AS fullName FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder
+                        .from( "users" )
+                        .values( builder.raw( "CONCAT(fname, ' ', lname) AS fullName" ) );
+                    expect( results ).toBe( [ "John Doe", "Jane Doe" ] );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT CONCAT(fname, ' ', lname) AS fullName FROM ""users""", options: {} } );
+                } );
+
+                it( "can use the valuesRaw shortcut method", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew(
+                        "fullName",
+                        "varchar",
+                        [ { fullName: "John Doe" }, { fullName: "Jane Doe" } ]
+                    );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT CONCAT(fname, ' ', lname) AS fullName FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).valuesRaw( "CONCAT(fname, ' ', lname) AS fullName" );
+                    expect( results ).toBe( [ "John Doe", "Jane Doe" ] );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT CONCAT(fname, ' ', lname) AS fullName FROM ""users""", options: {} } );
                 } );
             } );
 

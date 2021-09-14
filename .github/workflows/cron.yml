@@ -12,7 +12,6 @@ jobs:
       fail-fast: true
       matrix:
         cfengine: ["lucee@5", "lucee@be", "adobe@2016", "adobe@2018", "adobe@be"]
-        coldbox: ["coldbox@5", "coldbox@6", "coldbox@be"]
         javaVersion: ["openjdk8", "openjdk11"]
         fullNull: ["true", "false"]
     steps:
@@ -30,7 +29,6 @@ jobs:
       - name: Install dependencies
         run: |
           box install
-          box install ${{ matrix.coldbox }} --noSave
       
       - name: Start server
         run: box server start cfengine=${{ matrix.cfengine }} javaVersion=${{ matrix.javaVersion }} --noSaveSettings

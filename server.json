@@ -6,7 +6,7 @@
         }
     },
     "app":{
-        "cfengine":"adobe@2018"
+        "cfengine":"adobe@2016"
     },
     "directoryBrowsing":"true",
     "JVM":{

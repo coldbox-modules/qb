@@ -679,6 +679,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function updateWithSubselect() {
+        return "UPDATE ""EMPLOYEES"" SET ""DEPARTMENTNAME"" = (SELECT ""NAME"" FROM ""DEPARTMENTS"" WHERE ""EMPLOYEES"".""DEPARTMENTID"" = ""DEPARTMENTS"".""ID"")";
+    }
+
+    function updateWithBuilder() {
+        return "UPDATE ""EMPLOYEES"" SET ""DEPARTMENTNAME"" = (SELECT ""NAME"" FROM ""DEPARTMENTS"" WHERE ""EMPLOYEES"".""DEPARTMENTID"" = ""DEPARTMENTS"".""ID"")";
+    }
+
     function updateOrInsertNotExists() {
         return { sql: "INSERT INTO ""USERS"" (""NAME"") VALUES (?)", bindings: [ "baz" ] };
     }

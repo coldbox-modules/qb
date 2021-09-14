@@ -2078,6 +2078,40 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, updateWithJoin() );
                 } );
+
+                it( "turns a function into a subselect", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "employees" )
+                            .update(
+                                values = {
+                                    "departmentName": function( qb ) {
+                                        qb.from( "departments" )
+                                            .select( "name" )
+                                            .whereColumn( "employees.departmentId", "departments.id" );
+                                    }
+                                },
+                                toSql = true
+                            );
+                    }, updateWithSubselect() );
+                } );
+
+                it( "turns a builder instance into a subselect", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "employees" )
+                            .update(
+                                values = {
+                                    "departmentName": builder
+                                        .newQuery()
+                                        .from( "departments" )
+                                        .select( "name" )
+                                        .whereColumn( "employees.departmentId", "departments.id" )
+                                },
+                                toSql = true
+                            );
+                    }, updateWithBuilder() );
+                } );
             } );
 
             describe( "updateOrInsert statements", function() {

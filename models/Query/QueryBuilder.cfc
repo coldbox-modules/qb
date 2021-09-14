@@ -2508,7 +2508,15 @@ component displayname="QueryBuilder" accessors="true" {
 
         for ( var column in updateArray ) {
             var value = arguments.values[ column.original ];
-            if ( !getUtils().isExpression( value ) ) {
+            if ( isCustomFunction( value ) || isClosure( value ) ) {
+                var subselect = newQuery();
+                value( subselect );
+                arguments.values[ column.original ] = subselect;
+                addBindings( subselect.getBindings(), "update" );
+            } else if ( getUtils().isBuilder( value ) ) {
+                arguments.values[ column.original ] = value;
+                addBindings( value.getBindings(), "update" );
+            } else if ( !getUtils().isExpression( value ) ) {
                 addBindings( getUtils().extractBinding( value ), "update" );
             }
         }

@@ -228,7 +228,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         var updateList = columns
             .map( function( column ) {
                 var value = updateMap[ column.original ];
-                return "#wrapColumn( column.formatted )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+                var assignment = "?";
+                if ( utils.isExpression( value ) ) {
+                    assignment = value.getSql();
+                } else if ( utils.isBuilder( value ) ) {
+                    assignment = "(#value.toSQL()#)";
+                }
+                return "#wrapColumn( column.formatted )# = #assignment#";
             } )
             .toList( ", " );
 

@@ -658,6 +658,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "UPDATE `employees` INNER JOIN `departments` ON `departments`.`id` = `employees`.`departmentId` SET `employees`.`departmentName` = departments.name";
     }
 
+    function updateWithSubselect() {
+        return "UPDATE `employees` SET `departmentName` = (SELECT `name` FROM `departments` WHERE `employees`.`departmentId` = `departments`.`id`)";
+    }
+
+    function updateWithBuilder() {
+        return "UPDATE `employees` SET `departmentName` = (SELECT `name` FROM `departments` WHERE `employees`.`departmentId` = `departments`.`id`)";
+    }
+
     function updateOrInsertNotExists() {
         return { sql: "INSERT INTO `users` (`name`) VALUES (?)", bindings: [ "baz" ] };
     }

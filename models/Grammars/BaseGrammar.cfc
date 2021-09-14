@@ -739,8 +739,14 @@ component displayname="Grammar" accessors="true" singleton {
             } )
             .toList( ", " );
 
+        var updateStatement = "UPDATE #wrapTable( query.getFrom() )#";
+
+        if ( !arguments.query.getJoins().isEmpty() ) {
+            updateStatement &= " " & compileJoins( arguments.query, arguments.query.getJoins() );
+        }
+
         return trim(
-            "UPDATE #wrapTable( query.getFrom() )# SET #updateList# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#"
+            updateStatement & " SET #updateList# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#"
         );
     }
 

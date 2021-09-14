@@ -232,7 +232,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             } )
             .toList( ", " );
 
-        return arrayToList(
+        var updateStatement = arrayToList(
             arrayFilter(
                 [
                     "UPDATE",
@@ -247,6 +247,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 }
             ),
             " "
+        );
+
+        if ( arguments.query.getJoins().isEmpty() ) {
+            return updateStatement;
+        }
+
+        return updateStatement & " FROM #wrapTable( query.getFrom() )# " & compileJoins(
+            arguments.query,
+            arguments.query.getJoins()
         );
     }
 

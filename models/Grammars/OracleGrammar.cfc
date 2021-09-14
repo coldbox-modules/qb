@@ -135,6 +135,28 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return trim( "INSERT#multiple ? " ALL" : ""# #placeholderString##multiple ? " SELECT 1 FROM dual" : ""#" );
     }
 
+    /**
+     * Compile a Builder's query into an update string.
+     *
+     * @query The Builder instance.
+     * @columns The array of columns into which to insert.
+     *
+     * @return string
+     */
+    public string function compileUpdate(
+        required QueryBuilder query,
+        required array columns,
+        required struct updateMap
+    ) {
+        if ( !query.getJoins().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support UPDATEs with JOINs. Use a subselect to update the necessary values instead."
+            );
+        }
+        return super.compileUpdate( argumentCollection = arguments );
+    }
+
     public string function compileUpsert(
         required QueryBuilder qb,
         required array insertColumns,

@@ -2066,6 +2066,18 @@ component extends="testbox.system.BaseSpec" {
                             .update( toSql = true );
                     }, addUpdate() );
                 } );
+
+                it( "can update with a join", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "employees" )
+                            .join( "departments", "departments.id", "employees.departmentId" )
+                            .update(
+                                values = { "employees.departmentName": builder.raw( "departments.name" ) },
+                                toSql = true
+                            );
+                    }, updateWithJoin() );
+                } );
             } );
 
             describe( "updateOrInsert statements", function() {

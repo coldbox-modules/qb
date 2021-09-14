@@ -660,6 +660,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function updateWithJoin() {
+        return "UPDATE [employees] SET [employees].[departmentName] = departments.name FROM [employees] INNER JOIN [departments] ON [departments].[id] = [employees].[departmentId]";
+    }
+
     function updateOrInsertNotExists() {
         return { sql: "INSERT INTO [users] ([name]) VALUES (?)", bindings: [ "baz" ] };
     }

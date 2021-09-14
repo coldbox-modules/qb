@@ -2498,7 +2498,7 @@ component displayname="QueryBuilder" accessors="true" {
         var updateArray = arguments.values
             .keyArray()
             .map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
+                var formatted = applyColumnFormatter( column );
                 return { original: column, formatted: formatted };
             } );
 
@@ -3049,7 +3049,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @column The column for which to retrieve the values.
      * @options Any options to pass to `queryExecute`. Default: {}.
      *
-     * @return any
+     * @return [any]
      */
     public array function values( required any column, struct options = {} ) {
         return withReturnFormat( "query", function() {
@@ -3071,7 +3071,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @column The sql to use as an expression to retrieve the values.
      * @options Any options to pass to `queryExecute`. Default: {}.
      *
-     * @return any
+     * @return [any]
      */
     public any function valuesRaw( required string column, struct options = {} ) {
         arguments.column = raw( arguments.column );

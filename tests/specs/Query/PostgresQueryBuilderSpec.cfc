@@ -672,6 +672,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function updateWithJoin() {
+        return "UPDATE ""employees"" SET ""employees"".""departmentName"" = departments.name FROM ""departments"" WHERE ""departments"".""id"" = ""employees"".""departmentId""";
+    }
+
     function updateOrInsertNotExists() {
         return { sql: "INSERT INTO ""users"" (""name"") VALUES (?)", bindings: [ "baz" ] };
     }

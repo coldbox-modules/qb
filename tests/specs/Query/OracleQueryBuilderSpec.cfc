@@ -675,6 +675,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function updateWithJoin() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function updateOrInsertNotExists() {
         return { sql: "INSERT INTO ""USERS"" (""NAME"") VALUES (?)", bindings: [ "baz" ] };
     }

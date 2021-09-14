@@ -56,6 +56,48 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return super.compileInsert( argumentCollection = arguments ) & returningClause;
     }
 
+    /**
+     * Compile a Builder's query into an update string.
+     *
+     * @query The Builder instance.
+     * @columns The array of columns into which to insert.
+     *
+     * @return string
+     */
+    public string function compileUpdate(
+        required QueryBuilder query,
+        required array columns,
+        required struct updateMap
+    ) {
+        var updateList = columns
+            .map( function( column ) {
+                var value = updateMap[ column.original ];
+                return "#wrapColumn( column.formatted )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+            } )
+            .toList( ", " );
+
+        var updateStatement = "UPDATE #wrapTable( query.getFrom() )#";
+
+
+        updateStatement = trim(
+            updateStatement & " SET #updateList# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#"
+        );
+
+        var joins = arguments.query.getJoins();
+        if ( joins.isEmpty() ) {
+            return updateStatement;
+        }
+
+        var firstJoin = joins[ 1 ];
+        updateStatement &= " FROM #wrapTable( firstJoin.getTable() )# #compileWheres( arguments.query, firstJoin.getWheres() )#";
+        if ( joins.len() <= 1 ) {
+            return updateStatement;
+        }
+
+        var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );
+        return "#updateStatement# #compileJoins( arguments.query, restJoins )#";
+    }
+
     /*===================================
     =              Schema               =
     ===================================*/

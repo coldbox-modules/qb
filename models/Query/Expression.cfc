@@ -9,6 +9,7 @@ component displayname="Expression" accessors="true" {
      * The raw sql value
      */
     property name="sql" type="string" default="";
+    property name="bindings" type="array";
 
     this.isExpression = true;
 
@@ -19,8 +20,9 @@ component displayname="Expression" accessors="true" {
      *
      * @return qb.models.Query.Expression
      */
-    public Expression function init( required string sql ) {
+    public Expression function init( required string sql, array bindings = [] ) {
         variables.sql = arguments.sql;
+        variables.bindings = arguments.bindings;
         return this;
     }
 

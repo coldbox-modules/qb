@@ -1755,6 +1755,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @column The column with which to constrain the having clause. An expression (`builder.raw()`) can be passed as well.
      * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
      * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
+     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
      *
      * @return qb.models.Query.QueryBuilder
      */
@@ -1768,6 +1769,26 @@ component displayname="QueryBuilder" accessors="true" {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
 
+        if (
+            isNull( arguments.value ) &&
+            isNull( arguments.operator ) &&
+            getUtils().isExpression( arguments.column )
+        ) {
+            arrayAppend(
+                variables.havings,
+                { type: "raw", column: arguments.column, combinator: arguments.combinator }
+            );
+            addBindings(
+                arguments.column
+                    .getBindings()
+                    .map( function( binding ) {
+                        return utils.extractBinding( binding );
+                    } ),
+                "where"
+            );
+            return this;
+        }
+
         if ( isNull( arguments.value ) ) {
             arguments.value = arguments.operator;
             arguments.operator = "=";
@@ -1778,6 +1799,7 @@ component displayname="QueryBuilder" accessors="true" {
         arrayAppend(
             variables.havings,
             {
+                type: "normal",
                 column: applyColumnFormatter( arguments.column ),
                 operator: arguments.operator,
                 value: arguments.value,
@@ -1785,11 +1807,35 @@ component displayname="QueryBuilder" accessors="true" {
             }
         );
 
+        if ( getUtils().isExpression( arguments.column ) ) {
+            addBindings(
+                arguments.column
+                    .getBindings()
+                    .map( function( binding ) {
+                        return utils.extractBinding( binding );
+                    } ),
+                "where"
+            );
+        }
+
         if ( getUtils().isNotExpression( arguments.value ) ) {
             addBindings( utils.extractBinding( arguments.value ), "where" );
         }
 
         return this;
+    }
+
+    /**
+     * Add a having clause to a query.
+     *
+     * @column The SQL to use as the raw expression.
+     * @bindings Any bindings used in the raw expression.
+     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function havingRaw( required string column, array bindings = [], string combinator = "and" ) {
+        return having( column = raw( arguments.column, arguments.bindings ), combinator = arguments.combinator );
     }
 
     /**
@@ -1900,6 +1946,14 @@ component displayname="QueryBuilder" accessors="true" {
         // ex: "DATE(created_at)" -- RAW expression
         if ( getUtils().isExpression( column ) ) {
             variables.orders.append( { direction: "raw", column: column } );
+            addBindings(
+                column
+                    .getBindings()
+                    .map( function( value ) {
+                        return variables.utils.extractBinding( arguments.value );
+                    } ),
+                "orderBy"
+            );
             return this;
         }
 
@@ -3240,8 +3294,8 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.Expression
      */
-    public Expression function raw( required string sql ) {
-        return new qb.models.Query.Expression( sql );
+    public Expression function raw( required string sql, array bindings = [] ) {
+        return new qb.models.Query.Expression( arguments.sql, arguments.bindings );
     }
 
     /**

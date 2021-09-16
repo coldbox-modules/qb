@@ -1256,6 +1256,37 @@ component extends="testbox.system.BaseSpec" {
                         }, havingRawColumn() );
                     } );
 
+                    it( "can use a raw expression as the entire having clause", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .groupBy( "email" )
+                                .having( builder.raw( "COUNT(email) > ?", [ 1 ] ) );
+                        }, havingRawExpression() );
+                    } );
+
+                    it( "can use a havingRaw shortcut method", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .groupBy( "email" )
+                                .havingRaw( "COUNT(email) > ?", [ 1 ] );
+                        }, havingRawExpression() );
+                    } );
+
+                    it( "can add a having clause with a raw column that contains bindings", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .groupBy( "email" )
+                                .having(
+                                    builder.raw( "CASE WHEN active = ? THEN COUNT(email) ELSE 0 END", [ 1 ] ),
+                                    ">",
+                                    2
+                                );
+                        }, havingRawColumnWithBindings() );
+                    } );
+
                     it( "can add a having clause with a raw value", function() {
                         testCase( function( builder ) {
                             builder
@@ -1318,6 +1349,14 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder.from( "users" ).orderByRaw( "CASE WHEN id = ? THEN 1 ELSE 0 END DESC", [ 1 ] );
                         }, orderByRawWithBindings() );
+                    } );
+
+                    it( "can accept bindings in a raw expression in orderBy", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .orderBy( builder.raw( "CASE WHEN id = ? THEN 1 ELSE 0 END DESC", [ 1 ] ) );
+                        }, orderByWithRawBindings() );
                     } );
 
                     it( "can order by a subselect", function() {

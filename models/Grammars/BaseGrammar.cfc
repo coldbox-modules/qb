@@ -569,6 +569,9 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function compileHaving( required struct having ) {
+        if ( having.type == "raw" ) {
+            return trim( "#having.combinator# #having.column.getSQL()#" );
+        }
         var placeholder = variables.utils.isExpression( having.value ) ? having.value.getSQL() : "?";
         return trim( "#having.combinator# #wrapColumn( having.column )# #having.operator# #placeholder#" );
     }

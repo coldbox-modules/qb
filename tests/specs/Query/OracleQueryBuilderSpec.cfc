@@ -445,6 +445,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM ""USERS"" GROUP BY ""EMAIL"" HAVING COUNT(email) > ?", bindings: [ 1 ] };
     }
 
+    function havingRawExpression() {
+        return { sql: "SELECT * FROM ""USERS"" GROUP BY ""EMAIL"" HAVING COUNT(email) > ?", bindings: [ 1 ] };
+    }
+
+    function havingRawColumnWithBindings() {
+        return {
+            sql: "SELECT * FROM ""USERS"" GROUP BY ""EMAIL"" HAVING CASE WHEN active = ? THEN COUNT(email) ELSE 0 END > ?",
+            bindings: [ 1, 2 ]
+        };
+    }
+
     function havingRawValue() {
         return {
             sql: "SELECT COUNT(*) AS ""total"" FROM ""ITEMS"" WHERE ""DEPARTMENT"" = ? GROUP BY ""CATEGORY"" HAVING ""TOTAL"" > 3",
@@ -469,6 +480,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function orderByRawWithBindings() {
+        return { "sql": "SELECT * FROM ""USERS"" ORDER BY CASE WHEN id = ? THEN 1 ELSE 0 END DESC", "bindings": [ 1 ] };
+    }
+
+    function orderByWithRawBindings() {
         return { "sql": "SELECT * FROM ""USERS"" ORDER BY CASE WHEN id = ? THEN 1 ELSE 0 END DESC", "bindings": [ 1 ] };
     }
 

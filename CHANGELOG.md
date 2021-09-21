@@ -1,3 +1,37 @@
+# v8.7.0
+## 21 Sep 2021 — 21:11:00 UTC
+
+### chore
+
++ __Release:__ Fix artifact commit process during release
+ ([2c7d3eb](https://github.com/coldbox-modules/qb/commit/2c7d3eb52c0d71fc0a720a044d9a84167167d5e2))
++ __CI:__ Remove ColdBox as a test dependency
+ ([9fa95ca](https://github.com/coldbox-modules/qb/commit/9fa95caf21f2da1425d152384120afde285a5ea6))
++ __CI:__ Test with full null support ([98b0df9](https://github.com/coldbox-modules/qb/commit/98b0df9ff5935e1d79ddf93bf7dc8e39b9f9688a))
+
+### feat
+
++ __QueryBuilder:__ Allow updates with subselects ([af82f71](https://github.com/coldbox-modules/qb/commit/af82f71807c19b1bc072c3b74335428d318a1859))
++ __QueryBuilder:__ Allow JOINS in UPDATE statements ([0a89175](https://github.com/coldbox-modules/qb/commit/0a8917508f233b03fc5d7ebe48d2c56d2763787f))
++ __QueryBuilder:__ Allow expressions in `value` and `values` ([60d131e](https://github.com/coldbox-modules/qb/commit/60d131e6ccfe93586f381540782b8448da695517))
++ __QueryBuilder:__ Add an upsert method ([13debdd](https://github.com/coldbox-modules/qb/commit/13debdd54d57f439d3fc05b5cf72646ed4be94b4))
+
+### fix
+
++ __Expressions:__ Better Expression support in HAVING ([7b1096f](https://github.com/coldbox-modules/qb/commit/7b1096f36b05d30bb148d2261ce040f54882c003))
++ __Aggregates:__ Use default values via COALESCE ([ab181e2](https://github.com/coldbox-modules/qb/commit/ab181e2d4aa514dd12632f0ff0a3397771ca6ccd))
++ __Aggregates:__ Provide default values for sum and count if no records are returned ([4ce89ac](https://github.com/coldbox-modules/qb/commit/4ce89accf7972b46a382ae16cc3fff8225dcad21))
++ __Aggregates:__ Allow any value to be returned from withAggregate ([5323e39](https://github.com/coldbox-modules/qb/commit/5323e39e5d36b479ba3787e459c4e17bc0cad80a))
++ __Pagination:__ Handle group by and havings in pagination queries ([4a4428f](https://github.com/coldbox-modules/qb/commit/4a4428f757d5a078b2e310f31a6e517d18d0c642))
+
+### other
+
++ __\*:__ v8.7.0-beta.2
+ ([62705cd](https://github.com/coldbox-modules/qb/commit/62705cd47947326608909492d64bd6f82d442334))
++ __\*:__ v8.7.0-beta.1
+ ([13feb20](https://github.com/coldbox-modules/qb/commit/13feb20970214be12481e89d6419559789b0cdf2))
+
+
 # v8.3.0
 ## 29 Oct 2020 — 22:52:21 UTC
 

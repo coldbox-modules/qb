@@ -676,7 +676,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function updateWithJoin() {
-        return "UPDATE [employees] SET [employees].[departmentName] = departments.name FROM [employees] INNER JOIN [departments] ON [departments].[id] = [employees].[departmentId]";
+        return "UPDATE [employees] SET [departmentName] = departments.name FROM [employees] INNER JOIN [departments] ON [departments].[id] = [employees].[departmentId]";
     }
 
     function updateWithSubselect() {

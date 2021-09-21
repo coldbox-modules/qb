@@ -2552,7 +2552,7 @@ component displayname="QueryBuilder" accessors="true" {
         var updateArray = arguments.values
             .keyArray()
             .map( function( column ) {
-                var formatted = applyColumnFormatter( column );
+                var formatted = listLast( applyColumnFormatter( column ), "." );
                 return { original: column, formatted: formatted };
             } );
 

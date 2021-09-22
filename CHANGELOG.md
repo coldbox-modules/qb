@@ -1,3 +1,12 @@
+# v8.7.1
+## 22 Sep 2021 — 02:17:56 UTC
+
+### fix
+
++ __QueryBuilder:__ Correctly format columns being updated
+ ([a32bfb5](https://github.com/coldbox-modules/qb/commit/a32bfb5e11706e171bf515804437ce1c68a1dae4))
+
+
 # v8.7.0
 ## 21 Sep 2021 — 21:11:00 UTC
 

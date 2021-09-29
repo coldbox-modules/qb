@@ -86,7 +86,11 @@ component displayname="QueryUtils" accessors="true" {
      *
      * @return string
      */
-    public string function inferSqlType( required any value ) {
+    public string function inferSqlType( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return "CF_SQL_VARCHAR";
+        }
+
         if ( isArray( value ) ) {
             return arraySame(
                 value,
@@ -295,19 +299,20 @@ component displayname="QueryUtils" accessors="true" {
      *
      * @return boolean
      */
-    private boolean function checkIsActuallyNumeric( required any value ) {
-        return isNull( arguments.value ) || (
-            isSimpleValue( arguments.value ) && arrayContainsNoCase(
-                [
-                    "CFDouble",
-                    "Integer",
-                    "Double",
-                    "Float",
-                    "Long",
-                    "Short"
-                ],
-                listLast( getMetadata( arguments.value ), ". " )
-            )
+    private boolean function checkIsActuallyNumeric( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return false;
+        }
+        return isSimpleValue( arguments.value ) && arrayContainsNoCase(
+            [
+                "CFDouble",
+                "Integer",
+                "Double",
+                "Float",
+                "Long",
+                "Short"
+            ],
+            listLast( getMetadata( arguments.value ), ". " )
         );
     }
 
@@ -318,13 +323,15 @@ component displayname="QueryUtils" accessors="true" {
      *
      * @return boolean
      */
-    private boolean function checkIsActuallyDate( required any value ) {
+    private boolean function checkIsActuallyDate( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return false;
+        }
+
         if ( variables.strictDateDetection ) {
-            return isNull( arguments.value ) || (
-                isDate( arguments.value ) && arrayContainsNoCase(
-                    [ "OleDateTime", "DateTimeImpl" ],
-                    listLast( getMetadata( arguments.value ), "." )
-                )
+            return isDate( arguments.value ) && arrayContainsNoCase(
+                [ "OleDateTime", "DateTimeImpl" ],
+                listLast( getMetadata( arguments.value ), "." )
             );
         } else {
             return isDate( arguments.value );
@@ -433,6 +440,10 @@ component displayname="QueryUtils" accessors="true" {
     }
 
     private boolean function isFloatingPoint( required struct binding ) {
+        if ( isNull( arguments.binding.value ) || arguments.binding.null ) {
+            return false;
+        }
+
         return arguments.binding.cfsqltype.findNoCase( "decimal" ) > 0 ||
         arguments.binding.cfsqltype.findNoCase( "double" ) > 0 ||
         arguments.binding.cfsqltype.findNoCase( "float" ) > 0 ||
@@ -446,6 +457,10 @@ component displayname="QueryUtils" accessors="true" {
     }
 
     private numeric function calculateNumberOfDecimalDigits( required struct binding ) {
+        if ( isNull( arguments.binding.value ) || arguments.binding.null ) {
+            return 0;
+        }
+
         var numString = arguments.binding.value.toString();
         var numStringParts = listToArray( numString, "." );
         if ( numStringParts.len() != 2 ) {

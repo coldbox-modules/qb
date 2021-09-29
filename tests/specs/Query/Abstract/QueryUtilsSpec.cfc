@@ -34,6 +34,23 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 variables.utils.setStrictDateDetection( false );
             } );
 
+            it( "null", function() {
+                expect( utils.inferSqlType( javacast( "null", "" ) ) ).toBe( "CF_SQL_VARCHAR" );
+                expect( utils.extractBinding( javacast( "null", "" ) ) ).toBe( { "null": true, "cfsqltype": "CF_SQL_VARCHAR", "value": "" } );
+                makePublic( utils, "checkIsActuallyNumeric", "publicCheckIsActuallyNumeric" );
+                expect( utils.publicCheckIsActuallyNumeric( javacast( "null", "" ) ) ).toBe( false );
+                makePublic( utils, "isFloatingPoint", "publicIsFloatingPoint" );
+                expect(
+                    utils.publicIsFloatingPoint( { "value": javacast( "null", "" ), "cfsqltype": "CF_SQL_DECIMAL", "null": true } )
+                ).toBe( false );
+                makePublic( utils, "checkIsActuallyDate", "publicCheckIsActuallyDate" );
+                expect( utils.publicCheckIsActuallyDate( javacast( "null", "" ) ) ).toBe( false );
+                makePublic( utils, "calculateNumberOfDecimalDigits", "publicCalculateNumberOfDecimalDigits" );
+                expect(
+                    utils.publicCalculateNumberOfDecimalDigits( { "value": javacast( "null", "" ), "cfsqltype": "CF_SQL_DECIMAL", "null": true } )
+                ).toBe( 0 );
+            } );
+
             describe( "it infers the sql type from the members of an array", function() {
                 it( "if all the members of the array are the same", function() {
                     if ( isACF2016() ) {

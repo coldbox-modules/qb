@@ -1,3 +1,12 @@
+# v8.7.2
+## 29 Sep 2021 — 22:05:52 UTC
+
+### fix
+
++ __QueryUtils:__ Add better null handling to inferSqlType
+ ([1f11650](https://github.com/coldbox-modules/qb/commit/1f11650cfff88ce5cc03e21df1ce99913b60c398))
+
+
 # v8.7.1
 ## 22 Sep 2021 — 02:17:56 UTC
 

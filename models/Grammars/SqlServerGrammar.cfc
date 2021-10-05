@@ -315,7 +315,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .toList( ", " );
         }
 
-        return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING (VALUES #placeholderString#) AS [qb_src] (#columnsString#) ON #constraintString# WHEN MATCHED THEN UPDATE SET #updateList# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)";
+        return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING (VALUES #placeholderString#) AS [qb_src] (#columnsString#) ON #constraintString# WHEN MATCHED THEN UPDATE SET #updateList# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#);";
     }
 
     function generateType( column, blueprint ) {

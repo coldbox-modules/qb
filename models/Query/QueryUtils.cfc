@@ -133,6 +133,9 @@ component displayname="QueryUtils" accessors="true" {
      * @return boolean
      */
     public boolean function isNotExpression( required any value ) {
+		if ( isNull( arguments.value ) ) {
+            return true;
+        }
         return isSimpleValue( arguments.value ) ||
         isArray( arguments.value ) ||
         !structKeyExists( arguments.value, "isExpression" );
@@ -146,6 +149,9 @@ component displayname="QueryUtils" accessors="true" {
      * @return boolean
      */
     public boolean function isBuilder( required any value ) {
+        if ( isNull( arguments.value ) ) {
+            return false;
+        }
         return !isSimpleValue( arguments.value ) &&
         !isArray( arguments.value ) &&
         structKeyExists( arguments.value, "isBuilder" );

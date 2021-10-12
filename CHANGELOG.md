@@ -1,3 +1,21 @@
+# v8.7.4
+## 12 Oct 2021 — 22:26:26 UTC
+
+### fix
+
++ __Null:__ Fixes for full null support
+ ([963d79e](https://github.com/coldbox-modules/qb/commit/963d79ee642d44579ae99b5be1ee557a4d7b8de4))
+
+
+# v8.7.3
+## 06 Oct 2021 — 22:05:52 UTC
+
+### fix
+
++ __QueryBuilder:__ Merge statements in SQL Server need a terminating semicolon
+ ([32b5dec](https://github.com/coldbox-modules/qb/commit/32b5dec785fe29bde685a5cdba79e7601557e523))
+
+
 # v8.7.2
 ## 29 Sep 2021 — 22:05:52 UTC
 

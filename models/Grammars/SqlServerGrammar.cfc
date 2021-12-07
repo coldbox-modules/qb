@@ -271,27 +271,35 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         required array values,
         required array updateColumns,
         required any updates,
-        required array target
+        required array target,
+        QueryBuilder source
     ) {
+        var sourceString = "";
         var columnsString = arguments.insertColumns
             .map( function( column ) {
                 return wrapColumn( column.formatted );
             } )
             .toList( ", " );
 
-        var placeholderString = arguments.values
-            .map( function( valueArray ) {
-                return "(" & valueArray
-                    .map( function( item ) {
-                        if ( getUtils().isExpression( item ) ) {
-                            return item.getSQL();
-                        } else {
-                            return "?";
-                        }
-                    } )
-                    .toList( ", " ) & ")";
-            } )
-            .toList( ", " );
+        if ( !isNull( arguments.source ) ) {
+            sourceString = "(#compileSelect( arguments.source )#) AS [qb_src]";
+        } else {
+            var placeholderString = arguments.values
+                .map( function( valueArray ) {
+                    return "(" & valueArray
+                        .map( function( item ) {
+                            if ( getUtils().isExpression( item ) ) {
+                                return item.getSQL();
+                            } else {
+                                return "?";
+                            }
+                        } )
+                        .toList( ", " ) & ")";
+                } )
+                .toList( ", " );
+
+            sourceString = "(VALUES #placeholderString#) AS [qb_src] (#columnsString#)";
+        }
 
         var constraintString = arguments.target
             .map( function( column ) {
@@ -315,7 +323,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .toList( ", " );
         }
 
-        return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING (VALUES #placeholderString#) AS [qb_src] (#columnsString#) ON #constraintString# WHEN MATCHED THEN UPDATE SET #updateList# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#);";
+        return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING #sourceString# ON #constraintString# WHEN MATCHED THEN UPDATE SET #updateList# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#);";
     }
 
     function generateType( column, blueprint ) {

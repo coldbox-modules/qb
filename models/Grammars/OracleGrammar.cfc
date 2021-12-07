@@ -163,7 +163,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array values,
         required array updateColumns,
         required any updates,
-        required array target
+        required array target,
+        QueryBuilder source
     ) {
         var columnsString = arguments.insertColumns
             .map( function( column ) {
@@ -178,19 +179,24 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             ", "
         );
 
-        var placeholderString = arguments.values
-            .map( function( valueArray ) {
-                return "SELECT " & valueArray
-                    .map( function( item ) {
-                        if ( getUtils().isExpression( item ) ) {
-                            return item.getSQL();
-                        } else {
-                            return "?";
-                        }
-                    } )
-                    .toList( ", " ) & " FROM dual";
-            } )
-            .toList( " UNION ALL " );
+        var placeholderString = "";
+        if ( !isNull( arguments.source ) ) {
+            placeholderString = compileSelect( arguments.source );
+        } else {
+            placeholderString = arguments.values
+                .map( function( valueArray ) {
+                    return "SELECT " & valueArray
+                        .map( function( item ) {
+                            if ( getUtils().isExpression( item ) ) {
+                                return item.getSQL();
+                            } else {
+                                return "?";
+                            }
+                        } )
+                        .toList( ", " ) & " FROM dual";
+                } )
+                .toList( " UNION ALL " );
+        }
 
         var constraintString = arguments.target
             .map( function( column ) {

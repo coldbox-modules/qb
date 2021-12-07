@@ -2291,6 +2291,46 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, upsertSingleTarget() );
                 } );
+
+                it( "can perform an upsert with a closure as the source", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "users" )
+                            .upsert(
+                                source = function( q ) {
+                                    q.from( "activeDirectoryUsers" );
+                                },
+                                values = [
+                                    "username",
+                                    "active",
+                                    "createdDate",
+                                    "modifiedDate"
+                                ],
+                                target = [ "username" ],
+                                update = [ "active", "modifiedDate" ],
+                                toSql = true
+                            );
+                    }, upsertFromClosure() );
+                } );
+
+                it( "can perform an upsert with a builder object as the source", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "users" )
+                            .upsert(
+                                source = builder.newQuery().from( "activeDirectoryUsers" ),
+                                values = [
+                                    "username",
+                                    "active",
+                                    "createdDate",
+                                    "modifiedDate"
+                                ],
+                                target = [ "username" ],
+                                update = [ "active", "modifiedDate" ],
+                                toSql = true
+                            );
+                    }, upsertFromClosure() );
+                } );
             } );
 
             describe( "delete statements", function() {

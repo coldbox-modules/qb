@@ -106,9 +106,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array insertColumns,
         required array values,
         required array updateColumns,
-        required any updates
+        required any updates,
+        required array target,
+        QueryBuilder source
     ) {
-        var insertString = this.compileInsert( arguments.qb, arguments.insertColumns, arguments.values );
+        var insertString = isNull( arguments.source ) ? this.compileInsert(
+            arguments.qb,
+            arguments.insertColumns,
+            arguments.values
+        ) : this.compileInsertUsing( arguments.qb, arguments.insertColumns, arguments.source );
         var updateString = "";
         if ( isArray( arguments.updates ) ) {
             updateString = arguments.updateColumns

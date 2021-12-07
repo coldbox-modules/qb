@@ -2661,11 +2661,18 @@ component displayname="QueryBuilder" accessors="true" {
         required any values,
         required any target,
         any update,
+        any source,
         struct options = {},
         boolean toSql = false
     ) {
         if ( arguments.values.isEmpty() ) {
             return;
+        }
+
+        if ( !isNull( arguments.source ) && ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) ) {
+            var callback = arguments.source;
+            arguments.source = newQuery();
+            callback( arguments.source );
         }
 
         if ( !isArray( arguments.values ) ) {
@@ -2687,13 +2694,16 @@ component displayname="QueryBuilder" accessors="true" {
             return { "original": column, "formatted": formatted };
         } );
 
-        var columns = arguments.values[ 1 ]
-            .keyArray()
-            .map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
-                return { "original": column, "formatted": formatted };
-            } );
-
+        var columns = [];
+        if ( isStruct( arguments.values[ 1 ] ) ) {
+            columns = arguments.values[ 1 ].keyArray();
+        } else {
+            columns = arguments.values;
+        }
+        columns = columns.map( function( column ) {
+            var formatted = listLast( applyColumnFormatter( column ), "." );
+            return { "original": column, "formatted": formatted };
+        } );
         columns.sort( function( a, b ) {
             return compareNoCase( a.formatted, b.formatted );
         } );
@@ -2725,13 +2735,16 @@ component displayname="QueryBuilder" accessors="true" {
             return compareNoCase( a.formatted, b.formatted );
         } );
 
-        var newInsertBindings = arguments.values.map( function( value ) {
-            return columns.map( function( column ) {
-                return getUtils().extractBinding(
-                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" )
-                );
+        var newInsertBindings = [];
+        if ( isStruct( arguments.values[ 1 ] ) ) {
+            newInsertBindings = arguments.values.map( function( value ) {
+                return columns.map( function( column ) {
+                    return getUtils().extractBinding(
+                        value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" )
+                    );
+                } );
             } );
-        } );
+        }
 
         newInsertBindings.each( function( bindingsArray ) {
             bindingsArray.each( function( binding ) {
@@ -2749,7 +2762,8 @@ component displayname="QueryBuilder" accessors="true" {
             newInsertBindings,
             updateArray,
             arguments.update,
-            arguments.target
+            arguments.target,
+            isNull( arguments.source ) ? javacast( "null", "" ) : arguments.source
         );
 
         clearBindings( except = [ "insert", "update" ] );

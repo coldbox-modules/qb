@@ -790,6 +790,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertFromClosure() {
+        return {
+            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT * FROM ""ACTIVEDIRECTORYUSERS"") ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"", ""USERNAME"") VALUES (""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"", ""QB_SRC"".""USERNAME"")",
+            bindings: []
+        };
+    }
+
+    function upsertFromBuilder() {
+        return {
+            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT * FROM ""ACTIVEDIRECTORYUSERS"") ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"", ""USERNAME"") VALUES (""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"", ""QB_SRC"".""USERNAME"")",
+            bindings: []
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM ""USERS""";
     }

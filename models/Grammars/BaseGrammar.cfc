@@ -782,45 +782,6 @@ component displayname="Grammar" accessors="true" singleton {
         );
     }
 
-    public string function compileUpsert(
-        required QueryBuilder qb,
-        required array insertColumns,
-        required array values,
-        required array updateColumns,
-        required any updates,
-        required array target,
-        QueryBuilder source
-    ) {
-        var insertString = isNull( arguments.source ) ? this.compileInsert(
-            arguments.qb,
-            arguments.insertColumns,
-            arguments.values
-        ) : this.compileInsertUsing( arguments.qb, arguments.insertColumns, arguments.source );
-        var updateString = "";
-        if ( isArray( arguments.updates ) ) {
-            updateString = arguments.updateColumns
-                .map( function( column ) {
-                    return "#wrapValue( column.formatted )# = EXCLUDED.#wrapValue( column.formatted )#";
-                } )
-                .toList( ", " );
-        } else {
-            updateString = arguments.updateColumns
-                .map( function( column ) {
-                    var value = updates[ column.original ];
-                    return "#wrapValue( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
-                } )
-                .toList( ", " );
-        }
-
-        var constraintString = arguments.target
-            .map( function( column ) {
-                return wrapColumn( column.formatted );
-            } )
-            .toList( ", " );
-
-        return insertString & " ON CONFLICT (#constraintString#) DO UPDATE #updateString#";
-    }
-
     /**
      * Compile a Builder's query into a delete string.
      *

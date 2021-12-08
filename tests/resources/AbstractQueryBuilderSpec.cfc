@@ -2342,7 +2342,29 @@ component extends="testbox.system.BaseSpec" {
                                 update = [ "active", "modifiedDate" ],
                                 toSql = true
                             );
-                    }, upsertFromClosure() );
+                    }, upsertFromBuilder() );
+                } );
+
+                it( "can delete unmatched source rows in an upsert (SQL Server)", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "users" )
+                            .upsert(
+                                source = function( q ) {
+                                    q.from( "activeDirectoryUsers" );
+                                },
+                                values = [
+                                    "username",
+                                    "active",
+                                    "createdDate",
+                                    "modifiedDate"
+                                ],
+                                target = [ "username" ],
+                                update = [ "active", "modifiedDate" ],
+                                deleteUnmatched = true,
+                                toSql = true
+                            );
+                    }, upsertWithDelete() );
                 } );
             } );
 

@@ -660,6 +660,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertUsingSelectCallback() {
+        return {
+            sql: "INSERT INTO ""USERS"" (""CREATEDDATE"", ""EMAIL"") SELECT ""CREATEDDATE"", ""EMAIL"" FROM ""ACTIVEDIRECTORYUSERS""",
+            bindings: []
+        };
+    }
+
+    function insertUsingSelectBuilder() {
+        return {
+            SQL: "INSERT INTO ""USERS"" (""CREATEDDATE"", ""EMAIL"") SELECT ""CREATEDDATE"", ""EMAIL"" FROM ""ACTIVEDIRECTORYUSERS""",
+            bindings: []
+        };
+    }
+
     function returning() {
         return { exception: "UnsupportedOperation" };
     }

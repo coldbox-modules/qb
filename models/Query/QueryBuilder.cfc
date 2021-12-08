@@ -2662,6 +2662,7 @@ component displayname="QueryBuilder" accessors="true" {
         required any target,
         any update,
         any source,
+        boolean deleteUnmatched = false,
         struct options = {},
         boolean toSql = false
     ) {
@@ -2763,7 +2764,8 @@ component displayname="QueryBuilder" accessors="true" {
             updateArray,
             arguments.update,
             arguments.target,
-            isNull( arguments.source ) ? javacast( "null", "" ) : arguments.source
+            isNull( arguments.source ) ? javacast( "null", "" ) : arguments.source,
+            arguments.deleteUnmatched
         );
 
         clearBindings( except = [ "insert", "update" ] );

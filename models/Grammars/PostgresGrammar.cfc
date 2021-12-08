@@ -104,6 +104,56 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "#updateStatement# #compileJoins( arguments.query, restJoins )#";
     }
 
+    public string function compileUpsert(
+        required QueryBuilder qb,
+        required array insertColumns,
+        required array values,
+        required array updateColumns,
+        required any updates,
+        required array target,
+        QueryBuilder source,
+        boolean deleteUnmatched = false
+    ) {
+        if ( arguments.deleteUnmatched ) {
+            throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
+        }
+
+        var insertString = isNull( arguments.source ) ? this.compileInsert(
+            arguments.qb,
+            arguments.insertColumns,
+            arguments.values
+        ) : this.compileInsertUsing( arguments.qb, arguments.insertColumns, arguments.source );
+        var updateString = "";
+        if ( isArray( arguments.updates ) ) {
+            updateString = arguments.updateColumns
+                .map( function( column ) {
+                    return "#wrapValue( column.formatted )# = EXCLUDED.#wrapValue( column.formatted )#";
+                } )
+                .toList( ", " );
+        } else {
+            updateString = arguments.updateColumns
+                .map( function( column ) {
+                    var value = updates[ column.original ];
+                    return "#wrapValue( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
+                } )
+                .toList( ", " );
+        }
+
+        var constraintString = arguments.target
+            .map( function( column ) {
+                return wrapColumn( column.formatted );
+            } )
+            .toList( ", " );
+
+        var returningColumns = arguments.qb
+            .getReturning()
+            .map( wrapColumn )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+
+        return insertString & " ON CONFLICT (#constraintString#) DO UPDATE #updateString##returningClause#";
+    }
+
     /*===================================
     =              Schema               =
     ===================================*/

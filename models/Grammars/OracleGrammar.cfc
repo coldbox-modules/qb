@@ -164,8 +164,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array updateColumns,
         required any updates,
         required array target,
-        QueryBuilder source
+        QueryBuilder source,
+        boolean deleteUnmatched = false
     ) {
+        if ( arguments.deleteUnmatched ) {
+            throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
+        }
+
         var columnsString = arguments.insertColumns
             .map( function( column ) {
                 return wrapColumn( column.formatted );

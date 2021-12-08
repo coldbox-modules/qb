@@ -58,6 +58,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         var returningColumns = query
             .getReturning()
             .map( function( column ) {
+                if ( listLen( column, "." ) > 1 ) {
+                    return column;
+                }
                 return "INSERTED." & wrapColumn( column );
             } )
             .toList( ", " );
@@ -272,7 +275,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         required array updateColumns,
         required any updates,
         required array target,
-        QueryBuilder source
+        QueryBuilder source,
+        boolean deleteUnmatched = false
     ) {
         var sourceString = "";
         var columnsString = arguments.insertColumns
@@ -322,8 +326,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 } )
                 .toList( ", " );
         }
+        var updateStatement = updateList == "" ? "" : " WHEN MATCHED THEN UPDATE SET #updateList#";
 
-        return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING #sourceString# ON #constraintString# WHEN MATCHED THEN UPDATE SET #updateList# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#);";
+        var deleteStatement = arguments.deleteUnmatched ? " WHEN NOT MATCHED BY SOURCE DELETE" : "";
+
+        var returningColumns = arguments.qb.getReturning().toList( ", " );
+        var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
+
+        return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING #sourceString# ON #constraintString##updateStatement# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)#deleteStatement##returningClause#;";
     }
 
     function generateType( column, blueprint ) {

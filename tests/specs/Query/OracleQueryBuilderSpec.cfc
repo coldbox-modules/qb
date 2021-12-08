@@ -800,6 +800,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertWithDelete() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function deleteAll() {
         return "DELETE FROM ""USERS""";
     }

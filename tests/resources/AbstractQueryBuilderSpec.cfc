@@ -2061,6 +2061,35 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, insertWithNull() );
                 } );
+
+                it( "can insert using a select statement and a callback", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .insertUsing(
+                                columns = [ "createdDate", "email" ],
+                                source = function( q ) {
+                                    q.from( "activeDirectoryUsers" ).select( [ "createdDate", "email" ] );
+                                },
+                                toSql = true
+                            );
+                    }, insertUsingSelectCallback() );
+                } );
+
+                it( "can insert using a select statement and a builder object", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .insertUsing(
+                                columns = [ "createdDate", "email" ],
+                                source = builder
+                                    .newQuery()
+                                    .from( "activeDirectoryUsers" )
+                                    .select( [ "createdDate", "email" ] ),
+                                toSql = true
+                            );
+                    }, insertUsingSelectBuilder() );
+                } );
             } );
 
             describe( "update statements", function() {

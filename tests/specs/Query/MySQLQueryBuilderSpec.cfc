@@ -644,6 +644,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertUsingSelectCallback() {
+        return {
+            sql: "INSERT INTO `users` (`createdDate`, `email`) SELECT `createdDate`, `email` FROM `activeDirectoryUsers`",
+            bindings: []
+        };
+    }
+
+    function insertUsingSelectBuilder() {
+        return {
+            sql: "INSERT INTO `users` (`createdDate`, `email`) SELECT `createdDate`, `email` FROM `activeDirectoryUsers`",
+            bindings: []
+        };
+    }
+
     function returning() {
         return { exception: "UnsupportedOperation" };
     }

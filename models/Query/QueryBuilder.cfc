@@ -2528,6 +2528,47 @@ component displayname="QueryBuilder" accessors="true" {
         return runQuery( sql, arguments.options, "result" );
     }
 
+    /**
+     * Inserts data into a table based off of a query.
+     * This call must come after setting the query's table using `from` or `table`.
+     *
+     * @columns An array of columns to insert.
+     * @source A callback function or QueryBuilder object to insert records from.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+     *
+     * @return query
+     */
+    public any function insertUsing(
+        required array columns,
+        required any source,
+        struct options = {},
+        boolean toSql = false
+    ) {
+        if ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) {
+            var callback = arguments.source;
+            arguments.source = newQuery();
+            callback( arguments.source );
+        }
+
+        var formattedColumns = arguments.columns.map( function( column ) {
+            var formatted = listLast( applyColumnFormatter( column ), "." );
+            return { "original": column, "formatted": formatted };
+        } );
+
+        formattedColumns.sort( function( a, b ) {
+            return compareNoCase( a.formatted, b.formatted );
+        } );
+
+        var sql = getGrammar().compileInsertUsing( this, formattedColumns, arguments.source );
+
+        if ( toSql ) {
+            return sql;
+        }
+
+        return runQuery( sql, arguments.options, "result" );
+    }
+
     function returning( required any columns ) {
         variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
         variables.returning = variables.returning.map( function( column ) {

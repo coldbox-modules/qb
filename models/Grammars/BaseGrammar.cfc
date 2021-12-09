@@ -723,6 +723,32 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Compile a Builder's query into an insert string ignoring duplicate key values.
+     *
+     * @qb The Builder instance.
+     * @columns The array of columns into which to insert.
+     * @target The array of key columns to match.
+     * @values The array of values to insert.
+     *
+     * @return string
+     */
+    public string function compileInsertIgnore(
+        required QueryBuilder qb,
+        required array columns,
+        required array target,
+        required array values
+    ) {
+        return compileUpsert(
+            arguments.qb,
+            arguments.columns,
+            arguments.values,
+            [],
+            [],
+            arguments.target
+        );
+    }
+
+    /**
      * Compile a Builder's query into an insert using string.
      *
      * @query The Builder instance.

@@ -2569,7 +2569,86 @@ component displayname="QueryBuilder" accessors="true" {
         return runQuery( sql, arguments.options, "result" );
     }
 
-    function returning( required any columns ) {
+    /**
+     * Inserts data into a table ignoring any duplicate keys when inserting.
+     * This call must come after setting the query's table using `from` or `table`.
+     *
+     * @values A struct or array of structs to insert in to the table.
+     * @target An array of key column names to match on (for SQL Server and Oracle grammars)
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
+     *
+     * @return query
+     */
+    public any function insertIgnore(
+        required any values,
+        array target = [],
+        struct options = {},
+        boolean toSql = false
+    ) {
+        if ( values.isEmpty() ) {
+            return;
+        }
+
+        if ( !isArray( values ) ) {
+            if ( !isStruct( values ) ) {
+                throw(
+                    type = "InvalidSQLType",
+                    message = "Please pass a struct or an array of structs mapping columns to values"
+                );
+            }
+            values = [ values ];
+        }
+
+        var columns = arguments.values[ 1 ]
+            .keyArray()
+            .map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
+            } );
+        columns.sort( function( a, b ) {
+            return compareNoCase( a.formatted, b.formatted );
+        } );
+        var newBindings = arguments.values.map( function( value ) {
+            return columns.map( function( column ) {
+                return getUtils().extractBinding(
+                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" )
+                );
+            } );
+        } );
+
+        newBindings.each( function( bindingsArray ) {
+            bindingsArray.each( function( binding ) {
+                if ( getUtils().isNotExpression( binding ) ) {
+                    addBindings( binding, "insert" );
+                } else {
+                    addBindings( binding, "insertRaw" );
+                }
+            } );
+        } );
+
+        arguments.target = arrayWrap( arguments.target ).map( function( column ) {
+            var formatted = listLast( applyColumnFormatter( column ), "." );
+            return { "original": column, "formatted": formatted };
+        } );
+
+        var sql = getGrammar().compileInsertIgnore(
+            this,
+            columns,
+            arguments.target,
+            newBindings
+        );
+
+        clearBindings( except = "insert" );
+
+        if ( toSql ) {
+            return sql;
+        }
+
+        return runQuery( sql, arguments.options, "result" );
+    }
+
+    public QueryBuilder function returning( required any columns ) {
         variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
         variables.returning = variables.returning.map( function( column ) {
             return listLast( applyColumnFormatter( column ), "." );

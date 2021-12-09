@@ -656,6 +656,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertIgnore() {
+        return {
+            sql: "MERGE [users] AS [qb_target] USING (VALUES (?, ?), (?, ?)) AS [qb_src] ([email], [name]) ON [qb_target].[email] = [qb_src].[email] WHEN NOT MATCHED BY TARGET THEN INSERT ([email], [name]) VALUES ([email], [name]);",
+            bindings: [ "foo", "bar", "baz", "bleh" ]
+        };
+    }
+
     function returning() {
         return {
             sql: "INSERT INTO [users] ([email], [name]) OUTPUT INSERTED.[id] VALUES (?, ?)",

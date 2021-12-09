@@ -674,6 +674,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertIgnore() {
+        return {
+            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ?, ? FROM dual UNION ALL SELECT ?, ? FROM dual) ""QB_SRC"" ON ""QB_TARGET"".""EMAIL"" = ""QB_SRC"".""EMAIL"" WHEN NOT MATCHED THEN INSERT (""EMAIL"", ""NAME"") VALUES (""QB_SRC"".""EMAIL"", ""QB_SRC"".""NAME"")",
+            bindings: [ "foo", "bar", "baz", "bleh" ]
+        };
+    }
+
     function returning() {
         return { exception: "UnsupportedOperation" };
     }

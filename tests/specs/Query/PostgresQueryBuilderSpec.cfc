@@ -665,6 +665,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertIgnore() {
+        return {
+            sql: "INSERT INTO ""users"" (""email"", ""name"") VALUES (?, ?), (?, ?) ON CONFLICT DO NOTHING",
+            bindings: [ "foo", "bar", "baz", "bleh" ]
+        };
+    }
+
     function returning() {
         return {
             sql: "INSERT INTO ""users"" (""email"", ""name"") VALUES (?, ?) RETURNING ""id""",

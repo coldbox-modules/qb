@@ -2090,6 +2090,18 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, insertUsingSelectBuilder() );
                 } );
+
+                it( "can insert ignoring conflicts", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .insertIgnore(
+                                values = [ { "email": "foo", "name": "bar" }, { "email": "baz", "name": "bleh" } ],
+                                target = [ "email" ],
+                                toSql = true
+                            );
+                    }, insertIgnore() );
+                } );
             } );
 
             describe( "update statements", function() {

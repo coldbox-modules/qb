@@ -658,6 +658,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertIgnore() {
+        return {
+            sql: "INSERT IGNORE INTO `users` (`email`, `name`) VALUES (?, ?), (?, ?)",
+            bindings: [ "foo", "bar", "baz", "bleh" ]
+        };
+    }
+
     function returning() {
         return { exception: "UnsupportedOperation" };
     }

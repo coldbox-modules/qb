@@ -224,8 +224,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 } )
                 .toList( ", " );
         }
+        var updateStatement = updateList == "" ? "" : " WHEN MATCHED THEN UPDATE SET #updateList#";
 
-        return "MERGE INTO #wrapTable( arguments.qb.getFrom() )# ""QB_TARGET"" USING (#placeholderString#) ""QB_SRC"" ON #constraintString# WHEN MATCHED THEN UPDATE SET #updateList# WHEN NOT MATCHED THEN INSERT (#columnsString#) VALUES (#valuesString#)";
+        return "MERGE INTO #wrapTable( arguments.qb.getFrom() )# ""QB_TARGET"" USING (#placeholderString#) ""QB_SRC"" ON #constraintString##updateStatement# WHEN NOT MATCHED THEN INSERT (#columnsString#) VALUES (#valuesString#)";
     }
 
     /**

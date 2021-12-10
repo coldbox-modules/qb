@@ -2310,7 +2310,13 @@ component extends="testbox.system.BaseSpec" {
                             .table( "users" )
                             .upsert(
                                 source = function( q ) {
-                                    q.from( "activeDirectoryUsers" );
+                                    q.from( "activeDirectoryUsers" )
+                                        .select( [
+                                            "username",
+                                            "active",
+                                            "createdDate",
+                                            "modifiedDate"
+                                        ] );
                                 },
                                 values = [
                                     "username",
@@ -2330,7 +2336,15 @@ component extends="testbox.system.BaseSpec" {
                         return builder
                             .table( "users" )
                             .upsert(
-                                source = builder.newQuery().from( "activeDirectoryUsers" ),
+                                source = builder
+                                    .newQuery()
+                                    .from( "activeDirectoryUsers" )
+                                    .select( [
+                                        "username",
+                                        "active",
+                                        "createdDate",
+                                        "modifiedDate"
+                                    ] ),
                                 values = [
                                     "username",
                                     "active",
@@ -2350,7 +2364,13 @@ component extends="testbox.system.BaseSpec" {
                             .table( "users" )
                             .upsert(
                                 source = function( q ) {
-                                    q.from( "activeDirectoryUsers" );
+                                    q.from( "activeDirectoryUsers" )
+                                        .select( [
+                                            "username",
+                                            "active",
+                                            "createdDate",
+                                            "modifiedDate"
+                                        ] );
                                 },
                                 values = [
                                     "username",

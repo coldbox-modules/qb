@@ -792,14 +792,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertFromClosure() {
         return {
-            sql: "INSERT INTO ""users"" (""active"", ""createdDate"", ""modifiedDate"", ""username"") SELECT * FROM ""activeDirectoryUsers"" ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
+            sql: "INSERT INTO ""users"" (""username"", ""active"", ""createdDate"", ""modifiedDate"") SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
             bindings: []
         };
     }
 
     function upsertFromBuilder() {
         return {
-            sql: "INSERT INTO ""users"" (""active"", ""createdDate"", ""modifiedDate"", ""username"") SELECT * FROM ""activeDirectoryUsers"" ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
+            sql: "INSERT INTO ""users"" (""username"", ""active"", ""createdDate"", ""modifiedDate"") SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
             bindings: []
         };
     }

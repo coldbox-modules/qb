@@ -787,21 +787,21 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertFromClosure() {
         return {
-            sql: "MERGE [users] AS [qb_target] USING (SELECT * FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([active], [createdDate], [modifiedDate], [username]) VALUES ([active], [createdDate], [modifiedDate], [username]);",
+            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]);",
             bindings: []
         };
     }
 
     function upsertFromBuilder() {
         return {
-            sql: "MERGE [users] AS [qb_target] USING (SELECT * FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([active], [createdDate], [modifiedDate], [username]) VALUES ([active], [createdDate], [modifiedDate], [username]);",
+            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]);",
             bindings: []
         };
     }
 
     function upsertWithDelete() {
         return {
-            sql: "MERGE [users] AS [qb_target] USING (SELECT * FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([active], [createdDate], [modifiedDate], [username]) VALUES ([active], [createdDate], [modifiedDate], [username]) WHEN NOT MATCHED BY SOURCE DELETE;",
+            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]) WHEN NOT MATCHED BY SOURCE DELETE;",
             bindings: []
         };
     }

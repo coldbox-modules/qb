@@ -2784,9 +2784,11 @@ component displayname="QueryBuilder" accessors="true" {
             var formatted = listLast( applyColumnFormatter( column ), "." );
             return { "original": column, "formatted": formatted };
         } );
-        columns.sort( function( a, b ) {
-            return compareNoCase( a.formatted, b.formatted );
-        } );
+        if ( isStruct( arguments.values[ 1 ] ) ) {
+            columns.sort( function( a, b ) {
+                return compareNoCase( a.formatted, b.formatted );
+            } );
+        }
 
         var updateArray = [];
         if ( isNull( arguments.update ) ) {

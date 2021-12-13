@@ -2556,10 +2556,6 @@ component displayname="QueryBuilder" accessors="true" {
             return { "original": column, "formatted": formatted };
         } );
 
-        formattedColumns.sort( function( a, b ) {
-            return compareNoCase( a.formatted, b.formatted );
-        } );
-
         addBindingsFromBuilder( arguments.source );
 
         var sql = getGrammar().compileInsertUsing( this, formattedColumns, arguments.source );

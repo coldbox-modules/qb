@@ -646,15 +646,15 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function insertUsingSelectCallback() {
         return {
-            sql: "INSERT INTO `users` (`createdDate`, `email`) SELECT `createdDate`, `email` FROM `activeDirectoryUsers`",
-            bindings: []
+            sql: "INSERT INTO `users` (`createdDate`, `email`) SELECT `createdDate`, `email` FROM `activeDirectoryUsers` WHERE `active` = ?",
+            bindings: [ 1 ]
         };
     }
 
     function insertUsingSelectBuilder() {
         return {
-            sql: "INSERT INTO `users` (`createdDate`, `email`) SELECT `createdDate`, `email` FROM `activeDirectoryUsers`",
-            bindings: []
+            sql: "INSERT INTO `users` (`createdDate`, `email`) SELECT `createdDate`, `email` FROM `activeDirectoryUsers` WHERE `active` = ?",
+            bindings: [ 1 ]
         };
     }
 
@@ -776,15 +776,15 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertFromClosure() {
         return {
-            sql: "INSERT INTO `users` (`username`, `active`, `createdDate`, `modifiedDate`) SELECT `username`, `active`, `createdDate`, `modifiedDate` FROM `activeDirectoryUsers` ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `modifiedDate` = VALUES(`modifiedDate`)",
-            bindings: []
+            sql: "INSERT INTO `users` (`username`, `active`, `createdDate`, `modifiedDate`) SELECT `username`, `active`, `createdDate`, `modifiedDate` FROM `activeDirectoryUsers` WHERE `active` = ? ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `modifiedDate` = VALUES(`modifiedDate`)",
+            bindings: [ 1 ]
         };
     }
 
     function upsertFromBuilder() {
         return {
-            sql: "INSERT INTO `users` (`username`, `active`, `createdDate`, `modifiedDate`) SELECT `username`, `active`, `createdDate`, `modifiedDate` FROM `activeDirectoryUsers` ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `modifiedDate` = VALUES(`modifiedDate`)",
-            bindings: []
+            sql: "INSERT INTO `users` (`username`, `active`, `createdDate`, `modifiedDate`) SELECT `username`, `active`, `createdDate`, `modifiedDate` FROM `activeDirectoryUsers` WHERE `active` = ? ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `modifiedDate` = VALUES(`modifiedDate`)",
+            bindings: [ 1 ]
         };
     }
 

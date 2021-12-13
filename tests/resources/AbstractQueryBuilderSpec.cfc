@@ -2069,7 +2069,9 @@ component extends="testbox.system.BaseSpec" {
                             .insertUsing(
                                 columns = [ "createdDate", "email" ],
                                 source = function( q ) {
-                                    q.from( "activeDirectoryUsers" ).select( [ "createdDate", "email" ] );
+                                    q.from( "activeDirectoryUsers" )
+                                        .select( [ "createdDate", "email" ] )
+                                        .where( "active", 1 );
                                 },
                                 toSql = true
                             );
@@ -2085,7 +2087,8 @@ component extends="testbox.system.BaseSpec" {
                                 source = builder
                                     .newQuery()
                                     .from( "activeDirectoryUsers" )
-                                    .select( [ "createdDate", "email" ] ),
+                                    .select( [ "createdDate", "email" ] )
+                                    .where( "active", 1 ),
                                 toSql = true
                             );
                     }, insertUsingSelectBuilder() );
@@ -2329,7 +2332,8 @@ component extends="testbox.system.BaseSpec" {
                                             "active",
                                             "createdDate",
                                             "modifiedDate"
-                                        ] );
+                                        ] )
+                                        .where( "active", 1 );
                                 },
                                 values = [
                                     "username",
@@ -2357,7 +2361,8 @@ component extends="testbox.system.BaseSpec" {
                                         "active",
                                         "createdDate",
                                         "modifiedDate"
-                                    ] ),
+                                    ] )
+                                    .where( "active", 1 ),
                                 values = [
                                     "username",
                                     "active",
@@ -2383,7 +2388,8 @@ component extends="testbox.system.BaseSpec" {
                                             "active",
                                             "createdDate",
                                             "modifiedDate"
-                                        ] );
+                                        ] )
+                                        .where( "active", 1 );
                                 },
                                 values = [
                                     "username",

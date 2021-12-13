@@ -644,15 +644,15 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function insertUsingSelectCallback() {
         return {
-            sql: "INSERT INTO [users] ([createdDate], [email]) SELECT [createdDate], [email] FROM [activeDirectoryUsers]",
-            bindings: []
+            sql: "INSERT INTO [users] ([createdDate], [email]) SELECT [createdDate], [email] FROM [activeDirectoryUsers] WHERE [active] = ?",
+            bindings: [ 1 ]
         };
     }
 
     function insertUsingSelectBuilder() {
         return {
-            sql: "INSERT INTO [users] ([createdDate], [email]) SELECT [createdDate], [email] FROM [activeDirectoryUsers]",
-            bindings: []
+            sql: "INSERT INTO [users] ([createdDate], [email]) SELECT [createdDate], [email] FROM [activeDirectoryUsers] WHERE [active] = ?",
+            bindings: [ 1 ]
         };
     }
 
@@ -787,22 +787,22 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertFromClosure() {
         return {
-            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]);",
-            bindings: []
+            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers] WHERE [active] = ?) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]);",
+            bindings: [ 1 ]
         };
     }
 
     function upsertFromBuilder() {
         return {
-            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]);",
-            bindings: []
+            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers] WHERE [active] = ?) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]);",
+            bindings: [ 1 ]
         };
     }
 
     function upsertWithDelete() {
         return {
-            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers]) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]) WHEN NOT MATCHED BY SOURCE DELETE;",
-            bindings: []
+            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers] WHERE [active] = ?) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]) WHEN NOT MATCHED BY SOURCE DELETE;",
+            bindings: [ 1 ]
         };
     }
 

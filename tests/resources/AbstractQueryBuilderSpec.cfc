@@ -2067,10 +2067,10 @@ component extends="testbox.system.BaseSpec" {
                         return builder
                             .from( "users" )
                             .insertUsing(
-                                columns = [ "createdDate", "email" ],
+                                columns = [ "email", "createdDate" ], // purposefully not in alphabetical order
                                 source = function( q ) {
                                     q.from( "activeDirectoryUsers" )
-                                        .select( [ "createdDate", "email" ] )
+                                        .select( [ "email", "createdDate" ] )
                                         .where( "active", 1 );
                                 },
                                 toSql = true
@@ -2083,11 +2083,11 @@ component extends="testbox.system.BaseSpec" {
                         return builder
                             .from( "users" )
                             .insertUsing(
-                                columns = [ "createdDate", "email" ],
+                                columns = [ "email", "createdDate" ], // purposefully not in alphabetical order
                                 source = builder
                                     .newQuery()
                                     .from( "activeDirectoryUsers" )
-                                    .select( [ "createdDate", "email" ] )
+                                    .select( [ "email", "createdDate" ] )
                                     .where( "active", 1 ),
                                 toSql = true
                             );

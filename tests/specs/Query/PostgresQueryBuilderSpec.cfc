@@ -653,14 +653,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function insertUsingSelectCallback() {
         return {
-            sql: "INSERT INTO ""users"" (""createdDate"", ""email"") SELECT ""createdDate"", ""email"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ?",
+            sql: "INSERT INTO ""users"" (""email"", ""createdDate"") SELECT ""email"", ""createdDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ?",
             bindings: [ 1 ]
         };
     }
 
     function insertUsingSelectBuilder() {
         return {
-            sql: "INSERT INTO ""users"" (""createdDate"", ""email"") SELECT ""createdDate"", ""email"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ?",
+            sql: "INSERT INTO ""users"" (""email"", ""createdDate"") SELECT ""email"", ""createdDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ?",
             bindings: [ 1 ]
         };
     }

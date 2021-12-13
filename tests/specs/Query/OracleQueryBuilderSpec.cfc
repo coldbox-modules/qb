@@ -662,15 +662,15 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function insertUsingSelectCallback() {
         return {
-            sql: "INSERT INTO ""USERS"" (""CREATEDDATE"", ""EMAIL"") SELECT ""CREATEDDATE"", ""EMAIL"" FROM ""ACTIVEDIRECTORYUSERS""",
-            bindings: []
+            sql: "INSERT INTO ""USERS"" (""CREATEDDATE"", ""EMAIL"") SELECT ""CREATEDDATE"", ""EMAIL"" FROM ""ACTIVEDIRECTORYUSERS"" WHERE ""ACTIVE"" = ?",
+            bindings: [ 1 ]
         };
     }
 
     function insertUsingSelectBuilder() {
         return {
-            SQL: "INSERT INTO ""USERS"" (""CREATEDDATE"", ""EMAIL"") SELECT ""CREATEDDATE"", ""EMAIL"" FROM ""ACTIVEDIRECTORYUSERS""",
-            bindings: []
+            SQL: "INSERT INTO ""USERS"" (""CREATEDDATE"", ""EMAIL"") SELECT ""CREATEDDATE"", ""EMAIL"" FROM ""ACTIVEDIRECTORYUSERS"" WHERE ""ACTIVE"" = ?",
+            bindings: [ 1 ]
         };
     }
 
@@ -799,15 +799,15 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertFromClosure() {
         return {
-            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"" FROM ""ACTIVEDIRECTORYUSERS"") ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"") VALUES (""QB_SRC"".""USERNAME"", ""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"")",
-            bindings: []
+            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"" FROM ""ACTIVEDIRECTORYUSERS"" WHERE ""ACTIVE"" = ?) ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"") VALUES (""QB_SRC"".""USERNAME"", ""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"")",
+            bindings: [ 1 ]
         };
     }
 
     function upsertFromBuilder() {
         return {
-            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"" FROM ""ACTIVEDIRECTORYUSERS"") ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"") VALUES (""QB_SRC"".""USERNAME"", ""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"")",
-            bindings: []
+            sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"" FROM ""ACTIVEDIRECTORYUSERS"" WHERE ""ACTIVE"" = ?) ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"") VALUES (""QB_SRC"".""USERNAME"", ""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"")",
+            bindings: [ 1 ]
         };
     }
 

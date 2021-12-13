@@ -2560,6 +2560,8 @@ component displayname="QueryBuilder" accessors="true" {
             return compareNoCase( a.formatted, b.formatted );
         } );
 
+        addBindingsFromBuilder( arguments.source );
+
         var sql = getGrammar().compileInsertUsing( this, formattedColumns, arguments.source );
 
         if ( toSql ) {
@@ -2755,6 +2757,10 @@ component displayname="QueryBuilder" accessors="true" {
             callback( arguments.source );
         }
 
+        if ( !isNull( arguments.source ) ) {
+            addBindingsFromBuilder( arguments.source );
+        }
+
         if ( !isArray( arguments.values ) ) {
             if ( !isStruct( arguments.values ) ) {
                 throw(
@@ -2848,8 +2854,6 @@ component displayname="QueryBuilder" accessors="true" {
             isNull( arguments.source ) ? javacast( "null", "" ) : arguments.source,
             arguments.deleteUnmatched
         );
-
-        clearBindings( except = [ "insert", "update" ] );
 
         if ( toSql ) {
             return sql;
@@ -2981,6 +2985,24 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         variables.bindings[ type ].append( newBindings, true );
+
+        return this;
+    }
+
+    /**
+     * Adds a single binding or an array of bindings to a query for a given type.
+     *
+     * @newBindings A single binding or an array of bindings to add for a given type.
+     * @type The type of binding to add.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    private QueryBuilder function addBindingsFromBuilder( required QueryBuilder qb ) {
+        var bindingsByType = arguments.qb.getRawBindings();
+        for ( var type in bindingsByType ) {
+            var bindings = bindingsByType[ type ];
+            addBindings( bindings, type );
+        }
 
         return this;
     }

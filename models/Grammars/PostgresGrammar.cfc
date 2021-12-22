@@ -82,26 +82,34 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             } )
             .toList( ", " );
 
-        var updateStatement = "UPDATE #wrapTable( query.getFrom() )#";
-
-
-        updateStatement = trim(
-            updateStatement & " SET #updateList# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#"
-        );
+        var updateStatement = "UPDATE #wrapTable( query.getFrom() )# SET #updateList#";
 
         var joins = arguments.query.getJoins();
+
+        if ( joins.isEmpty() ) {
+            updateStatement = trim( "#updateStatement# #compileWheres( query, query.getWheres() )#" );
+        }
+
+        updateStatement = trim( "#updateStatement# #compileLimitValue( query, query.getLimitValue() )#" );
+
         if ( joins.isEmpty() ) {
             return updateStatement;
         }
 
         var firstJoin = joins[ 1 ];
+        var whereStatement = replace(
+            compileWheres( query, query.getWheres() ),
+            "WHERE",
+            "AND",
+            "one"
+        );
         updateStatement &= " FROM #wrapTable( firstJoin.getTable() )# #compileWheres( arguments.query, firstJoin.getWheres() )#";
         if ( joins.len() <= 1 ) {
-            return updateStatement;
+            return trim( updateStatement & " " & whereStatement );
         }
 
         var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );
-        return "#updateStatement# #compileJoins( arguments.query, restJoins )#";
+        return trim( "#updateStatement# #compileJoins( arguments.query, restJoins )# #whereStatement#" );
     }
 
     /*===================================

@@ -133,7 +133,7 @@ component displayname="QueryUtils" accessors="true" {
      * @return boolean
      */
     public boolean function isNotExpression( required any value ) {
-		if ( isNull( arguments.value ) ) {
+        if ( isNull( arguments.value ) ) {
             return true;
         }
         return isSimpleValue( arguments.value ) ||

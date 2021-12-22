@@ -245,8 +245,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                     isNull( query.getLimitValue() ) ? "" : "TOP (#query.getLimitValue()#)",
                     wrapTable( query.getFrom() ),
                     "SET",
-                    updateList,
-                    compileWheres( query, query.getWheres() )
+                    updateList
                 ],
                 function( str ) {
                     return str != "";
@@ -256,12 +255,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         );
 
         if ( arguments.query.getJoins().isEmpty() ) {
-            return updateStatement;
+            return trim( updateStatement & " " & compileWheres( query, query.getWheres() ) );
         }
 
-        return updateStatement & " FROM #wrapTable( query.getFrom() )# " & compileJoins(
-            arguments.query,
-            arguments.query.getJoins()
+        return trim(
+            updateStatement & " FROM #wrapTable( query.getFrom() )# " & compileJoins(
+                arguments.query,
+                arguments.query.getJoins()
+            ) & " " & compileWheres( query, query.getWheres() )
         );
     }
 

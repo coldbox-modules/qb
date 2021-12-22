@@ -2118,6 +2118,19 @@ component extends="testbox.system.BaseSpec" {
                     }, updateWithJoin() );
                 } );
 
+                it( "can update with a join and a where", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "employees" )
+                            .join( "departments", "departments.id", "employees.departmentId" )
+                            .where( "departments.active", 1 )
+                            .update(
+                                values = { "employees.departmentName": builder.raw( "departments.name" ) },
+                                toSql = true
+                            );
+                    }, updateWithJoinAndWhere() );
+                } );
+
                 it( "turns a function into a subselect", function() {
                     testCase( function( builder ) {
                         return builder

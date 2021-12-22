@@ -691,6 +691,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "UPDATE ""employees"" SET ""departmentName"" = departments.name FROM ""departments"" WHERE ""departments"".""id"" = ""employees"".""departmentId""";
     }
 
+    function updateWithJoinAndWhere() {
+        return {
+            sql: "UPDATE ""employees"" SET ""departmentName"" = departments.name FROM ""departments"" WHERE ""departments"".""id"" = ""employees"".""departmentId"" AND ""departments"".""active"" = ?",
+            bindings: [ 1 ]
+        };
+    }
+
     function updateWithSubselect() {
         return "UPDATE ""employees"" SET ""departmentName"" = (SELECT ""name"" FROM ""departments"" WHERE ""employees"".""departmentId"" = ""departments"".""id"")";
     }

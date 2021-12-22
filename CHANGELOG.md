@@ -1,3 +1,12 @@
+# v8.7.5
+## 22 Dec 2021 — 17:19:08 UTC
+
+### fix
+
++ __QueryBuilder:__ Fix wheres with joins in update statements
+ ([fb98478](https://github.com/coldbox-modules/qb/commit/fb9847834c92124d68ab27bc14b2aa24d332e8db))
+
+
 # v8.7.4
 ## 12 Oct 2021 — 22:26:26 UTC
 

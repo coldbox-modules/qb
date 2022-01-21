@@ -2842,9 +2842,7 @@ component displayname="QueryBuilder" accessors="true" {
             newBindings = [ newBindings ];
         }
 
-        newBindings.each( function( binding ) {
-            variables.bindings[ type ].append( binding );
-        } );
+        variables.bindings[ type ].append( newBindings, true );
 
         return this;
     }

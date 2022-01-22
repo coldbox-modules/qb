@@ -1,3 +1,11 @@
+# v8.7.6
+## 22 Jan 2022 — 20:49:41 UTC
+
+### perf
+
++ __QueryBuilder:__ arrayEach is slow compared to merging arrays ([6f9a3e7](https://github.com/coldbox-modules/qb/commit/6f9a3e7876710f76e0006febaeb3e33790c0deac))
+
+
 # v8.7.5
 ## 22 Dec 2021 — 17:19:08 UTC
 

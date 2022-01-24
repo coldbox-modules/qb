@@ -2476,18 +2476,18 @@ component displayname="QueryBuilder" accessors="true" {
      * @return query
      */
     public any function insert( required any values, struct options = {}, boolean toSql = false ) {
-        if ( values.isEmpty() ) {
+        if ( arguments.values.isEmpty() ) {
             return;
         }
 
-        if ( !isArray( values ) ) {
-            if ( !isStruct( values ) ) {
+        if ( !isArray( arguments.values ) ) {
+            if ( !isStruct( arguments.values ) ) {
                 throw(
                     type = "InvalidSQLType",
                     message = "Please pass a struct or an array of structs mapping columns to values"
                 );
             }
-            values = [ values ];
+            arguments.values = [ arguments.values ];
         }
 
         var columns = arguments.values[ 1 ]

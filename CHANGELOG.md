@@ -1,3 +1,11 @@
+# v8.7.7
+## 24 Jan 2022 — 20:08:20 UTC
+
+### fix
+
++ __QueryBuilder:__ Explicit arguments scoping ([b5c1070](https://github.com/coldbox-modules/qb/commit/b5c1070076bf1302c983434da2148fe754fb7b3f))
+
+
 # v8.7.6
 ## 22 Jan 2022 — 20:49:41 UTC
 

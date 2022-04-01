@@ -715,6 +715,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function updateWithJoinAndAliases() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function updateWithJoinAndWhere() {
         return { exception: "UnsupportedOperation" };
     }

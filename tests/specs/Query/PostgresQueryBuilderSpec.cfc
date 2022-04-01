@@ -708,6 +708,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function updateWithJoinAndAliases() {
+        return "UPDATE ""employees"" AS ""e"" SET ""departmentName"" = d.name FROM ""departments"" AS ""d"" WHERE ""d"".""id"" = ""e"".""departmentId""";
+    }
+
     function updateWithJoin() {
         return "UPDATE ""employees"" SET ""departmentName"" = departments.name FROM ""departments"" WHERE ""departments"".""id"" = ""employees"".""departmentId""";
     }

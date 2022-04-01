@@ -216,6 +216,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         if ( value == "*" ) {
             return value;
         }
+
+        arguments.value = reReplace( arguments.value, """", "", "all" );
+
         return "[#value#]";
     }
 

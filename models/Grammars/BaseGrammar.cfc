@@ -974,9 +974,16 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     function wrapValue( required any value ) {
-        if ( value == "*" ) {
-            return value;
+        if ( len( arguments.value ) == 0 ) {
+            return arguments.value;
         }
+
+        if ( arguments.value == "*" ) {
+            return arguments.value;
+        }
+
+        arguments.value = reReplace( arguments.value, """", "", "all" );
+
         return """#value#""";
     }
 

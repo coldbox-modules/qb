@@ -290,11 +290,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     function wrapValue( required any value ) {
-        arguments.value = uCase( arguments.value );
-        if ( value == "*" ) {
-            return value;
+        if (
+            len( arguments.value ) == 0 ||
+            arguments.value == "*" ||
+            left( arguments.value, 1 ) == """"
+        ) {
+            return arguments.value;
         }
-        return """#value#""";
+
+        return """#uCase( arguments.value )#""";
     }
 
     function compileCreateColumn( column, blueprint ) {

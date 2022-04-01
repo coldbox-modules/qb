@@ -28,6 +28,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT `foo` AS `bar` FROM `users`";
     }
 
+    function parseColumnAliasWithQuotes() {
+        return "SELECT `foo` AS `bar` FROM `users`";
+    }
+
     function parseColumnAliasInWhere() {
         return { "sql": "SELECT `users`.`foo` FROM `users` WHERE `users`.`foo` = ?", "bindings": [ "bar" ] };
     }

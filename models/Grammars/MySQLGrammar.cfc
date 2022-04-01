@@ -11,6 +11,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         if ( value == "*" ) {
             return value;
         }
+        arguments.value = reReplace( arguments.value, """", "", "all" );
+
         return "`#value#`";
     }
 

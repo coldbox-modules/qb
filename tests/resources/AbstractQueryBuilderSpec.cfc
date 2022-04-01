@@ -53,6 +53,12 @@ component extends="testbox.system.BaseSpec" {
                         }, parseColumnAlias() );
                     } );
 
+                    it( "does not change aliases when quoted", function() {
+                        testCase( function( builder ) {
+                            builder.select( "foo as ""bar""" ).from( "users" );
+                        }, parseColumnAliasWithQuotes() );
+                    } );
+
                     it( "can parse column aliases in where clauses", function() {
                         testCase( function( builder ) {
                             builder

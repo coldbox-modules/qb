@@ -2162,6 +2162,15 @@ component extends="testbox.system.BaseSpec" {
                     }, updateWithJoin() );
                 } );
 
+                it( "can update with a join using aliases", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "employees e" )
+                            .join( "departments d", "d.id", "e.departmentId" )
+                            .update( values = { "departmentName": builder.raw( "d.name" ) }, toSql = true );
+                    }, updateWithJoinAndAliases() );
+                } );
+
                 it( "can update with a join and a where", function() {
                     testCase( function( builder ) {
                         return builder

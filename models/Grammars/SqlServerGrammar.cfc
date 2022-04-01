@@ -241,12 +241,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             } )
             .toList( ", " );
 
+        var parts = explodeTable( query.getFrom() );
+        var updateTable = parts.alias.len() ? wrapAlias( parts.alias ) : wrapTable( parts.table );
         var updateStatement = arrayToList(
             arrayFilter(
                 [
                     "UPDATE",
                     isNull( query.getLimitValue() ) ? "" : "TOP (#query.getLimitValue()#)",
-                    wrapTable( query.getFrom() ),
+                    updateTable,
                     "SET",
                     updateList
                 ],

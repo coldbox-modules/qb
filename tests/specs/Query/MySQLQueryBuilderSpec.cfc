@@ -696,6 +696,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "UPDATE `employees` INNER JOIN `departments` ON `departments`.`id` = `employees`.`departmentId` SET `departmentName` = departments.name";
     }
 
+    function updateWithJoinAndAliases() {
+        return "UPDATE `employees` AS `e` INNER JOIN `departments` AS `d` ON `d`.`id` = `e`.`departmentId` SET `departmentName` = d.name";
+    }
+
     function updateWithJoinAndWhere() {
         return {
             sql: "UPDATE `employees` INNER JOIN `departments` ON `departments`.`id` = `employees`.`departmentId` SET `departmentName` = departments.name WHERE `departments`.`active` = ?",

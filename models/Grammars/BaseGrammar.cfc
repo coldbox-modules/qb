@@ -872,30 +872,15 @@ component displayname="Grammar" accessors="true" singleton {
      *
      * @return string
      */
-    public string function wrapTable( required any table ) {
+    public string function wrapTable( required any table, boolean includeAlias = true ) {
         // if we have a raw expression, just return it as-is
         if ( variables.utils.isExpression( arguments.table ) ) {
             return arguments.table.getSql();
         }
 
-        var alias = "";
-        // trim table to prevent incorrect " " matching
-        arguments.table = trim( arguments.table );
-        // Quick check to see if we should bother to use a regex to look for a table alias
-        if ( table.find( " " ) ) {
-            var matches = reFindNoCase(
-                "(.*?)(?:\s(?:AS\s){0,1})([^\)]+)$",
-                table,
-                1,
-                true
-            );
-            if ( matches.pos.len() >= 3 ) {
-                alias = mid( table, matches.pos[ 3 ], matches.len[ 3 ] );
-                table = mid( table, matches.pos[ 2 ], matches.len[ 2 ] );
-            }
-        }
-        if ( getUtils().isNotSubQuery( table ) ) {
-            table = table
+        var parts = explodeTable( arguments.table );
+        if ( getUtils().isNotSubQuery( parts.table ) ) {
+            parts.table = parts.table
                 .listToArray( "." )
                 .map( function( tablePart, index, tableParts ) {
                     // Add the tableprefix when we get to the last element
@@ -906,10 +891,35 @@ component displayname="Grammar" accessors="true" singleton {
                 } )
                 .toList( "." );
         }
-        if ( !alias.len() ) {
-            return table;
+        if ( !parts.alias.len() ) {
+            return parts.table;
         }
-        return table & getTableAliasOperator() & wrapAlias( getTablePrefix() & alias );
+
+        if ( !arguments.includeAlias ) {
+            return parts.table;
+        }
+
+        return parts.table & getTableAliasOperator() & wrapAlias( getTablePrefix() & parts.alias );
+    }
+
+    public struct function explodeTable( required string table ) {
+        var parts = { "alias": "", "table": trim( arguments.table ) };
+
+        // Quick check to see if we should bother to use a regex to look for a table alias
+        if ( parts.table.find( " " ) ) {
+            var matches = reFindNoCase(
+                "(.*?)(?:\s(?:AS\s){0,1})([^\)]+)$",
+                parts.table,
+                1,
+                true
+            );
+            if ( matches.pos.len() >= 3 ) {
+                parts.alias = mid( parts.table, matches.pos[ 3 ], matches.len[ 3 ] );
+                parts.table = mid( parts.table, matches.pos[ 2 ], matches.len[ 2 ] );
+            }
+        }
+
+        return parts;
     }
 
     /**

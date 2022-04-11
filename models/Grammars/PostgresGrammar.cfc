@@ -29,6 +29,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 return "FOR SHARE";
             case "update":
                 return "FOR UPDATE";
+            case "updateSkipLocked":
+                return "FOR UPDATE SKIP LOCKED";
             case "custom":
                 return arguments.query.getLockValue();
             case "none":

@@ -616,8 +616,8 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function lockForUpdate() {
-        variables.lockType = "update";
+    public QueryBuilder function lockForUpdate( boolean skipLocked = false ) {
+        variables.lockType = arguments.skipLocked ? "updateSkipLocked" : "update";
         variables.lockValue = "";
         return this;
     }

@@ -55,7 +55,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     private string function compileLockType( required query, required string lockType ) {
-        return ""; // Oracle grammar adds it as an additional statement before the select statement.
+        switch ( arguments.lockType ) {
+            case "update":
+                return "FOR UPDATE";
+            case "updateSkipLocked":
+                return "FOR UPDATE SKIP LOCKED";
+            default:
+                return ""; // Oracle grammar adds the other lock types as an additional statement before the select statement.
+        }
     }
 
     /**
@@ -70,8 +77,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         switch ( arguments.query.getLockType() ) {
             case "shared":
                 return "LOCK TABLE #wrapTable( arguments.query.getFrom() )# IN SHARE MODE NOWAIT; #arguments.sql#";
-            case "update":
-                return "LOCK TABLE #wrapTable( arguments.query.getFrom() )# IN ROW EXCLUSIVE MODE NOWAIT; #arguments.sql#";
             case "custom":
                 return "LOCK TABLE #wrapTable( arguments.query.getFrom() )# IN #arguments.query.getLockValue()# MODE NOWAIT; #arguments.sql#";
             case "none":

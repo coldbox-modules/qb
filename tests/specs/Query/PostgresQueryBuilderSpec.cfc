@@ -669,6 +669,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertUsingDerivingColumnNames() {
+        return {
+            sql: "INSERT INTO ""users"" (""email"", ""createdDate"") SELECT ""email"", ""modifiedDate"" AS ""createdDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ?",
+            bindings: [ 1 ]
+        };
+    }
+
     function insertIgnore() {
         return {
             sql: "INSERT INTO ""users"" (""email"", ""name"") VALUES (?, ?), (?, ?) ON CONFLICT DO NOTHING",

@@ -2532,16 +2532,16 @@ component displayname="QueryBuilder" accessors="true" {
      * Inserts data into a table based off of a query.
      * This call must come after setting the query's table using `from` or `table`.
      *
-     * @columns An array of columns to insert.
      * @source A callback function or QueryBuilder object to insert records from.
+     * @columns An array of columns to insert. If no columns are passed, the columns will be derived from the source columns and aliases.
      * @options Any options to pass to `queryExecute`. Default: {}.
      * @toSql If true, returns the raw sql string instead of running the query.  Useful for debugging. Default: false.
      *
      * @return query
      */
     public any function insertUsing(
-        required array columns,
         required any source,
+        array columns,
         struct options = {},
         boolean toSql = false
     ) {
@@ -2549,6 +2549,14 @@ component displayname="QueryBuilder" accessors="true" {
             var callback = arguments.source;
             arguments.source = newQuery();
             callback( arguments.source );
+        }
+
+        if ( isNull( arguments.columns ) ) {
+            arguments.columns = arguments.source
+                .getColumns()
+                .map( function( column ) {
+                    return getGrammar().extractAlias( column );
+                } );
         }
 
         var formattedColumns = arguments.columns.map( function( column ) {

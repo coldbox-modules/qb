@@ -660,6 +660,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertUsingDerivingColumnNames() {
+        return {
+            sql: "INSERT INTO [users] ([email], [createdDate]) SELECT [email], [modifiedDate] AS [createdDate] FROM [activeDirectoryUsers] WHERE [active] = ?",
+            bindings: [ 1 ]
+        };
+    }
+
     function insertIgnore() {
         return {
             sql: "MERGE [users] AS [qb_target] USING (VALUES (?, ?), (?, ?)) AS [qb_src] ([email], [name]) ON [qb_target].[email] = [qb_src].[email] WHEN NOT MATCHED BY TARGET THEN INSERT ([email], [name]) VALUES ([email], [name]);",

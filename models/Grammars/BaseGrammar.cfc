@@ -967,6 +967,42 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Extracts the alias from a column. Returns the column if no alias is found.
+     *
+     * @column The column to extract the alias
+     *
+     * @return string
+     */
+    public string function extractAlias( required any column ) {
+        // In this case, isInstanceOf takes ~30 ms while this takes ~0 ms
+        if (
+            !isSimpleValue( arguments.column ) &&
+            isObject( arguments.column ) &&
+            structKeyExists( arguments.column, "getSQL" )
+        ) {
+            return trim( arguments.column.getSQL() );
+        }
+
+        arguments.column = trim( arguments.column );
+        var alias = "";
+        if ( arguments.column.findNoCase( " as " ) > 0 ) {
+            var matches = reFindNoCase(
+                "(.*)(?:\sAS\s)(.*)",
+                arguments.column,
+                1,
+                true
+            );
+            if ( matches.pos.len() >= 3 ) {
+                return mid( arguments.column, matches.pos[ 3 ], matches.len[ 3 ] );
+            }
+        } else if ( arguments.column.findNoCase( " " ) > 0 ) {
+            return listGetAt( arguments.column, 2, " " );
+        }
+
+        return listLast( arguments.column, "." );
+    }
+
+    /**
      * Parses and wraps a value from the Builder for use in a sql statement.
      *
      * @table The value to parse and wrap.

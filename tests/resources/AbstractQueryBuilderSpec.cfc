@@ -2100,6 +2100,21 @@ component extends="testbox.system.BaseSpec" {
                     }, insertUsingSelectBuilder() );
                 } );
 
+                it( "can derive the columns to insert from the source query", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .insertUsing(
+                                source = function( q ) {
+                                    q.from( "activeDirectoryUsers" )
+                                        .select( [ "email", "modifiedDate AS createdDate" ] )
+                                        .where( "active", 1 );
+                                },
+                                toSql = true
+                            );
+                    }, insertUsingDerivingColumnNames() );
+                } );
+
                 it( "can insert ignoring conflicts", function() {
                     testCase( function( builder ) {
                         return builder

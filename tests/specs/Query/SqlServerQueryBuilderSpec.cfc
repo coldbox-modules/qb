@@ -110,6 +110,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { "sql": "SELECT * FROM [users] WITH (ROWLOCK,UPDLOCK,HOLDLOCK) WHERE [id] = ?", "bindings": [ 1 ] };
     }
 
+    function lockForUpdateSkipLocked() {
+        return {
+            "sql": "SELECT * FROM [users] WITH (ROWLOCK,UPDLOCK,HOLDLOCK,READPAST) WHERE [id] = ?",
+            "bindings": [ 1 ]
+        };
+    }
+
     function lockArbitraryString() {
         return { "sql": "SELECT * FROM [users] foobar WHERE [id] = ?", "bindings": [ 1 ] };
     }

@@ -113,6 +113,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ? FOR UPDATE", "bindings": [ 1 ] };
     }
 
+    function lockForUpdateSkipLocked() {
+        return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ? FOR UPDATE SKIP LOCKED", "bindings": [ 1 ] };
+    }
+
     function lockArbitraryString() {
         return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ? foobar", "bindings": [ 1 ] };
     }

@@ -272,6 +272,15 @@ component extends="testbox.system.BaseSpec" {
                         }, lockForUpdate() );
                     } );
 
+                    it( "can lock for update skipping locked rows", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .lockForUpdate( skipLocked = true );
+                        }, lockForUpdateSkipLocked() );
+                    } );
+
                     it( "can pass an arbitrary string to lock", function() {
                         testCase( function( builder ) {
                             builder

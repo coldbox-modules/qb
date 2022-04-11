@@ -137,6 +137,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 return "WITH (ROWLOCK,HOLDLOCK)";
             case "update":
                 return "WITH (ROWLOCK,UPDLOCK,HOLDLOCK)";
+            case "updateSkipLocked":
+                return "WITH (ROWLOCK,UPDLOCK,HOLDLOCK,READPAST)";
             case "custom":
                 return arguments.query.getLockValue();
             case "none":

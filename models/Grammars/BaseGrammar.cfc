@@ -681,6 +681,8 @@ component displayname="Grammar" accessors="true" singleton {
                 return "LOCK IN SHARE MODE";
             case "update":
                 return "FOR UPDATE";
+            case "updateSkipLocked":
+                return "FOR UPDATE SKIP LOCKED";
             case "custom":
                 return arguments.query.getLockValue();
             case "none":

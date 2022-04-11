@@ -113,10 +113,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function lockForUpdate() {
-        return {
-            "sql": "LOCK TABLE ""USERS"" IN ROW EXCLUSIVE MODE NOWAIT; SELECT * FROM ""USERS"" WHERE ""ID"" = ?",
-            "bindings": [ 1 ]
-        };
+        return { "sql": "SELECT * FROM ""USERS"" WHERE ""ID"" = ? FOR UPDATE", "bindings": [ 1 ] };
+    }
+
+    function lockForUpdateSkipLocked() {
+        return { "sql": "SELECT * FROM ""USERS"" WHERE ""ID"" = ? FOR UPDATE SKIP LOCKED", "bindings": [ 1 ] };
     }
 
     function lockArbitraryString() {

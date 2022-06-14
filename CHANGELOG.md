@@ -1,3 +1,32 @@
+# v8.8.0
+## 14 Jun 2022 — 17:38:07 UTC
+
+### feat
+
++ __Locks:__ Add skip locked feature to lockForUpdate
+ ([eea76c6](https://github.com/coldbox-modules/qb/commit/eea76c6569419c91a7b056aa0f4fc34be6d39d0a))
++ __QueryBuilder:__ Make columns optional for insertUsing
+ ([3ff0f1f](https://github.com/coldbox-modules/qb/commit/3ff0f1fe9586da8cf5a5518c2b71960c57953c1f))
++ __QueryBuilder:__ Add insertIgnore
+ ([6238626](https://github.com/coldbox-modules/qb/commit/6238626bc1a1a9aa5a236b9376127bddf91b9bb3))
++ __SqlServerGrammar:__ Allow deleting unmatched source records in upsert ([cc9c106](https://github.com/coldbox-modules/qb/commit/cc9c106b921d335fcfb2292118c51b5736369b20))
++ __QueryBuilder:__ Allow using a source callback or QueryBuilder in upserts
+ ([ac2d959](https://github.com/coldbox-modules/qb/commit/ac2d95927c0a46f2f09312b4d6f4a24b12be91e3))
++ __QueryBuilder:__ Add insertUsing to use queries to insert into tables
+ ([47a2c64](https://github.com/coldbox-modules/qb/commit/47a2c642a7e048ab69ed4856ec6c5f1cde03228d))
+
+### fix
+
++ __OracleGrammar:__ Don't uppercase quoted aliases in Oracle ([5b54d1d](https://github.com/coldbox-modules/qb/commit/5b54d1df4d22287acd24140328cbf2481f0c5a2f))
++ __QueryBuilder:__ Fix for aliases in update statements ([f72ea0c](https://github.com/coldbox-modules/qb/commit/f72ea0cc99069f62bfe20fe4303cd0c461cf82b7))
++ __QueryBuilder:__ Don't sort columns for insertUsing
+ ([3f9b15f](https://github.com/coldbox-modules/qb/commit/3f9b15f225885883364efc5da4ea8242d8484e6c))
++ __QueryBuilder:__ Add subquery bindings in insert and upsert statements
+ ([7ea072f](https://github.com/coldbox-modules/qb/commit/7ea072fdea31b45059a660b597e899f1c0ffef05))
++ __QueryBuilder:__ Maintain column order when using source in upsert
+ ([c44e626](https://github.com/coldbox-modules/qb/commit/c44e6267a2d61114c063985354782aff103c0925))
+
+
 # v8.7.8
 ## 14 Jun 2022 — 17:08:06 UTC
 

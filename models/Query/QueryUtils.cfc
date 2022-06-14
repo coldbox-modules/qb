@@ -251,7 +251,20 @@ component displayname="QueryUtils" accessors="true" {
             var foundColumn = queryColumnInfo.filter( function( c ) {
                 return c.name == col;
             } );
-            return arrayIsEmpty( foundColumn ) ? "varchar" : lCase( foundColumn[ 1 ].TypeName );
+            if ( arrayIsEmpty( foundColumn ) ) {
+                return "varchar";
+            }
+            var foundType = lCase( foundColumn[ 1 ].TypeName );
+            switch ( foundType ) {
+                case "number":
+                    return "double";
+                case "varchar2":
+                    return "varchar";
+                case "char":
+                    return "varchar";
+                default:
+                    return foundType;
+            }
         } );
 
         return queryNew( newColumns.toList(), newColumnTypes.toList(), queryAsArray );

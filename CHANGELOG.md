@@ -1,3 +1,17 @@
+# v8.7.8
+## 14 Jun 2022 — 17:08:06 UTC
+
+### fix
+
++ __OracleGrammar:__ Fix for Oracle returning custom column types
+ ([c07ff33](https://github.com/coldbox-modules/qb/commit/c07ff335cf814353289128c72a15064b3ac7ce13))
+
+### other
+
++ __\*:__ chore: trigger build
+ ([4a8bbdb](https://github.com/coldbox-modules/qb/commit/4a8bbdbf381b876a6c86671b55abbecd7dcffd38))
+
+
 # v8.7.7
 ## 24 Jan 2022 — 20:08:20 UTC
 

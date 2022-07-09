@@ -230,6 +230,9 @@ component displayname="Grammar" accessors="true" singleton {
             return "";
         }
         var select = query.getDistinct() && query.getAggregate().isEmpty() ? "SELECT DISTINCT " : "SELECT ";
+        if ( columns.isEmpty() ) {
+            columns = [ "*" ];
+        }
         return select & columns.map( wrapColumn ).toList( ", " );
     }
 

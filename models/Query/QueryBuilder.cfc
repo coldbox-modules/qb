@@ -299,7 +299,7 @@ component displayname="QueryBuilder" accessors="true" {
     private void function setDefaultValues() {
         variables.distinct = false;
         variables.aggregate = {};
-        variables.columns = [ "*" ];
+        variables.columns = [];
         variables.from = "";
         variables.lockType = "none";
         variables.lockValue = "";
@@ -368,9 +368,6 @@ component displayname="QueryBuilder" accessors="true" {
         variables.columns = normalizeToArray( arguments.columns ).map( function( column ) {
             return applyColumnFormatter( column );
         } );
-        if ( variables.columns.isEmpty() ) {
-            variables.columns = [ "*" ];
-        }
         return this;
     }
 
@@ -408,12 +405,6 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addSelect( required any columns ) {
-        if (
-            variables.columns.isEmpty() ||
-            ( variables.columns.len() == 1 && isSimpleValue( variables.columns[ 1 ] ) && variables.columns[ 1 ] == "*" )
-        ) {
-            variables.columns = [];
-        }
         var newColumns = normalizeToArray( arguments.columns ).map( function( column ) {
             return applyColumnFormatter( column );
         } );
@@ -450,7 +441,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function clearSelect() {
-        variables.columns = [ "*" ];
+        variables.columns = [];
         clearBindings( only = [ "select" ] );
         return this;
     }

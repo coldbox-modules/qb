@@ -118,6 +118,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         if ( !isNull( query.getLimitValue() ) && isNull( query.getOffsetValue() ) ) {
             select &= "TOP (#query.getLimitValue()#) ";
         }
+        if ( columns.isEmpty() ) {
+            columns = [ "*" ];
+        }
         return select & columns.map( wrapColumn ).toList( ", " );
     }
 

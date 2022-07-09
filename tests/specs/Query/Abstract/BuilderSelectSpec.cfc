@@ -8,8 +8,16 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "select()", function() {
-                it( "defaults to all columns", function() {
+                it( "defaults to no columns", function() {
+                    expect( query.getColumns() ).toBe( [] );
+                } );
+
+                it( "does not remove * when adding a column", function() {
+                    expect( query.getColumns() ).toBe( [] );
+                    query.select( "*" );
                     expect( query.getColumns() ).toBe( [ "*" ] );
+                    query.addSelect( "name" );
+                    expect( query.getColumns() ).toBe( [ "*", "name" ] );
                 } );
 
                 it( "can specify a single column from a query", function() {

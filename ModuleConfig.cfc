@@ -13,7 +13,8 @@ component {
             "preventDuplicateJoins": false,
             "strictDateDetection": false,
             "numericSQLType": "CF_SQL_NUMERIC",
-            "autoAddScale": true
+            "autoAddScale": true,
+            "defaultOptions": {}
         };
 
         interceptorSettings = { "customInterceptionPoints": "preQBExecute,postQBExecute" };
@@ -32,7 +33,8 @@ component {
             .initArg( name = "grammar", ref = settings.defaultGrammar )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
-            .initArg( name = "returnFormat", value = settings.defaultReturnFormat );
+            .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
+            .initArg( name = "defaultOptions", value = settings.defaultOptions );
 
         binder
             .map( alias = "SchemaBuilder@qb", force = true )

@@ -1,3 +1,11 @@
+# v8.8.1
+## 05 Aug 2022 — 17:21:33 UTC
+
+### fix
+
++ __BaseGrammar:__ Detect column aliases in raw statements ([727f777](https://github.com/coldbox-modules/qb/commit/727f77796d77234df7f19b2b72602d7eac54d8e7))
+
+
 # v8.8.0
 ## 14 Jun 2022 — 17:38:07 UTC
 

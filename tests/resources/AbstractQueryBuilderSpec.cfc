@@ -2124,6 +2124,22 @@ component extends="testbox.system.BaseSpec" {
                     }, insertUsingDerivingColumnNames() );
                 } );
 
+                it( "can guess column names from raw statements in an insert using query", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .insertUsing(
+                                source = function( q ) {
+                                    q.from( "activeDirectoryUsers" )
+                                        .select( "email" )
+                                        .selectRaw( "COALESCE(modifiedDate, NOW()) AS createdDate" )
+                                        .where( "active", 1 );
+                                },
+                                toSql = true
+                            );
+                    }, insertUsingDerivedColumnNamesFromRawStatements() );
+                } );
+
                 it( "can insert ignoring conflicts", function() {
                     testCase( function( builder ) {
                         return builder

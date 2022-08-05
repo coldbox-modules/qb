@@ -982,7 +982,7 @@ component displayname="Grammar" accessors="true" singleton {
             isObject( arguments.column ) &&
             structKeyExists( arguments.column, "getSQL" )
         ) {
-            return trim( arguments.column.getSQL() );
+            arguments.column = trim( arguments.column.getSQL() );
         }
 
         arguments.column = trim( arguments.column );
@@ -998,7 +998,7 @@ component displayname="Grammar" accessors="true" singleton {
                 return mid( arguments.column, matches.pos[ 3 ], matches.len[ 3 ] );
             }
         } else if ( arguments.column.findNoCase( " " ) > 0 ) {
-            return listGetAt( arguments.column, 2, " " );
+            return listLast( arguments.column, " " );
         }
 
         return listLast( arguments.column, "." );

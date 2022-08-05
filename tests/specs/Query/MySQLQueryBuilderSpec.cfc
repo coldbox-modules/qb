@@ -673,6 +673,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertUsingDerivedColumnNamesFromRawStatements() {
+        return {
+            sql: "INSERT INTO `users` (`email`, `createdDate`) SELECT `email`, COALESCE(modifiedDate, NOW()) AS createdDate FROM `activeDirectoryUsers` WHERE `active` = ?",
+            bindings: [ 1 ]
+        };
+    }
+
     function insertIgnore() {
         return {
             sql: "INSERT IGNORE INTO `users` (`email`, `name`) VALUES (?, ?), (?, ?)",

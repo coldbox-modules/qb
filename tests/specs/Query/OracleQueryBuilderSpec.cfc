@@ -686,6 +686,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function insertUsingDerivedColumnNamesFromRawStatements() {
+        return {
+            SQL: "INSERT INTO ""USERS"" (""EMAIL"", ""CREATEDDATE"") SELECT ""EMAIL"", COALESCE(modifiedDate, NOW()) AS createdDate FROM ""ACTIVEDIRECTORYUSERS"" WHERE ""ACTIVE"" = ?",
+            bindings: [ 1 ]
+        };
+    }
+
     function insertIgnore() {
         return {
             sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ?, ? FROM dual UNION ALL SELECT ?, ? FROM dual) ""QB_SRC"" ON ""QB_TARGET"".""EMAIL"" = ""QB_SRC"".""EMAIL"" WHEN NOT MATCHED THEN INSERT (""EMAIL"", ""NAME"") VALUES (""QB_SRC"".""EMAIL"", ""QB_SRC"".""NAME"")",

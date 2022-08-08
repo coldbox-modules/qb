@@ -1,3 +1,11 @@
+# v8.9.0
+## 08 Aug 2022 — 17:31:59 UTC
+
+### feat
+
++ __ModuleConfig:__ Allow defaultOptions to be set in `moduleSettings` ([a98fb6c](https://github.com/coldbox-modules/qb/commit/a98fb6c96d16d4dfc9980ec727789192bd1a0843))
+
+
 # v8.8.1
 ## 05 Aug 2022 — 17:21:33 UTC
 

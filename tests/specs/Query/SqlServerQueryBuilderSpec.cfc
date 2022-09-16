@@ -111,10 +111,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function lockForUpdateSkipLocked() {
-        return {
-            "sql": "SELECT * FROM [users] WITH (ROWLOCK,UPDLOCK,HOLDLOCK,READPAST) WHERE [id] = ?",
-            "bindings": [ 1 ]
-        };
+        return { "sql": "SELECT * FROM [users] WITH (ROWLOCK,UPDLOCK,READPAST) WHERE [id] = ?", "bindings": [ 1 ] };
     }
 
     function lockArbitraryString() {

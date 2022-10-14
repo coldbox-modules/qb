@@ -15,12 +15,30 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( utils.inferSqlType( "a string" ) ).toBe( "CF_SQL_VARCHAR" );
             } );
 
-            it( "numbers", function() {
-                if ( isACF2016() ) {
-                    expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_VARCHAR" );
-                } else {
-                    expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
-                }
+            describe( "numbers", function() {
+                it( "integers", function() {
+                    if ( isACF2016() ) {
+                        expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_VARCHAR" );
+                    } else {
+                        expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
+                        variables.utils.setAutoDeriveNumericType( true );
+                        expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_INTEGER" );
+                        variables.utils.setAutoDeriveNumericType( false );
+                    }
+                } );
+
+                it( "decimals", function() {
+                    if ( isACF2016() ) {
+                        variables.utils.setStrictDateDetection( true );
+                        expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_VARCHAR" );
+                        variables.utils.setStrictDateDetection( false );
+                    } else {
+                        expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_NUMERIC" );
+                        variables.utils.setAutoDeriveNumericType( true );
+                        expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_DECIMAL" );
+                        variables.utils.setAutoDeriveNumericType( false );
+                    }
+                } );
             } );
 
             it( "dates", function() {

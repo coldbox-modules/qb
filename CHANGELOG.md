@@ -1,3 +1,12 @@
+# v8.10.0
+## 14 Oct 2022 — 19:16:33 UTC
+
+### feat
+
++ __QueryBuilder:__ Add firstOrFail ([f6d92cb](https://github.com/coldbox-modules/qb/commit/f6d92cb4c152f2362785aa2a2ea9794efd6a1ea6))
++ __QueryUtils:__ Auto derive the correct numeric sql types (#231) ([c638925](https://github.com/coldbox-modules/qb/commit/c63892504c0078ec221132471ef143faf11316e8))
+
+
 # v8.9.1
 ## 16 Sep 2022 — 21:07:41 UTC
 

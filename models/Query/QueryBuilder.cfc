@@ -3179,6 +3179,32 @@ component displayname="QueryBuilder" accessors="true" {
         }
         return results[ 1 ];
     }
+    
+    /**
+	 * Returns the first matching row for the configured query.
+	 * If no records are found, it throws an `EntityNotFound` exception.
+	 *
+	 * @errorMessage  An optional string error message or callback to produce
+	 *                a string error message.  If a callback is used, it is
+	 *                passed the unloaded entity as the only argument.
+     * 
+	 * @options Any options to pass to `queryExecute`. Default: {}.
+     * 
+	 * @throws        EntityNotFound
+	 *
+	 * @return        struct
+	 */
+	public any function firstOrFail( any errorMessage, struct options = {} ) {
+        var results = first( arguments.options );
+        if ( isEmpty( results ) ) {
+            param arguments.errorMessage = "No rows found with constraints [#serializeJSON( this.getBindings() )#]";
+			if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
+				arguments.errorMessage = arguments.errorMessage( this );
+			}
+			throw( type = "EntityNotFound", message = arguments.errorMessage );
+        }
+        return results;
+	}
 
     /**
      * Returns the last record returned from a query.

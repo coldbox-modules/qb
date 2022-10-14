@@ -1,12 +1,7 @@
 /**
  * A collection of query utilities shared across multiple models
  */
-component displayname="QueryUtils" accessors="true" {
-
-    /**
-     * A reference to the owning query builder
-     */
-    property name="builder";
+component singleton displayname="QueryUtils" accessors="true" {
 
     /**
      * qb strictDateDetection so we can do some conditional behaviour in data type detections
@@ -19,28 +14,52 @@ component displayname="QueryUtils" accessors="true" {
     property name="numericSQLType" default="CF_SQL_NUMERIC";
 
     /**
+     * Allow overriding default integer numeric SQL type inferral.
+     * Only applies when `autoDeriveNumericType` is true.
+     */
+    property name="integerSQLType" default="CF_SQL_INTEGER";
+
+    /**
+     * Allow overriding default decimal numeric SQL type inferral.
+     * Only applies when `autoDeriveNumericType` is true.
+     */
+    property name="decimalSQLType" default="CF_SQL_DECIMAL";
+
+    /**
      * Automatically add a scale to floating point bindings.
      */
     property name="autoAddScale" default="true";
 
     /**
+     * Automatically derive the numeric sql type based on the number.
+     */
+    property name="autoDeriveNumericType" default="true";
+
+    /**
      * Creates a new QueryUtils helper.
      *
-     * @strictDateDetection  Flag to only parse date objects as timestamps.
-     *                       If false, strings that pass `isDate` are also treated as timestamps.
-     * @numericSQLType       Allows overriding inferred numeric SQL type default by adding a setting in coldbox.cfc module settings
-     * @autoAddScale         Automatically add a scale to floating point bindings.
+     * @strictDateDetection   Flag to only parse date objects as timestamps.
+     *                        If false, strings that pass `isDate` are also treated as timestamps.
+     * @numericSQLType        Allows overriding inferred numeric SQL type default by adding a setting in coldbox.cfc module settings
+     * @autoAddScale          Automatically add a scale to floating point bindings.
+     * @autoDeriveNumericType Automatically derive the numeric sql type based on the number.
      *
      * @return               qb.models.Query.QueryUtils
      */
     public QueryUtils function init(
         boolean strictDateDetection = false,
         string numericSQLType = "CF_SQL_NUMERIC",
-        boolean autoAddScale = true
+        boolean autoAddScale = true,
+        boolean autoDeriveNumericType = false,
+        string integerSqlType = "CF_SQL_INTEGER",
+        string decimalSqlType = "CF_SQL_DECIMAL"
     ) {
         variables.strictDateDetection = arguments.strictDateDetection;
         variables.numericSQLType = arguments.numericSQLType;
         variables.autoAddScale = arguments.autoAddScale;
+        variables.autoDeriveNumericType = arguments.autoDeriveNumericType;
+        variables.integerSqlType = arguments.integerSqlType;
+        variables.decimalSqlType = arguments.decimalSqlType;
         return this;
     }
 
@@ -102,7 +121,11 @@ component displayname="QueryUtils" accessors="true" {
         }
 
         if ( checkIsActuallyNumeric( value ) ) {
-            return variables.numericSQLType;
+            if ( variables.autoDeriveNumericType ) {
+                return deriveNumericSqlType( value );
+            } else {
+                return variables.numericSQLType;
+            }
         }
 
         if ( checkIsActuallyDate( value ) ) {
@@ -333,6 +356,11 @@ component displayname="QueryUtils" accessors="true" {
             ],
             listLast( getMetadata( arguments.value ), ". " )
         );
+    }
+
+    private string function deriveNumericSqlType( required numeric value ) {
+        var isInteger = reFind( "^\d+$", arguments.value ) > 0;
+        return isInteger ? variables.integerSqlType : variables.decimalSqlType;
     }
 
     /**

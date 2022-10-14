@@ -13,7 +13,10 @@ component {
             "preventDuplicateJoins": false,
             "strictDateDetection": false,
             "numericSQLType": "CF_SQL_NUMERIC",
+            "integerSQLType": "CF_SQL_INTEGER",
+            "decimalSQLType": "CF_SQL_DECIMAL",
             "autoAddScale": true,
+            "autoDeriveNumericType": false,
             "defaultOptions": {}
         };
 
@@ -25,7 +28,11 @@ component {
             .map( alias = "QueryUtils@qb", force = true )
             .to( "qb.models.Query.QueryUtils" )
             .initArg( name = "strictDateDetection", value = settings.strictDateDetection )
-            .initArg( name = "numericSQLType", value = settings.numericSQLType );
+            .initArg( name = "numericSQLType", value = settings.numericSQLType )
+            .initArg( name = "autoAddScale", value = settings.autoAddScale )
+            .initArg( name = "autoDeriveNumericType", value = settings.autoDeriveNumericType )
+            .initArg( name = "integerSQLType", value = settings.integerSQLType )
+            .initArg( name = "decimalSQLType", value = settings.decimalSQLType );
 
         binder
             .map( alias = "QueryBuilder@qb", force = true )

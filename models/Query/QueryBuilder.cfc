@@ -3195,15 +3195,15 @@ component displayname="QueryBuilder" accessors="true" {
      * @return        struct
      */
     public any function firstOrFail( any errorMessage, struct options = {} ) {
-        var results = first( arguments.options );
-        if ( isEmpty( results ) ) {
+        var result = first( arguments.options );
+        if ( isEmpty( result ) ) {
             param arguments.errorMessage = "No rows found with constraints [#serializeJSON( this.getBindings() )#]";
             if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
                 arguments.errorMessage = arguments.errorMessage( this );
             }
-            throw( type = "EntityNotFound", message = arguments.errorMessage );
+            throw( type = "RecordNotFound", message = arguments.errorMessage );
         }
-        return results;
+        return result;
     }
 
     /**

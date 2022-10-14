@@ -1,3 +1,12 @@
+# v8.9.1
+## 16 Sep 2022 — 21:07:41 UTC
+
+### fix
+
++ __SqlServerGrammar:__ HOLDLOCK and READPAST are mutually exclusive
+ ([557b805](https://github.com/coldbox-modules/qb/commit/557b805dea3f8779cf2874e6b2e99ff748492503))
+
+
 # v8.9.0
 ## 08 Aug 2022 — 17:31:59 UTC
 

@@ -15,6 +15,8 @@ component singleton {
                 return wirebox.getInstance( "SQLServerGrammar@qb" );
             case "Oracle":
                 return wirebox.getInstance( "OracleGrammar@qb" );
+            case "SQLite":
+                return wirebox.getInstance( "SQLiteGrammar@qb" );
             default:
                 return wirebox.getInstance( "BaseGrammar@qb" );
         }

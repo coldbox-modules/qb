@@ -96,7 +96,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
 						charIndex++;
 					} while( isOpen );
-                    
+
 					replacements.append({
 						"origional": buffer,
 						"new": mid(replacementBuffer,8,replacementBuffer.len() - 8)
@@ -448,7 +448,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     ========================================*/
 
         function compileModifyColumn( blueprint, commandParameters ) {
-            throw( type = "UnsupportedOperation", message = "This grammar does not support modifying columns" );
             throw( type = "UnsupportedOperation", message = "This grammar does not support modifying columns" );
         }
 

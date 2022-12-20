@@ -18,7 +18,7 @@ jobs:
         fullNull: ["true", "false"]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.2.0
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.4.3
@@ -49,7 +49,7 @@ jobs:
       GA_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.2.0
         with:
           fetch-depth: 0
 
@@ -80,7 +80,7 @@ jobs:
 
       - name: Get Current Version
         id: current_version
-        run: echo "::set-output name=version::`cat box.json | jq '.version' -r`"
+        run: echo "version=`cat box.json | jq '.version' -r`" >> $GITHUB_OUTPUT
 
       - name: Upload API Docs to S3
         uses: jakejarvis/s3-sync-action@master

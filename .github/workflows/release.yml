@@ -80,7 +80,7 @@ jobs:
 
       - name: Get Current Version
         id: current_version
-        run: echo "::set-output name=version::`cat box.json | jq '.version' -r`"
+        run: echo "version=`cat box.json | jq '.version' -r`" >> $GITHUB_OUTPUT
 
       - name: Upload API Docs to S3
         uses: jakejarvis/s3-sync-action@master

@@ -16,7 +16,7 @@ jobs:
         fullNull: ["true", "false"]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.2.0
 
       - name: Setup Java JDK
         uses: actions/setup-java@v1.4.3

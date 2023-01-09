@@ -3040,7 +3040,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return numeric
      */
-    public numeric function count( string column = "*", struct options = {} ) {
+    public any function count( string column = "*", struct options = {}, boolean toSQL = false ) {
         arguments.type = "count";
         arguments.defaultValue = 0;
         return aggregateQuery( argumentCollection = arguments );
@@ -3104,7 +3104,8 @@ component displayname="QueryBuilder" accessors="true" {
         required string type,
         required string column = "*",
         struct options = {},
-        any defaultValue
+        any defaultValue,
+        boolean toSQL = false
     ) {
         return withAggregate(
             {
@@ -3115,6 +3116,10 @@ component displayname="QueryBuilder" accessors="true" {
             function() {
                 return withReturnFormat( "query", function() {
                     return withColumns( column, function() {
+                        if ( toSQL ) {
+                            return this.toSQL();
+                        }
+
                         var result = get( options = options );
                         if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
                             return defaultValue;
@@ -3156,7 +3161,7 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !isNull( arguments.columns ) ) {
             select( arguments.columns );
         }
-        var result = run( sql = toSql(), options = arguments.options );
+        var result = run( sql = this.toSql(), options = arguments.options );
         select( originalColumns );
         return result;
     }
@@ -3537,7 +3542,7 @@ component displayname="QueryBuilder" accessors="true" {
         boolean showUDFs = true
     ) {
         writeDump(
-            var = toSQL( showBindings = arguments.showBindings ),
+            var = this.toSQL( showBindings = arguments.showBindings ),
             output = arguments.output,
             format = arguments.format,
             abort = arguments.abort,
@@ -3615,10 +3620,15 @@ component displayname="QueryBuilder" accessors="true" {
      * @return any
      */
     private any function withColumns( required any columns, required any callback ) {
-        var originalColumns = getColumns();
-        select( arguments.columns );
+        var originalColumns = [ "*" ];
+        if ( getUnions().isEmpty() ) {
+            originalColumns = getColumns();
+            select( arguments.columns );
+        }
         var result = callback();
-        select( originalColumns );
+        if ( getUnions().isEmpty() ) {
+            select( originalColumns );
+        }
         return result;
     }
 

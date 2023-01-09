@@ -562,6 +562,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function unionCount() {
+        return {
+            sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM (SELECT [name] FROM [users] WHERE [id] = ? UNION SELECT [name] FROM [users] WHERE [id] = ?) AS [qb_aggregate_source]",
+            bindings: [ 1, 2 ]
+        };
+    }
+
     function commonTableExpression() {
         return {
             sql: ";WITH [UsersCTE] AS (SELECT * FROM [users] INNER JOIN [contacts] ON [users].[id] = [contacts].[id] WHERE [users].[age] > ?) SELECT * FROM [UsersCTE] WHERE [user].[id] NOT IN (?, ?)",

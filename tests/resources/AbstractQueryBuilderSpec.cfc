@@ -1818,6 +1818,23 @@ component extends="testbox.system.BaseSpec" {
                             ;
                         }, unionAll() );
                     } );
+
+                    it( "can run an aggregate query like count on a union query", function() {
+                        testCase( function( builder ) {
+                            return builder
+                                .select( "name" )
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .union( function( q ) {
+                                    q.select( "name" )
+                                        .from( "users" )
+                                        .where( "id", 2 )
+                                    ;
+                                } )
+                                .count( toSQL = true )
+                            ;
+                        }, unionCount() );
+                    } );
                 } );
 
                 describe( "common table expressions (i.e. CTEs)", function() {

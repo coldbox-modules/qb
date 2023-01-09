@@ -837,6 +837,14 @@ component displayname="Grammar" accessors="true" singleton {
         if ( aggregate.keyExists( "defaultValue" ) && !isNull( aggregate.defaultValue ) ) {
             aggString = "COALESCE(#aggString#, #aggregate.defaultValue#)";
         }
+
+        if ( !query.getUnions().isEmpty() ) {
+            var clonedQuery = query.clone().setAggregate( {} );
+            query.reset();
+            query.setAggregate( arguments.aggregate );
+            query.fromSub( "qb_aggregate_source", clonedQuery );
+        }
+
         return "SELECT #aggString# AS ""aggregate""";
     }
 

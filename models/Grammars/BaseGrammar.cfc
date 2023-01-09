@@ -127,7 +127,7 @@ component displayname="Grammar" accessors="true" singleton {
      */
     private function tryPostInterceptor( data ) {
         if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
-            variables.interceptorService.announceInterception( "postQBExecute", data );
+            variables.interceptorService.announce( "postQBExecute", data );
             return;
         }
 

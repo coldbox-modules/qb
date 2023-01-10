@@ -59,6 +59,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT substr( foo, 6 ), trim( bar ) FROM ""USERS""";
     }
 
+    function selectConcat() {
+        return "SELECT CONCAT(a,b,c,d) AS ""MY_ALIAS"" FROM ""USERS""";
+    }
+
+    function selectConcatArray() {
+        return "SELECT CONCAT(a,b,c,d) AS ""MY_ALIAS"" FROM ""USERS""";
+    }
+
     function clearSelect() {
         return "SELECT * FROM ""USERS""";
     }

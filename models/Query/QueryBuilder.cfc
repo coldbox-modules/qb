@@ -271,7 +271,6 @@ component displayname="QueryBuilder" accessors="true" {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
-        setReturnFormat( arguments.returnFormat );
         setPreventDuplicateJoins( arguments.preventDuplicateJoins );
         if ( isNull( arguments.columnFormatter ) ) {
             arguments.columnFormatter = function( column ) {
@@ -284,6 +283,7 @@ component displayname="QueryBuilder" accessors="true" {
             setParentQuery( arguments.parentQuery );
         }
         setDefaultOptions( arguments.defaultOptions );
+        setReturnFormat( arguments.returnFormat );
 
         setDefaultValues();
 
@@ -3391,6 +3391,10 @@ component displayname="QueryBuilder" accessors="true" {
             return returnFormat( q );
         }
 
+        if ( isArray( q ) ) {
+            return returnFormat( q );
+        }
+
         return { result: q.result, query: returnFormat( q.query ) };
     }
 
@@ -3584,12 +3588,22 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function setReturnFormat( required any format ) {
+        if ( supportsNativeReturnType() ) {
+            structDelete( variables.defaultOptions, "returntype" );
+        }
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
         } else if ( arguments.format == "array" ) {
-            variables.returnFormat = function( q ) {
-                return getUtils().queryToArrayOfStructs( q );
-            };
+            if ( supportsNativeReturnType() ) {
+                mergeDefaultOptions( { "returntype": "array" } );
+                variables.returnFormat = function( q ) {
+                    return q;
+                };
+            } else {
+                variables.returnFormat = function( q ) {
+                    return getUtils().queryToArrayOfStructs( q );
+                };
+            }
         } else if ( arguments.format == "query" ) {
             variables.returnFormat = function( q ) {
                 return q;
@@ -3598,6 +3612,15 @@ component displayname="QueryBuilder" accessors="true" {
             throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );
         }
 
+        return this;
+    }
+
+    private boolean function supportsNativeReturnType() {
+        return server.keyExists( "lucee" ) || listFirst( server.coldfusion.productversion ) >= 2021;
+    }
+
+    public QueryBuilder function mergeDefaultOptions( required struct options ) {
+        structAppend( variables.defaultOptions, arguments.options, true );
         return this;
     }
 
@@ -3621,9 +3644,16 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private any function withReturnFormat( required any returnFormat, required any callback ) {
         var originalReturnFormat = getReturnFormat();
+        var originalReturnType = javacast( "null", "" );
+        if ( supportsNativeReturnType() && variables.defaultOptions.keyExists( "returntype" ) ) {
+            originalReturnType = variables.defaultOptions.returntype;
+        }
         setReturnFormat( arguments.returnFormat );
         var result = callback();
         setReturnFormat( originalReturnFormat );
+        if ( !isNull( originalReturnType ) ) {
+            mergeDefaultOptions( { "returntype": originalReturnType } );
+        }
         return result;
     }
 

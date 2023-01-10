@@ -119,7 +119,15 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "concat can accept an array of values", function() {
                         testCase( function( builder ) {
-                            builder.select( builder.concat( "my_alias", [ "a", "b", "c", "d" ] ) ).from( "users" );
+                            // I kid you not, ACF2018 wouldn't let me pass `[ "a", "b", "c", "d" ]`
+                            var items = [];
+                            items
+                                .append( "a" )
+                                .append( "b" )
+                                .append( "c" )
+                                .append( "d" );
+
+                            builder.select( builder.concat( "my_alias", items ) ).from( "users" );
                         }, selectConcatArray() );
                     } );
 
@@ -1797,16 +1805,13 @@ component extends="testbox.system.BaseSpec" {
                                 .unionAll( function( q ) {
                                     q.select( "name" )
                                         .from( "users" )
-                                        .where( "id", 2 )
-                                    ;
+                                        .where( "id", 2 );
                                 } )
                                 .unionAll( function( q ) {
                                     q.select( "name" )
                                         .from( "users" )
-                                        .where( "id", 3 )
-                                    ;
-                                } )
-                            ;
+                                        .where( "id", 3 );
+                                } );
                         }, unionAll() );
                     } );
 
@@ -1840,11 +1845,9 @@ component extends="testbox.system.BaseSpec" {
                                 .union( function( q ) {
                                     q.select( "name" )
                                         .from( "users" )
-                                        .where( "id", 2 )
-                                    ;
+                                        .where( "id", 2 );
                                 } )
-                                .count( toSQL = true )
-                            ;
+                                .count( toSQL = true );
                         }, unionCount() );
                     } );
                 } );

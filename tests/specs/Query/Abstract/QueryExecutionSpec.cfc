@@ -89,7 +89,9 @@ component extends="testbox.system.BaseSpec" {
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1", options = {} )
-                        .$results( expectedQuery );
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
+                        );
 
                     var results = builder
                         .from( "users" )
@@ -118,7 +120,9 @@ component extends="testbox.system.BaseSpec" {
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT * FROM ""users""", options = {} )
-                        .$results( expectedQuery );
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
+                        );
 
                     var results = builder.from( "users" ).last();
 
@@ -135,7 +139,9 @@ component extends="testbox.system.BaseSpec" {
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1", options = {} )
-                        .$results( expectedQuery );
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
+                        );
 
                     var results = builder.from( "users" ).find( 1 );
 
@@ -482,13 +488,19 @@ component extends="testbox.system.BaseSpec" {
                         .$results( queryNew( "aggregate", "varchar", [ { "aggregate": 257 } ] ) )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 0", options = {} )
-                        .$results( expectedQuery100 )
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery100 ) : expectedQuery100
+                        )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 100", options = {} )
-                        .$results( expectedQuery100 )
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery100 ) : expectedQuery100
+                        )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 200", options = {} )
-                        .$results( expectedQueryRest );
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQueryRest ) : expectedQueryRest
+                        );
 
                     builder
                         .select( "name" )
@@ -519,13 +531,19 @@ component extends="testbox.system.BaseSpec" {
                         .$results( queryNew( "aggregate", "varchar", [ { "aggregate": 257 } ] ) )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 0", options = {} )
-                        .$results( expectedQuery100 )
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery100 ) : expectedQuery100
+                        )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 100", options = {} )
-                        .$results( expectedQuery100 )
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery100 ) : expectedQuery100
+                        )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 200", options = {} )
-                        .$results( expectedQueryRest );
+                        .$results(
+                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQueryRest ) : expectedQueryRest
+                        );
 
                     builder
                         .select( "name" )
@@ -844,14 +862,16 @@ component extends="testbox.system.BaseSpec" {
         } );
 
         describe( "returnFormat", function() {
-            it( "has a default return value of array", function() {
+            it( "has a default return format of array", function() {
                 var builder = getBuilder();
                 var data = [ { id: 1 } ];
                 var expectedQuery = queryNew( "id", "integer", data );
                 builder
                     .$( "runQuery" )
                     .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
-                    .$results( expectedQuery );
+                    .$results(
+                        supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
+                    );
 
                 var results = builder
                     .select( "id" )
@@ -873,7 +893,9 @@ component extends="testbox.system.BaseSpec" {
                 builder
                     .$( "runQuery" )
                     .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
-                    .$results( expectedQuery );
+                    .$results(
+                        supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
+                    );
 
                 var results = builder
                     .select( "id" )
@@ -962,6 +984,10 @@ component extends="testbox.system.BaseSpec" {
             .map( function( binding ) {
                 return binding.value;
             } );
+    }
+
+    private boolean function supportsNativeReturnType() {
+        return server.keyExists( "lucee" ) || listFirst( server.coldfusion.productversion ) >= 2021;
     }
 
 }

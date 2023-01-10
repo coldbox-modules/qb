@@ -111,6 +111,18 @@ component extends="testbox.system.BaseSpec" {
                         }, selectRawArray() );
                     } );
 
+                    it( "provides a grammar-specific helper for concat", function() {
+                        testCase( function( builder ) {
+                            builder.select( builder.concat( "my_alias", "a,b,c,d" ) ).from( "users" );
+                        }, selectConcat() );
+                    } );
+
+                    it( "concat can accept an array of values", function() {
+                        testCase( function( builder ) {
+                            builder.select( builder.concat( "my_alias", [ "a", "b", "c", "d" ] ) ).from( "users" );
+                        }, selectConcatArray() );
+                    } );
+
                     it( "can clear the selected columns for a query", function() {
                         testCase( function( builder ) {
                             builder

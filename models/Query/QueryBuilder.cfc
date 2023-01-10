@@ -3491,6 +3491,22 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Wraps up items into a CONCAT expression.
+     * This is provided since different engines have different syntax for CONCAT.
+     *
+     * @alias The alias for the CONCAT expression
+     * @items The items in the CONCAT expression, either a list or an array.
+     *
+     * @return qb.models.Query.Expression
+     */
+    public Expression function concat( required string alias, required any items, array bindings = [] ) {
+        return new qb.models.Query.Expression(
+            variables.grammar.compileConcat( arguments.alias, arrayWrap( value = arguments.items, explodeList = true ) ),
+            arguments.bindings
+        );
+    }
+
+    /**
      * Returns the Builder compiled to grammar-specific sql.
      *
      * @return string
@@ -3683,8 +3699,17 @@ component displayname="QueryBuilder" accessors="true" {
      * @doc_generic  any
      * @return       [any]
      */
-    private array function arrayWrap( required any value ) {
-        return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+    private array function arrayWrap( required any value, boolean explodeList = false ) {
+        if ( isArray( arguments.value ) ) {
+            return arguments.value;
+        }
+
+        if ( arguments.explodeList ) {
+            // this handles lists with or without spaces after the comma
+            return arraySlice( arguments.value.split( ",\s*" ), 1 );
+        } else {
+            return [ arguments.value ];
+        }
     }
 
     /**

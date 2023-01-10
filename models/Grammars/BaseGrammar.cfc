@@ -233,6 +233,10 @@ component displayname="Grammar" accessors="true" singleton {
         return select & columns.map( wrapColumn ).toList( ", " );
     }
 
+    public string function compileConcat( required string alias, required array items ) {
+        return "CONCAT(#arrayToList( items )#) AS #wrapAlias( alias )#";
+    }
+
     /**
      * Compiles the table portion of a sql statement.
      *

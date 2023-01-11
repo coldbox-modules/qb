@@ -691,6 +691,28 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(COUNT(DISTINCT ""name""), 0) AS ""aggregate"" FROM ""users""", options: {} } );
                 } );
+
+                it( "correctly ignores distinct when doing an open count", function() {
+                    var builder = getBuilder();
+                    var expectedCount = 1;
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder
+                        .from( "users" )
+                        .distinct()
+                        .count();
+
+                    expect( results ).toBe( expectedCount );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options: {} } );
+                } );
             } );
 
             describe( "max", function() {

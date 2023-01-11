@@ -116,6 +116,35 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            it( "can does not limit the query when the maxrows passes the override check", function() {
+                var builder = getBuilder();
+                builder.setShouldMaxRowsOverrideToAll( function( maxrows ) {
+                    return maxrows <= 0;
+                } );
+
+                var expectedResults = [];
+                for ( var i = 1; i <= 45; i++ ) {
+                    expectedResults.append( { "id": i } );
+                }
+                var expectedQuery = queryNew( "id", "integer", expectedResults );
+                builder.$( "count", 45 );
+                builder.$(
+                    "runQuery",
+                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
+                );
+
+                var results = builder.from( "users" ).paginate( page = 1, maxRows = 0 );
+
+                expect( results.pagination ).toBe( {
+                    "maxRows": 0,
+                    "offset": 0,
+                    "page": 1,
+                    "totalPages": 0,
+                    "totalRecords": 45
+                } );
+                expect( results.results ).toBe( expectedResults );
+            } );
+
             it( "can provide a custom paginator shell", function() {
                 var builder = getBuilder();
                 builder.setPaginationCollector( {

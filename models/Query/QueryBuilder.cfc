@@ -3373,6 +3373,32 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Retrieve the results of the query in chunks.  The number of items
+     * retrieved at a time is determined by the `max` parameter. Each
+     * chunk of items will be passed to the callback provided.
+     *
+     * @asQuery  Flag to retrieve the columnList as a query instead of an array. Default: false.
+     *
+     * @return   Query | Array<String>
+     */
+    public any function columnList( asQuery = false ) {
+        if ( isNull( getFrom() ) || !isSimpleValue( getFrom() ) || getFrom() == "" ) {
+            throw(
+                type = "MissingTable",
+                message = "A simple table is required to use `columnList`."
+            );
+        }
+
+        cfdbinfo( type = "Columns", name = "local.columnList", table = arguments.table );
+
+        if ( arguments.asQuery ) {
+            return local.columnList;
+        } else {
+            return listToArray( local.columnList.valueList( "column_name" ) );
+        }
+    }
+
+    /**
      * Execute a query and convert it to the proper return format.
      *
      * @sql         The sql string to execute.

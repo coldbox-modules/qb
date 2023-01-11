@@ -778,7 +778,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsert() {
         return {
-            sql: "INSERT INTO ""users"" (""active"", ""createdDate"", ""modifiedDate"", ""username"") VALUES (?, ?, ?, ?) ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
+            sql: "INSERT INTO ""users"" (""active"", ""createdDate"", ""modifiedDate"", ""username"") VALUES (?, ?, ?, ?) ON CONFLICT (""username"") DO UPDATE SET ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
             bindings: [
                 1,
                 "2021-09-08 12:00:00",
@@ -790,7 +790,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertAllValues() {
         return {
-            sql: "INSERT INTO ""users"" (""active"", ""createdDate"", ""modifiedDate"", ""username"") VALUES (?, ?, ?, ?) ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""createdDate"" = EXCLUDED.""createdDate"", ""modifiedDate"" = EXCLUDED.""modifiedDate"", ""username"" = EXCLUDED.""username""",
+            sql: "INSERT INTO ""users"" (""active"", ""createdDate"", ""modifiedDate"", ""username"") VALUES (?, ?, ?, ?) ON CONFLICT (""username"") DO UPDATE SET ""active"" = EXCLUDED.""active"", ""createdDate"" = EXCLUDED.""createdDate"", ""modifiedDate"" = EXCLUDED.""modifiedDate"", ""username"" = EXCLUDED.""username""",
             bindings: [
                 1,
                 "2021-09-08 12:00:00",
@@ -814,7 +814,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertWithInsertedValue() {
         return {
-            sql: "INSERT INTO ""stats"" (""postId"", ""viewedDate"", ""views"") VALUES (?, ?, ?), (?, ?, ?) ON CONFLICT (""postId"", ""viewedDate"") DO UPDATE ""views"" = stats.views + 1",
+            sql: "INSERT INTO ""stats"" (""postId"", ""viewedDate"", ""views"") VALUES (?, ?, ?), (?, ?, ?) ON CONFLICT (""postId"", ""viewedDate"") DO UPDATE SET ""views"" = stats.views + 1",
             bindings: [
                 1,
                 "2021-09-08",
@@ -828,7 +828,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertSingleTarget() {
         return {
-            sql: "INSERT INTO ""users"" (""active"", ""createdDate"", ""modifiedDate"", ""username"") VALUES (?, ?, ?, ?) ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
+            sql: "INSERT INTO ""users"" (""active"", ""createdDate"", ""modifiedDate"", ""username"") VALUES (?, ?, ?, ?) ON CONFLICT (""username"") DO UPDATE SET ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
             bindings: [
                 1,
                 "2021-09-08 12:00:00",
@@ -840,14 +840,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function upsertFromClosure() {
         return {
-            sql: "INSERT INTO ""users"" (""username"", ""active"", ""createdDate"", ""modifiedDate"") SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ? ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
+            sql: "INSERT INTO ""users"" (""username"", ""active"", ""createdDate"", ""modifiedDate"") SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ? ON CONFLICT (""username"") DO UPDATE SET ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
             bindings: [ 1 ]
         };
     }
 
     function upsertFromBuilder() {
         return {
-            sql: "INSERT INTO ""users"" (""username"", ""active"", ""createdDate"", ""modifiedDate"") SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ? ON CONFLICT (""username"") DO UPDATE ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
+            sql: "INSERT INTO ""users"" (""username"", ""active"", ""createdDate"", ""modifiedDate"") SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ? ON CONFLICT (""username"") DO UPDATE SET ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
             bindings: [ 1 ]
         };
     }

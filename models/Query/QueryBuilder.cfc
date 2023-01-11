@@ -3379,14 +3379,11 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @asQuery  Flag to retrieve the columnList as a query instead of an array. Default: false.
      *
-     * @return   Query | Array<String>
+     * @return   Query | Array<string>
      */
     public any function columnList( asQuery = false ) {
         if ( isNull( getFrom() ) || !isSimpleValue( getFrom() ) || getFrom() == "" ) {
-            throw(
-                type = "MissingTable",
-                message = "A simple table is required to use `columnList`."
-            );
+            throw( type = "MissingTable", message = "A simple table is required to use `columnList`." );
         }
 
         cfdbinfo( type = "Columns", name = "local.columnList", table = arguments.table );

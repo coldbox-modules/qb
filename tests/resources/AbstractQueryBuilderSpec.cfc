@@ -2038,7 +2038,12 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "returns zeros values less than zero", function() {
                         testCase( function( builder ) {
-                            builder.from( "users" ).forPage( 0, -2 );
+                            builder
+                                .setShouldMaxRowsOverrideToAll( function() {
+                                    return false;
+                                } )
+                                .from( "users" )
+                                .forPage( 0, -2 );
                         }, forPageWithLessThanZeroValues() );
                     } );
                 } );

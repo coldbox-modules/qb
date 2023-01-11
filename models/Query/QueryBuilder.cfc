@@ -75,6 +75,14 @@ component displayname="QueryBuilder" accessors="true" {
      */
     property name="sqlCommenter";
 
+    /*
+     * shouldMaxRowsOverrideToAll callback
+     * A callback to determine if the maxRows value passed should be treated as if ALL (or no maxrows) was passed.
+     * Useful for integration with libraries like DataTables that sends -1 to mean "all records".
+     * @default Overrides to all on any value <= 0
+     */
+    property name="shouldMaxRowsOverrideToAll";
+
     /******************** Query Properties ********************/
 
     /**
@@ -244,25 +252,28 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Creates an empty query builder.
      *
-     * @grammar              The grammar to use when compiling queries.
-     *                       Default: qb.models.Grammars.BaseGrammar
-     * @utils                A collection of query utilities.
-     *                       Default: qb.models.Query.QueryUtils
-     * @returnFormat         The closure (or string format shortcut) that
-     *                       modifies the query and is eventually returned to
-     *                       the caller. Default: 'array'
-     * @preventDuplicateJoins Whether QB should ignore a .join() statement that matches an existing join
-     *                       Default: false
-     * @paginationCollector  The closure that processes the pagination result.
-     *                       Default: cbpaginator.models.Pagination
-     * @columnFormatter      The closure that modifies each column before being
-     *                       added to the query. Default: Identity
-     * @parentQuery          An optional parent query that will be called when
-     *                       a method isn't found on this query builder.
-     * @defaultOptions       The default queryExecute options to use for this
-     *                       builder. This will be merged in each execution.
+     * @grammar                     The grammar to use when compiling queries.
+     *                              Default: qb.models.Grammars.BaseGrammar
+     * @utils                       A collection of query utilities.
+     *                              Default: qb.models.Query.QueryUtils
+     * @returnFormat                The closure (or string format shortcut) that modifies the query
+     *                              and is eventually returned to the caller. Default: 'array'
+     * @preventDuplicateJoins       Whether QB should ignore a .join() statement that matches an existing join
+     *                              Default: false
+     * @paginationCollector         The closure that processes the pagination result.
+     *                              Default: cbpaginator.models.Pagination
+     * @columnFormatter             The closure that modifies each column before being
+     *                              added to the query. Default: Identity
+     * @parentQuery                 An optional parent query that will be called when
+     *                              a method isn't found on this query builder.
+     * @defaultOptions              The default queryExecute options to use for this
+     *                              builder. This will be merged in each execution.
+     * @sqlCommenter                A component to gather and apply SQL comments according
+     *                              to the sqlcommenter specification.
+     * @shouldMaxRowsOverrideToAll  Callback function to determine if a given maxrows value
+     *                              should be treated as all records.
      *
-     * @return               qb.models.Query.QueryBuilder
+     * @return                      qb.models.Query.QueryBuilder
      */
     public QueryBuilder function init(
         grammar = new qb.models.Grammars.BaseGrammar(),
@@ -273,7 +284,8 @@ component displayname="QueryBuilder" accessors="true" {
         columnFormatter,
         parentQuery,
         defaultOptions = {},
-        sqlCommenter = new qb.models.SQLCommenter.NullSQLCommenter()
+        sqlCommenter = new qb.models.SQLCommenter.NullSQLCommenter(),
+        shouldMaxRowsOverrideToAll
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
@@ -292,6 +304,13 @@ component displayname="QueryBuilder" accessors="true" {
         setDefaultOptions( arguments.defaultOptions );
         setReturnFormat( arguments.returnFormat );
         setSqlCommenter( arguments.sqlCommenter );
+
+        if ( isNull( arguments.shouldMaxRowsOverrideToAll ) ) {
+            arguments.shouldMaxRowsOverrideToAll = function( maxRows ) {
+                return maxRows <= 0;
+            };
+        }
+        setShouldMaxRowsOverrideToAll( arguments.shouldMaxRowsOverrideToAll );
 
         setDefaultValues();
 
@@ -2296,6 +2315,12 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function forPage( required numeric page, required numeric maxRows ) {
+        if ( shouldMaxRowsOverrideToAll( arguments.maxRows ) ) {
+            variables.limitValue = javacast( "null", "" );
+            variables.offsetValue = javacast( "null", "" );
+            return this;
+        }
+
         arguments.maxRows = arguments.maxRows > 0 ? arguments.maxRows : 0;
         offset( arguments.page * arguments.maxRows - arguments.maxRows );
         limit( arguments.maxRows );

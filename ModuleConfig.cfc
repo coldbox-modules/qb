@@ -25,6 +25,9 @@ component {
                     { "class": "RouteInfoCommenter@qb", "properties": {} },
                     { "class": "DBInfoCommenter@qb", "properties": {} }
                 ]
+            },
+            "shouldMaxRowsOverrideToAll": function( maxRows ) {
+                return maxRows <= 0;
             }
         };
 
@@ -51,6 +54,7 @@ component {
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
             .initArg( name = "defaultOptions", value = settings.defaultOptions );
             .initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" );
+            .initArg( name = "shouldMaxRowsOverrideToAll", value = settings.shouldMaxRowsOverrideToAll );
 
         binder
             .map( alias = "SchemaBuilder@qb", force = true )

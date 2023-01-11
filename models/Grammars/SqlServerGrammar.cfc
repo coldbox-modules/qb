@@ -528,10 +528,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return typeTimestampTz( column );
     }
 
-    function typeUUID( column ) {
-        return "uniqueidentifier";
-    }
-
     function typeEnum( column, blueprint ) {
         blueprint.appendIndex(
             type = "check",
@@ -551,6 +547,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         }
 
         return "FLOAT";
+    }
+
+    function typeGUID( column ) {
+        return "uniqueidentifier";
     }
 
     function typeInteger( column ) {

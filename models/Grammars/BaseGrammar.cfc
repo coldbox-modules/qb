@@ -1432,6 +1432,10 @@ component displayname="Grammar" accessors="true" singleton {
         return "FLOAT(#column.getLength()#,#column.getPrecision()#)";
     }
 
+    function typeGUID( column ) {
+        return typeChar( column, 36 );
+    }
+
     function typeInteger( column ) {
         return arrayToList(
             arrayFilter( [ "INTEGER", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
@@ -1462,7 +1466,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeUUID( column ) {
-        return typeChar( column, 36 );
+        return typeChar( column, 35 );
     }
 
     function typeLineString( column ) {

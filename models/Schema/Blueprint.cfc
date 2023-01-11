@@ -90,6 +90,12 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    public Column function guid( required string name ) {
+        arguments.type = "GUID";
+        arguments.length = 36;
+        return appendColumn( argumentCollection = arguments );
+    }
+
     public Column function increments( required string name, string indexName ) {
         arguments.autoIncrement = true;
         param arguments.indexName = "pk_#getTable()#_#name#";
@@ -317,7 +323,7 @@ component accessors="true" {
 
     public Column function uuid( required string name ) {
         arguments.type = "UUID";
-        arguments.length = 36;
+        arguments.length = 35;
         return appendColumn( argumentCollection = arguments );
     }
 

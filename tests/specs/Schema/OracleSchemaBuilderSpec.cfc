@@ -114,6 +114,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""EMPLOYEES"" (""SALARY"" FLOAT NOT NULL)" ];
     }
 
+    function guid() {
+        return [ "CREATE TABLE ""USERS"" (""ID"" CHAR(36) NOT NULL)" ];
+    }
+
     function increments() {
         return [
             "CREATE TABLE ""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
@@ -339,7 +343,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function uuid() {
-        return [ "CREATE TABLE ""USERS"" (""ID"" CHAR(36) NOT NULL)" ];
+        return [ "CREATE TABLE ""USERS"" (""ID"" CHAR(35) NOT NULL)" ];
     }
 
     function comment() {

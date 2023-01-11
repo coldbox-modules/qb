@@ -837,7 +837,8 @@ component displayname="Grammar" accessors="true" singleton {
         if ( aggregate.isEmpty() ) {
             return "";
         }
-        var aggString = "#uCase( aggregate.type )#(#query.getDistinct() ? "DISTINCT " : ""##wrapColumn( aggregate.column )#)";
+        var shouldIncludeDistinct = query.getDistinct() && aggregate.column != "*";
+        var aggString = "#uCase( aggregate.type )#(#shouldIncludeDistinct ? "DISTINCT " : ""##wrapColumn( aggregate.column )#)";
         if ( aggregate.keyExists( "defaultValue" ) && !isNull( aggregate.defaultValue ) ) {
             aggString = "COALESCE(#aggString#, #aggregate.defaultValue#)";
         }

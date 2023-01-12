@@ -1752,18 +1752,27 @@ component extends="testbox.system.BaseSpec" {
     }
 
     private function testCase( callback, expected ) {
-        var schema = getBuilder();
-        var statements = callback( schema );
-        if ( !isSimpleValue( statements ) ) {
-            statements = statements.toSql();
+        try {
+            var schema = getBuilder();
+            var statements = callback( schema );
+            if ( !isSimpleValue( statements ) ) {
+                statements = statements.toSql();
+            }
+            if ( !isArray( statements ) ) {
+                statements = [ statements ];
+            }
+            expect( statements ).toBeArray();
+            expect( statements ).toHaveLength( arrayLen( expected ) );
+            for ( var i = 1; i <= expected.len(); i++ ) {
+                expect( statements[ i ] ).toBeWithCase( expected[ i ] );
+            }
         }
-        if ( !isArray( statements ) ) {
-            statements = [ statements ];
-        }
-        expect( statements ).toBeArray();
-        expect( statements ).toHaveLength( arrayLen( expected ) );
-        for ( var i = 1; i <= expected.len(); i++ ) {
-            expect( statements[ i ] ).toBeWithCase( expected[ i ] );
+        catch ( any e ) {
+            if ( !isSimpleValue( expected ) && !isArray( expected ) && structKeyExists( expected, "exception" ) ) {
+                expect( e.type ).toBe( expected.exception );
+                return;
+            }
+            rethrow;
         }
     }
 

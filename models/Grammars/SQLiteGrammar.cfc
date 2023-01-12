@@ -273,6 +273,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
                 return insertString & " ON CONFLICT (#constraintString#) DO UPDATE SET #updateString##returningClause#";
             }
+            
+            public string function compileConcat( required string alias, required array items ) {
+                return "#arrayToList( items, " || " )# AS #wrapAlias( alias )#";
+            }
+
     /*=====  End of Query Builder  ======*/
 
     /*===================================

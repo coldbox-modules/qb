@@ -13,7 +13,7 @@ Using qb, you can:
 
 ## Requirements
 
-+ Adobe ColdFusion 2016+
++ Adobe ColdFusion 2018+
 + Lucee 5+
 
 ## Installation
@@ -91,14 +91,14 @@ To use the SQLite grammar for qb you will need to setup a datasource that connec
 
 ### Configure the Datasource
 
-You can configure your datasource for Lucee or Adobe Coldfusion using the steps below. You can also use [cfconfig](https://cfconfig.ortusbooks.com/using-the-cli/installation) with CommandBox to do it automatically for you. 
+You can configure your datasource for Lucee or Adobe Coldfusion using the steps below. You can also use [cfconfig](https://cfconfig.ortusbooks.com/using-the-cli/installation) with CommandBox to do it automatically for you.
 
 For both Lucee and ACF you need to set the JDBC Driver class to `org.sqlite.JDBC`. Then you need to specify the JDBC connection string as `jdbc:sqlite:<your database path>`. i.e. `jdbc:sqlite:C:/data/my_database.db`
 
 **Lucee**
 1. Navigate to Datasources in the Lucee administrator
 2. Enter datasource name
-3. Select Type: Other - JDBC Driver 
+3. Select Type: Other - JDBC Driver
 4. Click Create
 5. Enter `org.sqlite.JDBC` for Class
 6. Enter the Connection String: `jdbc:sqlite:<db path>`

@@ -271,7 +271,6 @@ component displayname="QueryBuilder" accessors="true" {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
-        setReturnFormat( arguments.returnFormat );
         setPreventDuplicateJoins( arguments.preventDuplicateJoins );
         if ( isNull( arguments.columnFormatter ) ) {
             arguments.columnFormatter = function( column ) {
@@ -284,6 +283,7 @@ component displayname="QueryBuilder" accessors="true" {
             setParentQuery( arguments.parentQuery );
         }
         setDefaultOptions( arguments.defaultOptions );
+        setReturnFormat( arguments.returnFormat );
 
         setDefaultValues();
 
@@ -3040,7 +3040,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return numeric
      */
-    public numeric function count( string column = "*", struct options = {} ) {
+    public any function count( string column = "*", struct options = {}, boolean toSQL = false ) {
         arguments.type = "count";
         arguments.defaultValue = 0;
         return aggregateQuery( argumentCollection = arguments );
@@ -3104,7 +3104,8 @@ component displayname="QueryBuilder" accessors="true" {
         required string type,
         required string column = "*",
         struct options = {},
-        any defaultValue
+        any defaultValue,
+        boolean toSQL = false
     ) {
         return withAggregate(
             {
@@ -3115,6 +3116,10 @@ component displayname="QueryBuilder" accessors="true" {
             function() {
                 return withReturnFormat( "query", function() {
                     return withColumns( column, function() {
+                        if ( toSQL ) {
+                            return this.toSQL();
+                        }
+
                         var result = get( options = options );
                         if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
                             return defaultValue;
@@ -3156,7 +3161,7 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !isNull( arguments.columns ) ) {
             select( arguments.columns );
         }
-        var result = run( sql = toSql(), options = arguments.options );
+        var result = run( sql = this.toSql(), options = arguments.options );
         select( originalColumns );
         return result;
     }
@@ -3368,6 +3373,29 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Retrieve the results of the query in chunks.  The number of items
+     * retrieved at a time is determined by the `max` parameter. Each
+     * chunk of items will be passed to the callback provided.
+     *
+     * @asQuery  Flag to retrieve the columnList as a query instead of an array. Default: false.
+     *
+     * @return   Query | Array<string>
+     */
+    public any function columnList( asQuery = false ) {
+        if ( isNull( getFrom() ) || !isSimpleValue( getFrom() ) || getFrom() == "" ) {
+            throw( type = "MissingTable", message = "A simple table is required to use `columnList`." );
+        }
+
+        cfdbinfo( type = "Columns", name = "local.columnList", table = arguments.table );
+
+        if ( arguments.asQuery ) {
+            return local.columnList;
+        } else {
+            return listToArray( local.columnList.valueList( "column_name" ) );
+        }
+    }
+
+    /**
      * Execute a query and convert it to the proper return format.
      *
      * @sql         The sql string to execute.
@@ -3383,6 +3411,10 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( isQuery( q ) ) {
+            return returnFormat( q );
+        }
+
+        if ( isArray( q ) ) {
             return returnFormat( q );
         }
 
@@ -3486,6 +3518,22 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Wraps up items into a CONCAT expression.
+     * This is provided since different engines have different syntax for CONCAT.
+     *
+     * @alias The alias for the CONCAT expression
+     * @items The items in the CONCAT expression, either a list or an array.
+     *
+     * @return qb.models.Query.Expression
+     */
+    public Expression function concat( required string alias, required any items, array bindings = [] ) {
+        return new qb.models.Query.Expression(
+            variables.grammar.compileConcat( arguments.alias, arrayWrap( value = arguments.items, explodeList = true ) ),
+            arguments.bindings
+        );
+    }
+
+    /**
      * Returns the Builder compiled to grammar-specific sql.
      *
      * @return string
@@ -3537,7 +3585,7 @@ component displayname="QueryBuilder" accessors="true" {
         boolean showUDFs = true
     ) {
         writeDump(
-            var = toSQL( showBindings = arguments.showBindings ),
+            var = this.toSQL( showBindings = arguments.showBindings ),
             output = arguments.output,
             format = arguments.format,
             abort = arguments.abort,
@@ -3563,12 +3611,22 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function setReturnFormat( required any format ) {
+        if ( supportsNativeReturnType() ) {
+            structDelete( variables.defaultOptions, "returntype" );
+        }
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
         } else if ( arguments.format == "array" ) {
-            variables.returnFormat = function( q ) {
-                return getUtils().queryToArrayOfStructs( q );
-            };
+            if ( supportsNativeReturnType() ) {
+                mergeDefaultOptions( { "returntype": "array" } );
+                variables.returnFormat = function( q ) {
+                    return q;
+                };
+            } else {
+                variables.returnFormat = function( q ) {
+                    return getUtils().queryToArrayOfStructs( q );
+                };
+            }
         } else if ( arguments.format == "query" ) {
             variables.returnFormat = function( q ) {
                 return q;
@@ -3577,6 +3635,15 @@ component displayname="QueryBuilder" accessors="true" {
             throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );
         }
 
+        return this;
+    }
+
+    private boolean function supportsNativeReturnType() {
+        return server.keyExists( "lucee" ) || listFirst( server.coldfusion.productversion ) >= 2021;
+    }
+
+    public QueryBuilder function mergeDefaultOptions( required struct options ) {
+        structAppend( variables.defaultOptions, arguments.options, true );
         return this;
     }
 
@@ -3600,9 +3667,16 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private any function withReturnFormat( required any returnFormat, required any callback ) {
         var originalReturnFormat = getReturnFormat();
+        var originalReturnType = javacast( "null", "" );
+        if ( supportsNativeReturnType() && variables.defaultOptions.keyExists( "returntype" ) ) {
+            originalReturnType = variables.defaultOptions.returntype;
+        }
         setReturnFormat( arguments.returnFormat );
         var result = callback();
         setReturnFormat( originalReturnFormat );
+        if ( !isNull( originalReturnType ) ) {
+            mergeDefaultOptions( { "returntype": originalReturnType } );
+        }
         return result;
     }
 
@@ -3615,10 +3689,15 @@ component displayname="QueryBuilder" accessors="true" {
      * @return any
      */
     private any function withColumns( required any columns, required any callback ) {
-        var originalColumns = getColumns();
-        select( arguments.columns );
+        var originalColumns = [ "*" ];
+        if ( getUnions().isEmpty() ) {
+            originalColumns = getColumns();
+            select( arguments.columns );
+        }
         var result = callback();
-        select( originalColumns );
+        if ( getUnions().isEmpty() ) {
+            select( originalColumns );
+        }
         return result;
     }
 
@@ -3673,8 +3752,17 @@ component displayname="QueryBuilder" accessors="true" {
      * @doc_generic  any
      * @return       [any]
      */
-    private array function arrayWrap( required any value ) {
-        return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+    private array function arrayWrap( required any value, boolean explodeList = false ) {
+        if ( isArray( arguments.value ) ) {
+            return arguments.value;
+        }
+
+        if ( arguments.explodeList ) {
+            // this handles lists with or without spaces after the comma
+            return arraySlice( arguments.value.split( ",\s*" ), 1 );
+        } else {
+            return [ arguments.value ];
+        }
     }
 
     /**

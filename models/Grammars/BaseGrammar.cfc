@@ -127,7 +127,7 @@ component displayname="Grammar" accessors="true" singleton {
      */
     private function tryPostInterceptor( data ) {
         if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
-            variables.interceptorService.announceInterception( "postQBExecute", data );
+            variables.interceptorService.announce( "postQBExecute", data );
             return;
         }
 
@@ -231,6 +231,10 @@ component displayname="Grammar" accessors="true" singleton {
         }
         var select = query.getDistinct() && query.getAggregate().isEmpty() ? "SELECT DISTINCT " : "SELECT ";
         return select & columns.map( wrapColumn ).toList( ", " );
+    }
+
+    public string function compileConcat( required string alias, required array items ) {
+        return "CONCAT(#arrayToList( items )#) AS #wrapAlias( alias )#";
     }
 
     /**
@@ -833,10 +837,19 @@ component displayname="Grammar" accessors="true" singleton {
         if ( aggregate.isEmpty() ) {
             return "";
         }
-        var aggString = "#uCase( aggregate.type )#(#query.getDistinct() ? "DISTINCT " : ""##wrapColumn( aggregate.column )#)";
+        var shouldIncludeDistinct = query.getDistinct() && aggregate.column != "*";
+        var aggString = "#uCase( aggregate.type )#(#shouldIncludeDistinct ? "DISTINCT " : ""##wrapColumn( aggregate.column )#)";
         if ( aggregate.keyExists( "defaultValue" ) && !isNull( aggregate.defaultValue ) ) {
             aggString = "COALESCE(#aggString#, #aggregate.defaultValue#)";
         }
+
+        if ( !query.getUnions().isEmpty() ) {
+            var clonedQuery = query.clone().setAggregate( {} );
+            query.reset();
+            query.setAggregate( arguments.aggregate );
+            query.fromSub( "qb_aggregate_source", clonedQuery );
+        }
+
         return "SELECT #aggString# AS ""aggregate""";
     }
 
@@ -1419,6 +1432,10 @@ component displayname="Grammar" accessors="true" singleton {
         return "FLOAT(#column.getLength()#,#column.getPrecision()#)";
     }
 
+    function typeGUID( column ) {
+        return typeChar( column, 36 );
+    }
+
     function typeInteger( column ) {
         return arrayToList(
             arrayFilter( [ "INTEGER", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
@@ -1449,7 +1466,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeUUID( column ) {
-        return typeChar( column, 36 );
+        return typeChar( column, 35 );
     }
 
     function typeLineString( column ) {

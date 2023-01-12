@@ -59,6 +59,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT substr( foo, 6 ), trim( bar ) FROM ""USERS""";
     }
 
+    function selectConcat() {
+        return "SELECT CONCAT(a,b,c,d) AS ""MY_ALIAS"" FROM ""USERS""";
+    }
+
+    function selectConcatArray() {
+        return "SELECT CONCAT(a,b,c,d) AS ""MY_ALIAS"" FROM ""USERS""";
+    }
+
     function clearSelect() {
         return "SELECT * FROM ""USERS""";
     }
@@ -574,6 +582,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return {
             sql: "SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION ALL SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION ALL SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ?",
             bindings: [ 1, 2, 3 ]
+        };
+    }
+
+    function unionCount() {
+        return {
+            sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM (SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ? UNION SELECT ""NAME"" FROM ""USERS"" WHERE ""ID"" = ?) ""QB_AGGREGATE_SOURCE""",
+            bindings: [ 1, 2 ]
         };
     }
 

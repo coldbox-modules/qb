@@ -111,6 +111,26 @@ component extends="testbox.system.BaseSpec" {
                         }, selectRawArray() );
                     } );
 
+                    it( "provides a grammar-specific helper for concat", function() {
+                        testCase( function( builder ) {
+                            builder.select( builder.concat( "my_alias", "a,b,c,d" ) ).from( "users" );
+                        }, selectConcat() );
+                    } );
+
+                    it( "concat can accept an array of values", function() {
+                        testCase( function( builder ) {
+                            // I kid you not, ACF2018 wouldn't let me pass `[ "a", "b", "c", "d" ]`
+                            var items = [];
+                            items
+                                .append( "a" )
+                                .append( "b" )
+                                .append( "c" )
+                                .append( "d" );
+
+                            builder.select( builder.concat( "my_alias", items ) ).from( "users" );
+                        }, selectConcatArray() );
+                    } );
+
                     it( "can clear the selected columns for a query", function() {
                         testCase( function( builder ) {
                             builder
@@ -1785,16 +1805,13 @@ component extends="testbox.system.BaseSpec" {
                                 .unionAll( function( q ) {
                                     q.select( "name" )
                                         .from( "users" )
-                                        .where( "id", 2 )
-                                    ;
+                                        .where( "id", 2 );
                                 } )
                                 .unionAll( function( q ) {
                                     q.select( "name" )
                                         .from( "users" )
-                                        .where( "id", 3 )
-                                    ;
-                                } )
-                            ;
+                                        .where( "id", 3 );
+                                } );
                         }, unionAll() );
                     } );
 
@@ -1817,6 +1834,21 @@ component extends="testbox.system.BaseSpec" {
                                 .unionAll( union3 )
                             ;
                         }, unionAll() );
+                    } );
+
+                    it( "can run an aggregate query like count on a union query", function() {
+                        testCase( function( builder ) {
+                            return builder
+                                .select( "name" )
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .union( function( q ) {
+                                    q.select( "name" )
+                                        .from( "users" )
+                                        .where( "id", 2 );
+                                } )
+                                .count( toSQL = true );
+                        }, unionCount() );
                     } );
                 } );
 

@@ -341,6 +341,19 @@ component extends="testbox.system.BaseSpec" {
                     }, floatWithLengthAndPrecision() );
                 } );
 
+                it( "guid", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "users",
+                            function( table ) {
+                                table.guid( "id" );
+                            },
+                            {},
+                            false
+                        );
+                    }, this.guid() );
+                } );
+
                 it( "increments", function() {
                     testCase( function( schema ) {
                         return schema.create(
@@ -1094,7 +1107,7 @@ component extends="testbox.system.BaseSpec" {
                         return schema.create(
                             "users",
                             function( table ) {
-                                table.uuid( "id" ).nullable();
+                                table.guid( "id" ).nullable();
                             },
                             {},
                             false

@@ -180,7 +180,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             .toList( ", " );
         var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
 
-        return insertString & " ON CONFLICT (#constraintString#) DO UPDATE #updateString##returningClause#";
+        return insertString & " ON CONFLICT (#constraintString#) DO UPDATE SET #updateString##returningClause#";
     }
 
     /*===================================

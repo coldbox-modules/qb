@@ -1,6 +1,5 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
-
     private function getBuilder() {
         variables.utils = getMockBox().createMock( "qb.models.Query.QueryUtils" ).init();
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.SQLiteGrammar" ).init( variables.utils );
@@ -15,7 +14,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     function selectSpecificColumn() {
         return "SELECT ""name"" FROM ""users""";
     }
-    
+
     function selectMultipleArray() {
         return "SELECT ""name"", COUNT(*) FROM ""users""";
     }
@@ -74,7 +73,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     function selectConcatArray() {
         return "SELECT a || b || c || d AS ""my_alias"" FROM ""users""";
     }
-    
+
     function clearSelect() {
         return "SELECT * FROM ""users""";
     }
@@ -111,33 +110,36 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function fromDerivedTable() {
-        return { sql: "SELECT * FROM (SELECT ""id"", ""name"" FROM ""users"" WHERE ""age"" >= ?) AS ""u""", bindings: [ 21 ] };
+        return {
+            sql: "SELECT * FROM (SELECT ""id"", ""name"" FROM ""users"" WHERE ""age"" >= ?) AS ""u""",
+            bindings: [ 21 ]
+        };
     }
 
     function noLock() {
         return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ?", "bindings": [ 1 ] };
     }
-    
+
     function sharedLock() {
         return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ?", "bindings": [ 1 ] };
     }
-    
+
     function lockForUpdate() {
         return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ?", "bindings": [ 1 ] };
     }
-    
+
     function lockForUpdateSkipLocked() {
         return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ?", "bindings": [ 1 ] };
     }
-    
+
     function lockArbitraryString() {
         return { "sql": "SELECT * FROM ""users"" WHERE ""id"" = ?", "bindings": [ 1 ] };
     }
-    
+
     function table() {
         return "SELECT * FROM ""users""";
     }
-    
+
     function tablePrefix() {
         return "SELECT * FROM ""prefix_users""";
     }
@@ -317,7 +319,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function orWhereIn() {
-        return { sql: "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" IN (?, ?, ?)", bindings: [ "foo", 1, 2, 3 ] };
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" IN (?, ?, ?)",
+            bindings: [ "foo", 1, 2, 3 ]
+        };
     }
 
     function whereInRaw() {
@@ -371,7 +376,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function joinWithWhere() {
-        return { sql: "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""contacts"".""balance"" < ?", bindings: [ 100 ] };
+        return {
+            sql: "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""contacts"".""balance"" < ?",
+            bindings: [ 100 ]
+        };
     }
 
     function leftJoin() {
@@ -415,8 +423,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             sql: "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" OR ""users"".""name"" = ""contacts"".""name"" OR ""users"".""admin"" = ?",
             bindings: [ 1 ]
         };
-    }    
-    
+    }
+
     function joinWithWhereNull() {
         return "SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" AND ""contacts"".""deleted_date"" IS NULL";
     }
@@ -812,7 +820,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function updateWithWhere() {
-        return { sql: "UPDATE ""users"" SET ""email"" = ?, ""name"" = ? WHERE ""Id"" = ?", bindings: [ "foo", "bar", 1 ] };
+        return {
+            sql: "UPDATE ""users"" SET ""email"" = ?, ""name"" = ? WHERE ""Id"" = ?",
+            bindings: [ "foo", "bar", 1 ]
+        };
     }
 
     function updateWithRaw() {

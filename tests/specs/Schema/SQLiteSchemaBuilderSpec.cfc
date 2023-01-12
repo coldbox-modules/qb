@@ -15,15 +15,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function columnPrimaryKey() {
-        return [
-            "CREATE TABLE ""users"" (""uuid"" TEXT NOT NULL, PRIMARY KEY (""uuid""))"
-        ];
+        return [ "CREATE TABLE ""users"" (""uuid"" TEXT NOT NULL, PRIMARY KEY (""uuid""))" ];
     }
 
     function tablePrimaryKey() {
-        return [
-            "CREATE TABLE ""users"" (""uuid"" TEXT NOT NULL, PRIMARY KEY (""uuid""))"
-        ];
+        return [ "CREATE TABLE ""users"" (""uuid"" TEXT NOT NULL, PRIMARY KEY (""uuid""))" ];
     }
 
     function simpleTable() {
@@ -31,7 +27,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasTable() {
-        return [ "SELECT 1 FROM ""pragma_table_list"" WHERE ""type"" = 'table' AND ""name"" = ? AND ""schema"" = 'main'" ];
+        return [
+            "SELECT 1 FROM ""pragma_table_list"" WHERE ""type"" = 'table' AND ""name"" = ? AND ""schema"" = 'main'"
+        ];
     }
 
     function hasTableInSchema() {
@@ -39,7 +37,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasColumn() {
-        return [ "SELECT 1 FROM ""pragma_table_list"" tl JOIN pragma_table_info(tl.name) ti WHERE tl.""type"" = 'table' AND tl.""name"" = ? AND ti.""name"" = ? AND tl.""schema"" = 'main'" ];
+        return [
+            "SELECT 1 FROM ""pragma_table_list"" tl JOIN pragma_table_info(tl.name) ti WHERE tl.""type"" = 'table' AND tl.""name"" = ? AND ti.""name"" = ? AND tl.""schema"" = 'main'"
+        ];
     }
 
     function hasColumnInSchema() {
@@ -77,17 +77,21 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function char() {
         return [ "CREATE TABLE ""classifications"" (""level"" VARCHAR(1) NOT NULL)" ];
     }
-    
+
     function charWithLength() {
         return [ "CREATE TABLE ""classifications"" (""abbreviation"" VARCHAR(3) NOT NULL)" ];
     }
 
     function computedStored() {
-        return [ "CREATE TABLE ""products"" (""price"" INTEGER NOT NULL, ""tax"" INTEGER GENERATED ALWAYS AS (price * 0.0675) STORED NOT NULL)" ];
+        return [
+            "CREATE TABLE ""products"" (""price"" INTEGER NOT NULL, ""tax"" INTEGER GENERATED ALWAYS AS (price * 0.0675) STORED NOT NULL)"
+        ];
     }
 
     function computedVirtual() {
-        return [ "CREATE TABLE ""products"" (""price"" INTEGER NOT NULL, ""tax"" INTEGER GENERATED ALWAYS AS (price * 0.0675) VIRTUAL NOT NULL)" ];
+        return [
+            "CREATE TABLE ""products"" (""price"" INTEGER NOT NULL, ""tax"" INTEGER GENERATED ALWAYS AS (price * 0.0675) VIRTUAL NOT NULL)"
+        ];
     }
 
     function date() {
@@ -119,7 +123,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function enum() {
-        return [ "CREATE TABLE ""employees"" (""tshirt_size"" TEXT NOT NULL CHECK (""tshirt_size"" IN ('S', 'M', 'L', 'XL', 'XXL')))" ];
+        return [
+            "CREATE TABLE ""employees"" (""tshirt_size"" TEXT NOT NULL CHECK (""tshirt_size"" IN ('S', 'M', 'L', 'XL', 'XXL')))"
+        ];
     }
 
     function float() {
@@ -167,9 +173,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function mediumIncrements() {
-        return [
-            "CREATE TABLE ""users"" (""id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT)"
-        ];
+        return [ "CREATE TABLE ""users"" (""id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT)" ];
     }
 
     function mediumInteger() {
@@ -192,7 +196,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""transactions"" (""amount"" INTEGER NOT NULL)" ];
     }
 
-    
+
     function morphs() {
         return [
             "CREATE TABLE ""tags"" (""taggable_id"" INTEGER NOT NULL, ""taggable_type"" TEXT NOT NULL)",
@@ -302,9 +306,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function tinyIncrements() {
-        return [
-            "CREATE TABLE ""users"" (""id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT)"
-        ];
+        return [ "CREATE TABLE ""users"" (""id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT)" ];
     }
 
     function tinyInteger() {
@@ -406,9 +408,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function uniqueOverridingName() {
-        return [
-            "CREATE TABLE ""users"" (""username"" TEXT NOT NULL, CONSTRAINT ""unq_uname"" UNIQUE (""username""))"
-        ];
+        return [ "CREATE TABLE ""users"" (""username"" TEXT NOT NULL, CONSTRAINT ""unq_uname"" UNIQUE (""username""))" ];
     }
 
     function uniqueMultipleColumns() {
@@ -430,17 +430,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function renameConstraint() {
         return { exception: "UnsupportedOperation" };
     }
-    
+
     function dropConstraintFromName() {
-        return [
-            "DROP INDEX ""unique_username"""
-        ];
+        return [ "DROP INDEX ""unique_username""" ];
     }
 
     function dropConstraintFromIndex() {
-        return [
-            "DROP INDEX ""unq_users_username"""
-        ];
+        return [ "DROP INDEX ""unq_users_username""" ];
     }
 
     function dropForeignKey() {
@@ -527,7 +523,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function addColumn() {
-        return [ "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" TEXT NOT NULL CHECK (""tshirt_size"" IN ('S', 'M', 'L', 'XL', 'XXL'))" ];
+        return [
+            "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" TEXT NOT NULL CHECK (""tshirt_size"" IN ('S', 'M', 'L', 'XL', 'XXL'))"
+        ];
     }
 
     function addMultiple() {

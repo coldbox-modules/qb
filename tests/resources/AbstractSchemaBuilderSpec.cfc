@@ -1766,8 +1766,7 @@ component extends="testbox.system.BaseSpec" {
             for ( var i = 1; i <= expected.len(); i++ ) {
                 expect( statements[ i ] ).toBeWithCase( expected[ i ] );
             }
-        }
-        catch ( any e ) {
+        } catch ( any e ) {
             if ( !isSimpleValue( expected ) && !isArray( expected ) && structKeyExists( expected, "exception" ) ) {
                 expect( e.type ).toBe( expected.exception );
                 return;

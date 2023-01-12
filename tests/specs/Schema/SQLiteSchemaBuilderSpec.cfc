@@ -356,6 +356,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function uuid() {
+        return [ "CREATE TABLE ""users"" (""id"" VARCHAR(35) NOT NULL)" ];
+    }
+
+    function guid() {
         return [ "CREATE TABLE ""users"" (""id"" VARCHAR(36) NOT NULL)" ];
     }
 

@@ -17,7 +17,15 @@ component {
             "decimalSQLType": "CF_SQL_DECIMAL",
             "autoAddScale": true,
             "autoDeriveNumericType": false,
-            "defaultOptions": {}
+            "defaultOptions": {},
+            "sqlCommenter": {
+                "enabled": false,
+                "commenters": [
+                    { "class": "FrameworkCommenter@qb", "properties": {} },
+                    { "class": "RouteInfoCommenter@qb", "properties": {} },
+                    { "class": "DBInfoCommenter@qb", "properties": {} }
+                ]
+            }
         };
 
         interceptorSettings = { "customInterceptionPoints": "preQBExecute,postQBExecute" };
@@ -42,6 +50,7 @@ component {
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
             .initArg( name = "defaultOptions", value = settings.defaultOptions );
+            .initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" );
 
         binder
             .map( alias = "SchemaBuilder@qb", force = true )

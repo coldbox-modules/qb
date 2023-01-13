@@ -702,6 +702,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function cteInsertUsing() {
+        return {
+            sql: "WITH ""UsersCTE"" AS (SELECT * FROM ""users"" WHERE ""users"".""age"" > ?) INSERT INTO ""oldUsers"" (""fname"", ""lname"", ""username"", ""age"") SELECT ""fname"", ""lname"", ""username"", ""age"" FROM ""UsersCTE""",
+            bindings: [ 25 ]
+        };
+    }
+
     function commonTableExpressionBindingOrder() {
         return {
             sql: "WITH RECURSIVE ""OrderCTE"" AS (SELECT * FROM ""orders"" WHERE ""created"" > ?), ""UsersCTE"" AS (SELECT * FROM ""users"" INNER JOIN ""contacts"" ON ""users"".""id"" = ""contacts"".""id"" WHERE ""users"".""age"" > ?) SELECT * FROM ""UsersCTE"" WHERE ""user"".""id"" NOT IN (?, ?)",

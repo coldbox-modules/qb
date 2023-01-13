@@ -1977,6 +1977,25 @@ component extends="testbox.system.BaseSpec" {
                             ;
                         }, commonTableExpressionBindingOrder() );
                     } );
+
+                    it( "can insert based off of a cte", function() {
+                        testCase( function( builder ) {
+                            return builder
+                                .with( "UsersCTE", function( q ) {
+                                    q.select( "*" )
+                                        .from( "users" )
+                                        .where( "users.age", ">", 25 )
+                                    ;
+                                } )
+                                .table( "oldUsers" )
+                                .insertUsing(
+                                    source = function( qb ) {
+                                        qb.from( "UsersCTE" ).select( [ "fname", "lname", "username", "age" ] );
+                                    },
+                                    toSQL = true
+                                );
+                        }, cteInsertUsing() );
+                    } );
                 } );
 
                 describe( "limits", function() {

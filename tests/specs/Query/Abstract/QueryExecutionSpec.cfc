@@ -854,6 +854,33 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );
+
+                it( "can use the sumRaw shortcut method", function() {
+                    var builder = getBuilder();
+                    var expectedSum = 424242;
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedSum } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COALESCE(SUM(netAdditions + netTransfers), 0) AS ""aggregate"" FROM ""accounts""",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "accounts" ).sumRaw( "netAdditions + netTransfers" );
+
+                    expect( results ).toBe( expectedSum );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql: "SELECT COALESCE(SUM(netAdditions + netTransfers), 0) AS ""aggregate"" FROM ""accounts""",
+                        options: {}
+                    } );
+
+                    expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                } );
             } );
 
             describe( "exists", function() {

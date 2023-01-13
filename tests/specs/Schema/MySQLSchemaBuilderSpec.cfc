@@ -417,6 +417,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE `users` DROP FOREIGN KEY `fk_posts_author_id`" ];
     }
 
+    function dropIndexFromName() {
+        return [ "ALTER TABLE `users` DROP INDEX `idx_username`" ];
+    }
+
+    function dropIndexFromIndex() {
+        return [ "ALTER TABLE `users` DROP INDEX `idx_users_username`" ];
+    }
+
     function basicIndex() {
         return [
             "CREATE TABLE `users` (`published_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, INDEX `idx_users_published_date` (`published_date`))"

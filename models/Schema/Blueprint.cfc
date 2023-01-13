@@ -447,6 +447,15 @@ component accessors="true" {
         return this;
     }
 
+    public Blueprint function dropIndex( required any name ) {
+        if ( !isSimpleValue( arguments.name ) ) {
+            dropIndex( arguments.name.getName() );
+        } else {
+            addCommand( "dropIndex", { name: arguments.name } );
+        }
+        return this;
+    }
+
     public Blueprint function dropForeignKey( required any name ) {
         if ( !isSimpleValue( arguments.name ) ) {
             dropForeignKey( arguments.name.getName() );

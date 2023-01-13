@@ -409,6 +409,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE [users] DROP CONSTRAINT [fk_posts_author_id]" ];
     }
 
+    function dropIndexFromName() {
+        return [ "DROP INDEX [users].[idx_username]" ];
+    }
+
+    function dropIndexFromIndex() {
+        return [ "DROP INDEX [users].[idx_users_username]" ];
+    }
+
     function basicIndex() {
         return [
             "CREATE TABLE [users] ([published_date] DATETIME2 NOT NULL, INDEX [idx_users_published_date] ([published_date]))"

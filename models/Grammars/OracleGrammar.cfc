@@ -438,6 +438,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( commandParameters.name )#";
     }
 
+    function compileDropIndex( blueprint, commandParameters ) {
+        return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( commandParameters.name )#";
+    }
+
     function generateIfExists( blueprint ) {
         return "";
     }

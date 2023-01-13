@@ -1271,6 +1271,32 @@ component extends="testbox.system.BaseSpec" {
                                 );
                             }, dropForeignKey() );
                         } );
+
+                        it( "drop index", function() {
+                            testCase( function( schema ) {
+                                return schema.alter(
+                                    "users",
+                                    function( table ) {
+                                        table.dropIndex( "idx_username" );
+                                    },
+                                    {},
+                                    false
+                                );
+                            }, dropIndexFromName() );
+                        } );
+
+                        it( "drop index (from index object)", function() {
+                            testCase( function( schema ) {
+                                return schema.alter(
+                                    "users",
+                                    function( table ) {
+                                        table.dropIndex( table.index( "username" ) );
+                                    },
+                                    {},
+                                    false
+                                );
+                            }, dropIndexFromIndex() );
+                        } );
                     } );
                 } );
 

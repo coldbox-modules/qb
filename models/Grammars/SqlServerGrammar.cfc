@@ -444,6 +444,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( commandParameters.name )#";
     }
 
+    function compileDropIndex( blueprint, commandParameters ) {
+        return "DROP INDEX #wrapTable( blueprint.getTable() )#.#wrapValue( commandParameters.name )#";
+    }
+
     function compileModifyColumn( blueprint, commandParameters ) {
         return arrayToList(
             arrayFilter(

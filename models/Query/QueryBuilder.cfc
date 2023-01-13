@@ -3091,10 +3091,24 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    public numeric function sum( required string column, struct options = {} ) {
+    public numeric function sum( required any column, struct options = {} ) {
         arguments.type = "sum";
         arguments.defaultValue = 0;
         return aggregateQuery( argumentCollection = arguments );
+    }
+
+    /**
+     * Return the sum of an Expression from a query.
+     * The original query is unaltered by this operation.
+     *
+     * @expression The expression to use to calculate the sum.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     *
+     * @return any
+     */
+    public numeric function sumRaw( required string expression, struct options = {} ) {
+        arguments.column = raw( arguments.expression );
+        return sum( argumentCollection = arguments );
     }
 
     /**
@@ -3110,7 +3124,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private any function aggregateQuery(
         required string type,
-        required string column = "*",
+        required any column = "*",
         struct options = {},
         any defaultValue,
         boolean toSQL = false

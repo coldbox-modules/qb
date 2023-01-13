@@ -1,6 +1,7 @@
 component {
 
     this.enableNullSupport = shouldEnableFullNullSupport();
+    this.timezone = "UTC";
 
     this.mappings[ "/tests" ] = getDirectoryFromPath( getCurrentTemplatePath() );
     this.mappings[ "/qb" ] = expandPath( "/" );

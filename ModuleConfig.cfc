@@ -11,7 +11,7 @@ component {
             "defaultGrammar": "AutoDiscover@qb",
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
-            "strictDateDetection": false,
+            "strictDateDetection": true,
             "numericSQLType": "CF_SQL_NUMERIC",
             "integerSQLType": "CF_SQL_INTEGER",
             "decimalSQLType": "CF_SQL_DECIMAL",

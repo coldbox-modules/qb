@@ -17,35 +17,22 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             describe( "numbers", function() {
                 it( "integers", function() {
-                    if ( isACF2016() ) {
-                        expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_VARCHAR" );
-                    } else {
-                        expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
-                        variables.utils.setAutoDeriveNumericType( true );
-                        expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_INTEGER" );
-                        variables.utils.setAutoDeriveNumericType( false );
-                    }
+                    expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
+                    variables.utils.setAutoDeriveNumericType( true );
+                    expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_INTEGER" );
+                    variables.utils.setAutoDeriveNumericType( false );
                 } );
 
                 it( "decimals", function() {
-                    if ( isACF2016() ) {
-                        variables.utils.setStrictDateDetection( true );
-                        expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_VARCHAR" );
-                        variables.utils.setStrictDateDetection( false );
-                    } else {
-                        expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_NUMERIC" );
-                        variables.utils.setAutoDeriveNumericType( true );
-                        expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_DECIMAL" );
-                        variables.utils.setAutoDeriveNumericType( false );
-                    }
+                    expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_NUMERIC" );
+                    variables.utils.setAutoDeriveNumericType( true );
+                    expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_DECIMAL" );
+                    variables.utils.setAutoDeriveNumericType( false );
                 } );
             } );
 
             it( "dates", function() {
                 expect( utils.inferSqlType( now() ) ).toBe( "CF_SQL_TIMESTAMP" );
-                if ( isLucee() ) {
-                    expect( utils.inferSqlType( "06 12345" ) ).toBe( "CF_SQL_TIMESTAMP" );
-                }
                 variables.utils.setStrictDateDetection( true );
                 expect( utils.inferSqlType( now() ) ).toBe( "CF_SQL_TIMESTAMP" );
                 expect( utils.inferSqlType( "06 12345" ) ).toBe( "CF_SQL_VARCHAR" );
@@ -71,11 +58,7 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             describe( "it infers the sql type from the members of an array", function() {
                 it( "if all the members of the array are the same", function() {
-                    if ( isACF2016() ) {
-                        expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_VARCHAR" );
-                    } else {
-                        expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_NUMERIC" );
-                    }
+                    expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_NUMERIC" );
                 } );
 
                 it( "but defaults to CF_SQL_VARCHAR if they are different", function() {
@@ -93,7 +76,7 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
         describe( "extractBinding()", function() {
             it( "includes sensible defaults", function() {
-                var binding = utils.extractBinding( "05/10/2016" );
+                var binding = utils.extractBinding( parseDateTime( "05/10/2016" ) );
 
                 expect( binding ).toBeStruct();
                 expect( binding.value ).toBe( "05/10/2016" );
@@ -230,15 +213,6 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( queryOne.getFrom() ).toBe( "foo" );
             } );
         } );
-    }
-
-    private boolean function isACF2016() {
-        return server.keyExists( "coldfusion" ) &&
-        !server.keyExists( "lucee" ) &&
-        left( server.coldfusion.productversion, 4 ) == "2016";
-    }
-    private boolean function isLucee() {
-        return server.keyExists( "lucee" );
     }
 
 }

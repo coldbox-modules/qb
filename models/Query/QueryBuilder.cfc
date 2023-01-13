@@ -69,6 +69,12 @@ component displayname="QueryBuilder" accessors="true" {
      */
     property name="defaultOptions";
 
+    /**
+     * The defined SQLCommenter for this builder.
+     * Defaults to a NullSQLCommenter that does nothing.
+     */
+    property name="sqlCommenter";
+
     /******************** Query Properties ********************/
 
     /**
@@ -266,7 +272,8 @@ component displayname="QueryBuilder" accessors="true" {
         paginationCollector = new cbpaginator.models.Pagination(),
         columnFormatter,
         parentQuery,
-        defaultOptions = {}
+        defaultOptions = {},
+        sqlCommenter = new qb.models.SQLCommenter.NullSQLCommenter()
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
@@ -284,6 +291,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
         setDefaultOptions( arguments.defaultOptions );
         setReturnFormat( arguments.returnFormat );
+        setSqlCommenter( arguments.sqlCommenter );
 
         setDefaultValues();
 
@@ -3434,7 +3442,13 @@ component displayname="QueryBuilder" accessors="true" {
     private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
         structAppend( arguments.options, getDefaultOptions(), false );
         var result = grammar.runQuery(
-            sql,
+            variables.sqlCommenter.appendSqlComments(
+                sql,
+                arguments.options.keyExists( "datasource" ) && !isNull( arguments.options.datasource ) ? arguments.options.datasource : javacast(
+                    "null",
+                    ""
+                )
+            ),
             getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] ),
             arguments.options,
             returnObject

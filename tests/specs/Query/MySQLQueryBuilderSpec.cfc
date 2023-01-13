@@ -614,6 +614,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function cteInsertUsing() {
+        return {
+            sql: "INSERT INTO `oldUsers` (`fname`, `lname`, `username`, `age`) WITH `UsersCTE` AS (SELECT * FROM `users` WHERE `users`.`age` > ?) SELECT `fname`, `lname`, `username`, `age` FROM `UsersCTE`",
+            bindings: [ 25 ]
+        };
+    }
+
     function limit() {
         return "SELECT * FROM `users` LIMIT 3";
     }

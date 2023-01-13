@@ -627,6 +627,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function cteInsertUsing() {
+        return {
+            sql: "WITH ""USERSCTE"" AS (SELECT * FROM ""USERS"" WHERE ""USERS"".""AGE"" > ?) INSERT INTO ""OLDUSERS"" (""FNAME"", ""LNAME"", ""USERNAME"", ""AGE"") SELECT ""FNAME"", ""LNAME"", ""USERNAME"", ""AGE"" FROM ""USERSCTE""",
+            bindings: [ 25 ]
+        };
+    }
+
     function limit() {
         return "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"") results ) WHERE ""QB_RN"" <= 3";
     }

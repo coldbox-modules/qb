@@ -774,7 +774,9 @@ component displayname="Grammar" accessors="true" singleton {
             } )
             .toList( ", " );
 
-        return "INSERT INTO #wrapTable( arguments.query.getFrom() )# (#columnsString#) #compileSelect( arguments.source )#";
+        return trim(
+            compileCommonTables( query, query.getCommonTables() ) & " INSERT INTO #wrapTable( arguments.query.getFrom() )# (#columnsString#) #compileSelect( arguments.source )#"
+        );
     }
 
     /**

@@ -127,6 +127,31 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         );
     }
 
+    /**
+     * Compile a Builder's query into an insert using string.
+     *
+     * @query The Builder instance.
+     * @columns The array of columns into which to insert.
+     * @source The source builder object to insert from.
+     *
+     * @return string
+     */
+    public string function compileInsertUsing(
+        required any query,
+        required array columns,
+        required QueryBuilder source
+    ) {
+        var columnsString = arguments.columns
+            .map( function( column ) {
+                return wrapColumn( column.formatted );
+            } )
+            .toList( ", " );
+
+        var cteClause = query.getCommonTables().isEmpty() ? "" : " #compileCommonTables( query, query.getCommonTables() )#";
+
+        return "INSERT INTO #wrapTable( arguments.query.getFrom() )# (#columnsString#)#cteClause# #compileSelect( arguments.source )#";
+    }
+
     public string function compileUpsert(
         required QueryBuilder qb,
         required array insertColumns,

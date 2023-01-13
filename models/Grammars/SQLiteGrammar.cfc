@@ -404,6 +404,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "DROP INDEX #wrapValue( commandParameters.name )#";
     }
 
+    function compileDropIndex( blueprint, commandParameters ) {
+        return "DROP INDEX #wrapValue( commandParameters.name )#";
+    }
+
     function compileDropForeignKey( blueprint, commandParameters ) {
         throw(
             type = "UnsupportedOperation",

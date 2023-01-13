@@ -352,6 +352,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( commandParameters.name )#";
     }
 
+    function compileDropIndex( blueprint, commandParameters ) {
+        return "DROP INDEX #wrapValue( commandParameters.name )#";
+    }
+
     function compileDropAllObjects( options, schema = "" ) {
         var tables = getAllTableNames( options, schema );
         var tableList = arrayToList(

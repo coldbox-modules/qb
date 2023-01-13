@@ -443,6 +443,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function dropIndexFromName() {
+        return [ "DROP INDEX ""idx_username""" ];
+    }
+
+    function dropIndexFromIndex() {
+        return [ "DROP INDEX ""idx_users_username""" ];
+    }
+
     function basicIndex() {
         return [
             "CREATE TABLE ""users"" (""published_date"" TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)",

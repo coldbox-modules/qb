@@ -6,7 +6,7 @@ component singleton displayname="QueryUtils" accessors="true" {
     /**
      * qb strictDateDetection so we can do some conditional behaviour in data type detections
      */
-    property name="strictDateDetection" default="false";
+    property name="strictDateDetection" default="true";
 
     /**
      * allow overriding default numeric SQL type inferral
@@ -47,7 +47,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return               qb.models.Query.QueryUtils
      */
     public QueryUtils function init(
-        boolean strictDateDetection = false,
+        boolean strictDateDetection = true,
         string numericSQLType = "CF_SQL_NUMERIC",
         boolean autoAddScale = true,
         boolean autoDeriveNumericType = false,

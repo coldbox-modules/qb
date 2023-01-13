@@ -2264,18 +2264,14 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "turns a function into a subselect", function() {
                     testCase( function( builder ) {
+                        var subselect = function( qb ) {
+                            qb.from( "departments" )
+                                .select( "name" )
+                                .whereColumn( "employees.departmentId", "departments.id" );
+                        };
                         return builder
                             .table( "employees" )
-                            .update(
-                                values = {
-                                    "departmentName": function( qb ) {
-                                        qb.from( "departments" )
-                                            .select( "name" )
-                                            .whereColumn( "employees.departmentId", "departments.id" );
-                                    }
-                                },
-                                toSql = true
-                            );
+                            .update( values = { "departmentName": subselect }, toSql = true );
                     }, updateWithSubselect() );
                 } );
 

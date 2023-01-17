@@ -36,11 +36,7 @@ component extends="testbox.system.BaseSpec" {
                 expect( binding.cfsqltype ).toBe( "cf_sql_varchar" );
                 var binding = bindings[ 2 ];
                 expect( binding.value ).toBe( 10 );
-                if ( isACF2016() ) {
-                    expect( binding.cfsqltype ).toBe( "cf_sql_varchar" );
-                } else {
-                    expect( binding.cfsqltype ).toBe( "cf_sql_numeric" );
-                }
+                expect( binding.cfsqltype ).toBe( "CF_SQL_INTEGER" );
             } );
 
             it( "retreives a map of bindings", function() {
@@ -54,12 +50,6 @@ component extends="testbox.system.BaseSpec" {
                 expect( bindings ).toBeStruct();
             } );
         } );
-    }
-
-    private boolean function isACF2016() {
-        return server.keyExists( "coldfusion" ) &&
-        !server.keyExists( "lucee" ) &&
-        left( server.coldfusion.productversion, 4 ) == "2016";
     }
 
 }

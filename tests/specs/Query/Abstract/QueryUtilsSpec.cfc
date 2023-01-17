@@ -17,17 +17,17 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             describe( "numbers", function() {
                 it( "integers", function() {
-                    expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
-                    variables.utils.setAutoDeriveNumericType( true );
                     expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_INTEGER" );
                     variables.utils.setAutoDeriveNumericType( false );
+                    expect( utils.inferSqlType( 100 ) ).toBe( "CF_SQL_NUMERIC" );
+                    variables.utils.setAutoDeriveNumericType( true );
                 } );
 
                 it( "decimals", function() {
-                    expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_NUMERIC" );
-                    variables.utils.setAutoDeriveNumericType( true );
                     expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_DECIMAL" );
                     variables.utils.setAutoDeriveNumericType( false );
+                    expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_NUMERIC" );
+                    variables.utils.setAutoDeriveNumericType( true );
                 } );
             } );
 
@@ -58,7 +58,7 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             describe( "it infers the sql type from the members of an array", function() {
                 it( "if all the members of the array are the same", function() {
-                    expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_NUMERIC" );
+                    expect( utils.inferSqlType( [ 1, 2 ] ) ).toBe( "CF_SQL_INTEGER" );
                 } );
 
                 it( "but defaults to CF_SQL_VARCHAR if they are different", function() {

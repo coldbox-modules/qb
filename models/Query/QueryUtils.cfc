@@ -50,7 +50,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         boolean strictDateDetection = true,
         string numericSQLType = "CF_SQL_NUMERIC",
         boolean autoAddScale = true,
-        boolean autoDeriveNumericType = false,
+        boolean autoDeriveNumericType = true,
         string integerSqlType = "CF_SQL_INTEGER",
         string decimalSqlType = "CF_SQL_DECIMAL"
     ) {

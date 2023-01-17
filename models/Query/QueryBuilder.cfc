@@ -3237,7 +3237,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @errorMessage  An optional string error message or callback to produce
      *                a string error message.  If a callback is used, it is
-     *                passed the unloaded entity as the only argument.
+     *                passed the QueryBuilder instance as the only argument.
      *
      * @options Any options to pass to `queryExecute`. Default: {}.
      *

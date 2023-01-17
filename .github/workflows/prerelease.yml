@@ -11,7 +11,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         cfengine: ["lucee@5", "adobe@2018", "adobe@2021"]
         fullNull: ["true", "false"]

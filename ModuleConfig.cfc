@@ -16,7 +16,7 @@ component {
             "integerSQLType": "CF_SQL_INTEGER",
             "decimalSQLType": "CF_SQL_DECIMAL",
             "autoAddScale": true,
-            "autoDeriveNumericType": false,
+            "autoDeriveNumericType": true,
             "defaultOptions": {},
             "sqlCommenter": {
                 "enabled": false,

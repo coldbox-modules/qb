@@ -35,6 +35,16 @@ component {
     }
 
     function onLoad() {
+        // Fill out the sqlCommenter commenters array in case users
+        // forget to define it when overriding in their `config/ColdBox.cfc`
+        if ( !settings.sqlCommenter.keyExists( "commenters" ) ) {
+            param settings.sqlCommenter.commenters = [
+                { "class": "FrameworkCommenter@qb", "properties": {} },
+                { "class": "RouteInfoCommenter@qb", "properties": {} },
+                { "class": "DBInfoCommenter@qb", "properties": {} }
+            ];
+        }
+
         binder
             .map( alias = "QueryUtils@qb", force = true )
             .to( "qb.models.Query.QueryUtils" )

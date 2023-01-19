@@ -65,7 +65,7 @@ component singleton {
      *
      * @return         A struct of key/value pairs from the comment.
      */
-    private struct function parseCommentString( required string commentString ) {
+    public struct function parseCommentString( required string commentString ) {
         arguments.commentString = trim( arguments.commentString );
         arguments.commentString = replace( arguments.commentString, "/*", "" );
         arguments.commentString = replace( arguments.commentString, "*/", "" );

@@ -62,8 +62,8 @@ component {
             .initArg( name = "utils", ref = "QueryUtils@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
-            .initArg( name = "defaultOptions", value = settings.defaultOptions );
-            .initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" );
+            .initArg( name = "defaultOptions", value = settings.defaultOptions )
+            .initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" )
             .initArg( name = "shouldMaxRowsOverrideToAll", value = settings.shouldMaxRowsOverrideToAll );
 
         binder

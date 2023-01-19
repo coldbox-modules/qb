@@ -61,7 +61,7 @@ component singleton {
     /**
      * Parses a comment string into a struct.
      *
-     * @commentString  The comment string to parse into a struct
+     * @commentString  The comment string to parse into a struct.
      *
      * @return         A struct of key/value pairs from the comment.
      */

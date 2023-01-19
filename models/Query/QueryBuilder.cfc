@@ -3420,20 +3420,25 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Retrieve the results of the query in chunks.  The number of items
-     * retrieved at a time is determined by the `max` parameter. Each
-     * chunk of items will be passed to the callback provided.
+     * Retrieves the columns for the configured table.
      *
-     * @asQuery  Flag to retrieve the columnList as a query instead of an array. Default: false.
+     * @asQuery     Flag to retrieve the columnList as a query instead of an array. Default: false.
+     * @datasource  Optional datasource to from which to retrieve the columnList.
      *
-     * @return   Query | Array<string>
+     * @throws      MissingTable
+     *
+     * @return      Query | Array<string>
      */
-    public any function columnList( asQuery = false ) {
+    public any function columnList( boolean asQuery = false, string datasource ) {
         if ( isNull( getFrom() ) || !isSimpleValue( getFrom() ) || getFrom() == "" ) {
             throw( type = "MissingTable", message = "A simple table is required to use `columnList`." );
         }
 
-        cfdbinfo( type = "Columns", name = "local.columnList", table = arguments.table );
+        var attrs = { "type": "Columns", "name": "local.columnList", "table": variables.from };
+        if ( !isNull( arguments.datasource ) ) {
+            attrs[ "datasource" ] = arguments.datasource;
+        }
+        cfdbinfo( attributeCollection = attrs );
 
         if ( arguments.asQuery ) {
             return local.columnList;

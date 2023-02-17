@@ -1,3 +1,11 @@
+# v9.0.1
+## 17 Feb 2023 — 05:53:38 UTC
+
+### fix
+
++ __SQLCommenter:__ Rename RouteInfoCommenter.cfc.cfc to RouteInfoCommenter.cfc ([bf33c1a](https://github.com/coldbox-modules/qb/commit/bf33c1a706ec8520be7dbcce79a7aaaa628c87c1))
+
+
 # v9.0.0
 ## 06 Feb 2023 — 18:01:42 UTC
 

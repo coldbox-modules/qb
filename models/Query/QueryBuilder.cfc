@@ -3470,6 +3470,10 @@ component displayname="QueryBuilder" accessors="true" {
             return returnFormat( q );
         }
 
+        if ( !q.keyExists( "result" ) || !q.keyExists( "query" ) ) {
+            return returnFormat( q );
+        }
+
         return { result: q.result, query: returnFormat( q.query ) };
     }
 
@@ -3686,6 +3690,10 @@ component displayname="QueryBuilder" accessors="true" {
                 };
             }
         } else if ( arguments.format == "query" ) {
+            variables.returnFormat = function( q ) {
+                return q;
+            };
+        } else if ( arguments.format == "none" ) {
             variables.returnFormat = function( q ) {
                 return q;
             };

@@ -1,3 +1,12 @@
+# v9.0.2
+## 14 Mar 2023 — 16:45:46 UTC
+
+### fix
+
++ __QueryBuilder:__ Fix losing `defaultOptions` when calling `newQuery` ([4e713d4](https://github.com/coldbox-modules/qb/commit/4e713d4497fe8cfdd4d53c61ea423729e05f972b))
++ __QueryBuilder:__ Allow for native struct returntypes ([a2e088d](https://github.com/coldbox-modules/qb/commit/a2e088d1507af4ac014ef775c81147d2eee2999a))
+
+
 # v9.0.1
 ## 17 Feb 2023 — 05:53:38 UTC
 

@@ -3737,7 +3737,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    private any function withReturnFormat( required any returnFormat, required any callback ) {
+    public any function withReturnFormat( required any returnFormat, required any callback ) {
         var originalReturnFormat = getReturnFormat();
         var originalReturnType = javacast( "null", "" );
         if ( supportsNativeReturnType() && variables.defaultOptions.keyExists( "returntype" ) ) {

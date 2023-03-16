@@ -301,8 +301,9 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !isNull( arguments.parentQuery ) ) {
             setParentQuery( arguments.parentQuery );
         }
-        setDefaultOptions( arguments.defaultOptions );
+        param variables.defaultOptions = {};
         setReturnFormat( arguments.returnFormat );
+        mergeDefaultOptions( arguments.defaultOptions );
         setSqlCommenter( arguments.sqlCommenter );
 
         if ( isNull( arguments.shouldMaxRowsOverrideToAll ) ) {
@@ -3673,6 +3674,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function setReturnFormat( required any format ) {
+        structDelete( variables.defaultOptions, "returntype" );
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
         } else if ( arguments.format == "array" ) {

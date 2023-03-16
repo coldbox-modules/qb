@@ -268,9 +268,14 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return array
      */
     public array function queryToArrayOfStructs( required any q ) {
-        var queryColumns = getMetadata( arguments.q ).map( function( item ) {
-            return item.name;
-        } );
+        try {
+            var queryColumns = getMetadata( arguments.q ).map( function( item ) {
+                return item.name;
+            } );
+        } catch ( any e ) {
+            writeDump( var = arguments );
+            rethrow;
+        }
 
         return queryReduce(
             arguments.q,

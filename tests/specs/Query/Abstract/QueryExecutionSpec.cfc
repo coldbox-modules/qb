@@ -89,9 +89,7 @@ component extends="testbox.system.BaseSpec" {
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                        );
+                        .$results( expectedQuery );
 
                     var results = builder
                         .from( "users" )
@@ -120,9 +118,7 @@ component extends="testbox.system.BaseSpec" {
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT * FROM ""users""", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                        );
+                        .$results( expectedQuery );
 
                     var results = builder.from( "users" ).last();
 
@@ -139,9 +135,7 @@ component extends="testbox.system.BaseSpec" {
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                        );
+                        .$results( expectedQuery );
 
                     var results = builder.from( "users" ).find( 1 );
 
@@ -488,19 +482,13 @@ component extends="testbox.system.BaseSpec" {
                         .$results( queryNew( "aggregate", "varchar", [ { "aggregate": 257 } ] ) )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 0", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery100 ) : expectedQuery100
-                        )
+                        .$results( expectedQuery100 )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 100", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery100 ) : expectedQuery100
-                        )
+                        .$results( expectedQuery100 )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 200", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQueryRest ) : expectedQueryRest
-                        );
+                        .$results( expectedQueryRest );
 
                     builder
                         .select( "name" )
@@ -531,19 +519,13 @@ component extends="testbox.system.BaseSpec" {
                         .$results( queryNew( "aggregate", "varchar", [ { "aggregate": 257 } ] ) )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 0", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery100 ) : expectedQuery100
-                        )
+                        .$results( expectedQuery100 )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 100", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery100 ) : expectedQuery100
-                        )
+                        .$results( expectedQuery100 )
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users"" LIMIT 100 OFFSET 200", options = {} )
-                        .$results(
-                            supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQueryRest ) : expectedQueryRest
-                        );
+                        .$results( expectedQueryRest );
 
                     builder
                         .select( "name" )
@@ -918,9 +900,7 @@ component extends="testbox.system.BaseSpec" {
                 builder
                     .$( "runQuery" )
                     .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
-                    .$results(
-                        supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                    );
+                    .$results( expectedQuery );
 
                 var results = builder
                     .select( "id" )
@@ -942,9 +922,7 @@ component extends="testbox.system.BaseSpec" {
                 builder
                     .$( "runQuery" )
                     .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
-                    .$results(
-                        supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                    );
+                    .$results( expectedQuery );
 
                 var results = builder
                     .select( "id" )

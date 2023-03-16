@@ -10,10 +10,7 @@ component extends="testbox.system.BaseSpec" {
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
                 builder.$( "count", 45 );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).paginate();
 
@@ -36,10 +33,7 @@ component extends="testbox.system.BaseSpec" {
                     expectedResults.append( { "id": i } );
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var nestedBuilder = getBuilder();
                 nestedBuilder.$( "count", 15 );
@@ -70,10 +64,7 @@ component extends="testbox.system.BaseSpec" {
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
                 builder.$( "count", 45 );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).paginate( page = 2 );
 
@@ -97,10 +88,7 @@ component extends="testbox.system.BaseSpec" {
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
                 builder.$( "count", 45 );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).paginate( page = 1, maxRows = 10 );
 
@@ -128,10 +116,7 @@ component extends="testbox.system.BaseSpec" {
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
                 builder.$( "count", 45 );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).paginate( page = 1, maxRows = 0 );
 
@@ -163,10 +148,7 @@ component extends="testbox.system.BaseSpec" {
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
                 builder.$( "count", 45 );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).paginate();
 
@@ -187,10 +169,7 @@ component extends="testbox.system.BaseSpec" {
                     expectedResults.append( { "id": i } );
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).simplePaginate();
 
@@ -212,10 +191,7 @@ component extends="testbox.system.BaseSpec" {
                     expectedResults.append( { "id": i } );
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).simplePaginate( page = 2 );
 
@@ -237,10 +213,7 @@ component extends="testbox.system.BaseSpec" {
                     expectedResults.append( { "id": i } );
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).simplePaginate( page = 1, maxRows = 10 );
 
@@ -280,10 +253,7 @@ component extends="testbox.system.BaseSpec" {
                     expectedResults.append( { "id": i } );
                 }
                 var expectedQuery = queryNew( "id", "integer", expectedResults );
-                builder.$(
-                    "runQuery",
-                    supportsNativeReturnType() ? builder.getUtils().queryToArrayOfStructs( expectedQuery ) : expectedQuery
-                );
+                builder.$( "runQuery", expectedQuery );
 
                 var results = builder.from( "users" ).simplePaginate();
 

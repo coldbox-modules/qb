@@ -1,3 +1,16 @@
+# v9.1.0
+## 16 Mar 2023 — 17:42:23 UTC
+
+### feat
+
++ __QueryBuilder:__ Add ability to inline bindings when calling `toSQL` and `dump` ([379d1e7](https://github.com/coldbox-modules/qb/commit/379d1e7cdb2f7b9bc1cb3414e568f0f54a369ad1))
+
+### fix
+
++ __SQLCommenter:__ Move coldbox namespace injection to the function body ([b6248d4](https://github.com/coldbox-modules/qb/commit/b6248d47f40e99a179b350da4fc59469a4ccb5fc))
++ __QueryBuilder:__ Correctly apply native returntypes after `newQuery` and `withReturnFormat` ([20416c3](https://github.com/coldbox-modules/qb/commit/20416c3996dc60bb188756c5173187571618101c))
+
+
 # v9.0.2
 ## 14 Mar 2023 — 16:45:46 UTC
 

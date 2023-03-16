@@ -3601,10 +3601,10 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return string
      */
-    public string function toSQL( boolean showBindings = false ) {
+    public string function toSQL( any showBindings = false ) {
         var sql = grammar.compileSelect( this );
 
-        if ( !showBindings ) {
+        if ( isBoolean( arguments.showBindings ) && arguments.showBindings == false ) {
             return sql;
         }
 
@@ -3615,6 +3615,13 @@ component displayname="QueryBuilder" accessors="true" {
             "?",
             function( pattern, position, originalString ) {
                 var thisBinding = bindings[ index ];
+                if ( showBindings == "inline" ) {
+                    index++;
+                    return getUtils().castAsSqlType(
+                        value = thisBinding.null ? javacast( "null", "" ) : thisBinding.value,
+                        sqltype = thisBinding.cfsqltype
+                    );
+                }
                 var orderedBinding = structNew( "ordered" );
                 for ( var type in [ "value", "cfsqltype", "null" ] ) {
                     orderedBinding[ type ] = thisBinding[ type ];
@@ -3634,7 +3641,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function dump(
-        boolean showBindings = false,
+        any showBindings = false,
         string output = "browser",
         string format = "html",
         boolean abort = false,

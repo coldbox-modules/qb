@@ -135,6 +135,48 @@ component singleton displayname="QueryUtils" accessors="true" {
         return "CF_SQL_VARCHAR";
     }
 
+    public any function castAsSqlType( any value, required string sqltype ) {
+        if ( isNull( arguments.value ) ) {
+            return "NULL";
+        }
+
+        switch ( arguments.sqltype ) {
+            case "CF_SQL_INTEGER":
+            case "CF_SQL_NUMERIC":
+            case "CF_SQL_DECIMAL":
+            case "CF_SQL_FLOAT":
+            case "CF_SQL_SMALLINT":
+            case "CF_SQL_REAL":
+            case "CF_SQL_DOUBLE":
+            case "CF_SQL_TINYINT":
+            case "CF_SQL_MONEY":
+            case "CF_SQL_MONEY4":
+            case "CF_SQL_BIGINT":
+            case "CF_SQL_BIT":
+                return parseNumber( value );
+            case "CF_SQL_DATE":
+                return "'#dateFormat( value, "yyyy-mm-dd" )#'";
+            case "CF_SQL_TIME":
+                return "'#timeFormat( value, "HH:mm:ss" )#'";
+            case "CF_SQL_TIMESTAMP":
+                return "'#dateTimeFormat( value, "yyyy-mm-dd HH:nn:ss" )#'";
+            case "CF_SQL_NULL":
+                return "NULL";
+            case "CF_SQL_VARCHAR":
+            case "CF_SQL_NVARCHAR":
+            case "CF_SQL_CHAR":
+            case "CF_SQL_NCHAR":
+            case "CF_SQL_IDSTAMP":
+            default:
+                return "'" & replace(
+                    toString( arguments.value ),
+                    "'",
+                    "''",
+                    "all"
+                ) & "'";
+        }
+    }
+
     /**
      * Returns true if a value is an Expression.
      *

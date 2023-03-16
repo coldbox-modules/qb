@@ -1,7 +1,6 @@
 component singleton accessors="true" {
 
     property name="wirebox" inject="wirebox";
-
     property name="properties";
 
     /**

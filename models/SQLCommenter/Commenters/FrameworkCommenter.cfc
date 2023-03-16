@@ -1,7 +1,6 @@
 component singleton accessors="true" {
 
-    property name="coldboxVersion" inject="coldbox:coldboxSetting:version";
-
+    property name="wirebox" inject="wirebox";
     property name="properties";
 
     /**
@@ -13,6 +12,7 @@ component singleton accessors="true" {
      *              This can be used to make decisions about what comments to return.
      */
     public struct function getComments( required string sql, string datasource ) {
+        param variables.coldboxVersion = variables.wirebox.getInstance( "coldbox:coldboxSetting:version" );
         return { "version": "coldbox-#variables.coldboxVersion#" };
     }
 

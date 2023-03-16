@@ -1,3 +1,12 @@
+# v9.1.1
+## 16 Mar 2023 — 21:12:44 UTC
+
+### fix
+
++ __QueryBuilder:__ Make withReturnFormat a public method
+ ([60747b8](https://github.com/coldbox-modules/qb/commit/60747b8b2c55dffe54db473bac62b1bfaf324feb))
+
+
 # v9.1.0
 ## 16 Mar 2023 — 17:42:23 UTC
 

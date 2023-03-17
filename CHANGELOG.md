@@ -1,3 +1,11 @@
+# v9.1.2
+## 17 Mar 2023 — 00:23:16 UTC
+
+### chore
+
++ __QueryBuilder:__ Back out of using native `returntype`s ([63a1599](https://github.com/coldbox-modules/qb/commit/63a159901620bbd0b789dc9daa0a6d39ac024717))
+
+
 # v9.1.1
 ## 16 Mar 2023 — 21:12:44 UTC
 

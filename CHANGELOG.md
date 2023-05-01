@@ -1,3 +1,11 @@
+# v9.1.3
+## 01 May 2023 — 20:43:47 UTC
+
+### fix
+
++ __QueryBuilder:__ Add support for from bindings ([7086c9e](https://github.com/coldbox-modules/qb/commit/7086c9e7a062b2dd02ddb8940b0a9b09c7d7fd27))
+
+
 # v9.1.2
 ## 17 Mar 2023 — 00:23:16 UTC
 

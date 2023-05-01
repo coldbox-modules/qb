@@ -235,6 +235,7 @@ component displayname="QueryBuilder" accessors="true" {
     variables.bindings = {
         "commonTables": [],
         "select": [],
+        "from": [],
         "join": [],
         "where": [],
         "orderBy": [],
@@ -344,6 +345,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.bindings = {
             "commonTables": [],
             "select": [],
+            "from": [],
             "join": [],
             "where": [],
             "orderBy": [],
@@ -593,7 +595,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.input = subquery;
         }
 
-        mergeBindings( arguments.input );
+        addBindings( arguments.input.getBindings(), "from" );
 
         // generate the derived table SQL
         return this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
@@ -2949,6 +2951,7 @@ component displayname="QueryBuilder" accessors="true" {
                 "update",
                 "insert",
                 "select",
+                "from",
                 "join",
                 "where",
                 "orderBy",
@@ -3044,7 +3047,7 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
-    /** MOD: New method
+    /**
      * Merges bindings from a derived/sub-query
      *
      * @query The query to merge the bindings.

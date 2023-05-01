@@ -106,6 +106,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM (SELECT [id], [name] FROM [users] WHERE [age] >= ?) AS [u]", bindings: [ 21 ] };
     }
 
+    function fromSubBindings() {
+        return {
+            sql: "SELECT [accounts].[id] FROM (SELECT [id], [name] FROM [users] WHERE [age] >= ?) AS [u] INNER JOIN [accounts] ON [accounts].[userId] = [u].[id] AND [accounts].[active] = ?",
+            bindings: [ 21, 1 ]
+        };
+    }
+
     function noLock() {
         return { "sql": "SELECT * FROM [users] WITH (NOLOCK) WHERE [id] = ?", "bindings": [ 1 ] };
     }

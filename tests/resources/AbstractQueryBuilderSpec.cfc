@@ -262,6 +262,22 @@ component extends="testbox.system.BaseSpec" {
                             } );
                         }, fromDerivedTable() );
                     } );
+
+                    it( "correctly positions bindings using fromSub", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select( "accounts.id" )
+                                .fromSub( "u", function( q ) {
+                                    q.select( [ "id", "name" ] )
+                                        .from( "users" )
+                                        .where( "age", ">=", "21" );
+                                } )
+                                .join( "accounts", ( j ) => {
+                                    j.on( "accounts.userId", "=", "u.id" );
+                                    j.where( "accounts.active", 1 );
+                                } );
+                        }, fromSubBindings() );
+                    } );
                 } );
 
                 describe( "locking", function() {

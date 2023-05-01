@@ -109,6 +109,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function fromSubBindings() {
+        return {
+            sql: "SELECT ""ACCOUNTS"".""ID"" FROM (SELECT ""ID"", ""NAME"" FROM ""USERS"" WHERE ""AGE"" >= ?) ""U"" INNER JOIN ""ACCOUNTS"" ON ""ACCOUNTS"".""USERID"" = ""U"".""ID"" AND ""ACCOUNTS"".""ACTIVE"" = ?",
+            bindings: [ 21, 1 ]
+        };
+    }
+
     function noLock() {
         return { "sql": "SELECT * FROM ""USERS"" WHERE ""ID"" = ?", "bindings": [ 1 ] };
     }

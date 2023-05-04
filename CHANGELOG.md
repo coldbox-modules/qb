@@ -1,3 +1,12 @@
+# v9.1.4
+## 04 May 2023 — 17:41:46 UTC
+
+### fix
+
++ __SQLCommenter:__ CommandBox-friendly injections
+ ([ce2a118](https://github.com/coldbox-modules/qb/commit/ce2a118f954c4a897ad5c7186ed0648dd42f2f32))
+
+
 # v9.1.3
 ## 01 May 2023 — 20:43:47 UTC
 

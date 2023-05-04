@@ -3,7 +3,7 @@ component extends="SQLCommenter" singleton {
     /**
      * All the qb module settings so we can inspect the sqlCommenter settings.
      */
-    property name="settings" inject="coldbox:moduleSettings:qb";
+    property name="settings" inject="box:moduleSettings:qb";
 
     /**
      * WireBox Injector

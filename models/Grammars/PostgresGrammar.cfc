@@ -373,7 +373,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var sql = "SELECT #wrapColumn( "table_name" )# FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_schema" )# = 'public'";
         var args = [];
         if ( schema != "" ) {
-            sql &= " AND #wrapColumn( "table_catalog" )# = ?";
+            sql &= " AND #wrapColumn( "table_schema" )# = ?";
             args.append( schema );
         }
         var tablesQuery = runQuery( sql, args, options, "query" );
@@ -387,7 +387,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function compileTableExists( tableName, schemaName = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_name" )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( "table_catalog" )# = ?";
+            sql &= " AND #wrapColumn( "table_schema" )# = ?";
         }
         return sql;
     }

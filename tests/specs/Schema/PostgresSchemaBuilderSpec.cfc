@@ -579,7 +579,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasTableInSchema() {
-        return [ "SELECT 1 FROM ""information_schema"".""tables"" WHERE ""table_name"" = ? AND ""table_catalog"" = ?" ];
+        return [ "SELECT 1 FROM ""information_schema"".""tables"" WHERE ""table_name"" = ? AND ""table_schema"" = ?" ];
     }
 
     function hasColumn() {

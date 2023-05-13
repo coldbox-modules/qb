@@ -19,6 +19,12 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
     property name="table" type="any";
 
     /**
+     * In the {cross,outer}Apply case, the already-toSql'd string of the table expr source.
+     * e.g. will be a string like "select 1 from foo where x = ?"
+     */
+    property name="crossApplyTableExprRaw";
+
+    /**
      * Valid join types for join clauses.
      */
     variables.types = [
@@ -28,7 +34,9 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
         "left",
         "left outer",
         "right",
-        "right outer"
+        "right outer",
+        "outer apply",
+        "cross apply"
     ];
 
     /**
@@ -37,10 +45,16 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
      * @parentQuery A reference to the query to which this join clause belongs.
      * @type The join type of this join clause.
      * @table The table to join.
+     * @crossApplySqlStringWithBindParams The already-`toSql`'d table expression for the {cross,outer}Apply case
      *
      * @return qb.models.Query.JoinClause
      */
-    public JoinClause function init( required QueryBuilder parentQuery, required string type, required any table ) {
+    public JoinClause function init(
+        required QueryBuilder parentQuery,
+        required string type,
+        required any table,
+        crossApplyTableExprRaw
+    ) {
         var typeIsValid = false;
         for ( var validType in variables.types ) {
             if ( validType == arguments.type ) {
@@ -54,6 +68,9 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
         variables.parentQuery = arguments.parentQuery;
         variables.type = arguments.type;
         variables.table = arguments.table;
+        variables.crossApplyTableExprRaw = isNull( arguments.crossApplyTableExprRaw )
+         ? ""
+         : arguments.crossApplyTableExprRaw;
 
         super.init( parentQuery.getGrammar(), parentQuery.getUtils() );
 

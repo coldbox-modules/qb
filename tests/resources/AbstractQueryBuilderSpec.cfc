@@ -1306,6 +1306,76 @@ component extends="testbox.system.BaseSpec" {
                                 .where( "A.C", "=", "C" );
                         }, joinSubBindings() );
                     } );
+
+                    it( "can cross apply", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .crossApply( "childCount", function( qb ) {
+                                    qb.selectRaw( "count(*) c" )
+                                        .from( "children" )
+                                        .whereColumn( "children.parentID", "=", "users.ID" )
+                                        .where( "children.someCol", "=", 0 )
+                                } )
+                                .select( [ "u.ID", "childCount.c" ] )
+                                .where( "childCount.c", ">", 1 )
+                        }, crossApply() );
+                    } );
+
+                    it( "can outer apply", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .outerApply( "childCount", function( qb ) {
+                                    qb.selectRaw( "count(*) c" )
+                                        .from( "children" )
+                                        .whereColumn( "children.parentID", "=", "users.ID" )
+                                        .where( "children.someCol", "=", 0 )
+                                } )
+                                .select( [ "u.ID", "childCount.c" ] )
+                                .where( "childCount.c", ">", 1 )
+                        }, outerApply() );
+                    } );
+
+                    it( "correctly positions bindings using crossApply", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "A" )
+                                .where( "A.A", "=", "A" )
+                                .crossApply(
+                                    "B",
+                                    getBuilder()
+                                        .from( "x" )
+                                        .where( "x.x", "=", "B" )
+                                        .whereColumn( "x.b", "=", "a.b" )
+                                )
+                                .where( "A.C", "=", "C" )
+                                .outerApply( "D", ( qb ) => {
+                                    qb.from( "y" )
+                                        .where( "y.y", "=", "D" )
+                                        .whereColumn( "y.d", "=", "a.d" )
+                                } )
+                        }, correctlyPositionsBindingsUsingCrossApply() );
+                    } );
+
+                    it( "duplicate {cross,outer} applies eliminated", function() {
+                        testCase( function( builder ) {
+                            var gen = ( name ) => ( qb ) => {
+                                qb.from( name ).select( "someColumn" )
+                            }
+                            builder
+                                .setPreventDuplicateJoins( true )
+                                .from( "A" )
+                                .crossApply( "B", gen( "crossapply_B" ) )
+                                .outerApply( "C", gen( "outerapply_C" ) )
+                                .crossApply( "B", gen( "crossapply_B" ) )
+                                .outerApply( "C", gen( "outerapply_C" ) )
+                                .crossApply( "D", gen( "crossapply_D" ) )
+                                .outerApply( "E", gen( "outerapply_E" ) )
+                                .crossApply( "D", gen( "crossapply_D" ) )
+                                .outerApply( "E", gen( "outerapply_E" ) )
+                        }, duplicateCrossAndOuterAppliesEliminated() );
+                    } );
                 } );
 
                 describe( "group bys", function() {

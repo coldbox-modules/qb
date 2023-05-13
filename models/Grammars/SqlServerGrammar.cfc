@@ -676,4 +676,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return "TINYINT";
     }
 
+    void function checkCrossOrOuterApplySupport() {
+        // no-op; by not throwing, we declare that we support {cross,outer}Apply
+    }
+
 }

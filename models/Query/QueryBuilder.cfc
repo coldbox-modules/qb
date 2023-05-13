@@ -1016,6 +1016,64 @@ component displayname="QueryBuilder" accessors="true" {
         return joinRaw( argumentCollection = arguments );
     }
 
+    private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
+        getGrammar().checkCrossOrOuterApplySupport();
+
+        if ( type != "outer apply" && type != "cross apply" ) {
+            throw "`type` must be 'outer apply' or 'cross apply'";
+        }
+
+        var sourceIsBuilder = getUtils().isBuilder( arguments.tableLikeSource )
+        var sourceIsFunc = isClosure( arguments.tableLikeSource ) || isCustomFunction( arguments.tableLikeSource )
+
+        if ( !sourceIsBuilder && !sourceIsFunc ) {
+            throw "bad table source type";
+        }
+
+        if ( sourceIsFunc ) {
+            var subquery = newQuery();
+            arguments.tableLikeSource = arguments.tableLikeSource( subquery );
+            arguments.tableLikeSource = subquery;
+
+            var sourceIsBuilder = getUtils().isBuilder( arguments.tableLikeSource )
+            if ( !sourceIsBuilder ) {
+                throw "bad table source type (function returned non-builder)";
+            }
+        }
+
+        var join = new qb.models.Query.JoinClause(
+            parentQuery = this,
+            type = type,
+            table = arguments.name,
+            crossApplyTableExprRaw = arguments.tableLikeSource.toSQL()
+        );
+
+        if ( this.getPreventDuplicateJoins() ) {
+            var hasThisJoin = variables.joins.find( function( existingJoin ) {
+                return existingJoin.isEqualTo( join );
+            } );
+
+            if ( hasThisJoin ) {
+                // Do nothing, early return
+                // We have not mutated `this` in any way.
+                return this;
+            }
+        }
+
+        addBindings( tableLikeSource.getBindings(), "join" );
+        variables.joins.append( join );
+
+        return this;
+    }
+
+    public function outerApply( required string name, required any tableDef ) {
+        return outerOrCrossApply( name = name, type = "outer apply", tableLikeSource = tableDef );
+    }
+
+    public function crossApply( required string name, required any tableDef ) {
+        return outerOrCrossApply( name = name, type = "cross apply", tableLikeSource = tableDef );
+    }
+
     /**
      * Adds a LEFT JOIN from a derived table to another table.
      *

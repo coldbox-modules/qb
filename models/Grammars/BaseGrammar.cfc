@@ -274,9 +274,23 @@ component displayname="Grammar" accessors="true" singleton {
     private string function compileJoins( required QueryBuilder query, required array joins ) {
         var joinsArray = [];
         for ( var join in arguments.joins ) {
-            var conditions = compileWheres( join, join.getWheres() );
-            var table = wrapTable( join.getTable() );
-            joinsArray.append( "#uCase( join.getType() )# JOIN #table# #conditions#" );
+            if ( join.getType() == "cross apply" || join.getType() == "outer apply" ) {
+                // ("outer" | "cross") "apply" ( <some-table-def> ) (AS)? <table-alias>
+                var tableName = wrapTable( join.getTable() )
+                if ( !reFindNoCase( "^\s*#trim( getTableAliasOperator() )#", tableName ) ) {
+                    // table alias operator is optional in MSSqlServer, but we'll provide it if it wasn't expanded via wrapTable.
+                    // Will `wrapTable` ever have emitted a table alias operator here?
+                    // n.b. `getTableAliasOperator()` is expected to have a leading and trailing space.
+                    tableName = "#getTableAliasOperator()##tableName#";
+                }
+
+                // `tableName` is expected to have at least a leading space.
+                joinsArray.append( "#uCase( join.getType() )# (#join.getCrossApplyTableExprRaw()#)#tableName#" );
+            } else {
+                var conditions = compileWheres( join, join.getWheres() );
+                var table = wrapTable( join.getTable() );
+                joinsArray.append( "#uCase( join.getType() )# JOIN #table# #conditions#" );
+            }
         }
 
         return arrayToList( joinsArray, " " );
@@ -1734,6 +1748,17 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileAddType() {
         return "";
+    }
+
+    /**
+     * Grammars implementing {cross,outer}Apply should override this to be a no-op.
+     */
+    void function checkCrossOrOuterApplySupport() {
+        throw(
+            type = "OperationNotSupported",
+            message = "This database grammar does not support this operation",
+            detail = "crossOrOuterApply"
+        );
     }
 
 }

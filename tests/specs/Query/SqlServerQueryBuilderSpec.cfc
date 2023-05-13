@@ -1009,6 +1009,28 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM [otherTable]";
     }
 
+    function crossApply() {
+        return {
+            sql: "SELECT [u].[ID], [childCount].[c] FROM [users] AS [u] CROSS APPLY (SELECT count(*) c FROM [children] WHERE [children].[parentID] = [users].[ID]) AS [childCount] WHERE [childCount].[c] > ?",
+            bindings: [4]
+        }
+    }
+
+    function outerApply() {
+        return {
+            sql: "SELECT [u].[ID], [childCount].[c] FROM [users] AS [u] OUTER APPLY (SELECT count(*) c FROM [children] WHERE [children].[parentID] = [users].[ID]) AS [childCount] WHERE [childCount].[c] > ?",
+            bindings: [4]
+        }
+    }
+
+    function crossApplySomeRawExpression() {
+        return "SELECT * FROM [users] AS [u] CROSS APPLY dbo.someUDF(u) x";
+    }
+
+    function outerApplySomeRawExpression() {
+        return "SELECT * FROM [users] AS [u] OUTER APPLY dbo.someUDF(u) x";
+    }
+
     private function getBuilder() {
         variables.utils = getMockBox().createMock( "qb.models.Query.QueryUtils" ).init();
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init( variables.utils );

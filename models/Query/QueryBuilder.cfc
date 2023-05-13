@@ -779,7 +779,9 @@ component displayname="QueryBuilder" accessors="true" {
             return this;
         }
 
-        var method = where ? "where" : "on";
+        var crossOrOuterApply = type == "cross apply" || type == "outer apply";
+        var method = crossOrOuterApply ? "crossOrOuterApply" : where ? "where" : "on";
+
         arguments.column = arguments.first;
         arguments.value = isNull( arguments.second ) ? javacast( "null", "" ) : arguments.second;
         join = invoke( join, method, arguments );
@@ -1014,6 +1016,50 @@ component displayname="QueryBuilder" accessors="true" {
         structDelete( arguments, "alias" );
 
         return joinRaw( argumentCollection = arguments );
+    }
+
+    private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
+        if ( type != "outer apply" && type != "cross apply") {
+            throw(message="`type` must be 'outer apply' or 'cross apply'")
+        }
+
+        if ( isClosure( arguments.tableLikeSource ) || isCustomFunction( arguments.tableLikeSource ) ) {
+            var subquery = newQuery();
+            arguments.tableLikeSource( subquery );
+            // replace the original query builder with the results of the sub-query
+            arguments.tableLikeSource = subquery;
+        }
+
+        if ( variables.utils.isExpression( tableLikeSource ) ) {
+            var table = tableLikeSource
+            // raw expression has no bindings, right ... ?
+        }
+        else {
+            var table = raw( getGrammar().wrapTable( "(#arguments.tableLikeSource.toSQL()#) #arguments.name#" ) );
+            // merge bindings
+            mergeBindings( arguments.tableLikeSource );
+        }
+
+        return join(
+            table = table,
+            type = type
+        );
+    }
+
+    public function outerApply( required string name, required any tableDef ) {
+        return outerOrCrossApply(
+            name = name,
+            type = "outer apply",
+            tableLikeSource = tableDef
+        );
+    }
+
+    public function crossApply( required string name, required any tableDef ) {
+        return outerOrCrossApply(
+            name = name,
+            type = "cross apply",
+            tableLikeSource = tableDef
+        );
     }
 
     /**

@@ -1306,6 +1306,50 @@ component extends="testbox.system.BaseSpec" {
                                 .where( "A.C", "=", "C" );
                         }, joinSubBindings() );
                     } );
+
+                    it( "can cross apply", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .crossApply( "childCount", function( qb ) {
+                                    qb.selectRaw( "count(*) c" )
+                                        .from( "children" )
+                                        .whereColumn( "children.parentID", "=", "users.ID" )
+                                } )
+                                .select( ["u.ID", "childCount.c"] )
+                                .where( "childCount.c", ">", 4 )
+                        }, crossApply() );
+                    } );
+
+                    it( "can outer apply", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .outerApply( "childCount", function( qb ) {
+                                    qb.selectRaw( "count(*) c" )
+                                        .from( "children" )
+                                        .whereColumn( "children.parentID", "=", "users.ID" )
+                                } )
+                                .select( ["u.ID", "childCount.c"] )
+                                .where( "childCount.c", ">", 4 )
+                        }, outerApply() );
+                    } );
+
+                    it( "can cross apply some raw expression", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .crossApply( "childCount", builder.raw( "dbo.someUDF(u) x" ) )
+                        }, crossApplySomeRawExpression() );
+                    } );
+
+                    it( "can outer apply some raw expression", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .outerApply( "childCount", builder.raw( "dbo.someUDF(u) x" ) )
+                        }, outerApplySomeRawExpression() );
+                    } );
                 } );
 
                 describe( "group bys", function() {

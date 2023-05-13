@@ -274,9 +274,16 @@ component displayname="Grammar" accessors="true" singleton {
     private string function compileJoins( required QueryBuilder query, required array joins ) {
         var joinsArray = [];
         for ( var join in arguments.joins ) {
-            var conditions = compileWheres( join, join.getWheres() );
-            var table = wrapTable( join.getTable() );
-            joinsArray.append( "#uCase( join.getType() )# JOIN #table# #conditions#" );
+            if ( join.getType() == "cross apply" || join.getType() == "outer apply" ) {
+                var table = wrapTable( join.getTable() );
+                // ("outer" | "cross") "apply" ( <raw> | <some-table-def> )
+                joinsArray.append( "#uCase( join.getType() )# #table#" );
+            }
+            else {
+                var conditions = compileWheres( join, join.getWheres() );
+                var table = wrapTable( join.getTable() );
+                joinsArray.append( "#uCase( join.getType() )# JOIN #table# #conditions#" );
+            }
         }
 
         return arrayToList( joinsArray, " " );
@@ -1736,4 +1743,11 @@ component displayname="Grammar" accessors="true" singleton {
         return "";
     }
 
+    function crossOrOuterApply() {
+        throw(
+            type = "OperationNotSupported",
+            message = "This database grammar does not support this operation",
+            detail = "crossOrOuterApply"
+        );
+    }
 }

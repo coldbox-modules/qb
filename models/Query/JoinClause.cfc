@@ -28,7 +28,9 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
         "left",
         "left outer",
         "right",
-        "right outer"
+        "right outer",
+        "outer apply",
+        "cross apply",
     ];
 
     /**
@@ -114,6 +116,14 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
      */
     public boolean function isJoin() {
         return true;
+    }
+
+    public JoinClause function crossOrOuterApply() {
+        // default impl of `crossOrOuterApply` throws "OperationNotSupported";
+        // A concrete grammar impl may override and NOT throw, to indicate that this *is* supported.
+        parentQuery.getGrammar().crossOrOuterApply();
+        // ok, didn't throw. No work to do.
+        return this;
     }
 
 }

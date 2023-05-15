@@ -790,6 +790,10 @@ component displayname="Grammar" accessors="true" singleton {
         required array columns,
         required struct updateMap
     ) {
+        if ( !arguments.query.getReturning().isEmpty() ) {
+            throw( type = "UnsupportedOperation", message = "This grammar does not support a RETURNING clause" );
+        }
+
         var updateList = columns
             .map( function( column ) {
                 var value = updateMap[ column.original ];
@@ -822,6 +826,9 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function compileDelete( required QueryBuilder query ) {
+        if ( !arguments.query.getReturning().isEmpty() ) {
+            throw( type = "UnsupportedOperation", message = "This grammar does not support a RETURNING clause" );
+        }
         return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )#" );
     }
 
@@ -956,12 +963,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function wrapColumn( required any column ) {
-        // In this case, isInstanceOf takes ~30 ms while this takes ~0 ms
-        if (
-            !isSimpleValue( arguments.column ) &&
-            isObject( arguments.column ) &&
-            structKeyExists( arguments.column, "getSQL" )
-        ) {
+        if ( getUtils().isExpression( arguments.column ) ) {
             return trim( arguments.column.getSQL() );
         }
 

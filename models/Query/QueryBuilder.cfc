@@ -2718,6 +2718,14 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    public QueryBuilder function returningRaw( required any columns ) {
+        variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
+        variables.returning = variables.returning.map( function( column ) {
+            return new Expression( column );
+        } );
+        return this;
+    }
+
     /**
      * Updates a table with a struct of column and value pairs.
      * This call must come after setting the query's table using `from` or `table`.

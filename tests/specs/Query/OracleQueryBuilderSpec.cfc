@@ -797,6 +797,18 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "UPDATE ""EMPLOYEES"" SET ""DEPARTMENTNAME"" = (SELECT ""NAME"" FROM ""DEPARTMENTS"" WHERE ""EMPLOYEES"".""DEPARTMENTID"" = ""DEPARTMENTS"".""ID"")";
     }
 
+    function updateReturning() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function updateReturningRaw() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function updateReturningIgnoresTableQualifiers() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function updateOrInsertNotExists() {
         return { sql: "INSERT INTO ""USERS"" (""NAME"") VALUES (?)", bindings: [ "baz" ] };
     }
@@ -895,6 +907,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function deleteWhere() {
         return { sql: "DELETE FROM ""USERS"" WHERE ""EMAIL"" = ?", bindings: [ "foo" ] };
+    }
+
+    function deleteReturning() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function deleteReturningIgnoresTableQualifiers() {
+        return { exception: "UnsupportedOperation" };
     }
 
     function whereBuilderInstance() {

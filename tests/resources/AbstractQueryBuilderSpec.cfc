@@ -2380,6 +2380,39 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, updateWithBuilder() );
                 } );
+
+                it( "can update with returning", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .where( "id", 1 )
+                            .returning( "modifiedDate" )
+                            .update( values = { "email": "john@example.com" }, toSql = true );
+                    }, updateReturning() );
+                } );
+
+                it( "can update with raw returning columns", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .where( "id", 1 )
+                            .returningRaw( [ "DELETED.modifiedDate AS oldModifiedDate", "INSERTED.modifiedDate AS newModifiedDate" ] )
+                            .update( values = { "email": "john@example.com" }, toSql = true );
+                    }, updateReturningRaw() );
+                } );
+
+                it( "returning ignores table qualifiers in update statements", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .setColumnFormatter( function( column ) {
+                                return "tablePrefix." & column;
+                            } )
+                            .from( "users" )
+                            .where( "id", 1 )
+                            .returning( "modifiedDate" )
+                            .update( values = { "email": "john@example.com" }, toSql = true );
+                    }, updateReturningIgnoresTableQualifiers() );
+                } );
             } );
 
             describe( "updateOrInsert statements", function() {
@@ -2599,6 +2632,29 @@ component extends="testbox.system.BaseSpec" {
                             .delete( toSql = true );
                     }, deleteWhere() );
                 } );
+
+                it( "can delete with returning", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .where( "active", 0 )
+                            .returning( "id" )
+                            .delete( toSql = true );
+                    }, deleteReturning() );
+                } );
+
+                it( "returning ignores table qualifiers in delete statements", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .setColumnFormatter( function( column ) {
+                                return "tablePrefix." & column;
+                            } )
+                            .from( "users" )
+                            .where( "active", 0 )
+                            .returning( "id" )
+                            .delete( toSql = true );
+                    }, deleteReturningIgnoresTableQualifiers() );
+                } );
             } );
         } );
     }
@@ -2617,6 +2673,7 @@ component extends="testbox.system.BaseSpec" {
             if ( isSimpleValue( expected ) ) {
                 expected = { sql: expected, bindings: [] };
             }
+
             expect( sql ).toBeWithCase( expected.sql );
             expect( getTestBindings( builder ) ).toBe( expected.bindings );
         } catch ( any e ) {

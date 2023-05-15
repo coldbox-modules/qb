@@ -129,9 +129,33 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             );
         }
 
+        var returningColumns = arguments.query
+            .getReturning()
+            .map( wrapColumn )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+
         return trim(
-            updateStatement & " SET #updateList##joinStatement# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#"
+            trim(
+                updateStatement & " SET #updateList##joinStatement# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#"
+            ) & returningClause
         );
+    }
+
+    /**
+     * Compile a Builder's query into a delete string.
+     *
+     * @query The Builder instance.
+     *
+     * @return string
+     */
+    public string function compileDelete( required QueryBuilder query ) {
+        var returningColumns = arguments.query
+            .getReturning()
+            .map( wrapColumn )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+        return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )##returningClause#" );
     }
 
     public string function compileUpsert(

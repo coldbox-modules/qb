@@ -55,7 +55,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 return wrapColumn( column.formatted );
             } )
             .toList( ", " );
-        var returningColumns = query
+        var returningColumns = arguments.query
             .getReturning()
             .map( function( column ) {
                 if ( listLen( column, "." ) > 1 ) {
@@ -269,16 +269,54 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             " "
         );
 
+        var returningColumns = arguments.query
+            .getReturning()
+            .map( function( column ) {
+                if ( getUtils().isExpression( column ) ) {
+                    return trim( column.getSQL() );
+                }
+                if ( listLen( column, "." ) > 1 ) {
+                    return column;
+                }
+                return "INSERTED." & wrapColumn( column );
+            } )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
+
         if ( arguments.query.getJoins().isEmpty() ) {
-            return trim( updateStatement & " " & compileWheres( query, query.getWheres() ) );
+            return trim( updateStatement & returningClause & " " & compileWheres( query, query.getWheres() ) );
         }
 
         return trim(
             updateStatement & " FROM #wrapTable( query.getFrom() )# " & compileJoins(
                 arguments.query,
                 arguments.query.getJoins()
-            ) & " " & compileWheres( query, query.getWheres() )
+            ) & returningClause & " " & compileWheres( query, query.getWheres() )
         );
+    }
+
+    /**
+     * Compile a Builder's query into a delete string.
+     *
+     * @query The Builder instance.
+     *
+     * @return string
+     */
+    public string function compileDelete( required QueryBuilder query ) {
+        var returningColumns = arguments.query
+            .getReturning()
+            .map( function( column ) {
+                if ( getUtils().isExpression( column ) ) {
+                    return trim( column.getSQL() );
+                }
+                if ( listLen( column, "." ) > 1 ) {
+                    return column;
+                }
+                return "DELETED." & wrapColumn( column );
+            } )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
+        return trim( "DELETE FROM #wrapTable( query.getFrom() )##returningClause# #compileWheres( query, query.getWheres() )#" );
     }
 
     public string function compileUpsert(

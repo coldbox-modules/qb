@@ -785,6 +785,27 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "UPDATE [employees] SET [departmentName] = (SELECT [name] FROM [departments] WHERE [employees].[departmentId] = [departments].[id])";
     }
 
+    function updateReturning() {
+        return {
+            "sql": "UPDATE [users] SET [email] = ? OUTPUT INSERTED.[modifiedDate] WHERE [id] = ?",
+            "bindings": [ "john@example.com", 1 ]
+        };
+    }
+
+    function updateReturningRaw() {
+        return {
+            "sql": "UPDATE [users] SET [email] = ? OUTPUT DELETED.modifiedDate AS oldModifiedDate, INSERTED.modifiedDate AS newModifiedDate WHERE [id] = ?",
+            "bindings": [ "john@example.com", 1 ]
+        };
+    }
+
+    function updateReturningIgnoresTableQualifiers() {
+        return {
+            "sql": "UPDATE [users] SET [email] = ? OUTPUT INSERTED.[modifiedDate] WHERE [tablePrefix].[id] = ?",
+            "bindings": [ "john@example.com", 1 ]
+        };
+    }
+
     function updateOrInsertNotExists() {
         return { sql: "INSERT INTO [users] ([name]) VALUES (?)", bindings: [ "baz" ] };
     }
@@ -886,6 +907,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function deleteWhere() {
         return { sql: "DELETE FROM [users] WHERE [email] = ?", bindings: [ "foo" ] };
+    }
+
+    function deleteReturning() {
+        return { "sql": "DELETE FROM [users] OUTPUT DELETED.[id] WHERE [active] = ?", "bindings": [ 0 ] };
+    }
+
+    function deleteReturningIgnoresTableQualifiers() {
+        return { "sql": "DELETE FROM [users] OUTPUT DELETED.[id] WHERE [tablePrefix].[active] = ?", "bindings": [ 0 ] };
     }
 
     function whereBuilderInstance() {

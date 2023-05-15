@@ -50,7 +50,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     public string function compileInsert( required QueryBuilder query, required array columns, required array values ) {
-        var returningColumns = query
+        var returningColumns = arguments.query
             .getReturning()
             .map( wrapColumn )
             .toList( ", " );
@@ -113,8 +113,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
         updateStatement = trim( "#updateStatement# #compileLimitValue( query, query.getLimitValue() )#" );
 
+        var returningColumns = arguments.query
+            .getReturning()
+            .map( wrapColumn )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+
         if ( joins.isEmpty() ) {
-            return updateStatement;
+            return updateStatement & returningClause;
         }
 
         var firstJoin = joins[ 1 ];
@@ -130,7 +136,24 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
 
         var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );
-        return trim( "#updateStatement# #compileJoins( arguments.query, restJoins )# #whereStatement#" );
+
+        return trim( "#updateStatement# #compileJoins( arguments.query, restJoins )# #whereStatement##returningClause#" );
+    }
+
+    /**
+     * Compile a Builder's query into a delete string.
+     *
+     * @query The Builder instance.
+     *
+     * @return string
+     */
+    public string function compileDelete( required QueryBuilder query ) {
+        var returningColumns = arguments.query
+            .getReturning()
+            .map( wrapColumn )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+        return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )##returningClause#" );
     }
 
     public string function compileUpsert(

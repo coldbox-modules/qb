@@ -445,6 +445,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function joinSubBindings() {
+        return {
+            sql: "SELECT * FROM ""A"" INNER JOIN (SELECT * FROM ""B"" WHERE ""B"".""B"" = ?) ""B"" ON ""A"".""A"" = ""B"".""B"" WHERE ""A"".""A"" = ? AND ""A"".""C"" = ?",
+            bindings: [ "B", "A", "C" ]
+        };
+    }
+
     function groupBy() {
         return "SELECT * FROM ""USERS"" GROUP BY ""EMAIL""";
     }

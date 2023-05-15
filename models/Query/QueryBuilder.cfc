@@ -964,10 +964,8 @@ component displayname="QueryBuilder" accessors="true" {
         // create the table reference
         arguments.table = getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" );
 
-
-
         // merge bindings
-        mergeBindings( arguments.input );
+        addBindings( arguments.input.getBindings(), "join" );
 
         // remove the non-standard arguments
         structDelete( arguments, "input" );

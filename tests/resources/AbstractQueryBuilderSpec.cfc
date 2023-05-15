@@ -1266,6 +1266,24 @@ component extends="testbox.system.BaseSpec" {
                                 } );
                         }, crossJoinSub() );
                     } );
+
+                    it( "correctly positions bindings using joinSub", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "A" )
+                                .where( "A.A", "=", "A" )
+                                .joinSub(
+                                    "B",
+                                    ( qb ) => {
+                                        return qb.from( "B" ).where( "B.B", "=", "B" );
+                                    },
+                                    "A.A",
+                                    "=",
+                                    "B.B"
+                                )
+                                .where( "A.C", "=", "C" );
+                        }, joinSubBindings() );
+                    } );
                 } );
 
                 describe( "group bys", function() {

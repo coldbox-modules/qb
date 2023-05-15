@@ -958,6 +958,28 @@ component extends="testbox.system.BaseSpec" {
                         }, leftJoinNested() );
                     } );
 
+                    it( "it can handle nested on queries without truncating text", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "test" )
+                                .leftJoin( "last_team_tasks_queue_record", function( j ) {
+                                    j.on(
+                                        "last_team_tasks_queue_record.task_territory_id",
+                                        "team_tasks_queue.task_territory_id"
+                                    );
+                                    j.where( function( q ) {
+                                        q.whereNull( "last_team_tasks_queue_record.when_created" );
+                                        q.whereColumn(
+                                            "last_team_tasks_queue_record.when_created",
+                                            "<=",
+                                            "team_tasks_queue.when_created",
+                                            "OR"
+                                        );
+                                    } );
+                                } );
+                        }, leftJoinTruncatingText() );
+                    } );
+
                     it( "can right join", function() {
                         testCase( function( builder ) {
                             builder.from( "orders" ).rightJoin( "users", "orders.user_id", "users.id" );

@@ -393,6 +393,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""users"" LEFT JOIN ""orders"" ON ""users"".""id"" = ""orders"".""user_id""";
     }
 
+    function leftJoinTruncatingText() {
+        return "SELECT * FROM ""test"" LEFT JOIN ""last_team_tasks_queue_record"" ON ""last_team_tasks_queue_record"".""task_territory_id"" = ""team_tasks_queue"".""task_territory_id"" AND (""last_team_tasks_queue_record"".""when_created"" IS NULL OR ""last_team_tasks_queue_record"".""when_created"" <= ""team_tasks_queue"".""when_created"")";
+    }
+
     function leftJoinRaw() {
         return "SELECT * FROM ""users"" LEFT JOIN contacts (nolock) ON ""users"".""id"" = ""contacts"".""id""";
     }

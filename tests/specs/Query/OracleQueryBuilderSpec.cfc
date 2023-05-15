@@ -342,6 +342,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS"" LEFT JOIN ""ORDERS"" ON ""USERS"".""ID"" = ""ORDERS"".""USER_ID""";
     }
 
+    function leftJoinTruncatingText() {
+        return "SELECT * FROM ""TEST"" LEFT JOIN ""LAST_TEAM_TASKS_QUEUE_RECORD"" ON ""LAST_TEAM_TASKS_QUEUE_RECORD"".""TASK_TERRITORY_ID"" = ""TEAM_TASKS_QUEUE"".""TASK_TERRITORY_ID"" AND (""LAST_TEAM_TASKS_QUEUE_RECORD"".""WHEN_CREATED"" IS NULL OR ""LAST_TEAM_TASKS_QUEUE_RECORD"".""WHEN_CREATED"" <= ""TEAM_TASKS_QUEUE"".""WHEN_CREATED"")";
+    }
+
     function leftJoinRaw() {
         return "SELECT * FROM ""USERS"" LEFT JOIN contacts (nolock) ON ""USERS"".""ID"" = ""CONTACTS"".""ID""";
     }

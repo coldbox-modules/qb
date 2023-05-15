@@ -285,7 +285,6 @@ component displayname="Grammar" accessors="true" singleton {
 
         for ( var where in arguments.wheres ) {
             var whereFunc = variables[ "where#where.type#" ];
-            // TODO: needs help
             var sql = uCase( where.combinator ) & " " & whereFunc( query, where );
             wheresArray.append( sql );
         }
@@ -355,8 +354,7 @@ component displayname="Grammar" accessors="true" singleton {
      */
     private string function whereNested( required QueryBuilder query, required struct where ) {
         var sql = compileWheres( arguments.where.query, arguments.where.query.getWheres() );
-        // cut off the first 7 characters to account for the extra "WHERE"
-        return trim( "(#mid( sql, 7, len( sql ) - 6 )#)" );
+        return "(" & trim( removeLeadingFilterKeyword( sql ) ) & ")";
     }
 
     /**
@@ -880,6 +878,17 @@ component displayname="Grammar" accessors="true" singleton {
      */
     private string function removeLeadingCombinator( required string whereList ) {
         return reReplaceNoCase( whereList, "and\s|or\s", "", "one" );
+    }
+
+    /**
+     * Removes the leading "AND" or "OR" from a sql fragment.
+     *
+     * @whereList The sql fragment
+     *
+     * @return string;
+     */
+    private string function removeLeadingFilterKeyword( required string whereList ) {
+        return reReplaceNoCase( whereList, "where\s|on\s", "", "one" );
     }
 
     /**

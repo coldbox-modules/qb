@@ -763,6 +763,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "UPDATE ""HITS"" SET ""COUNT"" = count + 1 WHERE ""PAGE"" = ?", bindings: [ "someUrl" ] };
     }
 
+    function updateWithRawTable() {
+        return {
+            sql: "UPDATE LogFiles..Browsers SET ""USERAGENT"" = ? WHERE ""ID"" = ?",
+            bindings: [ "Mozilla/5.0", 1 ]
+        };
+    }
+
     function addUpdate() {
         return {
             sql: "UPDATE ""USERS"" SET ""EMAIL"" = ?, ""FOO"" = ?, ""NAME"" = ? WHERE ""ID"" = ?",

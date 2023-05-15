@@ -2292,6 +2292,15 @@ component extends="testbox.system.BaseSpec" {
                     }, updateWithRaw() );
                 } );
 
+                it( "can use an expression in an update table or from clause", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .tableRaw( "LogFiles..Browsers" )
+                            .where( "ID", 1 )
+                            .update( values = { "UserAgent": "Mozilla/5.0" }, toSql = true );
+                    }, updateWithRawTable() );
+                } );
+
                 it( "can add incrementally with addUpdate", function() {
                     testCase( function( builder ) {
                         return builder

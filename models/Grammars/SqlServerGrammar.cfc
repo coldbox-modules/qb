@@ -246,8 +246,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             } )
             .toList( ", " );
 
-        var parts = explodeTable( query.getFrom() );
-        var updateTable = parts.alias.len() ? wrapAlias( parts.alias ) : wrapTable( parts.table );
+        var updateTable = "";
+        if ( !getUtils().isExpression( query.getFrom() ) ) {
+            var parts = explodeTable( query.getFrom() );
+            updateTable = parts.alias.len() ? wrapAlias( parts.alias ) : wrapTable( parts.table );
+        } else {
+            updateTable = query.getFrom().getSql();
+        }
         var updateStatement = arrayToList(
             arrayFilter(
                 [

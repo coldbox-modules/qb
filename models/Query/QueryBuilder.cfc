@@ -545,7 +545,7 @@ component displayname="QueryBuilder" accessors="true" {
 
     /**
      * Sets the FROM table of the query.
-     * Alias for `from`
+     * Alias for `from`.
      *
      * @table The name of the table or a Expression object from which the query is based.
      *
@@ -554,6 +554,29 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function table( required any table ) {
         variables.from = arguments.table;
         return this;
+    }
+
+    /**
+     * Sets the FROM table of the query using a string. This allows you to specify table hints, etc.
+     * Alias for `fromRaw`.
+     *
+     * @from The string to use as the table.
+     * @bindings Any bindings to use for the string.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function tableRaw( required string table, array bindings = [] ) {
+        // add the bindings required by the table
+        if ( !arrayIsEmpty( arguments.bindings ) ) {
+            addBindings(
+                arguments.bindings.map( function( value ) {
+                    return utils.extractBinding( value );
+                } ),
+                "from"
+            );
+        }
+
+        return this.table( raw( arguments.table ) );
     }
 
     /**
@@ -571,7 +594,7 @@ component displayname="QueryBuilder" accessors="true" {
                 arguments.bindings.map( function( value ) {
                     return utils.extractBinding( value );
                 } ),
-                "join"
+                "from"
             );
         }
 

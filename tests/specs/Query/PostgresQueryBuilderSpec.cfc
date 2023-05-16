@@ -488,6 +488,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function havingRawWhereIn() {
+        return {
+            sql: "SELECT ""h"".""account_id"", ""security_id"" FROM ""holdings"" AS ""h"" INNER JOIN ""accounts"" AS ""a"" ON ""h"".""account_id"" = ""a"".""account_id"" WHERE ""shares"" <> ? AND ""investment_type"" = ? AND ""security_id"" NOT LIKE ? AND ""h"".""account_id"" IN (SELECT ""portfolioCode"" FROM ""accounts"" WHERE ""id"" IN (?)) GROUP BY ""h"".""account_id"", ""security_id"" HAVING COUNT(security_id) > ? ORDER BY ""h"".""account_id"" ASC, ""security_id"" ASC",
+            bindings: [ -999, "taxable", "*%", 662, 1 ]
+        };
+    }
+
     function orderBy() {
         return "SELECT * FROM ""users"" ORDER BY ""email"" ASC";
     }

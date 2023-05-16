@@ -238,6 +238,7 @@ component displayname="QueryBuilder" accessors="true" {
         "from": [],
         "join": [],
         "where": [],
+        "having": [],
         "orderBy": [],
         "union": [],
         "insert": [],
@@ -348,6 +349,7 @@ component displayname="QueryBuilder" accessors="true" {
             "from": [],
             "join": [],
             "where": [],
+            "having": [],
             "orderBy": [],
             "union": [],
             "insert": [],
@@ -1834,7 +1836,7 @@ component displayname="QueryBuilder" accessors="true" {
                     .map( function( binding ) {
                         return utils.extractBinding( binding );
                     } ),
-                "where"
+                "having"
             );
             return this;
         }
@@ -1864,12 +1866,12 @@ component displayname="QueryBuilder" accessors="true" {
                     .map( function( binding ) {
                         return utils.extractBinding( binding );
                     } ),
-                "where"
+                "having"
             );
         }
 
         if ( getUtils().isNotExpression( arguments.value ) ) {
-            addBindings( utils.extractBinding( arguments.value ), "where" );
+            addBindings( utils.extractBinding( arguments.value ), "having" );
         }
 
         return this;
@@ -2983,6 +2985,7 @@ component displayname="QueryBuilder" accessors="true" {
                 "from",
                 "join",
                 "where",
+                "having",
                 "orderBy",
                 "union"
             ],

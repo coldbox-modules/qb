@@ -1388,6 +1388,28 @@ component extends="testbox.system.BaseSpec" {
                                 .having( "total", ">", builder.raw( 3 ) );
                         }, havingRawValue() );
                     } );
+
+                    it( "correctly orders bindings with having and raw statements and whereIn", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "holdings h" )
+                                .join( "accounts a", "h.account_id", "a.account_id" )
+                                .where( "shares", "<>", "-999" )
+                                .andWhere( "investment_type", "taxable" )
+                                .andWhereNotLike( "security_id", "*%" )
+                                .select( "h.account_id, security_id" )
+                                .groupBy( "h.account_id, security_id" )
+                                .having( builder.raw( "COUNT(security_id)" ), ">", 1 )
+                                .orderBy( "h.account_id, security_id" )
+                                .when( true, ( q ) => {
+                                    q.whereIn( "h.account_id", ( q ) => {
+                                        q.select( "portfolioCode" )
+                                            .from( "accounts" )
+                                            .whereIn( "id", [ 662 ] );
+                                    } )
+                                } );
+                        }, havingRawWhereIn() );
+                    } );
                 } );
 
                 describe( "order bys", function() {

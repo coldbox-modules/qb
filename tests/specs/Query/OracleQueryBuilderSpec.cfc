@@ -494,6 +494,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function havingRawWhereIn() {
+        return {
+            sql: "SELECT ""H"".""ACCOUNT_ID"", ""SECURITY_ID"" FROM ""HOLDINGS"" ""H"" INNER JOIN ""ACCOUNTS"" ""A"" ON ""H"".""ACCOUNT_ID"" = ""A"".""ACCOUNT_ID"" WHERE ""SHARES"" <> ? AND ""INVESTMENT_TYPE"" = ? AND ""SECURITY_ID"" NOT LIKE ? AND ""H"".""ACCOUNT_ID"" IN (SELECT ""PORTFOLIOCODE"" FROM ""ACCOUNTS"" WHERE ""ID"" IN (?)) GROUP BY ""H"".""ACCOUNT_ID"", ""SECURITY_ID"" HAVING COUNT(security_id) > ? ORDER BY ""H"".""ACCOUNT_ID"" ASC, ""SECURITY_ID"" ASC",
+            bindings: [ -999, "taxable", "*%", 662, 1 ]
+        };
+    }
+
     function orderBy() {
         return "SELECT * FROM ""USERS"" ORDER BY ""EMAIL"" ASC";
     }

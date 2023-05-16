@@ -1,3 +1,12 @@
+# v9.2.1
+## 16 May 2023 — 19:31:36 UTC
+
+### fix
+
++ __QueryBuilder:__ Separate `having` bindings from `where` bindings
+ ([7661752](https://github.com/coldbox-modules/qb/commit/7661752103e8de0b781f3751023b7fdcc2990cc4))
+
+
 # v9.1.4
 ## 04 May 2023 — 17:41:46 UTC
 

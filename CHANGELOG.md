@@ -1,3 +1,12 @@
+# v9.2.2
+## 19 May 2023 — 16:06:58 UTC
+
+### fix
+
++ __QueryUtils:__ Add millisecond accuracy to inline bindings
+ ([4e29fb2](https://github.com/coldbox-modules/qb/commit/4e29fb2d68da95daa27ec26533ae51d35bc5f5e0))
+
+
 # v9.2.1
 ## 16 May 2023 — 19:31:36 UTC
 

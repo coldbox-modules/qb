@@ -157,9 +157,9 @@ component singleton displayname="QueryUtils" accessors="true" {
             case "CF_SQL_DATE":
                 return "'#dateFormat( value, "yyyy-mm-dd" )#'";
             case "CF_SQL_TIME":
-                return "'#timeFormat( value, "HH:mm:ss" )#'";
+                return "'#timeFormat( value, "HH:mm:ss.lll" )#'";
             case "CF_SQL_TIMESTAMP":
-                return "'#dateTimeFormat( value, "yyyy-mm-dd HH:nn:ss" )#'";
+                return "'#dateTimeFormat( value, "yyyy-mm-dd HH:nn:ss.lll" )#'";
             case "CF_SQL_NULL":
                 return "NULL";
             case "CF_SQL_VARCHAR":

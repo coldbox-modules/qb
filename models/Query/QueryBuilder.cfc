@@ -356,6 +356,17 @@ component displayname="QueryBuilder" accessors="true" {
             "insertRaw": [],
             "update": []
         };
+        variables.pretending = false;
+    }
+
+    /**
+     * Sets the QueryBuilder to only pretend to execute queries.
+     * Once set, it cannot be without getting a new builder instance
+     * (like from `newQuery`, for example).
+     */
+    public QueryBuilder function pretend() {
+        variables.pretending = true;
+        return this;
     }
 
     /**
@@ -3246,7 +3257,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
         var result = run( sql = this.toSql(), options = arguments.options );
         select( originalColumns );
-        return result;
+        return isNull( result ) ? javacast( "null", "" ) : result;
     }
 
     /**
@@ -3535,7 +3546,8 @@ component displayname="QueryBuilder" accessors="true" {
             ),
             getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] ),
             arguments.options,
-            returnObject
+            returnObject,
+            variables.pretending
         );
         if ( !isNull( result ) ) {
             return result;

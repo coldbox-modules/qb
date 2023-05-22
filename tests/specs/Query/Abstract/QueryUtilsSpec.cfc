@@ -29,6 +29,11 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                     expect( utils.inferSqlType( 4.50 ) ).toBe( "CF_SQL_NUMERIC" );
                     variables.utils.setAutoDeriveNumericType( true );
                 } );
+
+                it( "really long decimals", function() {
+                    variables.utils.setAutoDeriveNumericType( true );
+                    expect( utils.inferSqlType( 19482.279999997998 ) ).toBe( "CF_SQL_DECIMAL" );
+                } );
             } );
 
             it( "dates", function() {

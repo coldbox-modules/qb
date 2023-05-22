@@ -4,7 +4,12 @@
 component singleton displayname="QueryUtils" accessors="true" {
 
     /**
-     * qb strictDateDetection so we can do some conditional behaviour in data type detections
+     * LogBox logging instance
+     */
+    property name="log" inject="logbox:logger:{this}";
+
+    /**
+     * qb strictDateDetection so we can do some conditional behavior in data type detections
      */
     property name="strictDateDetection" default="true";
 
@@ -52,7 +57,8 @@ component singleton displayname="QueryUtils" accessors="true" {
         boolean autoAddScale = true,
         boolean autoDeriveNumericType = true,
         string integerSqlType = "CF_SQL_INTEGER",
-        string decimalSqlType = "CF_SQL_DECIMAL"
+        string decimalSqlType = "CF_SQL_DECIMAL",
+        any log
     ) {
         variables.strictDateDetection = arguments.strictDateDetection;
         variables.numericSQLType = arguments.numericSQLType;
@@ -60,6 +66,14 @@ component singleton displayname="QueryUtils" accessors="true" {
         variables.autoDeriveNumericType = arguments.autoDeriveNumericType;
         variables.integerSqlType = arguments.integerSqlType;
         variables.decimalSqlType = arguments.decimalSqlType;
+        if ( !isNull( arguments.log ) ) {
+            variables.log = arguments.log;
+        } else {
+            variables.log = {
+                "debug": function() {
+                }
+            };
+        }
         return this;
     }
 
@@ -390,18 +404,29 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     private boolean function checkIsActuallyNumeric( any value ) {
         if ( isNull( arguments.value ) ) {
+            variables.log.debug( "checkIsActuallyNumeric: value is null" );
             return false;
         }
+        var type = listLast( getMetadata( arguments.value ), ". " );
+        variables.log.debug( "checkIsActuallyNumeric: #arguments.value# is #type#" );
         return isSimpleValue( arguments.value ) && arrayContainsNoCase(
             [
+                "AtomicInteger",
+                "AtomicLong",
+                "BigDecimal",
+                "BigInteger",
                 "CFDouble",
-                "Integer",
                 "Double",
+                "DoubleAccumulator",
+                "DoubleAdder",
                 "Float",
+                "Integer",
                 "Long",
+                "LongAccumulator",
+                "LongAdder",
                 "Short"
             ],
-            listLast( getMetadata( arguments.value ), ". " )
+            type
         );
     }
 

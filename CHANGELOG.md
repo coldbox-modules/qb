@@ -1,3 +1,12 @@
+# v9.2.3
+## 22 May 2023 — 19:52:04 UTC
+
+### fix
+
++ __QueryUtils:__ Handle more obscure numeric SQL types
+ ([415255e](https://github.com/coldbox-modules/qb/commit/415255ef16b2e0049880c3257bcc5fad9839b890))
+
+
 # v9.2.2
 ## 19 May 2023 — 16:06:58 UTC
 

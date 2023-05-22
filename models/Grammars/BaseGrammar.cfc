@@ -85,6 +85,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @options Any options to pass to `queryExecute`. Default: {}.
      * @returnObject The type of object to return, "query" or "result". Default: "query".
      * @pretend Flag to only pretend to run the query, if true. Default: false.
+     * @postProcessHook An optional function to run after executing the query.
      *
      * @return any
      */
@@ -93,7 +94,8 @@ component displayname="Grammar" accessors="true" singleton {
         any bindings = [],
         struct options = {},
         string returnObject = "query",
-        boolean pretend = false
+        boolean pretend = false,
+        function postProcessHook
     ) {
         local.result = "";
         var data = {
@@ -107,7 +109,9 @@ component displayname="Grammar" accessors="true" singleton {
         structAppend( data.options, { result: "local.result" }, true );
         variables.log.debug( "Executing sql: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
         var startTick = getTickCount();
-        param data.result = {};
+        data.result = {};
+        data.executionTime = 0;
+        data.query = javacast( "null", "" );
         if ( !arguments.pretend ) {
             var q = queryExecute( data.sql, data.bindings, data.options );
             data.executionTime = getTickCount() - startTick;
@@ -115,6 +119,9 @@ component displayname="Grammar" accessors="true" singleton {
             data.result = local.result;
         }
         tryPostInterceptor( data );
+        if ( !isNull( arguments.postProcessHook ) ) {
+            arguments.postProcessHook( data );
+        }
         return arguments.returnObject == "query" ? ( isNull( q ) ? javacast( "null", "" ) : q ) : {
             result: data.result,
             query: ( isNull( q ) ? javacast( "null", "" ) : q )

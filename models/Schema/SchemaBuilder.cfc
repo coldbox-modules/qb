@@ -22,6 +22,11 @@ component accessors="true" singleton {
     property name="defaultStringLength" default="255";
 
     /**
+     * The query log for this builder.
+     */
+    property name="queryLog" type="array";
+
+    /**
      * Create a new schema builder.
      *
      * @grammar The specific grammar that will compile the builder statements.
@@ -37,6 +42,7 @@ component accessors="true" singleton {
         variables.grammar = arguments.grammar;
         variables.defaultOptions = arguments.defaultOptions;
         variables.pretending = false;
+        variables.queryLog = [];
         return this;
     }
 
@@ -68,11 +74,20 @@ component accessors="true" singleton {
         blueprint.setCreating( true );
         blueprint.setTable( arguments.table );
         arguments.callback( blueprint );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
-                    getGrammar().runQuery( statement, [], options, "result" );
+                    getGrammar().runQuery(
+                        statement,
+                        [],
+                        options,
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
+                    );
                 } );
         }
         return blueprint;
@@ -93,7 +108,7 @@ component accessors="true" singleton {
         blueprint.setCreating( true );
         blueprint.setTable( arguments.view );
 
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -101,7 +116,11 @@ component accessors="true" singleton {
                         statement,
                         query.getBindings(),
                         options,
-                        "result"
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
                     );
                 } );
         }
@@ -124,7 +143,7 @@ component accessors="true" singleton {
         blueprint.setCreating( true );
         blueprint.setTable( arguments.view );
 
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -132,7 +151,11 @@ component accessors="true" singleton {
                         statement,
                         query.getBindings(),
                         options,
-                        "result"
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
                     );
                 } );
         }
@@ -146,7 +169,7 @@ component accessors="true" singleton {
         blueprint.addCommand( "dropView" );
         blueprint.setTable( arguments.view );
 
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -154,7 +177,11 @@ component accessors="true" singleton {
                         statement,
                         query.getBindings(),
                         options,
-                        "result"
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
                     );
                 } );
         }
@@ -176,11 +203,20 @@ component accessors="true" singleton {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
         blueprint.setTable( arguments.table );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
-                    getGrammar().runQuery( statement, [], options, "result" );
+                    getGrammar().runQuery(
+                        statement,
+                        [],
+                        options,
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
+                    );
                 } );
         }
         return blueprint;
@@ -201,11 +237,20 @@ component accessors="true" singleton {
         blueprint.addCommand( "drop" );
         blueprint.setTable( arguments.table );
         blueprint.setIfExists( true );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
-                    getGrammar().runQuery( statement, [], options, "result" );
+                    getGrammar().runQuery(
+                        statement,
+                        [],
+                        options,
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
+                    );
                 } );
         }
         return blueprint;
@@ -232,11 +277,20 @@ component accessors="true" singleton {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( arguments.table );
         arguments.callback( blueprint );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
-                    getGrammar().runQuery( statement, [], options, "result" );
+                    getGrammar().runQuery(
+                        statement,
+                        [],
+                        options,
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
+                    );
                 } );
         }
         return blueprint;
@@ -262,11 +316,20 @@ component accessors="true" singleton {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( arguments.from );
         blueprint.addCommand( "renameTable", { to: arguments.to } );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
-                    getGrammar().runQuery( statement, [], options, "result" );
+                    getGrammar().runQuery(
+                        statement,
+                        [],
+                        options,
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
+                    );
                 } );
         }
         return blueprint;
@@ -315,12 +378,16 @@ component accessors="true" singleton {
             arrayAppend( args, arguments.schema );
         }
         var sql = getGrammar().compileTableExists( arguments.name, arguments.schema );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             var q = getGrammar().runQuery(
                 sql,
                 args,
                 arguments.options,
-                "query"
+                "query",
+                variables.pretending,
+                function( data ) {
+                    variables.queryLog.append( duplicate( data ) );
+                }
             );
             return q.RecordCount > 0;
         }
@@ -351,12 +418,16 @@ component accessors="true" singleton {
             arrayAppend( args, arguments.schema );
         }
         var sql = getGrammar().compileColumnExists( arguments.table, arguments.column, arguments.schema );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             var q = getGrammar().runQuery(
                 sql,
                 args,
                 arguments.options,
-                "query"
+                "query",
+                variables.pretending,
+                function( data ) {
+                    variables.queryLog.append( duplicate( data ) );
+                }
             );
             return q.RecordCount > 0;
         }
@@ -374,9 +445,18 @@ component accessors="true" singleton {
     public array function dropAllObjects( struct options = {}, boolean execute = true, string schema = "" ) {
         structAppend( arguments.options, variables.defaultOptions, false );
         var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             statements.each( function( statement ) {
-                getGrammar().runQuery( statement, [], options, "result" );
+                getGrammar().runQuery(
+                    statement,
+                    [],
+                    options,
+                    "result",
+                    variables.pretending,
+                    function( data ) {
+                        variables.queryLog.append( duplicate( data ) );
+                    }
+                );
             } );
         }
         return statements;
@@ -393,12 +473,16 @@ component accessors="true" singleton {
     public string function enableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
         structAppend( arguments.options, variables.defaultOptions, false );
         var statement = getGrammar().compileEnableForeignKeyConstraints( arguments.options );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             getGrammar().runQuery(
                 statement,
                 [],
                 arguments.options,
-                "result"
+                "result",
+                variables.pretending,
+                function( data ) {
+                    variables.queryLog.append( duplicate( data ) );
+                }
             );
         }
         return statement;
@@ -415,12 +499,16 @@ component accessors="true" singleton {
     public string function disableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
         structAppend( arguments.options, variables.defaultOptions, false );
         var statement = getGrammar().compileDisableForeignKeyConstraints( arguments.options );
-        if ( arguments.execute && !variables.pretending ) {
+        if ( arguments.execute ) {
             getGrammar().runQuery(
                 statement,
                 [],
                 arguments.options,
-                "result"
+                "result",
+                variables.pretending,
+                function( data ) {
+                    variables.queryLog.append( duplicate( data ) );
+                }
             );
         }
         return statement;

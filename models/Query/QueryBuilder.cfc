@@ -83,6 +83,11 @@ component displayname="QueryBuilder" accessors="true" {
      */
     property name="shouldMaxRowsOverrideToAll";
 
+    /**
+     * The query log for this builder.
+     */
+    property name="queryLog" type="array";
+
     /******************** Query Properties ********************/
 
     /**
@@ -357,6 +362,7 @@ component displayname="QueryBuilder" accessors="true" {
             "update": []
         };
         variables.pretending = false;
+        variables.queryLog = [];
     }
 
     /**
@@ -3547,8 +3553,12 @@ component displayname="QueryBuilder" accessors="true" {
             getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] ),
             arguments.options,
             returnObject,
-            variables.pretending
+            variables.pretending,
+            function( data ) {
+                variables.queryLog.append( duplicate( data ) );
+            }
         );
+
         if ( !isNull( result ) ) {
             return result;
         }

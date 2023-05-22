@@ -30,9 +30,18 @@ component accessors="true" singleton {
      *
      * @returns The schema builder instance.
      */
-    public SchemaBuilder function init( required any grammar, struct defaultOptions = {} ) {
+    public SchemaBuilder function init(
+        required any grammar = new qb.models.Grammars.BaseGrammar(),
+        struct defaultOptions = {}
+    ) {
         variables.grammar = arguments.grammar;
         variables.defaultOptions = arguments.defaultOptions;
+        variables.pretending = false;
+        return this;
+    }
+
+    public SchemaBuilder function pretend() {
+        variables.pretending = true;
         return this;
     }
 
@@ -59,7 +68,7 @@ component accessors="true" singleton {
         blueprint.setCreating( true );
         blueprint.setTable( arguments.table );
         arguments.callback( blueprint );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -84,7 +93,7 @@ component accessors="true" singleton {
         blueprint.setCreating( true );
         blueprint.setTable( arguments.view );
 
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -115,7 +124,7 @@ component accessors="true" singleton {
         blueprint.setCreating( true );
         blueprint.setTable( arguments.view );
 
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -137,7 +146,7 @@ component accessors="true" singleton {
         blueprint.addCommand( "dropView" );
         blueprint.setTable( arguments.view );
 
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -167,7 +176,7 @@ component accessors="true" singleton {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.addCommand( "drop" );
         blueprint.setTable( arguments.table );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -192,7 +201,7 @@ component accessors="true" singleton {
         blueprint.addCommand( "drop" );
         blueprint.setTable( arguments.table );
         blueprint.setIfExists( true );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -223,7 +232,7 @@ component accessors="true" singleton {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( arguments.table );
         arguments.callback( blueprint );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -253,7 +262,7 @@ component accessors="true" singleton {
         var blueprint = new Blueprint( this, getGrammar() );
         blueprint.setTable( arguments.from );
         blueprint.addCommand( "renameTable", { to: arguments.to } );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             blueprint
                 .toSql()
                 .each( function( statement ) {
@@ -306,7 +315,7 @@ component accessors="true" singleton {
             arrayAppend( args, arguments.schema );
         }
         var sql = getGrammar().compileTableExists( arguments.name, arguments.schema );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             var q = getGrammar().runQuery(
                 sql,
                 args,
@@ -342,7 +351,7 @@ component accessors="true" singleton {
             arrayAppend( args, arguments.schema );
         }
         var sql = getGrammar().compileColumnExists( arguments.table, arguments.column, arguments.schema );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             var q = getGrammar().runQuery(
                 sql,
                 args,
@@ -365,7 +374,7 @@ component accessors="true" singleton {
     public array function dropAllObjects( struct options = {}, boolean execute = true, string schema = "" ) {
         structAppend( arguments.options, variables.defaultOptions, false );
         var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             statements.each( function( statement ) {
                 getGrammar().runQuery( statement, [], options, "result" );
             } );
@@ -384,7 +393,7 @@ component accessors="true" singleton {
     public string function enableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
         structAppend( arguments.options, variables.defaultOptions, false );
         var statement = getGrammar().compileEnableForeignKeyConstraints( arguments.options );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             getGrammar().runQuery(
                 statement,
                 [],
@@ -406,7 +415,7 @@ component accessors="true" singleton {
     public string function disableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
         structAppend( arguments.options, variables.defaultOptions, false );
         var statement = getGrammar().compileDisableForeignKeyConstraints( arguments.options );
-        if ( arguments.execute ) {
+        if ( arguments.execute && !variables.pretending ) {
             getGrammar().runQuery(
                 statement,
                 [],

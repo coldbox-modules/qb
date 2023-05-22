@@ -81,35 +81,42 @@ component displayname="Grammar" accessors="true" singleton {
      * This function exists so that platform-specific grammars can override it if needed.
      *
      * @sql The sql string to execute.
-     * @bindings The bindings to apply to the query.
+     * @bindings The bindings to apply to the query. Default: []
      * @options Any options to pass to `queryExecute`. Default: {}.
+     * @returnObject The type of object to return, "query" or "result". Default: "query".
+     * @pretend Flag to only pretend to run the query, if true. Default: false.
      *
      * @return any
      */
     public any function runQuery(
-        sql,
-        bindings,
-        options,
-        returnObject = "query"
+        required string sql,
+        any bindings = [],
+        struct options = {},
+        string returnObject = "query",
+        boolean pretend = false
     ) {
         local.result = "";
         var data = {
-            sql: arguments.sql,
-            bindings: arguments.bindings,
-            options: arguments.options,
-            returnObject: arguments.returnObject
+            "sql": arguments.sql,
+            "bindings": arguments.bindings,
+            "options": arguments.options,
+            "returnObject": arguments.returnObject,
+            "pretend": arguments.pretend
         };
         tryPreInterceptor( data );
         structAppend( data.options, { result: "local.result" }, true );
         variables.log.debug( "Executing sql: #data.sql#", "With bindings: #serializeJSON( data.bindings )#" );
         var startTick = getTickCount();
-        var q = queryExecute( data.sql, data.bindings, data.options );
-        data.executionTime = getTickCount() - startTick;
-        data.query = isNull( q ) ? javacast( "null", "" ) : q;
-        data.result = local.result;
+        param data.result = {};
+        if ( !arguments.pretend ) {
+            var q = queryExecute( data.sql, data.bindings, data.options );
+            data.executionTime = getTickCount() - startTick;
+            data.query = isNull( q ) ? javacast( "null", "" ) : q;
+            data.result = local.result;
+        }
         tryPostInterceptor( data );
-        return returnObject == "query" ? ( isNull( q ) ? javacast( "null", "" ) : q ) : {
-            result: local.result,
+        return arguments.returnObject == "query" ? ( isNull( q ) ? javacast( "null", "" ) : q ) : {
+            result: data.result,
             query: ( isNull( q ) ? javacast( "null", "" ) : q )
         };
     }

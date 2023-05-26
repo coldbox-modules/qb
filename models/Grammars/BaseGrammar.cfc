@@ -1464,7 +1464,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeGUID( column ) {
-        return typeChar( column, 36 );
+        return typeChar( column );
     }
 
     function typeInteger( column ) {
@@ -1497,7 +1497,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeUUID( column ) {
-        return typeChar( column, 35 );
+        return typeChar( column );
     }
 
     function typeLineString( column ) {

@@ -227,6 +227,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "NCHAR(#column.getLength()#)";
     }
 
+    function typeGUID( column ) {
+        return "CHAR(#column.getLength()#)";
+    }
+
     function typeLineString( column ) {
         return "LINESTRING";
     }

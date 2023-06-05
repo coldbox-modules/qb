@@ -346,6 +346,8 @@ component singleton displayname="QueryUtils" accessors="true" {
                     return "varchar";
                 case "char":
                     return "varchar";
+                case "clob":
+                    return "varchar";
                 default:
                     return foundType;
             }

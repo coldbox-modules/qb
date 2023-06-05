@@ -1,3 +1,16 @@
+# v9.2.4
+## 05 Jun 2023 — 17:28:47 UTC
+
+### fix
+
++ __QueryUtils:__ Use varchar for clob when converting to a CFML query ([5565fcb](https://github.com/coldbox-modules/qb/commit/5565fcb586b4221a3f10dc3752dd22a08e572256))
+
+### other
+
++ __\*:__ feat: Add query logging to QueryBuilder and SchemaBuilder instances ([ce92090](https://github.com/coldbox-modules/qb/commit/ce92090efd2fcbdbcc42ef1a71409db01f42d395))
++ __\*:__ feat: Add the ability to pretend to run queries ([a0a0c0b](https://github.com/coldbox-modules/qb/commit/a0a0c0bbf85e2f8b240994a921a4b27df1d0f24d))
+
+
 # v9.2.3
 ## 22 May 2023 — 19:52:04 UTC
 

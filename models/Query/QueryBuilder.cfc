@@ -3543,18 +3543,18 @@ component displayname="QueryBuilder" accessors="true" {
     private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
         structAppend( arguments.options, getDefaultOptions(), false );
         var result = grammar.runQuery(
-            variables.sqlCommenter.appendSqlComments(
+            sql = variables.sqlCommenter.appendSqlComments(
                 sql,
                 arguments.options.keyExists( "datasource" ) && !isNull( arguments.options.datasource ) ? arguments.options.datasource : javacast(
                     "null",
                     ""
                 )
             ),
-            getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] ),
-            arguments.options,
-            returnObject,
-            variables.pretending,
-            function( data ) {
+            bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] ),
+            options = arguments.options,
+            returnObject = returnObject,
+            pretend = variables.pretending,
+            postProcessHook = function( data ) {
                 variables.queryLog.append( duplicate( data ) );
             }
         );

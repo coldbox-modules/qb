@@ -1,3 +1,11 @@
+# v9.2.5
+## 06 Jun 2023 — 22:48:13 UTC
+
+### fix
+
++ __QueryBuilder:__ Use named parameters when passing to BaseGrammar ([488743b](https://github.com/coldbox-modules/qb/commit/488743b85dfc4ef649ac7880b696024a24152b2a))
+
+
 # v9.2.4
 ## 05 Jun 2023 — 17:28:47 UTC
 

@@ -1,3 +1,12 @@
+# v9.3.0
+## 23 Jun 2023 — 08:16:16 UTC
+
+### feat
+
++ __QueryUtils:__ Make replaceBindings available in the Query Utils
+ ([4e0ca18](https://github.com/coldbox-modules/qb/commit/4e0ca1824742488081156d7c3e58e92d667b63a3))
+
+
 # v9.2.5
 ## 06 Jun 2023 — 22:48:13 UTC
 

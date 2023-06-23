@@ -1,7 +1,7 @@
 /**
  * Schema Builder for creating database objects (tables, fields, indexes, etc.)
  */
-component accessors="true" singleton {
+component accessors="true" {
 
     /**
      * The specific grammar that will compile the builder statements.
@@ -384,12 +384,9 @@ component accessors="true" singleton {
                 args,
                 arguments.options,
                 "query",
-                variables.pretending,
-                function( data ) {
-                    variables.queryLog.append( duplicate( data ) );
-                }
+                variables.pretending
             );
-            return q.RecordCount > 0;
+            return structKeyExists( q, "RecordCount" ) ? q.RecordCount > 0 : false;
         }
         return sql;
     }
@@ -429,7 +426,7 @@ component accessors="true" singleton {
                     variables.queryLog.append( duplicate( data ) );
                 }
             );
-            return q.RecordCount > 0;
+            return structKeyExists( q, "RecordCount" ) ? q.RecordCount > 0 : false;
         }
         return sql;
     }

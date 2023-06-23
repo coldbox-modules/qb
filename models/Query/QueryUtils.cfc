@@ -113,6 +113,47 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     /**
+     * Replace the question marks (?) in a sql string with the bindings provided.
+     *
+     * @sql      The sql string to replace the bindings in.
+     * @bindings The bindings to replace the question marks with.
+     * @inline   Whether or not to inline the bindings.
+     *
+     * @return   string
+     */
+    public string function replaceBindings( required string sql, required array bindings, boolean inline = false ) {
+        var index = 1;
+        return replace(
+            arguments.sql,
+            "?",
+            function( pattern, position, originalString ) {
+                var thisBinding = bindings[ index ];
+
+                index++;
+
+                if ( !isStruct( thisBinding ) ) {
+                    return castAsSqlType( value = thisBinding, sqltype = "cf_sql_varchar" );
+                }
+
+                if ( inline ) {
+                    return getUtils().castAsSqlType(
+                        value = thisBinding.null ? javacast( "null", "" ) : thisBinding.value,
+                        sqltype = thisBinding.cfsqltype
+                    );
+                }
+
+                var orderedBinding = structNew( "ordered" );
+                for ( var type in [ "value", "cfsqltype", "null" ] ) {
+                    orderedBinding[ type ] = thisBinding[ type ];
+                }
+                var stringifiedBinding = serializeJSON( orderedBinding );
+                return stringifiedBinding;
+            },
+            "all"
+        );
+    }
+
+    /**
      * Infer the correct cf_sql_type from a value.
      *
      * @value The value from which to infer the cf_sql_type.

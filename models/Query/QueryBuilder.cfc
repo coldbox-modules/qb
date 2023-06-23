@@ -3665,30 +3665,7 @@ component displayname="QueryBuilder" accessors="true" {
             return sql;
         }
 
-        var bindings = getBindings();
-        var index = 1;
-        return replace(
-            sql,
-            "?",
-            function( pattern, position, originalString ) {
-                var thisBinding = bindings[ index ];
-                if ( showBindings == "inline" ) {
-                    index++;
-                    return getUtils().castAsSqlType(
-                        value = thisBinding.null ? javacast( "null", "" ) : thisBinding.value,
-                        sqltype = thisBinding.cfsqltype
-                    );
-                }
-                var orderedBinding = structNew( "ordered" );
-                for ( var type in [ "value", "cfsqltype", "null" ] ) {
-                    orderedBinding[ type ] = thisBinding[ type ];
-                }
-                var stringifiedBinding = serializeJSON( orderedBinding );
-                index++;
-                return stringifiedBinding;
-            },
-            "all"
-        );
+        return getUtils().replaceBindings( sql, getBindings(), arguments.showBindings == "inline" );
     }
 
     /**

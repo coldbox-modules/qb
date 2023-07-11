@@ -10,6 +10,11 @@ component accessors="true" {
     property name="grammar";
 
     /**
+     * The schema to execute the generated statements against, if any.
+     */
+    property name="defaultSchema";
+
+    /**
      * A struct of default options for the query builder.
      * These options will be merged with any options passed.
      */
@@ -37,10 +42,12 @@ component accessors="true" {
      */
     public SchemaBuilder function init(
         required any grammar = new qb.models.Grammars.BaseGrammar(),
-        struct defaultOptions = {}
+        struct defaultOptions = {},
+        string defaultSchema = ""
     ) {
         variables.grammar = arguments.grammar;
         variables.defaultOptions = arguments.defaultOptions;
+        variables.defaultSchema = arguments.defaultSchema;
         variables.pretending = false;
         variables.queryLog = [];
         return this;
@@ -368,7 +375,7 @@ component accessors="true" {
      */
     public any function hasTable(
         required string name,
-        string schema = "",
+        string schema = variables.defaultSchema,
         struct options = {},
         boolean execute = true
     ) {
@@ -405,7 +412,7 @@ component accessors="true" {
     public any function hasColumn(
         required string table,
         required string column,
-        string schema = "",
+        string schema = variables.defaultSchema,
         struct options = {},
         boolean execute = true
     ) {
@@ -439,7 +446,7 @@ component accessors="true" {
      *
      * @returns The array of executed statements.
      */
-    public array function dropAllObjects( struct options = {}, boolean execute = true, string schema = "" ) {
+    public array function dropAllObjects( struct options = {}, boolean execute = true, string schema = variables.defaultSchema ) {
         structAppend( arguments.options, variables.defaultOptions, false );
         var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema );
         if ( arguments.execute ) {

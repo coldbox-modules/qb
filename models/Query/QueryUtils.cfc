@@ -136,7 +136,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 }
 
                 if ( inline ) {
-                    return getUtils().castAsSqlType(
+                    return castAsSqlType(
                         value = thisBinding.null ? javacast( "null", "" ) : thisBinding.value,
                         sqltype = thisBinding.cfsqltype
                     );

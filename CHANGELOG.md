@@ -1,3 +1,12 @@
+# v9.3.1
+## 11 Jul 2023 — 11:50:19 UTC
+
+### fix
+
++ __MySQLGRammar:__ Use CHAR for GUID and UUID types in MySQL ([eca0fa7](https://github.com/coldbox-modules/qb/commit/eca0fa7fc48c306977892c5593fe503923ec0545))
++ __queryUtils:__ Don't call getUtils from inside the Utils ([3e80206](https://github.com/coldbox-modules/qb/commit/3e80206e89ea5c1771715e7439c70c4f31dbc2e3))
+
+
 # v9.3.0
 ## 23 Jun 2023 — 08:16:16 UTC
 

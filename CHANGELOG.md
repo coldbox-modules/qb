@@ -1,3 +1,11 @@
+# v9.4.0
+## 11 Jul 2023 — 14:03:00 UTC
+
+### feat
+
++ __SchemaBuilder:__ Allow for setting a `defaultSchema` ([697a307](https://github.com/coldbox-modules/qb/commit/697a3078c18301a5c869df88744ef47823bb5c8d))
+
+
 # v9.3.1
 ## 11 Jul 2023 — 11:50:19 UTC
 

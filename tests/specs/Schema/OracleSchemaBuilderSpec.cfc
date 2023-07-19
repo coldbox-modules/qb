@@ -1,5 +1,42 @@
 component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "Oracle Grammar-specific tests", function() {
+            it( "attempts to drop sequences and triggers when dropping a table", () => {
+                try {
+                    var schema = getBuilder();
+                    variables.mockGrammar.$( "hasSequence", true );
+                    variables.mockGrammar.$( "hasTrigger", true );
+                    var statements = schema.drop( "users", {}, false );
+                    if ( !isSimpleValue( statements ) ) {
+                        statements = statements.toSql();
+                    }
+                    if ( !isArray( statements ) ) {
+                        statements = [ statements ];
+                    }
+                    expect( statements ).toBeArray();
+                    var expected = [
+                        "DROP TABLE ""USERS""",
+                        "DROP SEQUENCE ""SEQ_USERS""",
+                        "DROP TRIGGER ""TRG_USERS"""
+                    ];
+                    expect( statements ).toHaveLength( arrayLen( expected ) );
+                    for ( var i = 1; i <= expected.len(); i++ ) {
+                        expect( statements[ i ] ).toBeWithCase( expected[ i ] );
+                    }
+                } catch ( any e ) {
+                    if ( !isSimpleValue( expected ) && !isArray( expected ) && structKeyExists( expected, "exception" ) ) {
+                        expect( e.type ).toBe( expected.exception );
+                        return;
+                    }
+                    rethrow;
+                }
+            } );
+        } );
+    }
+
     function emptyTable() {
         return [ "CREATE TABLE ""USERS"" ()" ];
     }
@@ -12,7 +49,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "CREATE TABLE ""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, ""USERNAME"" VARCHAR2(255) NOT NULL, ""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, ""PASSWORD"" VARCHAR2(100) NOT NULL, ""COUNTRY_ID"" NUMBER(10, 0) NOT NULL, ""CREATED_DATE"" DATE DEFAULT CURRENT_TIMESTAMP NOT NULL, ""MODIFIED_DATE"" DATE DEFAULT CURRENT_TIMESTAMP NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""), CONSTRAINT ""FK_USERS_COUNTRY_ID"" FOREIGN KEY (""COUNTRY_ID"") REFERENCES ""COUNTRIES"" (""ID"") ON DELETE CASCADE)",
             "CREATE SEQUENCE ""SEQ_USERS""",
-            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (new.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO :new.""ID"" FROM dual; END"
+            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
         ];
     }
 
@@ -20,7 +57,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "CREATE TABLE ""USERS"" (""ID"" NUMBER(19, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
             "CREATE SEQUENCE ""SEQ_USERS""",
-            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (new.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO :new.""ID"" FROM dual; END"
+            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
         ];
     }
 
@@ -122,7 +159,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "CREATE TABLE ""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
             "CREATE SEQUENCE ""SEQ_USERS""",
-            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (new.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO :new.""ID"" FROM dual; END"
+            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
         ];
     }
 
@@ -154,7 +191,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "CREATE TABLE ""USERS"" (""ID"" NUMBER(7, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
             "CREATE SEQUENCE ""SEQ_USERS""",
-            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (new.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO :new.""ID"" FROM dual; END"
+            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
         ];
     }
 
@@ -226,7 +263,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "CREATE TABLE ""USERS"" (""ID"" NUMBER(5, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
             "CREATE SEQUENCE ""SEQ_USERS""",
-            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (new.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO :new.""ID"" FROM dual; END"
+            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
         ];
     }
 
@@ -290,7 +327,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "CREATE TABLE ""USERS"" (""ID"" NUMBER(3, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
             "CREATE SEQUENCE ""SEQ_USERS""",
-            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (new.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO :new.""ID"" FROM dual; END"
+            "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
         ];
     }
 
@@ -595,20 +632,20 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function hasTable() {
-        return [ "SELECT 1 FROM ""DBA_TABLES"" WHERE ""TABLE_NAME"" = ?" ];
+        return [ "SELECT 1 FROM ""ALL_TABLES"" WHERE ""TABLE_NAME"" = ?" ];
     }
 
     function hasTableInSchema() {
-        return [ "SELECT 1 FROM ""DBA_TABLES"" WHERE ""TABLE_NAME"" = ? AND ""OWNER"" = ?" ];
+        return [ "SELECT 1 FROM ""ALL_TABLES"" WHERE ""TABLE_NAME"" = ? AND ""OWNER"" = ?" ];
     }
 
     function hasColumn() {
-        return [ "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ?" ];
+        return [ "SELECT 1 FROM ""ALL_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ?" ];
     }
 
     function hasColumnInSchema() {
         return [
-            "SELECT 1 FROM ""DBA_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ? AND ""OWNER"" = ?"
+            "SELECT 1 FROM ""ALL_TAB_COLUMNS"" WHERE ""TABLE_NAME"" = ? AND ""COLUMN_NAME"" = ? AND ""OWNER"" = ?"
         ];
     }
 
@@ -634,6 +671,8 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
             .init( utils ) : arguments.mockGrammar;
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" ).init( arguments.mockGrammar );
         variables.mockGrammar = arguments.mockGrammar;
+        variables.mockGrammar.$( "hasSequence", false );
+        variables.mockGrammar.$( "hasTrigger", false );
         return builder;
     }
 

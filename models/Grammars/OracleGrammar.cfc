@@ -477,7 +477,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         blueprint.addCommand(
             "raw",
             {
-                "sql": "CREATE OR REPLACE TRIGGER ""#triggerName#"" BEFORE INSERT ON ""#table#"" FOR EACH ROW WHEN (new.""#columnName#"" IS NULL) BEGIN SELECT ""#sequenceName#"".NEXTVAL INTO :new.""#columnName#"" FROM dual; END"
+                "sql": "CREATE OR REPLACE TRIGGER ""#triggerName#"" BEFORE INSERT ON ""#table#"" FOR EACH ROW WHEN (NEW.""#columnName#"" IS NULL) BEGIN SELECT ""#sequenceName#"".NEXTVAL INTO ::NEW.""#columnName#"" FROM dual; END"
             }
         );
         return "";
@@ -666,7 +666,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileTableExists( tableName, schemaName = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "dba_tables" )# WHERE #wrapColumn( "table_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "all_tables" )# WHERE #wrapColumn( "table_name" )# = ?";
         if ( schemaName != "" ) {
             sql &= " AND #wrapColumn( "owner" )# = ?";
         }
@@ -674,11 +674,49 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileColumnExists( table, column, scehma = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "dba_tab_columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "all_tab_columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
         if ( scehma != "" ) {
             sql &= " AND #wrapColumn( "owner" )# = ?";
         }
         return sql;
+    }
+
+    function compileDrop( required blueprint ) {
+        var statements = [ "DROP TABLE #wrapTable( arguments.blueprint.getTable() )#" ];
+
+        var sequenceName = "SEQ_#uCase( arguments.blueprint.getTable() )#";
+        if ( hasSequence( arguments.blueprint, sequenceName ) ) {
+            statements.append( "DROP SEQUENCE #wrapTable( sequenceName )#" );
+        }
+
+        var triggerName = "TRG_#uCase( arguments.blueprint.getTable() )#";
+        if ( hasTrigger( arguments.blueprint, triggerName ) ) {
+            statements.append( "DROP TRIGGER #wrapTable( triggerName )#" );
+        }
+
+        return statements;
+    }
+
+    private boolean function hasSequence( required Blueprint blueprint, required string sequenceName ) {
+        var sql = "SELECT 1 FROM #wrapTable( "all_sequences" )# WHERE #wrapColumn( "sequence_name" )# = ?";
+        var params = [ arguments.sequenceName ];
+        if ( arguments.blueprint.getDefaultSchema() != "" ) {
+            sql &= " AND #wrapColumn( "owner" )# = ?";
+            params.append( arguments.blueprint.getDefaultSchema() );
+        }
+        var result = queryExecute( sql, params, arguments.blueprint.getQueryOptions() );
+        return result.recordCount > 0;
+    }
+
+    private boolean function hasTrigger( required Blueprint blueprint, required string triggerName ) {
+        var sql = "SELECT 1 FROM #wrapTable( "all_triggers" )# WHERE #wrapColumn( "trigger_name" )# = ?";
+        var params = [ arguments.triggerName ];
+        if ( arguments.blueprint.getDefaultSchema() != "" ) {
+            sql &= " AND #wrapColumn( "owner" )# = ?";
+            params.append( arguments.blueprint.getDefaultSchema() );
+        }
+        var result = queryExecute( sql, params, arguments.blueprint.getQueryOptions() );
+        return result.recordCount > 0;
     }
 
     function compileDropAllObjects() {

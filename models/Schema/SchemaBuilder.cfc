@@ -76,7 +76,12 @@ component accessors="true" {
         boolean execute = true
     ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var blueprint = new Blueprint( this, getGrammar() );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
         blueprint.addCommand( "create" );
         blueprint.setCreating( true );
         blueprint.setTable( arguments.table );
@@ -110,7 +115,12 @@ component accessors="true" {
         var query = new models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
-        var blueprint = new Blueprint( this, getGrammar() );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
         blueprint.addCommand( "createView", { query: query } );
         blueprint.setCreating( true );
         blueprint.setTable( arguments.view );
@@ -145,7 +155,12 @@ component accessors="true" {
         var query = new models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
-        var blueprint = new Blueprint( this, getGrammar() );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
         blueprint.addCommand( "alterView", { query: query } );
         blueprint.setCreating( true );
         blueprint.setTable( arguments.view );
@@ -172,7 +187,12 @@ component accessors="true" {
 
     public Blueprint function dropView( required string view, struct options = {}, boolean execute = true ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var blueprint = new Blueprint( this, getGrammar() );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
         blueprint.addCommand( "dropView" );
         blueprint.setTable( arguments.view );
 
@@ -207,7 +227,12 @@ component accessors="true" {
      */
     public Blueprint function drop( required string table, struct options = {}, boolean execute = true ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var blueprint = new Blueprint( this, getGrammar() );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
         blueprint.addCommand( "drop" );
         blueprint.setTable( arguments.table );
         if ( arguments.execute ) {
@@ -240,7 +265,12 @@ component accessors="true" {
      */
     public Blueprint function dropIfExists( required string table, struct options = {}, boolean execute = true ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var blueprint = new Blueprint( this, getGrammar() );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
         blueprint.addCommand( "drop" );
         blueprint.setTable( arguments.table );
         blueprint.setIfExists( true );
@@ -281,7 +311,12 @@ component accessors="true" {
         boolean execute = true
     ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var blueprint = new Blueprint( this, getGrammar() );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
         blueprint.setTable( arguments.table );
         arguments.callback( blueprint );
         if ( arguments.execute ) {
@@ -320,7 +355,12 @@ component accessors="true" {
         boolean execute = true
     ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var blueprint = new Blueprint( this, getGrammar() );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
         blueprint.setTable( arguments.from );
         blueprint.addCommand( "renameTable", { to: arguments.to } );
         if ( arguments.execute ) {
@@ -380,7 +420,7 @@ component accessors="true" {
         boolean execute = true
     ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var args = [ arguments.name ];
+        var args = [ listLast( arguments.name, "." ) ];
         if ( arguments.schema != "" ) {
             arrayAppend( args, arguments.schema );
         }
@@ -417,7 +457,7 @@ component accessors="true" {
         boolean execute = true
     ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var args = [ arguments.table, arguments.column ];
+        var args = [ listLast( arguments.table, "." ), arguments.column ];
         if ( arguments.schema != "" ) {
             arrayAppend( args, arguments.schema );
         }
@@ -446,7 +486,11 @@ component accessors="true" {
      *
      * @returns The array of executed statements.
      */
-    public array function dropAllObjects( struct options = {}, boolean execute = true, string schema = variables.defaultSchema ) {
+    public array function dropAllObjects(
+        struct options = {},
+        boolean execute = true,
+        string schema = variables.defaultSchema
+    ) {
         structAppend( arguments.options, variables.defaultOptions, false );
         var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema );
         if ( arguments.execute ) {

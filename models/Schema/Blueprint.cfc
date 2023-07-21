@@ -5,6 +5,9 @@ component accessors="true" {
     property name="table";
     property name="commands";
 
+    property name="queryOptions";
+    property name="defaultSchema";
+
     property name="columns";
     property name="dropColumns";
     property name="indexes";
@@ -12,9 +15,16 @@ component accessors="true" {
     property name="creating" default="false";
     property name="ifExists" default="false";
 
-    public Blueprint function init( required SchemaBuilder schemaBuilder, required any grammar ) {
-        setSchemaBuilder( schemaBuilder );
-        setGrammar( grammar );
+    public Blueprint function init(
+        required SchemaBuilder schemaBuilder,
+        required any grammar,
+        struct queryOptions = {},
+        string defaultSchema = ""
+    ) {
+        setSchemaBuilder( arguments.schemaBuilder );
+        setGrammar( arguments.grammar );
+        setQueryOptions( arguments.queryOptions );
+        setDefaultSchema( arguments.defaultSchema );
 
         setColumns( [] );
         setDropColumns( [] );

@@ -1,3 +1,11 @@
+# v9.4.1
+## 21 Jul 2023 — 14:28:20 UTC
+
+### fix
+
++ __OracleGrammar:__ Better support for Oracle Grammar in cfmigrations ([40bb4a6](https://github.com/coldbox-modules/qb/commit/40bb4a6143103465852a77bc3989f0a50f74936a))
+
+
 # v9.4.0
 ## 11 Jul 2023 — 14:03:00 UTC
 

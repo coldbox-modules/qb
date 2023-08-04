@@ -1042,7 +1042,8 @@ component displayname="QueryBuilder" accessors="true" {
 
         return join(
             table = table,
-            type = type
+            type = type,
+            first = "" // null OK on lucee, "" for adobe
         );
     }
 

@@ -30,7 +30,7 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
         "right",
         "right outer",
         "outer apply",
-        "cross apply",
+        "cross apply"
     ];
 
     /**

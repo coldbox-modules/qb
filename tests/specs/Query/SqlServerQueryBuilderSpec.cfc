@@ -1031,6 +1031,12 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM [users] AS [u] OUTER APPLY dbo.someUDF(u) x";
     }
 
+    function rejectCrossApplyUsingRawExpressionHavingBindings() {
+        return {
+            exception: "OperationNotSupported"
+        }
+    }
+
     private function getBuilder() {
         variables.utils = getMockBox().createMock( "qb.models.Query.QueryUtils" ).init();
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init( variables.utils );

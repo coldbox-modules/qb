@@ -1031,12 +1031,15 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( variables.utils.isExpression( tableLikeSource ) ) {
+            if ( tableLikeSource.getBindings().len() > 0 ) {
+                // an expression is not a QueryBuilder, and cannot be passed to `mergeBindings`,
+                // so we don't support this.
+                throw(type="OperationNotSupported", message="Raw expressions containing bindings are not supported in {cross,outer}apply table sources.");
+            }
             var table = tableLikeSource
-            // raw expression has no bindings, right ... ?
         }
         else {
             var table = raw( getGrammar().wrapTable( "(#arguments.tableLikeSource.toSQL()#) #arguments.name#" ) );
-            // merge bindings
             mergeBindings( arguments.tableLikeSource );
         }
 

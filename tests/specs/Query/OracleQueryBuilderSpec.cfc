@@ -1039,4 +1039,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             exception: "OperationNotSupported"
         }
     }
+
+    function rejectCrossApplyUsingRawExpressionHavingBindings() {
+        return {
+            exception: "OperationNotSupported"
+        }
+    }
 }

@@ -1350,6 +1350,14 @@ component extends="testbox.system.BaseSpec" {
                                 .outerApply( "childCount", builder.raw( "dbo.someUDF(u) x" ) )
                         }, outerApplySomeRawExpression() );
                     } );
+
+                    it( "rejects a crossApply against a raw expression having bindings", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users as u" )
+                                .outerApply( "childCount", builder.raw( "dbo.someUDF( ? ) x", [ 42 ] ) )
+                        }, rejectCrossApplyUsingRawExpressionHavingBindings() );
+                    } );
                 } );
 
                 describe( "group bys", function() {

@@ -1036,7 +1036,7 @@ component displayname="QueryBuilder" accessors="true" {
                 // so we don't support this.
                 throw(type="OperationNotSupported", message="Raw expressions containing bindings are not supported in {cross,outer}apply table sources.");
             }
-            var table = tableLikeSource
+            var table = raw(tableLikeSource.getSql() & " " & getGrammar().wrapTable( name ) );
         }
         else {
             var table = raw( getGrammar().wrapTable( "(#arguments.tableLikeSource.toSQL()#) #arguments.name#" ) );

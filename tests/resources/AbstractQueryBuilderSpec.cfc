@@ -1341,7 +1341,7 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "users as u" )
-                                .crossApply( "childCount", builder.raw( "dbo.someUDF(u) x" ) )
+                                .crossApply( "x", builder.raw( "dbo.someUDF(u)" ) )
                         }, crossApplySomeRawExpression() );
                     } );
 
@@ -1349,7 +1349,7 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "users as u" )
-                                .outerApply( "childCount", builder.raw( "dbo.someUDF(u) x" ) )
+                                .outerApply( "x", builder.raw( "dbo.someUDF(u)" ) )
                         }, outerApplySomeRawExpression() );
                     } );
 
@@ -1357,7 +1357,7 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder
                                 .from( "users as u" )
-                                .outerApply( "childCount", builder.raw( "dbo.someUDF( ? ) x", [ 42 ] ) )
+                                .outerApply( "x", builder.raw( "dbo.someUDF( ? )", [ 42 ] ) )
                         }, rejectCrossApplyUsingRawExpressionHavingBindings() );
                     } );
                 } );

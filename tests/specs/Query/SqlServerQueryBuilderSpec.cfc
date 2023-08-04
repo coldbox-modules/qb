@@ -1024,11 +1024,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function crossApplySomeRawExpression() {
-        return "SELECT * FROM [users] AS [u] CROSS APPLY dbo.someUDF(u) x";
+        return "SELECT * FROM [users] AS [u] CROSS APPLY dbo.someUDF(u) [x]";
     }
 
     function outerApplySomeRawExpression() {
-        return "SELECT * FROM [users] AS [u] OUTER APPLY dbo.someUDF(u) x";
+        return "SELECT * FROM [users] AS [u] OUTER APPLY dbo.someUDF(u) [x]";
     }
 
     function rejectCrossApplyUsingRawExpressionHavingBindings() {

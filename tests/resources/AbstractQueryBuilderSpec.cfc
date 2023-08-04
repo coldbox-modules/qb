@@ -1315,9 +1315,10 @@ component extends="testbox.system.BaseSpec" {
                                     qb.selectRaw( "count(*) c" )
                                         .from( "children" )
                                         .whereColumn( "children.parentID", "=", "users.ID" )
+                                        .where( "children.someCol", "=", 0 )
                                 } )
                                 .select( ["u.ID", "childCount.c"] )
-                                .where( "childCount.c", ">", 4 )
+                                .where( "childCount.c", ">", 1 )
                         }, crossApply() );
                     } );
 
@@ -1329,9 +1330,10 @@ component extends="testbox.system.BaseSpec" {
                                     qb.selectRaw( "count(*) c" )
                                         .from( "children" )
                                         .whereColumn( "children.parentID", "=", "users.ID" )
+                                        .where( "children.someCol", "=", 0 )
                                 } )
                                 .select( ["u.ID", "childCount.c"] )
-                                .where( "childCount.c", ">", 4 )
+                                .where( "childCount.c", ">", 1 )
                         }, outerApply() );
                     } );
 

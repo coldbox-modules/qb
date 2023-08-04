@@ -1011,15 +1011,15 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function crossApply() {
         return {
-            sql: "SELECT [u].[ID], [childCount].[c] FROM [users] AS [u] CROSS APPLY (SELECT count(*) c FROM [children] WHERE [children].[parentID] = [users].[ID]) AS [childCount] WHERE [childCount].[c] > ?",
-            bindings: [4]
+            sql: "SELECT [u].[ID], [childCount].[c] FROM [users] AS [u] CROSS APPLY (SELECT count(*) c FROM [children] WHERE [children].[parentID] = [users].[ID] AND [children].[someCol] = ?) AS [childCount] WHERE [childCount].[c] > ?",
+            bindings: [ 0, 1 ]
         }
     }
 
     function outerApply() {
         return {
-            sql: "SELECT [u].[ID], [childCount].[c] FROM [users] AS [u] OUTER APPLY (SELECT count(*) c FROM [children] WHERE [children].[parentID] = [users].[ID]) AS [childCount] WHERE [childCount].[c] > ?",
-            bindings: [4]
+            sql: "SELECT [u].[ID], [childCount].[c] FROM [users] AS [u] OUTER APPLY (SELECT count(*) c FROM [children] WHERE [children].[parentID] = [users].[ID] AND [children].[someCol] = ?) AS [childCount] WHERE [childCount].[c] > ?",
+            bindings: [ 0, 1 ]
         }
     }
 

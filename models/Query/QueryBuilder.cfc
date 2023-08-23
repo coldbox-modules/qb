@@ -3243,6 +3243,27 @@ component displayname="QueryBuilder" accessors="true" {
         return count( options = arguments.options ) > 0;
     }
 
+    /**
+     * Returns true if any records exist with the configured query.
+     * If no records exist, it throws an RecordNotFound exception.
+     *
+     * @options       Any options to pass to `queryExecute`. Default: {}.
+     * @errorMessage  An optional string error message or callback to produce
+     *                a string error message.  If a callback is used, it is
+     *                passed the unloaded entity as the only argument.
+     *
+     * @throws        RecordNotFound
+     *
+     * @return        Boolean
+     */
+    public boolean function existsOrFail( struct options = {}, any errorMessage ) {
+        if ( !this.exists( arguments.options ) ) {
+            param arguments.errorMessage = "No rows found with constraints [#serializeJSON( this.getBindings() )#]";
+            throw( type = "RecordNotFound", message = arguments.errorMessage );
+        }
+        return true;
+    }
+
     /*******************************************************************************\
     |                               select functions                                |
     \*******************************************************************************/
@@ -3300,7 +3321,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public any function firstOrFail( any errorMessage, struct options = {} ) {
         var result = first( arguments.options );
-        if ( isEmpty( result ) ) {
+        if ( structIsEmpty( result ) ) {
             param arguments.errorMessage = "No rows found with constraints [#serializeJSON( this.getBindings() )#]";
             if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
                 arguments.errorMessage = arguments.errorMessage( this );
@@ -3339,6 +3360,32 @@ component displayname="QueryBuilder" accessors="true" {
     public any function find( required any id, string idColumn = "id", struct options = {} ) {
         where( idColumn, "=", arguments.id );
         return first( options = arguments.options );
+    }
+
+    /**
+     * Returns the first record with the id value as the primary key.
+     * If no record is found, it throws an `EntityNotFound` exception.
+     *
+     * @id            The id value to find.
+     * @idColumn      The name of the id column. Default: `id`.
+     * @errorMessage  An optional string error message to be used in the exception.
+     *
+     * @throws        RecordNotFound
+     *
+     * @return        struct
+     */
+    public any function findOrFail(
+        required any id,
+        string idColumn = "id",
+        any errorMessage,
+        struct options = {}
+    ) {
+        var row = this.find( arguments.id, arguments.idColumn, arguments.options );
+        if ( structIsEmpty( row ) ) {
+            param arguments.errorMessage = "No record found with [#idColumn#] column equal to [#arguments.id#].";
+            throw( type = "RecordNotFound", message = arguments.errorMessage );
+        }
+        return row;
     }
 
     /**

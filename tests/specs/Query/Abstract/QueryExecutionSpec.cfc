@@ -541,6 +541,134 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toHaveLength( 2 );
                 } );
             } );
+
+            describe( "firstOrFail", function() {
+                it( "retrieves the first record when calling `firstOrFail`", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id: 1, name: "foo" } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder
+                        .from( "users" )
+                        .whereName( "foo" )
+                        .firstOrFail();
+
+                    expect( results ).toBeStruct();
+                    expect( results ).toBe( { id: 1, name: "foo" } );
+                    expect( getTestBindings( builder ) ).toBe( [ "foo" ] );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1", options: {} } );
+                } );
+
+                it( "throw a RecordNotFound exception if no rows are returned", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1", options = {} )
+                        .$results( expectedQuery );
+
+                    expect( function() {
+                        builder
+                            .from( "users" )
+                            .whereName( "foo" )
+                            .firstOrFail();
+                    } ).toThrow( type = "RecordNotFound" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1", options: {} } );
+                } );
+
+                it( "can supply a custom errorMessage", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1", options = {} )
+                        .$results( expectedQuery );
+
+                    expect( function() {
+                        builder
+                            .from( "users" )
+                            .whereName( "foo" )
+                            .firstOrFail( errorMessage = "Whoops" );
+                    } ).toThrow( type = "RecordNotFound", regex = "Whoops" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT * FROM ""users"" WHERE ""name"" = ? LIMIT 1", options: {} } );
+                } );
+            } );
+
+            describe( "findOrFail", function() {
+                it( "returns the first result by id when calling `find`", function() {
+                    var builder = getBuilder();
+                    builder.setReturnFormat( "query" );
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [ { id: 1, name: "foo" } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1", options = {} )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).findOrFail( 1 );
+
+                    expect( results ).toBeStruct();
+                    expect( results ).toBe( { id: 1, name: "foo" } );
+                    expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1", options: {} } );
+                } );
+
+                it( "throw a RecordNotFound exception if no rows are returned", function() {
+                    var builder = getBuilder();
+                    builder.setReturnFormat( "query" );
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1", options = {} )
+                        .$results( expectedQuery );
+
+                    expect( function() {
+                        builder.from( "users" ).findOrFail( 1 );
+                    } ).toThrow( type = "RecordNotFound" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1", options: {} } );
+                } );
+
+                it( "can supply a custom errorMessage", function() {
+                    var builder = getBuilder();
+                    builder.setReturnFormat( "query" );
+                    var expectedQuery = queryNew( "id,name", "integer,varchar", [] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1", options = {} )
+                        .$results( expectedQuery );
+
+                    expect( function() {
+                        builder.from( "users" ).findOrFail( id = 1, errorMessage = "Whoops" );
+                    } ).toThrow( type = "RecordNotFound", regex = "Whoops" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1", options: {} } );
+                } );
+            } );
         } );
 
         describe( "aggregate functions", function() {
@@ -888,6 +1016,92 @@ component extends="testbox.system.BaseSpec" {
                             .from( "users" )
                             .exists()
                     ).toBe( false );
+                } );
+            } );
+
+            describe( "existsOrFail", function() {
+                it( "returns true if any records are found for the query", function() {
+                    var builder = getBuilder();
+                    var expectedCount = 1;
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    var results = builder
+                        .from( "users" )
+                        .where( "id", 1 )
+                        .existsOrFail();
+
+                    expect( results ).toBeTrue();
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
+                        options: {}
+                    } );
+                } );
+
+                it( "throws a RecordNotFound exception if no rows are found", function() {
+                    var builder = getBuilder();
+                    var expectedCount = 0;
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    expect( function() {
+                        builder
+                            .from( "users" )
+                            .where( "id", 1 )
+                            .existsOrFail();
+                    } ).toThrow( type = "RecordNotFound" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
+                        options: {}
+                    } );
+                } );
+
+                it( "can supply a custom errorMessage", function() {
+                    var builder = getBuilder();
+                    var expectedCount = 0;
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    expect( function() {
+                        builder
+                            .from( "users" )
+                            .where( "id", 1 )
+                            .existsOrFail( errorMessage = "Whoops" );
+                    } ).toThrow( type = "RecordNotFound", regex = "Whoops" );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
+                        options: {}
+                    } );
                 } );
             } );
         } );

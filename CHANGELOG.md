@@ -1,3 +1,12 @@
+# v9.5.0
+## 23 Aug 2023 — 22:46:32 UTC
+
+### feat
+
++ __QueryBuilder:__ Add `findOrFail` and `existsOrFail` methods
+ ([96b9047](https://github.com/coldbox-modules/qb/commit/96b9047bc012f1144e03a5407dca3209363ea7cd))
+
+
 # v9.4.1
 ## 21 Jul 2023 — 14:28:20 UTC
 

@@ -3282,7 +3282,7 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !isNull( arguments.columns ) ) {
             select( arguments.columns );
         }
-        var result = run( sql = this.toSql(options=arguments.options), options = arguments.options );
+        var result = run( sql = this.toSql( options = arguments.options ), options = arguments.options );
         select( originalColumns );
         return isNull( result ) ? javacast( "null", "" ) : result;
     }
@@ -3705,7 +3705,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return string
      */
-    public string function toSQL( any showBindings = false, struct options={} ) {
+    public string function toSQL( any showBindings = false, struct options = {} ) {
         var sql = grammar.compileSelect( this, options );
 
         if ( isBoolean( arguments.showBindings ) && arguments.showBindings == false ) {

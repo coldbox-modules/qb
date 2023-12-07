@@ -79,6 +79,11 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    public Column function datetime2( required string name ) {
+        arguments.type = "datetime2";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     public Column function datetimeTz( required string name ) {
         arguments.type = "datetimeTz";
         return appendColumn( argumentCollection = arguments );
@@ -113,7 +118,7 @@ component accessors="true" {
         return unsignedInteger( argumentCollection = arguments );
     }
 
-    public Column function integer( required string name, numeric precision ) {
+    public Column function integer( required string name, numeric precision, boolean autoIncrement=0 ) {
         arguments.type = "integer";
         return appendColumn( argumentCollection = arguments );
     }

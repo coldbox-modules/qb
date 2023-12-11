@@ -8,6 +8,7 @@ component singleton {
 
         switch ( dbInfo.DATABASE_PRODUCTNAME ) {
             case "MySQL":
+            case "MariaDB":
                 return wirebox.getInstance( "MySQLGrammar@qb" );
             case "PostgreSQL":
                 return wirebox.getInstance( "PostgresGrammar@qb" );

@@ -1,3 +1,11 @@
+# v9.5.1
+## 11 Dec 2023 — 17:45:48 UTC
+
+### fix
+
++ __AutoDiscover:__ Add MariaDB to AutoDiscover ([c013e9e](https://github.com/coldbox-modules/qb/commit/c013e9e66dcf5f10e230253c7e0db404696c92d7))
+
+
 # v9.5.0
 ## 23 Aug 2023 — 22:46:32 UTC
 

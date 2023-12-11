@@ -7,7 +7,8 @@ component singleton {
         cfdbinfo( type = "Version", name = "local.dbInfo" );
 
         switch ( dbInfo.DATABASE_PRODUCTNAME ) {
-            case "MySQL": case "MariaDB":
+            case "MySQL":
+            case "MariaDB":
                 return wirebox.getInstance( "MySQLGrammar@qb" );
             case "PostgreSQL":
                 return wirebox.getInstance( "PostgresGrammar@qb" );

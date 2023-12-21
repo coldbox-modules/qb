@@ -3068,7 +3068,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.QueryBuilder
      */
-    private QueryBuilder function addBindings( required any newBindings, string type = "where" ) {
+    public QueryBuilder function addBindings( required any newBindings, string type = "where" ) {
         if ( !isArray( newBindings ) ) {
             newBindings = [ newBindings ];
         }
@@ -3086,7 +3086,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return qb.models.Query.QueryBuilder
      */
-    private QueryBuilder function addBindingsFromBuilder( required QueryBuilder qb ) {
+    public QueryBuilder function addBindingsFromBuilder( required QueryBuilder qb ) {
         var bindingsByType = arguments.qb.getRawBindings();
         for ( var type in bindingsByType ) {
             var bindings = bindingsByType[ type ];

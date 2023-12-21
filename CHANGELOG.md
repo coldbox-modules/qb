@@ -1,3 +1,17 @@
+# v9.6.0
+## 21 Dec 2023 — 21:41:47 UTC
+
+### feat
+
++ __QueryBuilder:__ make `addBindings` public
+ ([7193bb4](https://github.com/coldbox-modules/qb/commit/7193bb4997129e96be8428483cd212ad5a6f6870))
+
+### other
+
++ __\*:__ chore: pin commandbox-semantic-release to ^3.0.0
+ ([172d60c](https://github.com/coldbox-modules/qb/commit/172d60c10ded0c4612d1f12a081a8ca2534d8609))
+
+
 # v9.5.1
 ## 11 Dec 2023 — 17:45:48 UTC
 

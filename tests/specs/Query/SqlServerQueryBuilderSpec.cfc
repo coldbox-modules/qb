@@ -1032,9 +1032,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function rejectCrossApplyUsingRawExpressionHavingBindings() {
-        return {
-            exception: "OperationNotSupported"
-        }
+        return { exception: "OperationNotSupported" }
     }
 
     private function getBuilder() {

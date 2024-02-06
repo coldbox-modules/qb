@@ -278,8 +278,7 @@ component displayname="Grammar" accessors="true" singleton {
                 var table = wrapTable( join.getTable() );
                 // ("outer" | "cross") "apply" ( <raw> | <some-table-def> )
                 joinsArray.append( "#uCase( join.getType() )# #table#" );
-            }
-            else {
+            } else {
                 var conditions = compileWheres( join, join.getWheres() );
                 var table = wrapTable( join.getTable() );
                 joinsArray.append( "#uCase( join.getType() )# JOIN #table# #conditions#" );
@@ -1750,4 +1749,5 @@ component displayname="Grammar" accessors="true" singleton {
             detail = "crossOrOuterApply"
         );
     }
+
 }

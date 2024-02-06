@@ -1317,7 +1317,7 @@ component extends="testbox.system.BaseSpec" {
                                         .whereColumn( "children.parentID", "=", "users.ID" )
                                         .where( "children.someCol", "=", 0 )
                                 } )
-                                .select( ["u.ID", "childCount.c"] )
+                                .select( [ "u.ID", "childCount.c" ] )
                                 .where( "childCount.c", ">", 1 )
                         }, crossApply() );
                     } );
@@ -1332,32 +1332,26 @@ component extends="testbox.system.BaseSpec" {
                                         .whereColumn( "children.parentID", "=", "users.ID" )
                                         .where( "children.someCol", "=", 0 )
                                 } )
-                                .select( ["u.ID", "childCount.c"] )
+                                .select( [ "u.ID", "childCount.c" ] )
                                 .where( "childCount.c", ">", 1 )
                         }, outerApply() );
                     } );
 
                     it( "can cross apply some raw expression", function() {
                         testCase( function( builder ) {
-                            builder
-                                .from( "users as u" )
-                                .crossApply( "x", builder.raw( "dbo.someUDF(u)" ) )
+                            builder.from( "users as u" ).crossApply( "x", builder.raw( "dbo.someUDF(u)" ) )
                         }, crossApplySomeRawExpression() );
                     } );
 
                     it( "can outer apply some raw expression", function() {
                         testCase( function( builder ) {
-                            builder
-                                .from( "users as u" )
-                                .outerApply( "x", builder.raw( "dbo.someUDF(u)" ) )
+                            builder.from( "users as u" ).outerApply( "x", builder.raw( "dbo.someUDF(u)" ) )
                         }, outerApplySomeRawExpression() );
                     } );
 
                     it( "rejects a crossApply against a raw expression having bindings", function() {
                         testCase( function( builder ) {
-                            builder
-                                .from( "users as u" )
-                                .outerApply( "x", builder.raw( "dbo.someUDF( ? )", [ 42 ] ) )
+                            builder.from( "users as u" ).outerApply( "x", builder.raw( "dbo.someUDF( ? )", [ 42 ] ) )
                         }, rejectCrossApplyUsingRawExpressionHavingBindings() );
                     } );
                 } );

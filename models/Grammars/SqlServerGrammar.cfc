@@ -680,4 +680,5 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         // no-op; existince of this function is enough to override the default implementation of
         // "always throw OperationNotSupported"
     }
+
 }

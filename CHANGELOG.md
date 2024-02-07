@@ -1,3 +1,11 @@
+# v9.6.1
+## 07 Feb 2024 — 23:56:13 UTC
+
+### fix
+
++ __QueryBuilder:__ Expand type annotation of `from` ([2b23fbb](https://github.com/coldbox-modules/qb/commit/2b23fbb039d2c7255de659d7723116c876ab7fa1))
+
+
 # v9.6.0
 ## 21 Dec 2023 — 21:41:47 UTC
 

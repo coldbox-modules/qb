@@ -112,7 +112,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * The base table of the query. Default: null
      */
-    property name="from" type="string";
+    property name="from" type="any";
 
     /**
      * The type of lock for the table. Default: `none`

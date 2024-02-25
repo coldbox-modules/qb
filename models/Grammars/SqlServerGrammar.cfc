@@ -571,6 +571,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return typeTimestamp( column );
     }
 
+    function typeDatetime2( column ) {
+        return typeTimestamp( column );
+    }
+
     function typeDatetimeTz( column ) {
         return typeTimestampTz( column );
     }

@@ -191,7 +191,7 @@ component extends="testbox.system.BaseSpec" {
                 describe( "getMementoForComparison", function() {
                     beforeEach( function() {
                         variables.qb = new qb.models.Query.QueryBuilder( preventDuplicateJoins = true ).from(
-                            new qb.models.Query.QueryBuilder( preventDuplicateJOins = true )
+                            new qb.models.Query.QueryBuilder( preventDuplicateJoins = true )
                                 .select( "FK_otherTable" )
                                 .from( "second_table" )
                         );

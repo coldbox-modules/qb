@@ -1017,35 +1017,34 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
-        getGrammar().checkCrossOrOuterApplySupport();
-
-        if ( type != "outer apply" && type != "cross apply" ) {
-            throw "`type` must be 'outer apply' or 'cross apply'";
+        if ( type != "outer apply" && type != "cross apply" && type != "lateral" ) {
+            throw(
+                type = "QBInvalidJoinType",
+                message = "Invalid join type: #arguments.type#. Valid types are [`outer apply`, `cross apply`, or `lateral`]"
+            );
         }
 
         var sourceIsBuilder = getUtils().isBuilder( arguments.tableLikeSource )
         var sourceIsFunc = isClosure( arguments.tableLikeSource ) || isCustomFunction( arguments.tableLikeSource )
 
         if ( !sourceIsBuilder && !sourceIsFunc ) {
-            throw "bad table source type";
+            throw(
+                type = "QBInvalidJoinSource",
+                message = "Invalid join source. Valid types are a QueryBuilder instance or a callback function that receives a new QueryBuilder instance."
+            );
         }
 
         if ( sourceIsFunc ) {
             var subquery = newQuery();
-            arguments.tableLikeSource = arguments.tableLikeSource( subquery );
+            arguments.tableLikeSource( subquery );
             arguments.tableLikeSource = subquery;
-
-            var sourceIsBuilder = getUtils().isBuilder( arguments.tableLikeSource )
-            if ( !sourceIsBuilder ) {
-                throw "bad table source type (function returned non-builder)";
-            }
         }
 
         var join = new qb.models.Query.JoinClause(
             parentQuery = this,
             type = type,
             table = arguments.name,
-            crossApplyTableExprRaw = arguments.tableLikeSource.toSQL()
+            lateralRawExpression = arguments.tableLikeSource.toSQL()
         );
 
         if ( this.getPreventDuplicateJoins() ) {

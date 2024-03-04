@@ -1032,19 +1032,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function crossApply() {
-        return { exception: "OperationNotSupported" }
+        return { exception: "UnsupportedOperation" }
     }
 
     function outerApply() {
-        return { exception: "OperationNotSupported" }
+        return { exception: "UnsupportedOperation" }
     }
 
     function correctlyPositionsBindingsUsingCrossApply() {
-        return { exception: "OperationNotSupported" }
+        return { exception: "UnsupportedOperation" }
     }
 
     function duplicateCrossAndOuterAppliesEliminated() {
-        return { exception: "OperationNotSupported" }
+        return { exception: "UnsupportedOperation" }
     }
 
 }

@@ -3136,10 +3136,9 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Adds a single binding or an array of bindings to a query for a given type.
+     * Adds all of the bindings from another builder instance.
      *
-     * @newBindings A single binding or an array of bindings to add for a given type.
-     * @type The type of binding to add.
+     * @qb Another builder instance to copy all of the bindings from.
      *
      * @return qb.models.Query.QueryBuilder
      */
@@ -3305,9 +3304,7 @@ component displayname="QueryBuilder" accessors="true" {
      * If no records exist, it throws an RecordNotFound exception.
      *
      * @options       Any options to pass to `queryExecute`. Default: {}.
-     * @errorMessage  An optional string error message or callback to produce
-     *                a string error message.  If a callback is used, it is
-     *                passed the unloaded entity as the only argument.
+     * @errorMessage  An optional string error message.
      *
      * @throws        RecordNotFound
      *

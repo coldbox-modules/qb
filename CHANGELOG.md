@@ -1,3 +1,11 @@
+# v9.7.0
+## 04 Mar 2024 — 23:34:29 UTC
+
+### feat
+
++ __QueryBuilder:__ Implement crossApply and outerApply for supported Grammars ([6a818ee](https://github.com/coldbox-modules/qb/commit/6a818ee5d503638f2e3355405b4f912e2cfbd0b5))
+
+
 # v9.6.1
 ## 07 Feb 2024 — 23:56:13 UTC
 

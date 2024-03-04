@@ -83,6 +83,39 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         );
     }
 
+    private string function compileOuterApplyJoin( required QueryBuilder query, required JoinClause join ) {
+        // OUTER APPLY ( <some-table-def> ) (AS)? <table-alias>
+        var tableName = wrapTable( join.getTable() )
+        if ( !reFindNoCase( "^\s*#trim( getTableAliasOperator() )#", tableName ) ) {
+            // table alias operator is optional in MSSqlServer, but we'll provide it if it wasn't expanded via wrapTable.
+            // Will `wrapTable` ever have emitted a table alias operator here?
+            // n.b. `getTableAliasOperator()` is expected to have a leading and trailing space.
+            tableName = "#getTableAliasOperator()##tableName#";
+        }
+        // `tableName` is expected to have at least a leading space.
+        return "OUTER APPLY (#join.getLateralRawExpression()#)#tableName#";
+    }
+
+    private string function compileCrossApplyJoin( required QueryBuilder query, required JoinClause join ) {
+        // CROSS APPLY ( <some-table-def> ) (AS)? <table-alias>
+        var tableName = wrapTable( join.getTable() )
+        if ( !reFindNoCase( "^\s*#trim( getTableAliasOperator() )#", tableName ) ) {
+            // table alias operator is optional in MSSqlServer, but we'll provide it if it wasn't expanded via wrapTable.
+            // Will `wrapTable` ever have emitted a table alias operator here?
+            // n.b. `getTableAliasOperator()` is expected to have a leading and trailing space.
+            tableName = "#getTableAliasOperator()##tableName#";
+        }
+        // `tableName` is expected to have at least a leading space.
+        return "CROSS APPLY (#join.getLateralRawExpression()#)#tableName#";
+    }
+
+    private string function compileLateralJoin( required QueryBuilder query, required JoinClause join ) {
+        throw(
+            type = "UnsupportedOperation",
+            message = "This grammar does not support LATERAL joins. Instead, use either OUTER APPLY or CROSS APPLY joins."
+        );
+    }
+
     /**
      * Compiles the Common Table Expressions (CTEs).
      *

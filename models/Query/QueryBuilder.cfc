@@ -1016,6 +1016,63 @@ component displayname="QueryBuilder" accessors="true" {
         return joinRaw( argumentCollection = arguments );
     }
 
+    private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
+        if ( type != "outer apply" && type != "cross apply" && type != "lateral" ) {
+            throw(
+                type = "QBInvalidJoinType",
+                message = "Invalid join type: #arguments.type#. Valid types are [`outer apply`, `cross apply`, or `lateral`]"
+            );
+        }
+
+        var sourceIsBuilder = getUtils().isBuilder( arguments.tableLikeSource )
+        var sourceIsFunc = isClosure( arguments.tableLikeSource ) || isCustomFunction( arguments.tableLikeSource )
+
+        if ( !sourceIsBuilder && !sourceIsFunc ) {
+            throw(
+                type = "QBInvalidJoinSource",
+                message = "Invalid join source. Valid types are a QueryBuilder instance or a callback function that receives a new QueryBuilder instance."
+            );
+        }
+
+        if ( sourceIsFunc ) {
+            var subquery = newQuery();
+            arguments.tableLikeSource( subquery );
+            arguments.tableLikeSource = subquery;
+        }
+
+        var join = new qb.models.Query.JoinClause(
+            parentQuery = this,
+            type = type,
+            table = arguments.name,
+            lateralRawExpression = arguments.tableLikeSource.toSQL()
+        );
+
+        if ( this.getPreventDuplicateJoins() ) {
+            var hasThisJoin = variables.joins.find( function( existingJoin ) {
+                return existingJoin.isEqualTo( join );
+            } );
+
+            if ( hasThisJoin ) {
+                // Do nothing, early return
+                // We have not mutated `this` in any way.
+                return this;
+            }
+        }
+
+        addBindings( tableLikeSource.getBindings(), "join" );
+        variables.joins.append( join );
+
+        return this;
+    }
+
+    public function outerApply( required string name, required any tableDef ) {
+        return outerOrCrossApply( name = name, type = "outer apply", tableLikeSource = tableDef );
+    }
+
+    public function crossApply( required string name, required any tableDef ) {
+        return outerOrCrossApply( name = name, type = "cross apply", tableLikeSource = tableDef );
+    }
+
     /**
      * Adds a LEFT JOIN from a derived table to another table.
      *
@@ -3079,10 +3136,9 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Adds a single binding or an array of bindings to a query for a given type.
+     * Adds all of the bindings from another builder instance.
      *
-     * @newBindings A single binding or an array of bindings to add for a given type.
-     * @type The type of binding to add.
+     * @qb Another builder instance to copy all of the bindings from.
      *
      * @return qb.models.Query.QueryBuilder
      */
@@ -3248,9 +3304,7 @@ component displayname="QueryBuilder" accessors="true" {
      * If no records exist, it throws an RecordNotFound exception.
      *
      * @options       Any options to pass to `queryExecute`. Default: {}.
-     * @errorMessage  An optional string error message or callback to produce
-     *                a string error message.  If a callback is used, it is
-     *                passed the unloaded entity as the only argument.
+     * @errorMessage  An optional string error message.
      *
      * @throws        RecordNotFound
      *

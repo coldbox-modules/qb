@@ -1009,6 +1009,34 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM [otherTable]";
     }
 
+    function crossApply() {
+        return {
+            sql: "SELECT [u].[ID], [childCount].[c] FROM [users] AS [u] CROSS APPLY (SELECT count(*) c FROM [children] WHERE [children].[parentID] = [users].[ID] AND [children].[someCol] = ?) AS [childCount] WHERE [childCount].[c] > ?",
+            bindings: [ 0, 1 ]
+        }
+    }
+
+    function outerApply() {
+        return {
+            sql: "SELECT [u].[ID], [childCount].[c] FROM [users] AS [u] OUTER APPLY (SELECT count(*) c FROM [children] WHERE [children].[parentID] = [users].[ID] AND [children].[someCol] = ?) AS [childCount] WHERE [childCount].[c] > ?",
+            bindings: [ 0, 1 ]
+        }
+    }
+
+    function correctlyPositionsBindingsUsingCrossApply() {
+        return {
+            sql: "SELECT * FROM [A] CROSS APPLY (SELECT * FROM [x] WHERE [x].[x] = ? AND [x].[b] = [a].[b]) AS [B] OUTER APPLY (SELECT * FROM [y] WHERE [y].[y] = ? AND [y].[d] = [a].[d]) AS [D] WHERE [A].[A] = ? AND [A].[C] = ?",
+            bindings: [ "B", "D", "A", "C" ]
+        };
+    }
+
+    function duplicateCrossAndOuterAppliesEliminated() {
+        return {
+            sql: "SELECT * FROM [A] CROSS APPLY (SELECT [someColumn] FROM [crossapply_B]) AS [B] OUTER APPLY (SELECT [someColumn] FROM [outerapply_C]) AS [C] CROSS APPLY (SELECT [someColumn] FROM [crossapply_D]) AS [D] OUTER APPLY (SELECT [someColumn] FROM [outerapply_E]) AS [E]",
+            bindings: []
+        };
+    }
+
     private function getBuilder() {
         variables.utils = getMockBox().createMock( "qb.models.Query.QueryUtils" ).init();
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init( variables.utils );

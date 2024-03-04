@@ -273,13 +273,57 @@ component displayname="Grammar" accessors="true" singleton {
      */
     private string function compileJoins( required QueryBuilder query, required array joins ) {
         var joinsArray = [];
-        for ( var join in arguments.joins ) {
-            var conditions = compileWheres( join, join.getWheres() );
-            var table = wrapTable( join.getTable() );
-            joinsArray.append( "#uCase( join.getType() )# JOIN #table# #conditions#" );
+
+        if ( arguments.joins.isEmpty() ) {
+            return "";
         }
 
-        return arrayToList( joinsArray, " " );
+        for ( var join in arguments.joins ) {
+            var joinFunc = variables[ "compile#replace( join.getType(), " ", "", "all" )#join" ];
+            joinsArray.append( joinFunc( arguments.query, join ) );
+        }
+
+        if ( joinsArray.isEmpty() ) {
+            return "";
+        }
+
+        return joinsArray.toList( " " );
+    }
+
+    private string function compileInnerJoin( required QueryBuilder query, required JoinClause join ) {
+        var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
+        var table = wrapTable( arguments.join.getTable() );
+        return "INNER JOIN #table# #conditions#";
+    }
+
+    private string function compileLeftJoin( required QueryBuilder query, required JoinClause join ) {
+        var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
+        var table = wrapTable( arguments.join.getTable() );
+        return "LEFT JOIN #table# #conditions#";
+    }
+
+    private string function compileRightJoin( required QueryBuilder query, required JoinClause join ) {
+        var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
+        var table = wrapTable( arguments.join.getTable() );
+        return "RIGHT JOIN #table# #conditions#";
+    }
+
+    private string function compileCrossJoin( required QueryBuilder query, required JoinClause join ) {
+        var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
+        var table = wrapTable( arguments.join.getTable() );
+        return "CROSS JOIN #table# #conditions#";
+    }
+
+    private string function compileOuterApplyJoin( required QueryBuilder query, required JoinClause join ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support OUTER APPLY joins" );
+    }
+
+    private string function compileCrossApplyJoin( required QueryBuilder query, required JoinClause join ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support CROSS APPLY joins" );
+    }
+
+    private string function compileLateralJoin( required QueryBuilder query, required JoinClause join ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support LATERAL joins" );
     }
 
     /**
@@ -1215,7 +1259,7 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileDropAllObjects() {
         throw(
-            type = "OperationNotSupported",
+            type = "UnsupportedOperation",
             message = "This database grammar does not support this operation",
             detail = "compileDropAllObjects"
         );
@@ -1223,7 +1267,7 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileEnableForeignKeyConstraints() {
         throw(
-            type = "OperationNotSupported",
+            type = "UnsupportedOperation",
             message = "This database grammar does not support this operation",
             detail = "compileEnableForeignKeyConstraints"
         );
@@ -1231,7 +1275,7 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileDisableForeignKeyConstraints() {
         throw(
-            type = "OperationNotSupported",
+            type = "UnsupportedOperation",
             message = "This database grammar does not support this operation",
             detail = "compileDisableForeignKeyConstraints"
         );

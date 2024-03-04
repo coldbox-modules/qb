@@ -1016,4 +1016,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return builder;
     }
 
+    function crossApply() {
+        return { exception: "UnsupportedOperation" }
+    }
+
+    function outerApply() {
+        return { exception: "UnsupportedOperation" }
+    }
+
+    function correctlyPositionsBindingsUsingCrossApply() {
+        return { exception: "UnsupportedOperation" }
+    }
+
+    function duplicateCrossAndOuterAppliesEliminated() {
+        return { exception: "UnsupportedOperation" }
+    }
+
 }

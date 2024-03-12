@@ -1,3 +1,12 @@
+# v9.7.1
+## 12 Mar 2024 — 17:05:20 UTC
+
+### fix
+
++ __QueryBuilder:__ Add compilations for all join types
+ ([98e36a5](https://github.com/coldbox-modules/qb/commit/98e36a526700822cea142172d5dc8f829cbd8354))
+
+
 # v9.7.0
 ## 04 Mar 2024 — 23:34:29 UTC
 

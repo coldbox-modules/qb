@@ -799,6 +799,58 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Adds a FULL JOIN to another table.
+     *
+     * For simple joins, this specifies a column on which to join the two tables.
+     * For complex joins, a closure can be passed to `first`.
+     * This allows multiple `on` and `where` conditions to be applied to the join.
+     *
+     * @table The table/expression to join to the query.
+     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+     * @operator The boolean operator for the join clause. Default: "=".
+     * @second The second column in the join's `on` statement.
+     * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function fullJoin(
+        required any table,
+        any first,
+        string operator,
+        string second,
+        boolean where
+    ) {
+        arguments.type = "full";
+        return join( argumentCollection = arguments );
+    }
+
+    /**
+     * Adds a FULL JOIN to another table.
+     *
+     * For simple joins, this specifies a column on which to join the two tables.
+     * For complex joins, a closure can be passed to `first`.
+     * This allows multiple `on` and `where` conditions to be applied to the join.
+     *
+     * @table The table/expression to join to the query.
+     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+     * @operator The boolean operator for the join clause. Default: "=".
+     * @second The second column in the join's `on` statement.
+     * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function fullOuterJoin(
+        required any table,
+        any first,
+        string operator,
+        string second,
+        boolean where
+    ) {
+        arguments.type = "full outer";
+        return join( argumentCollection = arguments );
+    }
+
+    /**
      * Adds a LEFT JOIN to another table.
      *
      * For simple joins, this specifies a column on which to join the two tables.
@@ -825,6 +877,32 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Adds a LEFT OUTER JOIN to another table.
+     *
+     * For simple joins, this specifies a column on which to join the two tables.
+     * For complex joins, a closure can be passed to `first`.
+     * This allows multiple `on` and `where` conditions to be applied to the join.
+     *
+     * @table The table/expression to join to the query.
+     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+     * @operator The boolean operator for the join clause. Default: "=".
+     * @second The second column in the join's `on` statement.
+     * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function leftOuterJoin(
+        required any table,
+        any first,
+        string operator,
+        string second,
+        boolean where
+    ) {
+        arguments.type = "left outer";
+        return join( argumentCollection = arguments );
+    }
+
+    /**
      * Adds a RIGHT JOIN to another table.
      *
      * For simple joins, this specifies a column on which to join the two tables.
@@ -847,6 +925,32 @@ component displayname="QueryBuilder" accessors="true" {
         boolean where
     ) {
         arguments.type = "right";
+        return join( argumentCollection = arguments );
+    }
+
+    /**
+     * Adds a RIGHT OUTER JOIN to another table.
+     *
+     * For simple joins, this specifies a column on which to join the two tables.
+     * For complex joins, a closure can be passed to `first`.
+     * This allows multiple `on` and `where` conditions to be applied to the join.
+     *
+     * @table The table/expression to join to the query.
+     * @first The first column in the join's `on` statement. This alternatively can be a closure that will be passed a JoinClause for complex joins. Passing a closure ignores all subsequent parameters.
+     * @operator The boolean operator for the join clause. Default: "=".
+     * @second The second column in the join's `on` statement.
+     * @where Sets if the value of `second` should be interpreted as a column or a value.  Passing this as an argument is discouraged.  Use the dedicated `joinWhere` or a join closure where possible.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function rightOuterJoin(
+        required any table,
+        any first,
+        string operator,
+        string second,
+        boolean where
+    ) {
+        arguments.type = "right outer";
         return join( argumentCollection = arguments );
     }
 

@@ -296,16 +296,40 @@ component displayname="Grammar" accessors="true" singleton {
         return "INNER JOIN #table# #conditions#";
     }
 
+    private string function compileFullJoin( required QueryBuilder query, required JoinClause join ) {
+        var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
+        var table = wrapTable( arguments.join.getTable() );
+        return "FULL JOIN #table# #conditions#";
+    }
+
+    private string function compileFullOuterJoin( required QueryBuilder query, required JoinClause join ) {
+        var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
+        var table = wrapTable( arguments.join.getTable() );
+        return "FULL OUTER JOIN #table# #conditions#";
+    }
+
     private string function compileLeftJoin( required QueryBuilder query, required JoinClause join ) {
         var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
         var table = wrapTable( arguments.join.getTable() );
         return "LEFT JOIN #table# #conditions#";
     }
 
+    private string function compileLeftOuterJoin( required QueryBuilder query, required JoinClause join ) {
+        var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
+        var table = wrapTable( arguments.join.getTable() );
+        return "LEFT OUTER JOIN #table# #conditions#";
+    }
+
     private string function compileRightJoin( required QueryBuilder query, required JoinClause join ) {
         var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
         var table = wrapTable( arguments.join.getTable() );
         return "RIGHT JOIN #table# #conditions#";
+    }
+
+    private string function compileRightOuterJoin( required QueryBuilder query, required JoinClause join ) {
+        var conditions = compileWheres( arguments.join, arguments.join.getWheres() );
+        var table = wrapTable( arguments.join.getTable() );
+        return "RIGHT OUTER JOIN #table# #conditions#";
     }
 
     private string function compileCrossJoin( required QueryBuilder query, required JoinClause join ) {

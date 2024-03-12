@@ -30,6 +30,7 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
     variables.types = [
         "inner",
         "full",
+        "full outer",
         "cross",
         "left",
         "left outer",

@@ -922,6 +922,24 @@ component extends="testbox.system.BaseSpec" {
                         }, leftJoin() );
                     } );
 
+                    it( "can left outer join", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).leftOuterJoin( "orders", "users.id", "orders.user_id" );
+                        }, leftOuterJoin() );
+                    } );
+
+                    it( "can full join", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).fullJoin( "orders", "users.id", "orders.user_id" );
+                        }, fullJoin() );
+                    } );
+
+                    it( "can full outer join", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).fullOuterJoin( "orders", "users.id", "orders.user_id" );
+                        }, fullOuterJoin() );
+                    } );
+
                     it( "can left join on table as expression", function() {
                         testCase( function( builder ) {
                             builder
@@ -984,6 +1002,12 @@ component extends="testbox.system.BaseSpec" {
                         testCase( function( builder ) {
                             builder.from( "orders" ).rightJoin( "users", "orders.user_id", "users.id" );
                         }, rightJoin() );
+                    } );
+
+                    it( "can right outer join", function() {
+                        testCase( function( builder ) {
+                            builder.from( "orders" ).rightOuterJoin( "users", "orders.user_id", "users.id" );
+                        }, rightOuterJoin() );
                     } );
 
                     it( "can right join on table as expression", function() {

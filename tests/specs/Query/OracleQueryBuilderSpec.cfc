@@ -338,8 +338,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function fullJoin() {
+        return "SELECT * FROM ""USERS"" FULL JOIN ""ORDERS"" ON ""USERS"".""ID"" = ""ORDERS"".""USER_ID""";
+    }
+
+    function fullOuterJoin() {
+        return "SELECT * FROM ""USERS"" FULL OUTER JOIN ""ORDERS"" ON ""USERS"".""ID"" = ""ORDERS"".""USER_ID""";
+    }
+
     function leftJoin() {
         return "SELECT * FROM ""USERS"" LEFT JOIN ""ORDERS"" ON ""USERS"".""ID"" = ""ORDERS"".""USER_ID""";
+    }
+
+    function leftOuterJoin() {
+        return "SELECT * FROM ""USERS"" LEFT OUTER JOIN ""ORDERS"" ON ""USERS"".""ID"" = ""ORDERS"".""USER_ID""";
     }
 
     function leftJoinTruncatingText() {
@@ -356,6 +368,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function rightJoin() {
         return "SELECT * FROM ""ORDERS"" RIGHT JOIN ""USERS"" ON ""ORDERS"".""USER_ID"" = ""USERS"".""ID""";
+    }
+
+    function rightOuterJoin() {
+        return "SELECT * FROM ""ORDERS"" RIGHT OUTER JOIN ""USERS"" ON ""ORDERS"".""USER_ID"" = ""USERS"".""ID""";
     }
 
     function rightJoinRaw() {

@@ -1,3 +1,11 @@
+# v9.8.0
+## 18 Mar 2024 — 16:22:13 UTC
+
+### feat
+
++ __QueryBuilder:__ Support alias renaming using `withAlias` ([9c52313](https://github.com/coldbox-modules/qb/commit/9c52313090c1fa111ab618a70298c111df886072))
+
+
 # v9.7.1
 ## 12 Mar 2024 — 17:05:20 UTC
 

@@ -260,7 +260,11 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function compileFrom( required QueryBuilder query, required any from ) {
-        return "FROM " & wrapTable( arguments.from );
+        var fullTable = arguments.from;
+        if ( query.getAlias() != "" ) {
+            fullTable &= " #query.getAlias()#";
+        }
+        return "FROM " & wrapTable( fullTable );
     }
 
     /**

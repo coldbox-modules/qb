@@ -115,6 +115,11 @@ component displayname="QueryBuilder" accessors="true" {
     property name="from" type="any";
 
     /**
+     * The alias name for the base table. Default: null
+     */
+    property name="alias" type="any";
+
+    /**
      * The type of lock for the table. Default: `none`
      * Expected values are `none`, `nolock`, `shared`, `update`, and `custom`.
      */
@@ -335,6 +340,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.aggregate = {};
         variables.columns = [ "*" ];
         variables.from = "";
+        variables.alias = "";
         variables.lockType = "none";
         variables.lockValue = "";
         variables.joins = [];
@@ -558,8 +564,221 @@ component displayname="QueryBuilder" accessors="true" {
                 message = "To use a subquery as a table, use the `fromSub` method.  This is required because your derived table needs an alias."
             );
         }
-        variables.from = arguments.from;
+
+        if ( isSimpleValue( arguments.from ) ) {
+            parseIntoTableAndAlias( arguments.from );
+        } else {
+            variables.from = arguments.from;
+        }
+
         return this;
+    }
+
+    private void function parseIntoTableAndAlias( required string table ) {
+        var parts = arguments.table.split( "\s(?:[Aa][Ss]\s)?" );
+        variables.from = trim( parts[ 1 ] );
+        if ( arrayLen( parts ) > 1 ) {
+            variables.alias = trim( parts[ 2 ] );
+        }
+    }
+
+    public QueryBuilder function withAlias( required any alias ) {
+        if ( utils.isExpression( variables.from ) ) {
+            throw( type = "QBInvalidFrom", message = "An alias cannot be added to a raw expression." );
+        }
+
+        var oldAlias = variables.alias;
+        variables.alias = arguments.alias;
+
+        renameAliases( ( oldAlias != "" ? oldAlias : variables.from ), arguments.alias );
+
+        return this;
+    }
+
+    public void function renameAliases( required string oldAlias, required string newAlias ) {
+        renameAliasesInColumns( oldAlias, newAlias );
+        renameAliasesInJoins( oldAlias, newAlias );
+        renameAliasesInWheres( oldAlias, newAlias );
+        renameAliasesInGroups( oldAlias, newAlias );
+        renameAliasesInHavings( oldAlias, newAlias );
+        renameAliasesInOrders( oldAlias, newAlias );
+        return;
+    }
+
+    private void function renameAliasesInColumns( required string oldAlias, required string newAlias ) {
+        for ( var i = 1; i <= variables.columns.len(); i++ ) {
+            var column = variables.columns[ i ];
+            if ( isSimpleValue( column ) ) {
+                variables.columns[ i ] = swapAlias( column, arguments.oldAlias, arguments.newAlias );
+            }
+        }
+    }
+
+    private void function renameAliasesInJoins( required string oldAlias, required string newAlias ) {
+        for ( var join in variables.joins ) {
+            join.renameAliases( arguments.oldAlias, arguments.newAlias );
+        }
+    }
+
+    private void function renameAliasesInWheres( required string oldAlias, required string newAlias ) {
+        for ( var where in variables.wheres ) {
+            var renameWhereFunc = variables[ "renameAliasInWhere#where.type#" ];
+            renameWhereFunc( where, arguments.oldAlias, arguments.newAlias );
+        }
+    }
+
+    private void function renameAliasesInGroups( required string oldAlias, required string newAlias ) {
+        for ( var i = 1; i <= variables.groups.len(); i++ ) {
+            var column = variables.groups[ i ];
+            if ( isSimpleValue( column ) ) {
+                variables.groups[ i ] = swapAlias( column, arguments.oldAlias, arguments.newAlias );
+            }
+        }
+    }
+
+    private void function renameAliasesInHavings( required string oldAlias, required string newAlias ) {
+        for ( var having in variables.havings ) {
+            if ( having.keyExists( "column" ) ) {
+                having.column = swapAlias( having.column, arguments.oldAlias, arguments.newAlias );
+            }
+        }
+    }
+
+    private void function renameAliasesInOrders( required string oldAlias, required string newAlias ) {
+        for ( var order in variables.orders ) {
+            if ( order.direction != "raw" ) {
+                order.column = swapAlias( order.column, arguments.oldAlias, arguments.newAlias );
+            }
+        }
+    }
+
+    private void function renameAliasInWhereBasic(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereColumn(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.first = swapAlias( arguments.where.first, arguments.oldAlias, arguments.newAlias );
+        arguments.where.second = swapAlias( arguments.where.second, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereSub(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereIn(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNotIn(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereRaw(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        return;
+    }
+
+    private void function renameAliasInWhereExists(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNotExists(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNested(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNull(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNotNull(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNullSub(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNotNullSub(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereBetween(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNotBetween(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private string function swapAlias( required string column, required string oldAlias, required string newAlias ) {
+        if ( listFirst( arguments.column, "." ) != arguments.oldAlias ) {
+            return arguments.column;
+        }
+        return arguments.newAlias & "." & listRest( arguments.column, "." );
     }
 
     /**
@@ -1753,7 +1972,7 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Adds a nested where statement to the query. (Basically adding parenthesis to the statments in the nested section.)
+     * Adds a nested where statement to the query. (Basically adding parenthesis to the statements in the nested section.)
      * The public api to create a nested WHERE statement is by passing a callback as the first parameter to `where`.
      *
      * @callback The callback that contains the nested query logic.

@@ -208,7 +208,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             case "CF_SQL_MONEY4":
             case "CF_SQL_BIGINT":
             case "CF_SQL_BIT":
-                return parseNumber( value );
+                return ( value * 1 );
             case "CF_SQL_DATE":
                 return "'#dateFormat( value, "yyyy-mm-dd" )#'";
             case "CF_SQL_TIME":

@@ -217,6 +217,21 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 queryTwo.from( "another" );
                 expect( queryOne.getFrom() ).toBe( "foo" );
             } );
+
+            it( "has the exact same sql as the original query", function() {
+                var queryOne = new qb.models.Query.QueryBuilder();
+                queryOne
+                    .from( "foo" )
+                    .select( [ "one", "two" ] )
+                    .where( "bar", "baz" )
+                    .join( "qux", "qux.fooId", "=", "foo.id" )
+                    .groupBy( [ "foo.one", "foo.two", "foo.bar" ] )
+                    .having( "foo.one", ">", 1 )
+                    .withAlias( "f" )
+                    .orderByDesc( "qux.blah" );
+                var queryTwo = queryOne.clone();
+                expect( queryTwo.toSql( showBindings = "inline" ) ).toBe( queryOne.toSql( showBindings = "inline" ) );
+            } );
         } );
     }
 

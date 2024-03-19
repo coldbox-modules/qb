@@ -4035,6 +4035,7 @@ component displayname="QueryBuilder" accessors="true" {
         clonedQuery.setAggregate( newAggregate );
         clonedQuery.setColumns( this.getColumns().isEmpty() ? [] : arraySlice( this.getColumns(), 1 ) );
         clonedQuery.setFrom( this.getFrom() );
+        clonedQuery.setAlias( this.getAlias() );
         clonedQuery.setJoins( this.getJoins().isEmpty() ? [] : arraySlice( this.getJoins(), 1 ) );
         clonedQuery.setWheres( this.getWheres().isEmpty() ? [] : arraySlice( this.getWheres(), 1 ) );
         clonedQuery.setGroups( this.getGroups().isEmpty() ? [] : arraySlice( this.getGroups(), 1 ) );

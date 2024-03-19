@@ -1,3 +1,14 @@
+# v9.8.1
+## 19 Mar 2024 — 17:14:44 UTC
+
+### fix
+
++ __QueryBuilder:__ Fix missing `parseNumber` function for ACF
+ ([b887a67](https://github.com/coldbox-modules/qb/commit/b887a675a8cf34586e0e7a1058f8d7d34d6d4935))
++ __QueryBuilder:__ Add alias to `clone()`
+ ([dcf87de](https://github.com/coldbox-modules/qb/commit/dcf87deb9e5c69a8330fef30c40cc27ce7f82820))
+
+
 # v9.8.0
 ## 18 Mar 2024 — 16:22:13 UTC
 

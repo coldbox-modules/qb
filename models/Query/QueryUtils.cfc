@@ -323,6 +323,10 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return array
      */
     public array function queryToArrayOfStructs( required any q ) {
+        if ( arguments.q.recordCount == 0 ) {
+            return [];
+        }
+
         try {
             var queryColumns = getMetadata( arguments.q ).map( function( item ) {
                 return item.name;
@@ -332,18 +336,16 @@ component singleton displayname="QueryUtils" accessors="true" {
             rethrow;
         }
 
-        return queryReduce(
-            arguments.q,
-            function( results, row ) {
-                var rowData = structNew( "ordered" );
-                for ( var column in queryColumns ) {
-                    rowData[ column ] = row[ column ];
-                }
-                results.append( rowData );
-                return results;
-            },
-            []
-        );
+        var results = [];
+        arrayResize( results, arguments.q.recordCount );
+        for ( var row in arguments.q ) {
+            var rowData = structNew( "ordered" );
+            for ( var column in queryColumns ) {
+                rowData[ column ] = row[ column ];
+            }
+            results[ arguments.q.currentRow ] = rowData;
+        }
+        return results;
     }
 
     /**

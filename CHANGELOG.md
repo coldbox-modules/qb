@@ -1,3 +1,11 @@
+# v9.9.0
+## 19 Apr 2024 — 18:14:21 UTC
+
+### feat
+
++ __SqlCommenter:__ Pass bindings to commenters. ([753b30b](https://github.com/coldbox-modules/qb/commit/753b30b61e1e60c212900cd775612e9ad82c4f4b))
+
+
 # v9.8.2
 ## 19 Apr 2024 — 17:26:33 UTC
 

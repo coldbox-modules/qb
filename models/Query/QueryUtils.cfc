@@ -323,6 +323,10 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return array
      */
     public array function queryToArrayOfStructs( required any q ) {
+        if ( arguments.q.recordCount == 0 ) {
+            return [];
+        }
+
         try {
             var queryColumns = getMetadata( arguments.q ).map( function( item ) {
                 return item.name;
@@ -333,9 +337,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         var results = [];
-        if ( arguments.q.recordCount > 0 ) {
-            arrayResize( results, arguments.q.recordCount );
-        }
+        arrayResize( results, arguments.q.recordCount );
         for ( var row in arguments.q ) {
             var rowData = structNew( "ordered" );
             for ( var column in queryColumns ) {

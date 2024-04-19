@@ -1,3 +1,12 @@
+# v9.9.1
+## 19 Apr 2024 — 21:12:27 UTC
+
+### fix
+
++ __SqlCommenter:__ Fix bug in new BindingsCommenter
+ ([ce3fd63](https://github.com/coldbox-modules/qb/commit/ce3fd63abb2112e9c913a9791d154b133108666a))
+
+
 # v9.9.0
 ## 19 Apr 2024 — 18:14:21 UTC
 

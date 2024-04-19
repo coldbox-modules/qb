@@ -332,18 +332,18 @@ component singleton displayname="QueryUtils" accessors="true" {
             rethrow;
         }
 
-        return queryReduce(
-            arguments.q,
-            function( results, row ) {
-                var rowData = structNew( "ordered" );
-                for ( var column in queryColumns ) {
-                    rowData[ column ] = row[ column ];
-                }
-                results.append( rowData );
-                return results;
-            },
-            []
-        );
+        var results = [];
+        if ( arguments.q.recordCount > 0 ) {
+            arrayResize( results, arguments.q.recordCount );
+        }
+        for ( var row in arguments.q ) {
+            var rowData = structNew( "ordered" );
+            for ( var column in queryColumns ) {
+                rowData[ column ] = row[ column ];
+            }
+            results[ arguments.q.currentRow ] = rowData;
+        }
+        return results;
     }
 
     /**

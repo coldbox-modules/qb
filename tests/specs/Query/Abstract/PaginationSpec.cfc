@@ -130,6 +130,25 @@ component extends="testbox.system.BaseSpec" {
                 expect( results.results ).toBe( expectedResults );
             } );
 
+            it( "can handle empty datasets", function() {
+                var builder = getBuilder();
+                var expectedResults = [];
+                var expectedQuery = queryNew( "id", "integer", expectedResults );
+                builder.$( "count", 0 );
+                builder.$( "runQuery", expectedQuery );
+
+                var results = builder.from( "users" ).paginate( page = 1, maxRows = 0 );
+
+                expect( results.pagination ).toBe( {
+                    "maxRows": 0,
+                    "offset": 0,
+                    "page": 1,
+                    "totalPages": 0,
+                    "totalRecords": 0
+                } );
+                expect( results.results ).toBe( expectedResults );
+            } );
+
             it( "can provide a custom paginator shell", function() {
                 var builder = getBuilder();
                 builder.setPaginationCollector( {

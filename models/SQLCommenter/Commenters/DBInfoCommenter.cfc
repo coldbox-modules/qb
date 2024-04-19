@@ -10,7 +10,7 @@ component singleton accessors="true" {
      * @datasource  The datasource that will execute the query. If null, the default datasource will be used.
      *              This can be used to make decisions about what comments to return.
      */
-    public struct function getComments( required string sql, string datasource ) {
+    public struct function getComments( required string sql, string datasource, array bindings = [] ) {
         if ( isNull( arguments.datasource ) ) {
             cfdbinfo( type = "version", name = "local.dbInfo" );
         } else {

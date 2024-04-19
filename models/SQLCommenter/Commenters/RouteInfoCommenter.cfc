@@ -11,7 +11,7 @@ component singleton accessors="true" {
      * @datasource  The datasource that will execute the query. If null, the default datasource will be used.
      *              This can be used to make decisions about what comments to return.
      */
-    public struct function getComments( required string sql, string datasource ) {
+    public struct function getComments( required string sql, string datasource, array bindings = [] ) {
         var event = wirebox.getInstance( "coldbox:requestContext" );
         return {
             "event": event.getCurrentEvent(),

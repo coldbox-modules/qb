@@ -36,16 +36,24 @@ component extends="SQLCommenter" singleton {
      * @sql         The SQL string to add the comment to.
      * @datasource  The datasource that will execute the query.
      *              If null, the default datasource is going to be used.
+     * @bindings    An array of bindings for the query.
      *
      * @return      Commented SQL string
      */
-    public string function appendSqlComments( required string sql, string datasource ) {
+    public string function appendSqlComments( required string sql, string datasource, array bindings = [] ) {
         if ( !settings.sqlCommenter.enabled ) {
             return arguments.sql;
         }
 
         var comments = variables.commenters.reduce( ( acc, commenter ) => {
-            acc.append( commenter.getComments( sql, isNull( datasource ) ? javacast( "null", "" ) : datasource ), true );
+            acc.append(
+                commenter.getComments(
+                    sql = sql,
+                    datasource = isNull( datasource ) ? javacast( "null", "" ) : datasource,
+                    bindings = bindings
+                ),
+                true
+            );
         }, {} );
 
         return appendCommentsToSQL( arguments.sql, comments );

@@ -9,7 +9,7 @@ component extends="SQLCommenter" singleton {
      *
      * @return      Commented SQL string
      */
-    public string function appendSqlComments( required string sql, string datasource ) {
+    public string function appendSqlComments( required string sql, string datasource, array bindings = [] ) {
         return arguments.sql;
     }
 

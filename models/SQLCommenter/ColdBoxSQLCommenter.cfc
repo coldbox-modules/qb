@@ -1,4 +1,4 @@
-component extends="SQLCommenter" singleton {
+component extends="SQLCommenter" singleton accessors="true" {
 
     /**
      * All the qb module settings so we can inspect the sqlCommenter settings.
@@ -54,6 +54,7 @@ component extends="SQLCommenter" singleton {
                 ),
                 true
             );
+			return acc;
         }, {} );
 
         return appendCommentsToSQL( arguments.sql, comments );

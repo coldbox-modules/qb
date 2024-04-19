@@ -1,3 +1,11 @@
+# v9.8.2
+## 19 Apr 2024 — 17:26:33 UTC
+
+### perf
+
++ __QueryBuilder:__ Performance improvement for large recordsets ([a5f2521](https://github.com/coldbox-modules/qb/commit/a5f25214f0731e34067be013cf2b644f62f6afc2))
+
+
 # v9.8.1
 ## 19 Mar 2024 — 17:14:44 UTC
 

@@ -1,3 +1,12 @@
+# v9.9.2
+## 22 Apr 2024 — 23:19:48 UTC
+
+### fix
+
++ __SqlCommenter:__ Handle bindings that are simple values
+ ([3aa84ec](https://github.com/coldbox-modules/qb/commit/3aa84ec4a1789c98ab845dea809e82848c79e9ad))
+
+
 # v9.9.1
 ## 19 Apr 2024 — 21:12:27 UTC
 

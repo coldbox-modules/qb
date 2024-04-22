@@ -1,6 +1,6 @@
 component singleton accessors="true" {
 
-	property name="queryUtil" inject="QueryUtils@qb";
+    property name="queryUtil" inject="QueryUtils@qb";
     property name="properties";
 
     /**
@@ -17,16 +17,16 @@ component singleton accessors="true" {
 
     private string function serializeBindings( required array bindings, string delimiter = ";" ) {
         return serializeJSON(
-			bindings.map( ( binding ) => {
+            bindings.map( ( binding ) => {
                 return limitString(
-                    str = variables.queryUtil.castAsSqlType(
+                    str = isSimpleValue( binding ) ? binding : variables.queryUtil.castAsSqlType(
                         value = binding.null ? javacast( "null", "" ) : binding.value,
                         sqltype = binding.cfsqltype
                     ),
                     limit = 100
                 );
             } )
-		);
+        );
     }
 
     private string function limitString( required string str, required numeric limit, string end = "..." ) {

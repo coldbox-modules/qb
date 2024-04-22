@@ -54,7 +54,7 @@ component extends="SQLCommenter" singleton accessors="true" {
                 ),
                 true
             );
-			return acc;
+            return acc;
         }, {} );
 
         return appendCommentsToSQL( arguments.sql, comments );

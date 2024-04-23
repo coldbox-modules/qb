@@ -423,6 +423,18 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "DROP INDEX ""idx_users_username""" ];
     }
 
+    function addIndexInAlter() {
+        return [ "CREATE INDEX ""idx_users_username"" ON ""users"" (""username"")" ];
+    }
+
+    function addIndexInAlterWithIndexObject() {
+        return [ "CREATE INDEX ""idx_users_username"" ON ""users"" (""username"")" ];
+    }
+
+    function addIndexInAlterCustomName() {
+        return [ "CREATE INDEX ""custom_index_name"" ON ""users"" (""username"")" ];
+    }
+
     function basicIndex() {
         return [
             "CREATE TABLE ""users"" (""published_date"" TIMESTAMP NOT NULL)",

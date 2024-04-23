@@ -457,6 +457,23 @@ component accessors="true" {
         return this;
     }
 
+    public Blueprint function addIndex( required any columns, string name ) {
+        if ( !isSimpleValue( arguments.columns ) && !isArray( arguments.columns ) ) {
+            return addIndex( arguments.columns.getColumns(), arguments.columns.getName() );
+        }
+
+        arguments.columns = arrayWrap( arguments.columns );
+        param arguments.name = "idx_#getTable()#_#arrayToList( columns, "_" )#";
+        addCommand(
+            "addIndex",
+            {
+                index: createIndex( type = "basic", columns = arguments.columns, name = arguments.name ),
+                table: getTable()
+            }
+        );
+        return this;
+    }
+
     public Blueprint function dropIndex( required any name ) {
         if ( !isSimpleValue( arguments.name ) ) {
             dropIndex( arguments.name.getName() );

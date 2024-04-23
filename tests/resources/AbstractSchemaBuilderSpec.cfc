@@ -1344,6 +1344,45 @@ component extends="testbox.system.BaseSpec" {
                             );
                         }, overrideIndexName() );
                     } );
+
+                    it( "add index in alter", function() {
+                        testCase( function( schema ) {
+                            return schema.alter(
+                                "users",
+                                function( table ) {
+                                    table.addIndex( "username" );
+                                },
+                                {},
+                                false
+                            );
+                        }, addIndexInAlter() );
+                    } );
+
+                    it( "add index in alter with index object", function() {
+                        testCase( function( schema ) {
+                            return schema.alter(
+                                "users",
+                                function( t ) {
+                                    t.addIndex( t.index( "username" ) );
+                                },
+                                {},
+                                false
+                            );
+                        }, addIndexInAlterWithIndexObject() );
+                    } );
+
+                    it( "add index in alter with a custom name", function() {
+                        testCase( function( schema ) {
+                            return schema.alter(
+                                "users",
+                                function( table ) {
+                                    table.addIndex( [ "username" ], "custom_index_name" );
+                                },
+                                {},
+                                false
+                            );
+                        }, addIndexInAlterCustomName() );
+                    } );
                 } );
 
                 describe( "primary key indexes", function() {

@@ -483,6 +483,18 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE ""USERS"" DROP CONSTRAINT ""IDX_USERS_USERNAME""" ];
     }
 
+    function addIndexInAlter() {
+        return [ "CREATE INDEX ""IDX_USERS_USERNAME"" ON ""USERS"" (""USERNAME"")" ];
+    }
+
+    function addIndexInAlterWithIndexObject() {
+        return [ "CREATE INDEX ""IDX_USERS_USERNAME"" ON ""USERS"" (""USERNAME"")" ];
+    }
+
+    function addIndexInAlterCustomName() {
+        return [ "CREATE INDEX ""CUSTOM_INDEX_NAME"" ON ""USERS"" (""USERNAME"")" ];
+    }
+
     function basicIndex() {
         return [
             "CREATE TABLE ""USERS"" (""PUBLISHED_DATE"" DATE NOT NULL)",

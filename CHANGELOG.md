@@ -1,3 +1,12 @@
+# v9.10.0
+## 23 Apr 2024 — 16:10:52 UTC
+
+### feat
+
++ __SchemaBuilder:__ New addIndex method for adding indexes to existing tables
+ ([d990700](https://github.com/coldbox-modules/qb/commit/d990700c5bc8bfa465ef1ddffd4828524532c911))
+
+
 # v9.9.2
 ## 22 Apr 2024 — 23:19:48 UTC
 

@@ -146,6 +146,9 @@ component singleton displayname="QueryUtils" accessors="true" {
                 for ( var type in [ "value", "cfsqltype", "null" ] ) {
                     orderedBinding[ type ] = thisBinding[ type ];
                 }
+                if ( isBinary( orderedBinding.value ) ) {
+                    orderedBinding.value = toBase64( orderedBinding.value );
+                }
                 var stringifiedBinding = serializeJSON( orderedBinding );
                 return stringifiedBinding;
             },
@@ -217,6 +220,9 @@ component singleton displayname="QueryUtils" accessors="true" {
                 return "'#dateTimeFormat( value, "yyyy-mm-dd HH:nn:ss.lll" )#'";
             case "CF_SQL_NULL":
                 return "NULL";
+            case "CF_SQL_BLOB":
+            case "CF_SQL_CLOB":
+                return toBase64( value );
             case "CF_SQL_VARCHAR":
             case "CF_SQL_NVARCHAR":
             case "CF_SQL_CHAR":

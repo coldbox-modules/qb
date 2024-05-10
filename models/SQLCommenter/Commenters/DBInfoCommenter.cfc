@@ -1,6 +1,7 @@
 component singleton accessors="true" {
 
     property name="properties";
+    property name="driverVersionByDatasource";
 
     /**
      * Returns a struct of key/value comment pairs to append to the SQL.
@@ -11,13 +12,21 @@ component singleton accessors="true" {
      *              This can be used to make decisions about what comments to return.
      */
     public struct function getComments( required string sql, string datasource, array bindings = [] ) {
+        var driverVersion = "UNKNOWN";
         if ( isNull( arguments.datasource ) ) {
-            cfdbinfo( type = "version", name = "local.dbInfo" );
+            if ( !variables.driverVersionByDatasource.keyExists( "__DEFAULT__" ) ) {
+                cfdbinfo( type = "version", name = "local.dbInfo" );
+                variables.driverVersionByDatasource[ "__DEFAULT__" ] = local.dbInfo.DRIVER_VERSION;
+            }
+            driverVersion = variables.driverVersionByDatasource[ "__DEFAULT__" ];
         } else {
-            cfdbinfo( type = "version", name = "local.dbInfo", datasource = arguments.datasource );
+            if ( !variables.driverVersionByDatasource.keyExists( arguments.datasource ) ) {
+                cfdbinfo( type = "version", name = "local.dbInfo", datasource = arguments.datasource );
+                variables.driverVersionByDatasource[ arguments.datasource ] = local.dbInfo.DRIVER_VERSION;
+            }
+            driverVersion = variables.driverVersionByDatasource[ arguments.datasource ];
         }
-
-        return { "dbDriver": dbInfo.DRIVER_VERSION };
+        return { "dbDriver": driverVersion };
     }
 
 }

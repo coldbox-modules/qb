@@ -70,6 +70,9 @@ component displayname="Grammar" accessors="true" singleton {
             }
         };
         variables.log = {
+            "canDebug": function() {
+                return false;
+            },
             "debug": function() {
             }
         };

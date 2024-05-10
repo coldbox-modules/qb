@@ -1,3 +1,19 @@
+# v9.10.1
+## 10 May 2024 — 23:24:14 UTC
+
+### other
+
++ __\*:__ fix: Add canDebug to the null logger
+ ([4da8c4d](https://github.com/coldbox-modules/qb/commit/4da8c4d7c073a4c2bb070a208ad3304ab914b144))
++ __\*:__ fix: Correctly serialize bindings with binary data
+ ([e7220a7](https://github.com/coldbox-modules/qb/commit/e7220a7c17600b3d2a478f757ba37b13f2545253))
+
+### perf
+
++ __DBInfoCommenter:__ Cache driver version per datasource
+ ([462adde](https://github.com/coldbox-modules/qb/commit/462adde6c5290eb587f9e2d41c73f4ded7970777))
+
+
 # v9.10.0
 ## 23 Apr 2024 — 16:10:52 UTC
 

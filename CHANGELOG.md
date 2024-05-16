@@ -1,3 +1,12 @@
+# v9.10.2
+## 16 May 2024 — 19:10:23 UTC
+
+### fix
+
++ __SQLCommenter:__ Fix caching of DBInfoCommenter
+ ([aabd75a](https://github.com/coldbox-modules/qb/commit/aabd75aad6e59e19dd075b2642c3ca2a634de245))
+
+
 # v9.10.1
 ## 10 May 2024 — 23:24:14 UTC
 

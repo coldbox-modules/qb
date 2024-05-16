@@ -12,6 +12,7 @@ component singleton accessors="true" {
      *              This can be used to make decisions about what comments to return.
      */
     public struct function getComments( required string sql, string datasource, array bindings = [] ) {
+        param variables.driverVersionByDatasource = {};
         var driverVersion = "UNKNOWN";
         if ( isNull( arguments.datasource ) ) {
             if ( !variables.driverVersionByDatasource.keyExists( "__DEFAULT__" ) ) {

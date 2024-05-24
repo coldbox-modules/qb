@@ -1817,8 +1817,10 @@ component displayname="Grammar" accessors="true" singleton {
         return serializeJSON(
             arguments.bindings.map( function( binding ) {
                 var newBinding = duplicate( binding );
-                if ( isBinary( newBinding.value ) ) {
+                if ( isStruct( newBinding ) && isBinary( newBinding.value ) ) {
                     newBinding.value = toBase64( newBinding.value );
+                } else if ( isBinary( newBinding ) ) {
+                    newBinding = toBase64( newBinding );
                 }
                 return newBinding;
             } )

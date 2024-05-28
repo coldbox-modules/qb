@@ -1,3 +1,12 @@
+# v9.10.3
+## 28 May 2024 — 15:29:28 UTC
+
+### fix
+
++ __QueryUtils:__ Fix serializing simple value bindings to JSON
+ ([2ac6b0b](https://github.com/coldbox-modules/qb/commit/2ac6b0b27d9e46efa44b459995fca83e88584fc8))
+
+
 # v9.10.2
 ## 16 May 2024 — 19:10:23 UTC
 

@@ -609,6 +609,18 @@ component singleton displayname="QueryUtils" accessors="true" {
         return true;
     }
 
+    public string function serializeBindings( required array bindings ) {
+        return serializeJSON(
+            arguments.bindings.map( function( binding ) {
+                var newBinding = extractBinding( duplicate( binding ) );
+                if ( isBinary( newBinding.value ) ) {
+                    newBinding.value = toBase64( newBinding.value );
+                }
+                return newBinding;
+            } )
+        );
+    }
+
     private boolean function isFloatingPoint( required struct binding ) {
         if ( isNull( arguments.binding.value ) || arguments.binding.null ) {
             return false;

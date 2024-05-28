@@ -111,7 +111,10 @@ component displayname="Grammar" accessors="true" singleton {
         tryPreInterceptor( data );
         structAppend( data.options, { result: "local.result" }, true );
         if ( variables.log.canDebug() ) {
-            variables.log.debug( "Executing sql: #data.sql#", "With bindings: #serializeBindings( data.bindings )#" );
+            variables.log.debug(
+                "Executing sql: #data.sql#",
+                "With bindings: #variables.utils.serializeBindings( data.bindings )#"
+            );
         }
         var startTick = getTickCount();
         data.result = {};
@@ -1811,18 +1814,6 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileAddType() {
         return "";
-    }
-
-    private string function serializeBindings( required array bindings ) {
-        return serializeJSON(
-            arguments.bindings.map( function( binding ) {
-                var newBinding = duplicate( binding );
-                if ( isBinary( newBinding.value ) ) {
-                    newBinding.value = toBase64( newBinding.value );
-                }
-                return newBinding;
-            } )
-        );
     }
 
 }

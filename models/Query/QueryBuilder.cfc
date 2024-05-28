@@ -3635,7 +3635,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public boolean function existsOrFail( struct options = {}, any errorMessage ) {
         if ( !this.exists( arguments.options ) ) {
-            param arguments.errorMessage = "No rows found with constraints [#serializeBindings( this.getBindings() )#]";
+            param arguments.errorMessage = "No rows found with constraints [#variables.utils.serializeBindings( this.getBindings() )#]";
             throw( type = "RecordNotFound", message = arguments.errorMessage );
         }
         return true;
@@ -3699,7 +3699,7 @@ component displayname="QueryBuilder" accessors="true" {
     public any function firstOrFail( any errorMessage, struct options = {} ) {
         var result = first( arguments.options );
         if ( structIsEmpty( result ) ) {
-            param arguments.errorMessage = "No rows found with constraints [#serializeBindings( this.getBindings() )#]";
+            param arguments.errorMessage = "No rows found with constraints [#variables.utils.serializeBindings( this.getBindings() )#]";
             if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
                 arguments.errorMessage = arguments.errorMessage( this );
             }
@@ -4414,18 +4414,6 @@ component displayname="QueryBuilder" accessors="true" {
      */
     function applyColumnFormatter( column ) {
         return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
-    }
-
-    private string function serializeBindings( required array bindings ) {
-        return serializeJSON(
-            arguments.bindings.map( function( binding ) {
-                var newBinding = duplicate( binding );
-                if ( isBinary( newBinding.value ) ) {
-                    newBinding.value = toBase64( newBinding.value );
-                }
-                return newBinding;
-            } )
-        );
     }
 
 }

@@ -47,7 +47,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function complicatedTable() {
         return [
-            "CREATE TABLE ""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, ""USERNAME"" VARCHAR2(255) NOT NULL, ""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, ""PASSWORD"" VARCHAR2(100) NOT NULL, ""COUNTRY_ID"" NUMBER(10, 0) NOT NULL, ""CREATED_DATE"" DATE DEFAULT CURRENT_TIMESTAMP NOT NULL, ""MODIFIED_DATE"" DATE DEFAULT CURRENT_TIMESTAMP NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""), CONSTRAINT ""FK_USERS_COUNTRY_ID"" FOREIGN KEY (""COUNTRY_ID"") REFERENCES ""COUNTRIES"" (""ID"") ON DELETE CASCADE)",
+            "CREATE TABLE ""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, ""USERNAME"" VARCHAR2(255) NOT NULL, ""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, ""PASSWORD"" VARCHAR2(100) NOT NULL, ""COUNTRY_ID"" NUMBER(10, 0) NOT NULL, ""CREATED_DATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, ""MODIFIED_DATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""), CONSTRAINT ""FK_USERS_COUNTRY_ID"" FOREIGN KEY (""COUNTRY_ID"") REFERENCES ""COUNTRIES"" (""ID"") ON DELETE CASCADE)",
             "CREATE SEQUENCE ""SEQ_USERS""",
             "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
         ];
@@ -106,7 +106,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function datetime() {
-        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" DATE NOT NULL)" ];
+        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" TIMESTAMP NOT NULL)" ];
     }
 
     function datetimeTz() {
@@ -230,7 +230,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function nullableTimestamps() {
-        return [ "CREATE TABLE ""POSTS"" (""CREATEDDATE"" DATE, ""MODIFIEDDATE"" DATE)" ];
+        return [ "CREATE TABLE ""POSTS"" (""CREATEDDATE"" TIMESTAMP, ""MODIFIEDDATE"" TIMESTAMP)" ];
     }
 
     function point() {
@@ -242,7 +242,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function softDeletes() {
-        return [ "CREATE TABLE ""POSTS"" (""DELETEDDATE"" DATE)" ];
+        return [ "CREATE TABLE ""POSTS"" (""DELETEDDATE"" TIMESTAMP)" ];
     }
 
     function softDeletesTz() {
@@ -296,7 +296,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function time() {
-        return [ "CREATE TABLE ""RECURRING_TASKS"" (""FIRE_TIME"" DATE NOT NULL)" ];
+        return [ "CREATE TABLE ""RECURRING_TASKS"" (""FIRE_TIME"" TIMESTAMP NOT NULL)" ];
     }
 
     function timeTz() {
@@ -304,12 +304,16 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function timestamp() {
-        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" DATE NOT NULL)" ];
+        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" TIMESTAMP NOT NULL)" ];
+    }
+
+    function timestampPrecision() {
+        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" TIMESTAMP(6) NOT NULL)" ];
     }
 
     function timestamps() {
         return [
-            "CREATE TABLE ""POSTS"" (""CREATEDDATE"" DATE DEFAULT CURRENT_TIMESTAMP NOT NULL, ""MODIFIEDDATE"" DATE DEFAULT CURRENT_TIMESTAMP NOT NULL)"
+            "CREATE TABLE ""POSTS"" (""CREATEDDATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, ""MODIFIEDDATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)"
         ];
     }
 
@@ -407,11 +411,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function timestampWithCurrent() {
-        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" DATE DEFAULT CURRENT_TIMESTAMP NOT NULL)" ];
+        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)" ];
     }
 
     function timestampWithNullable() {
-        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" DATE)" ];
+        return [ "CREATE TABLE ""POSTS"" (""POSTED_DATE"" TIMESTAMP)" ];
     }
 
     function nullable() {
@@ -497,7 +501,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function basicIndex() {
         return [
-            "CREATE TABLE ""USERS"" (""PUBLISHED_DATE"" DATE NOT NULL)",
+            "CREATE TABLE ""USERS"" (""PUBLISHED_DATE"" TIMESTAMP NOT NULL)",
             "CREATE INDEX ""IDX_USERS_PUBLISHED_DATE"" ON ""USERS"" (""PUBLISHED_DATE"")"
         ];
     }
@@ -586,7 +590,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function modifyMultipleColumns() {
         return [
             "ALTER TABLE ""USERS"" MODIFY (""NAME"" CLOB NOT NULL)",
-            "ALTER TABLE ""USERS"" MODIFY (""PURCHASED_DATE"" DATE)"
+            "ALTER TABLE ""USERS"" MODIFY (""PURCHASED_DATE"" TIMESTAMP)"
         ];
     }
 
@@ -610,7 +614,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
             "ALTER TABLE ""USERS"" DROP COLUMN ""IS_ACTIVE""",
             "ALTER TABLE ""USERS"" ADD ""TSHIRT_SIZE"" VARCHAR2(255) NOT NULL",
             "ALTER TABLE ""USERS"" RENAME COLUMN ""NAME"" TO ""USERNAME""",
-            "ALTER TABLE ""USERS"" MODIFY (""PURCHASE_DATE"" DATE)",
+            "ALTER TABLE ""USERS"" MODIFY (""PURCHASE_DATE"" TIMESTAMP)",
             "ALTER TABLE ""USERS"" ADD CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME"")",
             "ALTER TABLE ""USERS"" ADD CONSTRAINT ""UNQ_USERS_EMAIL"" UNIQUE (""EMAIL"")",
             "ALTER TABLE ""USERS"" DROP CONSTRAINT ""IDX_USERS_CREATED_DATE""",

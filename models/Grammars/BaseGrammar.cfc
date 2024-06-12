@@ -1643,7 +1643,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeTimestamp( column ) {
-        return "TIMESTAMP";
+        return "TIMESTAMP#isNull( column.getPrecision() ) ? '' : '(#column.getPrecision()#)'#";
     }
 
     function typeTimestampTz( column ) {

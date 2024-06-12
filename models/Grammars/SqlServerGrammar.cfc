@@ -694,7 +694,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function typeTimestamp( column ) {
-        return "DATETIME2";
+        return "DATETIME2#isNull( column.getPrecision() ) ? '' : '(#column.getPrecision()#)'#";
     }
 
     function typeTimestampTz( column ) {

@@ -250,6 +250,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [posts] ([posted_date] DATETIME2 NOT NULL)" ];
     }
 
+    function timestampPrecision() {
+        return [ "CREATE TABLE [posts] ([posted_date] DATETIME2(6) NOT NULL)" ];
+    }
+
     function timestampTz() {
         return [ "CREATE TABLE [posts] ([posted_date] DATETIMEOFFSET NOT NULL)" ];
     }

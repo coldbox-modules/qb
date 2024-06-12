@@ -253,6 +253,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP NOT NULL)" ];
     }
 
+    function timestampPrecision() {
+        return [ "CREATE TABLE ""posts"" (""posted_date"" TIMESTAMP(6) NOT NULL)" ];
+    }
+
+
     function timestamps() {
         return [
             "CREATE TABLE ""posts"" (""createdDate"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, ""modifiedDate"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"

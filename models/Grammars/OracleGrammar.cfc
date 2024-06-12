@@ -623,7 +623,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeTimestamp( column ) {
-        return "DATE";
+        return "TIMESTAMP#isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)"#";
     }
 
     function typeTimestampTz( column ) {

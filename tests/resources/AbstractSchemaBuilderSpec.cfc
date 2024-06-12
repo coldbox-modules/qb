@@ -788,6 +788,19 @@ component extends="testbox.system.BaseSpec" {
                     }, timestamp() );
                 } );
 
+                it( "timestampPrecision", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "posts",
+                            function( table ) {
+                                table.timestamp( "posted_date", 6 );
+                            },
+                            {},
+                            false
+                        );
+                    }, timestampPrecision( 6 ) );
+                } );
+
                 it( "timestampWithNullable", function() {
                     testCase( function( schema ) {
                         return schema.create(

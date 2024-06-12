@@ -272,7 +272,7 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
-    public Column function timestamp( required string name ) {
+    public Column function timestamp( required string name, numeric precision ) {
         arguments.type = "timestamp";
         return appendColumn( argumentCollection = arguments );
     }

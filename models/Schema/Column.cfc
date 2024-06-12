@@ -200,7 +200,7 @@ component accessors="true" {
      * @returns Column
      */
     public Column function withCurrent( numeric precision ) {
-        setDefault( "CURRENT_TIMESTAMP#isNull( arguments.precision ) ? '' : '(#arguments.precision#)'#" );
+        setDefault( "CURRENT_TIMESTAMP#isNull( arguments.precision ) ? "" : "(#arguments.precision#)"#" );
         return this;
     }
 

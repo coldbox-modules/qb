@@ -798,8 +798,8 @@ component extends="testbox.system.BaseSpec" {
                             {},
                             false
                         );
-                    }, timestampPrecision(6) );
-                } );                
+                    }, timestampPrecision( 6 ) );
+                } );
 
                 it( "timestampWithNullable", function() {
                     testCase( function( schema ) {

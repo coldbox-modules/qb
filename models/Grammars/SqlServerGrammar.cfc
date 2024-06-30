@@ -412,7 +412,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         }
         var updateStatement = updateList == "" ? "" : " WHEN MATCHED THEN UPDATE SET #updateList#";
 
-        var deleteStatement = arguments.deleteUnmatched ? " WHEN NOT MATCHED BY SOURCE DELETE" : "";
+        var deleteStatement = arguments.deleteUnmatched ? " WHEN NOT MATCHED BY SOURCE THEN DELETE" : "";
 
         var returningColumns = arguments.qb
             .getReturning()

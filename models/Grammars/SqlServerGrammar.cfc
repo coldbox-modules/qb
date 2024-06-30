@@ -414,7 +414,19 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
         var deleteStatement = arguments.deleteUnmatched ? " WHEN NOT MATCHED BY SOURCE DELETE" : "";
 
-        var returningColumns = arguments.qb.getReturning().toList( ", " );
+        var returningColumns = arguments.qb
+		    .getReturning()
+		    .map( function( column ) {
+			    if ( getUtils().isExpression( column ) ) {
+			    	return trim( column.getSQL() );
+			    }
+			    if ( listLen( column, "." ) > 1 ) {
+			    	return column;
+			    }
+			    return "INSERTED." & wrapColumn( column );
+		    } )
+		    .toList( ", " );
+
         var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
 
         return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING #sourceString# ON #constraintString##updateStatement# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)#deleteStatement##returningClause#;";

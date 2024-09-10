@@ -93,7 +93,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             return arguments.value.getBindings();
         }
 
-        var binding = "";
+        var binding = {};
         if ( isStruct( value ) ) {
             if ( structKeyExists( value, "isExpression" ) && value.isExpression == true ) {
                 return value;
@@ -103,7 +103,10 @@ component singleton displayname="QueryUtils" accessors="true" {
             binding = { value: normalizeSqlValue( value ) };
         }
 
-        structAppend( binding, { cfsqltype: inferSqlType( binding.value ), list: false, null: false }, false );
+        if ( !structKeyExists( binding, "cfsqltype" ) ) {
+            binding.cfsqltype = inferSqlType( binding.value );
+        }
+        structAppend( binding, { list: false, null: false }, false );
 
         if ( variables.autoAddScale && isFloatingPoint( binding ) ) {
             param binding.scale = calculateNumberOfDecimalDigits( binding );

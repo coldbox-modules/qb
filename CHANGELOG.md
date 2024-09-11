@@ -1,3 +1,16 @@
+# v9.11.1
+## 11 Sep 2024 — 22:06:13 UTC
+
+### fix
+
++ __QueryBuilder:__ Allow Raw Expressions in `upsert` ([50fa99a](https://github.com/coldbox-modules/qb/commit/50fa99a5fd6a1430126e5269915b79ef717642e0))
+
+### perf
+
++ __QueryUtils:__ Skip inferSqlType if user has specified a cfsqltype
+ ([1ee352e](https://github.com/coldbox-modules/qb/commit/1ee352e98c01928b9fdb9d8d21e36bbffac08d34))
+
+
 # v9.11.0
 ## 12 Jun 2024 — 21:25:50 UTC
 

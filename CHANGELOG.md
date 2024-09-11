@@ -1,3 +1,11 @@
+# v9.11.0
+## 12 Jun 2024 — 21:25:50 UTC
+
+### feat
+
++ __SchemaBuilder:__ Added ability to specify precision for timestamp datatypes ([6e559ae](https://github.com/coldbox-modules/qb/commit/6e559ae86664a58f8e9a2a6cd380eba5e14f5ee5))
+
+
 # v9.10.3
 ## 28 May 2024 — 15:29:28 UTC
 

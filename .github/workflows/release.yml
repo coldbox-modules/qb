@@ -29,6 +29,9 @@ jobs:
       - name: Set Up CommandBox
         uses: elpete/setup-commandbox@v1.0.0
 
+      - name: Install CommandBox-BoxLang
+        run: box install commandbox-boxlang
+
       - name: Install dependencies
         run: |
           box install

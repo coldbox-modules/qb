@@ -43,8 +43,8 @@ component extends="testbox.system.BaseSpec" {
                                 .references( "id" )
                                 .onTable( "countries" )
                                 .onDelete( "CASCADE" );
-                            table.timestamp( "created_date" ).setDefault( "CURRENT_TIMESTAMP" );
-                            table.timestamp( "modified_date" ).setDefault( "CURRENT_TIMESTAMP" );
+                            table.timestamp( "created_date" ).setDefaultValue( "CURRENT_TIMESTAMP" );
+                            table.timestamp( "modified_date" ).setDefaultValue( "CURRENT_TIMESTAMP" );
                         },
                         {},
                         false
@@ -141,7 +141,7 @@ component extends="testbox.system.BaseSpec" {
                             {},
                             false
                         );
-                    }, char() );
+                    }, this.char() );
                 } );
 
                 it( "char (with length)", function() {

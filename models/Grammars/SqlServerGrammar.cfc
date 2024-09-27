@@ -12,7 +12,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         "commonTables",
         "aggregate",
         "columns",
-        "from",
+        "tableName",
         "lockType",
         "joins",
         "wheres",
@@ -79,7 +79,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             } )
             .toList( ", " );
         return trim(
-            "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#)#returningClause# VALUES #placeholderString#"
+            "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#)#returningClause# VALUES #placeholderString#"
         );
     }
 
@@ -280,11 +280,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             .toList( ", " );
 
         var updateTable = "";
-        if ( !getUtils().isExpression( query.getFrom() ) ) {
-            var parts = explodeTable( query.getFrom() );
+        if ( !getUtils().isExpression( query.getTableName() ) ) {
+            var parts = explodeTable( query.getTableName() );
             updateTable = parts.alias.len() ? wrapAlias( parts.alias ) : wrapTable( parts.table );
         } else {
-            updateTable = query.getFrom().getSql();
+            updateTable = query.getTableName().getSql();
         }
         var updateStatement = arrayToList(
             arrayFilter(
@@ -321,7 +321,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         }
 
         return trim(
-            updateStatement & " FROM #wrapTable( query.getFrom() )# " & compileJoins(
+            updateStatement & " FROM #wrapTable( query.getTableName() )# " & compileJoins(
                 arguments.query,
                 arguments.query.getJoins()
             ) & returningClause & " " & compileWheres( query, query.getWheres() )
@@ -349,7 +349,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             } )
             .toList( ", " );
         var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
-        return trim( "DELETE FROM #wrapTable( query.getFrom() )##returningClause# #compileWheres( query, query.getWheres() )#" );
+        return trim( "DELETE FROM #wrapTable( query.getTableName() )##returningClause# #compileWheres( query, query.getWheres() )#" );
     }
 
     public string function compileUpsert(
@@ -429,7 +429,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
         var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
 
-        return "MERGE #wrapTable( arguments.qb.getFrom() )# AS [qb_target] USING #sourceString# ON #constraintString##updateStatement# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)#deleteStatement##returningClause#;";
+        return "MERGE #wrapTable( arguments.qb.getTableName() )# AS [qb_target] USING #sourceString# ON #constraintString##updateStatement# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)#deleteStatement##returningClause#;";
     }
 
     function generateType( column, blueprint ) {
@@ -440,7 +440,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function generateNullConstraint( column ) {
-        return ( column.getNullable() || column.getComputedType() != "none" ) ? "" : "NOT NULL";
+        return ( column.getIsNullable() || column.getComputedType() != "none" ) ? "" : "NOT NULL";
     }
 
     function modifyUnsigned( column ) {
@@ -460,18 +460,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function generateDefault( column, blueprint ) {
-        return column.getDefault() != "" ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
+        return column.getDefaultValue() != "" ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
     }
 
     function wrapDefaultType( column ) {
         switch ( column.getType() ) {
             case "boolean":
-                return column.getDefault() ? 1 : 0;
+                return column.getDefaultValue() ? 1 : 0;
             case "char":
             case "string":
-                return "'#column.getDefault()#'";
+                return "'#column.getDefaultValue()#'";
             default:
-                return column.getDefault();
+                return column.getDefaultValue();
         }
     }
 
@@ -507,7 +507,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                     " "
                 )
             ];
-            if ( commandParameters.name.getDefault() != "" ) {
+            if ( commandParameters.name.getDefaultValue() != "" ) {
                 statements.prepend(
                     "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#commandParameters.name.getName()#" )#"
                 );

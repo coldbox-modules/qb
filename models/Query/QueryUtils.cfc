@@ -106,6 +106,14 @@ component singleton displayname="QueryUtils" accessors="true" {
         if ( !structKeyExists( binding, "cfsqltype" ) ) {
             binding.cfsqltype = inferSqlType( binding.value );
         }
+
+        if ( binding.cfsqltype == "CF_SQL_TIMESTAMP" ) {
+            binding.value = dateTimeFormat( binding.value, "iso8601" );
+        } else if ( binding.cfsqltype == "CF_SQL_DATE" ) {
+            binding.value = dateFormat( binding.value, "yyyy-mm-dd" );
+        } else if ( binding.cfsqltype == "CF_SQL_TIME" ) {
+            binding.value = timeFormat( binding.value, "HH:mm:ss.nZ" );
+        }
         structAppend( binding, { list: false, null: false }, false );
 
         if ( variables.autoAddScale && isFloatingPoint( binding ) ) {
@@ -336,14 +344,9 @@ component singleton displayname="QueryUtils" accessors="true" {
             return [];
         }
 
-        try {
-            var queryColumns = getMetadata( arguments.q ).map( function( item ) {
-                return item.name;
-            } );
-        } catch ( any e ) {
-            writeDump( var = arguments );
-            rethrow;
-        }
+        var queryColumns = getMetadata( arguments.q ).map( function( item ) {
+            return item.name;
+        } );
 
         var results = [];
         arrayResize( results, arguments.q.recordCount );
@@ -413,9 +416,9 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @value The value to normalize to a list.
      *
-     * @return string
+     * @return any
      */
-    private string function normalizeSqlValue( required any value ) {
+    private any function normalizeSqlValue( required any value ) {
         if ( isArray( arguments.value ) ) {
             return arrayToList( arguments.value );
         }
@@ -461,7 +464,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             variables.log.debug( "checkIsActuallyNumeric: value is null" );
             return false;
         }
-        var type = listLast( getMetadata( arguments.value ), ". " );
+        var type = listLast( toString( getMetadata( arguments.value ) ), ". " );
         variables.log.debug( "checkIsActuallyNumeric: #arguments.value# is #type#" );
         return isSimpleValue( arguments.value ) && arrayContainsNoCase(
             [
@@ -503,8 +506,8 @@ component singleton displayname="QueryUtils" accessors="true" {
 
         if ( variables.strictDateDetection ) {
             return isDate( arguments.value ) && arrayContainsNoCase(
-                [ "OleDateTime", "DateTimeImpl" ],
-                listLast( getMetadata( arguments.value ), "." )
+                [ "OleDateTime", "DateTimeImpl", "DateTime" ],
+                listLast( toString( getMetadata( arguments.value ) ), "." )
             );
         } else {
             return isDate( arguments.value );

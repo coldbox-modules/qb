@@ -6,7 +6,7 @@
         }
     },
     "app":{
-        "cfengine":"adobe@2018"
+        "cfengine":"boxlang@be"
     },
     "directoryBrowsing":"true",
     "JVM":{

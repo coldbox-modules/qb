@@ -197,8 +197,8 @@ component accessors="true" {
     }
 
     public Blueprint function nullableTimestamps() {
-        appendColumn( name = "createdDate", type = "timestamp", nullable = true );
-        appendColumn( name = "modifiedDate", type = "timestamp", nullable = true );
+        appendColumn( name = "createdDate", type = "timestamp", isNullable = true );
+        appendColumn( name = "modifiedDate", type = "timestamp", isNullable = true );
         return this;
     }
 
@@ -231,12 +231,12 @@ component accessors="true" {
     }
 
     public Blueprint function softDeletes() {
-        appendColumn( name = "deletedDate", type = "timestamp", nullable = true );
+        appendColumn( name = "deletedDate", type = "timestamp", isNullable = true );
         return this;
     }
 
     public Blueprint function softDeletesTz() {
-        appendColumn( name = "deletedDate", type = "timestampTz", nullable = true );
+        appendColumn( name = "deletedDate", type = "timestampTz", isNullable = true );
         return this;
     }
 
@@ -307,27 +307,27 @@ component accessors="true" {
     }
 
     public Column function unsignedBigInteger( required string name, numeric precision ) {
-        arguments.unsigned = true;
+        arguments.isUnsigned = true;
         return bigInteger( argumentCollection = arguments );
     }
 
     public Column function unsignedInteger( required string name, numeric precision ) {
-        arguments.unsigned = true;
+        arguments.isUnsigned = true;
         return integer( argumentCollection = arguments );
     }
 
     public Column function unsignedMediumInteger( required string name, numeric precision ) {
-        arguments.unsigned = true;
+        arguments.isUnsigned = true;
         return mediumInteger( argumentCollection = arguments );
     }
 
     public Column function unsignedSmallInteger( required string name, numeric precision ) {
-        arguments.unsigned = true;
+        arguments.isUnsigned = true;
         return smallInteger( argumentCollection = arguments );
     }
 
     public Column function unsignedTinyInteger( required string name, numeric precision ) {
-        arguments.unsigned = true;
+        arguments.isUnsigned = true;
         return tinyInteger( argumentCollection = arguments );
     }
 
@@ -548,8 +548,10 @@ component accessors="true" {
                 "compile#command.getType()#",
                 { blueprint: this, commandParameters: command.getParameters() }
             );
-            if ( isArray( result ) || ( isSimpleValue( result ) && result != "" ) ) {
+            if ( isArray( result ) ) {
                 statements.append( result, true );
+            } else if ( isSimpleValue( result ) && result != "" ) {
+                statements.append( result );
             }
         }
         return statements;

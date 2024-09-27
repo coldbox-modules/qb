@@ -76,9 +76,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     private string function compileOracleLockType( required query, required string sql ) {
         switch ( arguments.query.getLockType() ) {
             case "shared":
-                return "LOCK TABLE #wrapTable( arguments.query.getFrom() )# IN SHARE MODE NOWAIT; #arguments.sql#";
+                return "LOCK TABLE #wrapTable( arguments.query.getTableName() )# IN SHARE MODE NOWAIT; #arguments.sql#";
             case "custom":
-                return "LOCK TABLE #wrapTable( arguments.query.getFrom() )# IN #arguments.query.getLockValue()# MODE NOWAIT; #arguments.sql#";
+                return "LOCK TABLE #wrapTable( arguments.query.getTableName() )# IN #arguments.query.getLockValue()# MODE NOWAIT; #arguments.sql#";
             case "none":
             case "nolock":
             default:
@@ -126,7 +126,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
         var placeholderString = values
             .map( function( valueArray ) {
-                return "INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES (" & valueArray
+                return "INTO #wrapTable( query.getTableName() )# (#columnsString#) VALUES (" & valueArray
                     .map( function( item ) {
                         if ( getUtils().isExpression( item ) ) {
                             return item.getSQL();
@@ -231,7 +231,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
         var updateStatement = updateList == "" ? "" : " WHEN MATCHED THEN UPDATE SET #updateList#";
 
-        return "MERGE INTO #wrapTable( arguments.qb.getFrom() )# ""QB_TARGET"" USING (#placeholderString#) ""QB_SRC"" ON #constraintString##updateStatement# WHEN NOT MATCHED THEN INSERT (#columnsString#) VALUES (#valuesString#)";
+        return "MERGE INTO #wrapTable( arguments.qb.getTableName() )# ""QB_TARGET"" USING (#placeholderString#) ""QB_SRC"" ON #constraintString##updateStatement# WHEN NOT MATCHED THEN INSERT (#columnsString#) VALUES (#valuesString#)";
     }
 
     /**
@@ -325,23 +325,22 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
 
         // Oracle: Default value must come before column constraints
+        var values = [
+            wrapColumn( column.getName() ),
+            generateType( column, blueprint ),
+            modifyUnsigned( column ),
+            generateComputed( column ),
+            generateAutoIncrement( column, blueprint ),
+            generateDefault( column ),
+            generateNullConstraint( column ),
+            generateUniqueConstraint( column, blueprint ),
+            generateComment( column, blueprint )
+        ];
+
         return arrayToList(
-            arrayFilter(
-                [
-                    wrapColumn( column.getName() ),
-                    generateType( column, blueprint ),
-                    modifyUnsigned( column ),
-                    generateComputed( column ),
-                    generateAutoIncrement( column, blueprint ),
-                    generateDefault( column ),
-                    generateNullConstraint( column ),
-                    generateUniqueConstraint( column, blueprint ),
-                    generateComment( column, blueprint )
-                ],
-                function( item ) {
-                    return item != "";
-                }
-            ),
+            arrayFilter( values, function( item ) {
+                return item != "";
+            } ),
             " "
         );
     }
@@ -447,7 +446,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function generateNullConstraint( column ) {
-        return ( column.getNullable() || column.getComputedType() != "none" ) ? "" : "NOT NULL";
+        return ( column.getIsNullable() || column.getComputedType() != "none" ) ? "" : "NOT NULL";
     }
 
     function modifyUnsigned( column ) {
@@ -484,14 +483,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function generateUniqueConstraint( column, blueprint ) {
-        if ( column.getUnique() ) {
+        if ( column.getIsUnique() ) {
             blueprint.unique( [ column.getName() ] );
         }
         return "";
     }
 
     function generateComment( column, blueprint ) {
-        if ( column.getComment() != "" ) {
+        if ( column.getCommentValue() != "" ) {
             blueprint.addCommand( "addComment", { table: blueprint.getTable(), column: column } );
         }
         return "";
@@ -500,12 +499,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function wrapDefaultType( column ) {
         switch ( column.getType() ) {
             case "boolean":
-                return column.getDefault() ? 1 : 0;
+                return column.getDefaultValue() ? 1 : 0;
             case "char":
             case "string":
-                return "'#column.getDefault()#'";
+                return "'#column.getDefaultValue()#'";
             default:
-                return column.getDefault();
+                return column.getDefaultValue();
         }
     }
 
@@ -654,7 +653,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "CONSTRAINT #wrapValue( index.getName() )#",
                 "FOREIGN KEY (#keys#)",
                 "REFERENCES #wrapTable( index.getTable() )# (#references#)",
-                "ON DELETE #uCase( index.getOnDelete() )#"
+                "ON DELETE #uCase( index.getOnDeleteAction() )#"
             ],
             " "
         );

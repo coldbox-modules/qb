@@ -19,7 +19,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""id"" FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"" FROM ""users""" );
                 } );
 
                 it( "can pass in an array of columns to retrieve for the single query execution", function() {
@@ -33,8 +33,16 @@ component extends="testbox.system.BaseSpec" {
                     );
                     builder
                         .$( "runQuery" )
+                        .$args( sql = "SELECT ""id"", ""name"" FROM ""users""", options = { "result": "local.result" } )
+                        .$results( expectedGetQuery );
+                    builder
+                        .$( "runQuery" )
                         .$args( sql = "SELECT ""id"", ""name"" FROM ""users""", options = {} )
                         .$results( expectedGetQuery );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT * FROM ""users""", options = { "result": "local.result" } )
+                        .$results( expectedNormalQuery );
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT * FROM ""users""", options = {} )
@@ -46,14 +54,18 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 2, "runQuery should have been called twice" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""id"", ""name"" FROM ""users""", options: {} } );
-                    expect( runQueryLog[ 2 ] ).toBe( { sql: "SELECT * FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"", ""name"" FROM ""users""" );
+                    expect( runQueryLog[ 2 ].sql ).toBe( "SELECT * FROM ""users""" );
                 } );
 
                 it( "can get a single column for a single query execution", function() {
                     var builder = getBuilder();
                     builder.setReturnFormat( "query" );
                     var expectedQuery = queryNew( "name", "varchar", [ { name: "foo" } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args( sql = "SELECT ""name"" FROM ""users""", options = { "result": "local.result" } )
+                        .$results( expectedQuery );
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT ""name"" FROM ""users""", options = {} )
@@ -64,7 +76,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""name"" FROM ""users""", options: {} } );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""name"" FROM ""users""" );
                 } );
 
                 it( "preserves original columns after executing a get with columns", function() {
@@ -73,7 +85,7 @@ component extends="testbox.system.BaseSpec" {
                     var expectedQuery = queryNew( "name", "varchar", [ { name: "foo" } ] );
                     builder
                         .$( "runQuery" )
-                        .$args( sql = "SELECT ""name"" FROM ""users""", options = {} )
+                        .$args( sql = "SELECT ""name"" FROM ""users""", options = { "result": "local.result" } )
                         .$results( expectedQuery );
 
                     builder.select( "id" ).from( "users" );
@@ -1113,26 +1125,8 @@ component extends="testbox.system.BaseSpec" {
                 var expectedQuery = queryNew( "id", "integer", data );
                 builder
                     .$( "runQuery" )
-                    .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = { "result": "local.result" } )
                     .$results( expectedQuery );
-
-                var results = builder
-                    .select( "id" )
-                    .from( "users" )
-                    .get();
-
-                expect( results ).toBe( data );
-                var runQueryLog = builder.$callLog().runQuery;
-                expect( runQueryLog ).toBeArray();
-                expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""id"" FROM ""users""", options: {} } );
-            } );
-
-            it( "can return an array of structs", function() {
-                var builder = getBuilder();
-                builder.setReturnFormat( "array" );
-                var data = [ { id: 1 } ];
-                var expectedQuery = queryNew( "id", "integer", data );
                 builder
                     .$( "runQuery" )
                     .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
@@ -1147,7 +1141,33 @@ component extends="testbox.system.BaseSpec" {
                 var runQueryLog = builder.$callLog().runQuery;
                 expect( runQueryLog ).toBeArray();
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""id"" FROM ""users""", options: {} } );
+                expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"" FROM ""users""" );
+            } );
+
+            it( "can return an array of structs", function() {
+                var builder = getBuilder();
+                builder.setReturnFormat( "array" );
+                var data = [ { id: 1 } ];
+                var expectedQuery = queryNew( "id", "integer", data );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = { "result": "local.result" } )
+                    .$results( expectedQuery );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
+                    .$results( expectedQuery );
+
+                var results = builder
+                    .select( "id" )
+                    .from( "users" )
+                    .get();
+
+                expect( results ).toBe( data );
+                var runQueryLog = builder.$callLog().runQuery;
+                expect( runQueryLog ).toBeArray();
+                expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"" FROM ""users""" );
             } );
 
             it( "can return a query", function() {
@@ -1155,6 +1175,10 @@ component extends="testbox.system.BaseSpec" {
                 builder.setReturnFormat( "query" );
                 var data = [ { id: 1 } ];
                 var expectedQuery = queryNew( "id", "integer", data );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = { "result": "local.result" } )
+                    .$results( expectedQuery );
                 builder
                     .$( "runQuery" )
                     .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
@@ -1169,7 +1193,7 @@ component extends="testbox.system.BaseSpec" {
                 var runQueryLog = builder.$callLog().runQuery;
                 expect( runQueryLog ).toBeArray();
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""id"" FROM ""users""", options: {} } );
+                expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"" FROM ""users""" );
             } );
 
             it( "can return the results of a closure", function() {
@@ -1186,6 +1210,10 @@ component extends="testbox.system.BaseSpec" {
                 var expectedQuery = queryNew( "id", "integer", data );
                 builder
                     .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = { "result": "local.result" } )
+                    .$results( expectedQuery );
+                builder
+                    .$( "runQuery" )
                     .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
                     .$results( expectedQuery );
 
@@ -1198,7 +1226,7 @@ component extends="testbox.system.BaseSpec" {
                 var runQueryLog = builder.$callLog().runQuery;
                 expect( runQueryLog ).toBeArray();
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""id"" FROM ""users""", options: {} } );
+                expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"" FROM ""users""" );
             } );
         } );
 

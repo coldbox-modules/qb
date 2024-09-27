@@ -389,11 +389,7 @@ component extends="testbox.system.BaseSpec" {
                                 builder
                                     .select( "*" )
                                     .from( "users" )
-                                    .where(
-                                        "createdDate",
-                                        ">=",
-                                        { value: "01/01/2019", cfsqltype: "CF_SQL_TIMESTAMP" }
-                                    );
+                                    .where( "createdDate", ">=", { value: "01/01/2019", cfsqltype: "CF_SQL_DATE" } );
                             }, basicWhereWithQueryParamStruct() );
                         } );
 
@@ -660,8 +656,8 @@ component extends="testbox.system.BaseSpec" {
                                     .from( "users" )
                                     .whereBetween(
                                         "createdDate",
-                                        { value: "1/1/2019", cfsqltype: "CF_SQL_TIMESTAMP" },
-                                        { value: "12/31/2019", cfsqltype: "CF_SQL_TIMESTAMP" }
+                                        { value: "1/1/2019", cfsqltype: "CF_SQL_DATE" },
+                                        { value: "12/31/2019", cfsqltype: "CF_SQL_DATE" }
                                     );
                             }, whereBetweenWithQueryParamStructs() );
                         } );
@@ -1384,9 +1380,11 @@ component extends="testbox.system.BaseSpec" {
 
                     it( "duplicate {cross,outer} applies eliminated", function() {
                         testCase( function( builder ) {
-                            var gen = ( name ) => ( qb ) => {
-                                qb.from( name ).select( "someColumn" )
-                            }
+                            var gen = function( name ) {
+                                return function( qb ) {
+                                    qb.from( name ).select( "someColumn" );
+                                };
+                            };
                             builder
                                 .setPreventDuplicateJoins( true )
                                 .from( "A" )
@@ -2188,7 +2186,7 @@ component extends="testbox.system.BaseSpec" {
                     it( "can offset the record set returned", function() {
                         testCase( function( builder ) {
                             builder.from( "users" ).offset( 3 );
-                        }, offset() );
+                        }, this.offset() );
                     } );
 
                     it( "can offset with an order by", function() {

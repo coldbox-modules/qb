@@ -103,7 +103,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             } )
             .toList( ", " );
 
-        var updateStatement = "UPDATE #wrapTable( query.getFrom() )# SET #updateList#";
+        var updateStatement = "UPDATE #wrapTable( query.getTableName() )# SET #updateList#";
 
         var joins = arguments.query.getJoins();
 
@@ -153,7 +153,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             .map( wrapColumn )
             .toList( ", " );
         var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
-        return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )##returningClause#" );
+        return trim( "DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )##returningClause#" );
     }
 
     public string function compileUpsert(
@@ -250,7 +250,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function generateUniqueConstraint( column ) {
-        return column.getUnique() ? "UNIQUE" : "";
+        return column.getIsUnique() ? "UNIQUE" : "";
     }
 
     function modifyUnsigned( column ) {
@@ -270,7 +270,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function generateComment( column, blueprint ) {
-        if ( column.getComment() != "" ) {
+        if ( column.getCommentValue() != "" ) {
             blueprint.addCommand( "addComment", { table: blueprint.getTable(), column: column } );
         }
         return "";
@@ -279,12 +279,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function wrapDefaultType( column ) {
         switch ( column.getType() ) {
             case "boolean":
-                return uCase( column.getDefault() );
+                return uCase( column.getDefaultValue() );
             case "char":
             case "string":
-                return "'#column.getDefault()#'";
+                return "'#column.getDefaultValue()#'";
             default:
-                return column.getDefault();
+                return column.getDefaultValue();
         }
     }
 
@@ -323,7 +323,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                     generateType( commandParameters.to, blueprint ) & ",",
                     "ALTER COLUMN",
                     wrapColumn( commandParameters.to.getName() ),
-                    commandParameters.to.getNullable() ? "DROP" : "SET",
+                    commandParameters.to.getIsNullable() ? "DROP" : "SET",
                     "NOT NULL"
                 ],
                 function( item ) {

@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "adobe@2018", "adobe@2021"]
+        cfengine: ["lucee@5", "adobe@2021", "adobe@2023", "boxlang@be"]
         fullNull: ["true", "false"]
     steps:
       - name: Checkout Repository
@@ -28,12 +28,22 @@ jobs:
       - name: Set Up CommandBox
         uses: elpete/setup-commandbox@v1.0.0
 
+      - name: Install CommandBox-BoxLang
+        run: box install commandbox-boxlang
+
       - name: Install dependencies
         run: |
           box install
 
       - name: Start server
-        run: box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
+        run: |
+          if [[ "${{ matrix.cfengine }}" == *"boxlang"* ]] ; then
+            box server start cfengine=${{ matrix.cfengine }} javaVersion=openjdk21_jdk
+            box run-script bx-modules:install
+            box server restart
+          else
+            box server start cfengine=${{ matrix.cfengine }}
+          fi
 
       - name: Run TestBox Tests
         env:

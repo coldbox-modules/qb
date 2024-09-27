@@ -175,7 +175,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function basicWhereWithQueryParamStruct() {
-        return { sql: "SELECT * FROM ""USERS"" WHERE ""CREATEDDATE"" >= ?", bindings: [ "01/01/2019" ] };
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""CREATEDDATE"" >= ?", bindings: [ "2019-01-01" ] };
     }
 
     function orWhere() {
@@ -261,7 +261,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     function whereBetweenWithQueryParamStructs() {
         return {
             sql: "SELECT * FROM ""USERS"" WHERE ""CREATEDDATE"" BETWEEN ? AND ?",
-            bindings: [ "1/1/2019", "12/31/2019" ]
+            bindings: [ "2019-01-01", "2019-12-31" ]
         };
     }
 

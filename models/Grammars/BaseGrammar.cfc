@@ -39,7 +39,7 @@ component displayname="Grammar" accessors="true" singleton {
         "commonTables",
         "aggregate",
         "columns",
-        "from",
+        "tableName",
         "joins",
         "wheres",
         "groups",
@@ -267,8 +267,8 @@ component displayname="Grammar" accessors="true" singleton {
      *
      * @return string
      */
-    private string function compileFrom( required QueryBuilder query, required any from ) {
-        var fullTable = arguments.from;
+    private string function compileTableName( required QueryBuilder query, required any tableName ) {
+        var fullTable = arguments.tableName;
         if ( query.getAlias() != "" ) {
             fullTable &= " #query.getAlias()#";
         }
@@ -817,7 +817,7 @@ component displayname="Grammar" accessors="true" singleton {
                     .toList( ", " ) & ")";
             } )
             .toList( ", " );
-        return trim( "INSERT INTO #wrapTable( query.getFrom() )# (#columnsString#) VALUES #placeholderString#" );
+        return trim( "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#) VALUES #placeholderString#" );
     }
 
     /**
@@ -867,7 +867,7 @@ component displayname="Grammar" accessors="true" singleton {
             .toList( ", " );
 
         return trim(
-            compileCommonTables( query, query.getCommonTables() ) & " INSERT INTO #wrapTable( arguments.query.getFrom() )# (#columnsString#) #compileSelect( arguments.source )#"
+            compileCommonTables( query, query.getCommonTables() ) & " INSERT INTO #wrapTable( arguments.query.getTableName() )# (#columnsString#) #compileSelect( arguments.source )#"
         );
     }
 
@@ -901,7 +901,7 @@ component displayname="Grammar" accessors="true" singleton {
             } )
             .toList( ", " );
 
-        var updateStatement = "UPDATE #wrapTable( query.getFrom() )#";
+        var updateStatement = "UPDATE #wrapTable( query.getTableName() )#";
 
         if ( !arguments.query.getJoins().isEmpty() ) {
             updateStatement &= " " & compileJoins( arguments.query, arguments.query.getJoins() );
@@ -923,7 +923,7 @@ component displayname="Grammar" accessors="true" singleton {
         if ( !arguments.query.getReturning().isEmpty() ) {
             throw( type = "UnsupportedOperation", message = "This grammar does not support a RETURNING clause" );
         }
-        return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )#" );
+        return trim( "DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )#" );
     }
 
     /**
@@ -1226,15 +1226,15 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function generateNullConstraint( column ) {
-        return column.getNullable() ? "" : "NOT NULL";
+        return column.getIsNullable() ? "" : "NOT NULL";
     }
 
     function generateUniqueConstraint( column, blueprint ) {
-        return column.getUnique() ? "UNIQUE" : "";
+        return column.getIsUnique() ? "UNIQUE" : "";
     }
 
     function modifyUnsigned( column ) {
-        return column.getUnsigned() ? "UNSIGNED" : "";
+        return column.getIsUnsigned() ? "UNSIGNED" : "";
     }
 
     function generateComputed( column ) {
@@ -1252,14 +1252,14 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function generateDefault( column ) {
-        if ( column.getDefault() == "" ) {
+        if ( column.getDefaultValue() == "" ) {
             return "";
         }
         return "DEFAULT #wrapDefaultType( column )#";
     }
 
     function generateComment( column ) {
-        return column.getComment() != "" ? "COMMENT '#column.getComment()#'" : "";
+        return column.getCommentValue() != "" ? "COMMENT '#column.getCommentValue()#'" : "";
     }
 
     function compileAddComment( blueprint, commandParameters ) {
@@ -1268,7 +1268,7 @@ component displayname="Grammar" accessors="true" singleton {
                 "COMMENT ON COLUMN",
                 wrapColumn( commandParameters.table & "." & commandParameters.column.getName() ),
                 "IS",
-                "'" & commandParameters.column.getComment() & "'"
+                "'" & commandParameters.column.getCommentValue() & "'"
             ],
             " "
         );
@@ -1743,8 +1743,8 @@ component displayname="Grammar" accessors="true" singleton {
                 "CONSTRAINT #wrapValue( index.getName() )#",
                 "FOREIGN KEY (#keys#)",
                 "REFERENCES #wrapTable( index.getTable() )# (#references#)",
-                "ON UPDATE #uCase( index.getOnUpdate() )#",
-                "ON DELETE #uCase( index.getOnDelete() )#"
+                "ON UPDATE #uCase( index.getOnUpdateAction() )#",
+                "ON DELETE #uCase( index.getOnDeleteAction() )#"
             ],
             " "
         );

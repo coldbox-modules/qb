@@ -112,7 +112,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * The base table of the query. Default: null
      */
-    property name="from" type="any";
+    property name="tableName" type="any";
 
     /**
      * The alias name for the base table. Default: null
@@ -339,7 +339,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.distinct = false;
         variables.aggregate = {};
         variables.columns = [ "*" ];
-        variables.from = "";
+        variables.tableName = "";
         variables.alias = "";
         variables.lockType = "none";
         variables.lockValue = "";
@@ -568,7 +568,7 @@ component displayname="QueryBuilder" accessors="true" {
         if ( isSimpleValue( arguments.from ) ) {
             parseIntoTableAndAlias( arguments.from );
         } else {
-            variables.from = arguments.from;
+            variables.tableName = arguments.from;
         }
 
         return this;
@@ -576,21 +576,21 @@ component displayname="QueryBuilder" accessors="true" {
 
     private void function parseIntoTableAndAlias( required string table ) {
         var parts = arguments.table.split( "\s(?:[Aa][Ss]\s)?" );
-        variables.from = trim( parts[ 1 ] );
+        variables.tableName = trim( parts[ 1 ] );
         if ( arrayLen( parts ) > 1 ) {
             variables.alias = trim( parts[ 2 ] );
         }
     }
 
     public QueryBuilder function withAlias( required any alias ) {
-        if ( utils.isExpression( variables.from ) ) {
+        if ( utils.isExpression( variables.tableName ) ) {
             throw( type = "QBInvalidFrom", message = "An alias cannot be added to a raw expression." );
         }
 
         var oldAlias = variables.alias;
         variables.alias = arguments.alias;
 
-        renameAliases( ( oldAlias != "" ? oldAlias : variables.from ), arguments.alias );
+        renameAliases( ( oldAlias != "" ? oldAlias : variables.tableName ), arguments.alias );
 
         return this;
     }
@@ -790,7 +790,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function table( required any table ) {
-        variables.from = arguments.table;
+        variables.tableName = arguments.table;
         return this;
     }
 
@@ -1607,13 +1607,13 @@ component displayname="QueryBuilder" accessors="true" {
         };
 
         if ( !isJoin() ) {
-            if ( !isCustomFunction( variables.from ) ) {
-                if ( getUtils().isExpression( getFrom() ) ) {
-                    memento[ "from" ] = getFrom().getSQL();
-                } else if ( getUtils().isBuilder( getFrom() ) ) {
-                    memento[ "from" ] = getFrom().toSQL();
+            if ( !isCustomFunction( variables.tableName ) ) {
+                if ( getUtils().isExpression( getTableName() ) ) {
+                    memento[ "from" ] = getTableName().getSQL();
+                } else if ( getUtils().isBuilder( getTableName() ) ) {
+                    memento[ "from" ] = getTableName().toSQL();
                 } else {
-                    memento[ "from" ] = getFrom();
+                    memento[ "from" ] = getTableName();
                 }
             }
         } else {
@@ -2009,7 +2009,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public QueryBuilder function forNestedWhere() {
         var query = newQuery();
-        return query.from( getFrom() );
+        return query.from( getTableName() );
     }
 
     /**
@@ -2745,8 +2745,8 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         arguments.maxRows = arguments.maxRows > 0 ? arguments.maxRows : 0;
-        offset( arguments.page * arguments.maxRows - arguments.maxRows );
-        limit( arguments.maxRows );
+        this.offset( arguments.page * arguments.maxRows - arguments.maxRows );
+        this.limit( arguments.maxRows );
         return this;
     }
 
@@ -3907,11 +3907,11 @@ component displayname="QueryBuilder" accessors="true" {
      * @return      Query | Array<string>
      */
     public any function columnList( boolean asQuery = false, string datasource ) {
-        if ( isNull( getFrom() ) || !isSimpleValue( getFrom() ) || getFrom() == "" ) {
+        if ( isNull( getTableName() ) || !isSimpleValue( getTableName() ) || getTableName() == "" ) {
             throw( type = "MissingTable", message = "A simple table is required to use `columnList`." );
         }
 
-        var attrs = { "type": "Columns", "name": "local.columnList", "table": variables.from };
+        var attrs = { "type": "Columns", "name": "local.columnList", "table": variables.tableName };
         if ( !isNull( arguments.datasource ) ) {
             attrs[ "datasource" ] = arguments.datasource;
         }
@@ -4036,7 +4036,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
         clonedQuery.setAggregate( newAggregate );
         clonedQuery.setColumns( this.getColumns().isEmpty() ? [] : arraySlice( this.getColumns(), 1 ) );
-        clonedQuery.setFrom( this.getFrom() );
+        clonedQuery.setTableName( this.getTableName() );
         clonedQuery.setAlias( this.getAlias() );
         clonedQuery.setJoins( this.getJoins().isEmpty() ? [] : arraySlice( this.getJoins(), 1 ) );
         clonedQuery.setWheres( this.getWheres().isEmpty() ? [] : arraySlice( this.getWheres(), 1 ) );
@@ -4359,9 +4359,9 @@ component displayname="QueryBuilder" accessors="true" {
          * column in the function name as the first column name.
          */
         if ( !arrayIsEmpty( reMatchNoCase( "^where(.+)", missingMethodName ) ) ) {
-            var args = { "1": mid( missingMethodName, 6, len( missingMethodName ) - 5 ) };
+            var args = { "column": mid( missingMethodName, 6, len( missingMethodName ) - 5 ) };
             for ( var key in missingMethodArguments ) {
-                args[ key + 1 ] = missingMethodArguments[ key ];
+                args[ "operator" ] = missingMethodArguments[ key ];
             }
             return where( argumentCollection = args );
         }
@@ -4372,9 +4372,9 @@ component displayname="QueryBuilder" accessors="true" {
          * column in the function name as the first column name.
          */
         if ( !arrayIsEmpty( reMatchNoCase( "^andWhere(.+)", missingMethodName ) ) ) {
-            var args = { "1": mid( missingMethodName, 9, len( missingMethodName ) - 8 ) };
+            var args = { "column": mid( missingMethodName, 9, len( missingMethodName ) - 8 ) };
             for ( var key in missingMethodArguments ) {
-                args[ key + 1 ] = missingMethodArguments[ key ];
+                args[ "operator" ] = missingMethodArguments[ key ];
             }
 
             return andWhere( argumentCollection = args );
@@ -4386,9 +4386,9 @@ component displayname="QueryBuilder" accessors="true" {
          * column in the function name as the first column name.
          */
         if ( !arrayIsEmpty( reMatchNoCase( "^orWhere(.+)", missingMethodName ) ) ) {
-            var args = { "1": mid( missingMethodName, 8, len( missingMethodName ) - 7 ) };
+            var args = { "column": mid( missingMethodName, 8, len( missingMethodName ) - 7 ) };
             for ( var key in missingMethodArguments ) {
-                args[ key + 1 ] = missingMethodArguments[ key ];
+                args[ "operator" ] = missingMethodArguments[ key ];
             }
 
             return orWhere( argumentCollection = args );

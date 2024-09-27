@@ -37,10 +37,12 @@ jobs:
 
       - name: Start server
         run: |
-          box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
           if [[ "${{ matrix.cfengine }}" == *"boxlang"* ]] ; then
+            box server start cfengine=${{ matrix.cfengine }} javaVersion=openjdk21_jdk --noSaveSettings
             box run-script bx-modules:install
             box server restart
+          else
+            box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
           fi
 
       - name: Run TestBox Tests

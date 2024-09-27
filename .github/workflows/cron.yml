@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "lucee@be", "adobe@2018", "adobe@2021", "adobe@2023", "adobe@be", "boxlang@be"]
+        cfengine: ["lucee@5", "lucee@be", "adobe@2021", "adobe@2023", "adobe@be", "boxlang@be"]
         javaVersion: ["openjdk8", "openjdk11"]
         fullNull: ["true", "false"]
     steps:
@@ -37,11 +37,11 @@ jobs:
       - name: Start server
         run: |
           if [[ "${{ matrix.cfengine }}" == *"boxlang"* ]] ; then
-            box server start cfengine=${{ matrix.cfengine }} javaVersion=openjdk21_jdk --noSaveSettings
+            box server start cfengine=${{ matrix.cfengine }} javaVersion=openjdk21_jdk
             box run-script bx-modules:install
             box server restart
           else
-            box server start cfengine=${{ matrix.cfengine }} javaVersion=${{ matrix.javaVersion }} --noSaveSettings
+            box server start cfengine=${{ matrix.cfengine }} javaVersion=${{ matrix.javaVersion }}
           fi
 
       - name: Run TestBox Tests

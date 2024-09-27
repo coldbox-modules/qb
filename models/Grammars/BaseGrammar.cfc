@@ -1035,7 +1035,7 @@ component displayname="Grammar" accessors="true" singleton {
         // Quick check to see if we should bother to use a regex to look for a table alias
         if ( parts.table.find( " " ) ) {
             var matches = reFindNoCase(
-                "(.*?)(?:\s(?:AS\s)*)([^\)]+)$",
+                "(.*?)(?:\s(?:AS\s){0,1})([^\)]+)$",
                 parts.table,
                 1,
                 true

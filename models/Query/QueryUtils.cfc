@@ -318,7 +318,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         // Includes quick check for a "(" to avoid the regex to look for the subquery pattern if possible
         return isSimpleValue( arguments.value ) &&
         arguments.value.find( "(" ) &&
-        arguments.value.reFindNoCase( "^\s*\(.+\)(\s|\sAS\s)*[^\(\s]*\s*$" );
+        arguments.value.reFindNoCase( "^\s*\(.+\)(\s|\sAS\s){0,1}[^\(\s]*\s*$" );
     }
 
     /**

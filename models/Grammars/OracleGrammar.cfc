@@ -325,23 +325,22 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
 
         // Oracle: Default value must come before column constraints
+        var values = [
+            wrapColumn( column.getName() ),
+            generateType( column, blueprint ),
+            modifyUnsigned( column ),
+            generateComputed( column ),
+            generateAutoIncrement( column, blueprint ),
+            generateDefault( column ),
+            generateNullConstraint( column ),
+            generateUniqueConstraint( column, blueprint ),
+            generateComment( column, blueprint )
+        ];
+
         return arrayToList(
-            arrayFilter(
-                [
-                    wrapColumn( column.getName() ),
-                    generateType( column, blueprint ),
-                    modifyUnsigned( column ),
-                    generateComputed( column ),
-                    generateAutoIncrement( column, blueprint ),
-                    generateDefault( column ),
-                    generateNullConstraint( column ),
-                    generateUniqueConstraint( column, blueprint ),
-                    generateComment( column, blueprint )
-                ],
-                function( item ) {
-                    return item != "";
-                }
-            ),
+            arrayFilter( values, function( item ) {
+                return item != "";
+            } ),
             " "
         );
     }

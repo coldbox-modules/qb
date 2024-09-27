@@ -120,10 +120,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             } )
             .toList( ", " );
 
-        var updateStatement = "UPDATE #wrapTable( query.getFrom() )#";
+        var updateStatement = "UPDATE #wrapTable( query.getTableName() )#";
         var joinStatement = "";
         if ( !arguments.query.getJoins().isEmpty() ) {
-            joinStatement = " FROM #wrapTable( query.getFrom() )# " & compileJoins(
+            joinStatement = " FROM #wrapTable( query.getTableName() )# " & compileJoins(
                 arguments.query,
                 arguments.query.getJoins()
             );
@@ -155,7 +155,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             .map( wrapColumn )
             .toList( ", " );
         var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
-        return trim( "DELETE FROM #wrapTable( query.getFrom() )# #compileWheres( query, query.getWheres() )##returningClause#" );
+        return trim( "DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )##returningClause#" );
     }
 
     public string function compileUpsert(
@@ -221,12 +221,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function wrapDefaultType( column ) {
         switch ( column.getType() ) {
             case "boolean":
-                return column.getDefault() ? 1 : 0;
+                return column.getDefaultValue() ? 1 : 0;
             case "char":
             case "string":
-                return "'#column.getDefault()#'";
+                return "'#column.getDefaultValue()#'";
             default:
-                return column.getDefault();
+                return column.getDefaultValue();
         }
     }
 
@@ -353,15 +353,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return "CHECK (#wrapColumn( column.getName() )# IN (#values#))";
         }
 
-        return column.getUnique() ? "UNIQUE" : "";
+        return column.getIsUnique() ? "UNIQUE" : "";
     }
 
     function generateDefault( column ) {
         if (
-            column.getDefault() == "" &&
+            column.getDefaultValue() == "" &&
             column.getType().findNoCase( "TIMESTAMP" ) > 0
         ) {
-            if ( column.getNullable() ) {
+            if ( column.getIsNullable() ) {
                 return "";
             } else {
                 column.withCurrent();
@@ -534,8 +534,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             [
                 "FOREIGN KEY (#keys#)",
                 "REFERENCES #wrapTable( index.getTable() )# (#references#)",
-                "ON UPDATE #uCase( index.getOnUpdate() )#",
-                "ON DELETE #uCase( index.getOnDelete() )#"
+                "ON UPDATE #uCase( index.getOnUpdateAction() )#",
+                "ON DELETE #uCase( index.getOnDeleteAction() )#"
             ],
             " "
         );

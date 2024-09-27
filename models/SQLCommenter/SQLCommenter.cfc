@@ -53,7 +53,7 @@ component singleton {
         return {
             "sql": left( arguments.sql, commentStartPosition - 1 ),
             "comments": parseCommentString(
-                mid( arguments.sql, commentStartPosition + 1, len( arguments.sql ) - commentStartPosition + 1 )
+                mid( arguments.sql, commentStartPosition + 1, len( arguments.sql ) - commentStartPosition )
             )
         };
     }

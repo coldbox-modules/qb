@@ -149,7 +149,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
         var cteClause = query.getCommonTables().isEmpty() ? "" : " #compileCommonTables( query, query.getCommonTables() )#";
 
-        return "INSERT INTO #wrapTable( arguments.query.getFrom() )# (#columnsString#)#cteClause# #compileSelect( arguments.source )#";
+        return "INSERT INTO #wrapTable( arguments.query.getTableName() )# (#columnsString#)#cteClause# #compileSelect( arguments.source )#";
     }
 
     public string function compileUpsert(
@@ -199,10 +199,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function generateDefault( column ) {
         if (
-            column.getDefault() == "" &&
+            column.getDefaultValue() == "" &&
             column.getType().findNoCase( "TIMESTAMP" ) > 0
         ) {
-            if ( column.getNullable() ) {
+            if ( column.getIsNullable() ) {
                 return "NULL DEFAULT NULL";
             } else {
                 column.withCurrent();
@@ -214,12 +214,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function wrapDefaultType( column ) {
         switch ( column.getType() ) {
             case "boolean":
-                return column.getDefault() ? 1 : 0;
+                return column.getDefaultValue() ? 1 : 0;
             case "char":
             case "string":
-                return "'#column.getDefault()#'";
+                return "'#column.getDefaultValue()#'";
             default:
-                return column.getDefault();
+                return column.getDefaultValue();
         }
     }
 

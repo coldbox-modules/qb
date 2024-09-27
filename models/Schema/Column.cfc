@@ -32,12 +32,12 @@ component accessors="true" {
     /**
      * Whether the column value can be null.
      */
-    property name="nullable" default="false";
+    property name="isNullable" default="false";
 
     /**
      * Whether the column value is only unsigned.
      */
-    property name="unsigned" default="false";
+    property name="isUnsigned" default="false";
 
     /**
      * Whether the column is auto incremented.
@@ -47,17 +47,17 @@ component accessors="true" {
     /*
      * The default value for the column.
      */
-    property name="default" default="";
+    property name="defaultValue" default="";
 
     /**
      * A comment for the column.
      */
-    property name="comment" default="";
+    property name="commentValue" default="";
 
     /**
      * Whether the column is unique.
      */
-    property name="unique" default="false";
+    property name="isUnique" default="false";
 
     /**
      * The possible values for the column.
@@ -96,7 +96,7 @@ component accessors="true" {
                 ( structKeyExists( variables, "set#arg#" ) || structKeyExists( this, "set#arg#" ) ) &&
                 !isNull( arguments.args[ arg ] )
             ) {
-                invoke( this, "set#arg#", { 1: arguments.args[ arg ] } );
+                invoke( this, "set#arg#", [ arguments.args[ arg ] ] );
             }
         }
         return this;
@@ -110,7 +110,7 @@ component accessors="true" {
      * @returns The Column instance.
      */
     public Column function comment( required string comment ) {
-        setComment( arguments.comment );
+        setCommentValue( arguments.comment );
         return this;
     }
 
@@ -122,7 +122,7 @@ component accessors="true" {
      * @returns The Column instance.
      */
     public Column function default( required string value ) {
-        setDefault( arguments.value );
+        setDefaultValue( arguments.value );
         return this;
     }
 
@@ -132,7 +132,7 @@ component accessors="true" {
      * @returns The Column instance.
      */
     public Column function nullable() {
-        setNullable( true );
+        setIsNullable( true );
         return this;
     }
 
@@ -173,7 +173,7 @@ component accessors="true" {
      * @returns The Column instance.
      */
     public Column function unsigned() {
-        setUnsigned( true );
+        setIsUnsigned( true );
         return this;
     }
 
@@ -183,7 +183,7 @@ component accessors="true" {
      * @returns The Column instance.
      */
     public Column function unique() {
-        setUnique( true );
+        setIsUnique( true );
         return this;
     }
 
@@ -200,7 +200,7 @@ component accessors="true" {
      * @returns Column
      */
     public Column function withCurrent( numeric precision ) {
-        setDefault( "CURRENT_TIMESTAMP#isNull( arguments.precision ) ? "" : "(#arguments.precision#)"#" );
+        setDefaultValue( "CURRENT_TIMESTAMP#isNull( arguments.precision ) ? "" : "(#arguments.precision#)"#" );
         return this;
     }
 

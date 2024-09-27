@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "adobe@2018", "adobe@2021"]
+        cfengine: ["lucee@5", "adobe@2018", "adobe@2021", "adobe@2023", "boxlang@be"]
         fullNull: ["true", "false"]
     steps:
       - name: Checkout Repository
@@ -34,7 +34,12 @@ jobs:
           box install
 
       - name: Start server
-        run: box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
+        run: |
+          box server start cfengine=${{ matrix.cfengine }} --noSaveSettings
+          if [[ "${{ matrix.cfengine }}" == *"boxlang"* ]] ; then
+            box run-script bx-modules:install
+            box server restart
+          fi
 
       - name: Run TestBox Tests
         env:

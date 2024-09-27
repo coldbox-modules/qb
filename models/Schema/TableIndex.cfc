@@ -35,14 +35,14 @@ component accessors="true" {
      * Available values are:
      * RESTRICT, CASCADE, SET NULL, NO ACTION, SET DEFAULT
      */
-    property name="onUpdate" default="NO ACTION";
+    property name="onUpdateAction" default="NO ACTION";
 
     /**
      * The strategy for updating foreign keys when the parent key is deleted.
      * Available values are:
      * RESTRICT, CASCADE, SET NULL, NO ACTION, SET DEFAULT
      */
-    property name="onDelete" default="NO ACTION";
+    property name="onDeleteAction" default="NO ACTION";
 
     /**
      * Create a new TableIndex instance.
@@ -60,7 +60,7 @@ component accessors="true" {
                 ( structKeyExists( variables, "set#arg#" ) || structKeyExists( this, "set#arg#" ) ) &&
                 !isNull( arguments.args[ arg ] )
             ) {
-                invoke( this, "set#arg#", { 1: arguments.args[ arg ] } );
+                invoke( this, "set#arg#", [ arguments.args[ arg ] ] );
             }
         }
         return this;
@@ -101,7 +101,7 @@ component accessors="true" {
      * @returns The TableIndex instance.
      */
     public TableIndex function onUpdate( required string option ) {
-        setOnUpdate( arguments.option );
+        setOnUpdateAction( arguments.option );
         return this;
     }
 
@@ -114,7 +114,7 @@ component accessors="true" {
      * @returns The TableIndex instance.
      */
     public TableIndex function onDelete( required string option ) {
-        setOnDelete( arguments.option );
+        setOnDeleteAction( arguments.option );
         return this;
     }
 

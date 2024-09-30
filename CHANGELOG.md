@@ -1,3 +1,11 @@
+# v10.0.0
+## 30 Sep 2024 — 13:54:41 UTC
+
+### BREAKING
+
++ __\*:__ Boxlang Certification ([bebc83d](https://github.com/coldbox-modules/qb/commit/bebc83d515ff8e802bfa5d2d4552c10e3b176271))
+
+
 # v9.11.1
 ## 11 Sep 2024 — 22:06:13 UTC
 

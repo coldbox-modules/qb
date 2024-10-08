@@ -108,7 +108,8 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         if ( binding.cfsqltype == "CF_SQL_TIMESTAMP" ) {
-            binding.value = dateTimeFormat( binding.value, "iso8601" );
+            // can't use iso8601 since it's not supported in Adobe. :-(
+            binding.value = dateFormat( binding.value, "yyyy-mm-dd" ) & "T" & timeFormat( binding.value, "HH:mm:ss" ) & "Z";
         } else if ( binding.cfsqltype == "CF_SQL_DATE" ) {
             binding.value = dateFormat( binding.value, "yyyy-mm-dd" );
         } else if ( binding.cfsqltype == "CF_SQL_TIME" ) {

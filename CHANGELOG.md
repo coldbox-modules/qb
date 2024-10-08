@@ -1,3 +1,12 @@
+# v10.0.1
+## 08 Oct 2024 — 05:50:33 UTC
+
+### fix
+
++ __QueryUtils:__ Manually construct ISO 8601 timestamps due to lack of Adobe support
+ ([9e03360](https://github.com/coldbox-modules/qb/commit/9e0336070f88358cfd858cddb282fb270db2c26b))
+
+
 # v10.0.0
 ## 30 Sep 2024 — 13:54:41 UTC
 

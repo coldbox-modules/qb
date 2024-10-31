@@ -85,9 +85,7 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 var binding = utils.extractBinding( datetime );
 
                 expect( binding ).toBeStruct();
-                expect( binding.value ).toBe(
-                    dateFormat( datetime, "yyyy-mm-dd" ) & "T" & timeFormat( datetime, "HH:mm:ss" ) & "Z"
-                );
+                expect( binding.value ).toBe( dateTimeFormat( datetime, "yyyy-mm-dd'T'HH:nn:ss.SSSXXX" ) );
                 expect( binding.cfsqltype ).toBe( "CF_SQL_TIMESTAMP" );
                 expect( binding.list ).toBe( false );
                 expect( binding.null ).toBe( false );

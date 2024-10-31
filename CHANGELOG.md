@@ -1,3 +1,12 @@
+# v10.0.2
+## 31 Oct 2024 — 20:03:18 UTC
+
+### fix
+
++ __QueryUtils:__ Fix timestamp formatting losing timezone information
+ ([0679aee](https://github.com/coldbox-modules/qb/commit/0679aeeb1efcc49d1198dab9cdac7b03375be439))
+
+
 # v10.0.1
 ## 08 Oct 2024 — 05:50:33 UTC
 

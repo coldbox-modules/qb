@@ -216,6 +216,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function whereBoolean() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ACTIVE"" = ?",
+            bindings: [
+                {
+                    "cfsqltype": "CF_SQL_NUMERIC",
+                    "value": 1,
+                    "list": false,
+                    "null": false
+                }
+            ]
+        };
+    }
+
     function whereExists() {
         return "SELECT * FROM ""ORDERS"" WHERE EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")";
     }
@@ -701,6 +715,34 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function insertSingleColumn() {
         return { sql: "INSERT INTO ""USERS"" (""EMAIL"") VALUES (?)", bindings: [ "foo" ] };
+    }
+
+    function insertBoolean() {
+        return {
+            sql: "INSERT INTO ""USERS"" (""ACTIVE"") VALUES (?)",
+            bindings: [
+                {
+                    "value": 1,
+                    "cfsqltype": "CF_SQL_NUMERIC",
+                    "null": false,
+                    "list": false
+                }
+            ]
+        };
+    }
+
+    function insertBooleanExplicitSqlType() {
+        return {
+            sql: "INSERT INTO ""USERS"" (""ACTIVE"") VALUES (?)",
+            bindings: [
+                {
+                    "value": true,
+                    "cfsqltype": "CF_SQL_BOOLEAN",
+                    "null": false,
+                    "list": false
+                }
+            ]
+        };
     }
 
     function insertMultipleColumns() {

@@ -498,6 +498,19 @@ component extends="testbox.system.BaseSpec" {
                                     );
                             }, whereBuilderInstance() );
                         } );
+
+                        it( "can add a where statement with a boolean literal", function() {
+                            testCase(
+                                callback = function( builder ) {
+                                    builder
+                                        .select( "*" )
+                                        .from( "users" )
+                                        .where( "active", "=", true );
+                                },
+                                expected = whereBoolean(),
+                                withFullBindings = true
+                            );
+                        } );
                     } );
 
                     describe( "where exists", function() {
@@ -2241,6 +2254,31 @@ component extends="testbox.system.BaseSpec" {
                     }, insertSingleColumn() );
                 } );
 
+                it( "correctly formats booleans during an insert", function() {
+                    testCase(
+                        callback = function( builder ) {
+                            return builder.from( "users" ).insert( values = { "active": true }, toSql = true );
+                        },
+                        expected = insertBoolean(),
+                        withFullBindings = true
+                    );
+                } );
+
+                it( "always uses passed in cfsqltypes if available", function() {
+                    testCase(
+                        callback = function( builder ) {
+                            return builder
+                                .from( "users" )
+                                .insert(
+                                    values = { "active": { "value": true, "cfsqltype": "CF_SQL_BOOLEAN" } },
+                                    toSql = true
+                                );
+                        },
+                        expected = insertBooleanExplicitSqlType(),
+                        withFullBindings = true
+                    );
+                } );
+
                 it( "can insert a struct of data with multiple columns into a table", function() {
                     testCase( function( builder ) {
                         return builder
@@ -2773,23 +2811,34 @@ component extends="testbox.system.BaseSpec" {
         } );
     }
 
-    private function testCase( callback, expected ) {
+    private function testCase( required function callback, required any expected, boolean withFullBindings = false ) {
         try {
             var builder = getBuilder();
-            var sql = callback( builder );
-            if ( !isNull( sql ) ) {
-                if ( !isSimpleValue( sql ) ) {
-                    sql = sql.toSQL();
+            local.sql = callback( builder );
+            if ( !isNull( local.sql ) ) {
+                if ( !isSimpleValue( local.sql ) ) {
+                    local.sql = local.sql.toSQL();
                 }
             } else {
-                sql = builder.toSQL();
+                local.sql = builder.toSQL();
             }
             if ( isSimpleValue( expected ) ) {
                 expected = { sql: expected, bindings: [] };
             }
 
-            expect( sql ).toBeWithCase( expected.sql );
-            expect( getTestBindings( builder ) ).toBe( expected.bindings );
+            expect( local.sql ).toBeWithCase( expected.sql );
+            getTestBindings( builder, arguments.withFullBindings ).each( ( testBinding, index ) => {
+                var expectedBinding = expected.bindings[ index ];
+                if ( isStruct( expectedBinding ) ) {
+                    expect( testBinding ).toBeStruct();
+                    for ( var key in expectedBinding ) {
+                        expect( testBinding ).toHaveKey( key );
+                        expect( testBinding[ key ] ).toBe( expectedBinding[ key ] );
+                    }
+                } else {
+                    expect( testBinding ).toBe( expectedBinding );
+                }
+            } );
         } catch ( any e ) {
             if ( !isSimpleValue( expected ) && structKeyExists( expected, "exception" ) ) {
                 expect( e.type ).toBe( expected.exception );
@@ -2803,7 +2852,7 @@ component extends="testbox.system.BaseSpec" {
         throw( "Must be implemented in a subclass" );
     }
 
-    private array function getTestBindings( builder ) {
+    private array function getTestBindings( required QueryBuilder builder, boolean withFullBindings = false ) {
         return builder
             .getBindings()
             .map( function( binding ) {
@@ -2813,7 +2862,7 @@ component extends="testbox.system.BaseSpec" {
                     if ( binding.null ) {
                         return "NULL";
                     } else {
-                        return binding.value;
+                        return withFullBindings ? binding : binding.value;
                     }
                 }
             } );

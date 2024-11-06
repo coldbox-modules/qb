@@ -278,6 +278,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "BOOLEAN";
     }
 
+    public string function getBooleanSqlType() {
+        return "CF_SQL_OTHER";
+    }
+
+    public any function convertBooleanValue( required any value ) {
+        return !!arguments.value;
+    }
+
     function typeChar( column ) {
         return "VARCHAR(#column.getLength()#)";
     }

@@ -608,6 +608,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return "BIT";
     }
 
+    public string function getBooleanSqlType() {
+        return "CF_SQL_BIT";
+    }
+
     function typeChar( column ) {
         return "NCHAR(#column.getLength()#)";
     }

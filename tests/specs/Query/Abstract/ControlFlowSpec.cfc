@@ -150,18 +150,18 @@ component extends="testbox.system.BaseSpec" {
 
     private function testCase( callback, expected ) {
         var builder = getBuilder();
-        var sql = callback( builder );
-        if ( !isNull( sql ) ) {
-            if ( !isSimpleValue( sql ) ) {
-                sql = sql.toSQL();
+        local.sql = callback( builder );
+        if ( !isNull( local.sql ) ) {
+            if ( !isSimpleValue( local.sql ) ) {
+                local.sql = local.sql.toSQL();
             }
         } else {
-            sql = builder.toSQL();
+            local.sql = builder.toSQL();
         }
         if ( isSimpleValue( expected ) ) {
             expected = { sql: expected, bindings: [] };
         }
-        expect( sql ).toBeWithCase( expected.sql );
+        expect( local.sql ).toBeWithCase( expected.sql );
         expect( getTestBindings( builder ) ).toBe( expected.bindings );
     }
 

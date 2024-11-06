@@ -84,7 +84,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @return any
      */
-    public any function extractBinding( any value ) {
+    public any function extractBinding( any value, required BaseGrammar grammar ) {
         if ( isNull( arguments.value ) ) {
             return { "cfsqltype": "CF_SQL_VARCHAR", "value": "", "null": true };
         }
@@ -104,7 +104,11 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         if ( !structKeyExists( binding, "cfsqltype" ) ) {
-            binding.cfsqltype = inferSqlType( binding.value );
+            if ( checkIsActuallyBoolean( binding.value ) ) {
+                structAppend( binding, arguments.grammar.convertToBooleanType( binding.value ), true );
+            } else {
+                binding.cfsqltype = inferSqlType( binding.value, arguments.grammar );
+            }
         }
 
         if ( binding.cfsqltype == "CF_SQL_TIMESTAMP" ) {
@@ -174,7 +178,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @return string
      */
-    public string function inferSqlType( any value ) {
+    public string function inferSqlType( any value, required BaseGrammar grammar ) {
         if ( isNull( arguments.value ) ) {
             return "CF_SQL_VARCHAR";
         }
@@ -183,7 +187,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             return arraySame(
                 value,
                 function( val ) {
-                    return inferSqlType( val );
+                    return inferSqlType( val, grammar );
                 },
                 "CF_SQL_VARCHAR"
             );
@@ -199,6 +203,10 @@ component singleton displayname="QueryUtils" accessors="true" {
 
         if ( checkIsActuallyDate( value ) ) {
             return "CF_SQL_TIMESTAMP";
+        }
+
+        if ( checkIsActuallyBoolean( value ) ) {
+            return arguments.grammar.getBooleanSqlType();
         }
 
         return "CF_SQL_VARCHAR";
@@ -514,6 +522,24 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
     }
 
+    /**
+     * Detects if value is a Boolean based on className
+     *
+     * @value The value
+     *
+     * @return boolean
+     */
+    private boolean function checkIsActuallyBoolean( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return false;
+        }
+
+        return arrayContainsNoCase(
+            [ "CFBoolean", "Boolean" ],
+            listLast( toString( getMetadata( arguments.value ) ), "." )
+        );
+    }
+
 
     /** Utility functions to assist with preventing duplicate joins. Adapted from cflib.org **/
     /**
@@ -615,10 +641,10 @@ component singleton displayname="QueryUtils" accessors="true" {
         return true;
     }
 
-    public string function serializeBindings( required array bindings ) {
+    public string function serializeBindings( required array bindings, required BaseGrammar grammar ) {
         return serializeJSON(
             arguments.bindings.map( function( binding ) {
-                var newBinding = extractBinding( duplicate( binding ) );
+                var newBinding = extractBinding( duplicate( binding ), grammar );
                 if ( isBinary( newBinding.value ) ) {
                     newBinding.value = toBase64( newBinding.value );
                 }

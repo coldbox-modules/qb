@@ -808,7 +808,7 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !arrayIsEmpty( arguments.bindings ) ) {
             addBindings(
                 arguments.bindings.map( function( value ) {
-                    return utils.extractBinding( value );
+                    return utils.extractBinding( value, variables.grammar );
                 } ),
                 "from"
             );
@@ -830,7 +830,7 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !arrayIsEmpty( arguments.bindings ) ) {
             addBindings(
                 arguments.bindings.map( function( value ) {
-                    return utils.extractBinding( value );
+                    return utils.extractBinding( value, variables.grammar );
                 } ),
                 "from"
             );
@@ -1706,7 +1706,7 @@ component displayname="QueryBuilder" accessors="true" {
         );
 
         if ( getUtils().isNotExpression( arguments.value ) ) {
-            addBindings( utils.extractBinding( arguments.value ), "where" );
+            addBindings( utils.extractBinding( arguments.value, variables.grammar ), "where" );
         }
 
         return this;
@@ -1812,7 +1812,7 @@ component displayname="QueryBuilder" accessors="true" {
         var bindings = values
             .filter( utils.isNotExpression )
             .map( function( value ) {
-                return utils.extractBinding( value );
+                return utils.extractBinding( value, variables.grammar );
             } );
 
         addBindings( bindings, "where" );
@@ -1880,7 +1880,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {
         addBindings(
             whereBindings.map( function( binding ) {
-                return utils.extractBinding( binding );
+                return utils.extractBinding( binding, variables.grammar );
             } ),
             "where"
         );
@@ -2102,8 +2102,8 @@ component displayname="QueryBuilder" accessors="true" {
             callback( arguments.end );
         }
 
-        addBindings( utils.extractBinding( arguments.start ), "where" );
-        addBindings( utils.extractBinding( arguments.end ), "where" );
+        addBindings( utils.extractBinding( arguments.start, variables.grammar ), "where" );
+        addBindings( utils.extractBinding( arguments.end, variables.grammar ), "where" );
 
         if (
             isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && arguments.start.keyExists(
@@ -2231,7 +2231,7 @@ component displayname="QueryBuilder" accessors="true" {
                 arguments.column
                     .getBindings()
                     .map( function( binding ) {
-                        return utils.extractBinding( binding );
+                        return utils.extractBinding( binding, variables.grammar );
                     } ),
                 "having"
             );
@@ -2261,14 +2261,14 @@ component displayname="QueryBuilder" accessors="true" {
                 arguments.column
                     .getBindings()
                     .map( function( binding ) {
-                        return utils.extractBinding( binding );
+                        return utils.extractBinding( binding, variables.grammar );
                     } ),
                 "having"
             );
         }
 
         if ( getUtils().isNotExpression( arguments.value ) ) {
-            addBindings( utils.extractBinding( arguments.value ), "having" );
+            addBindings( utils.extractBinding( arguments.value, variables.grammar ), "having" );
         }
 
         return this;
@@ -2399,7 +2399,7 @@ component displayname="QueryBuilder" accessors="true" {
                 column
                     .getBindings()
                     .map( function( value ) {
-                        return variables.utils.extractBinding( arguments.value );
+                        return variables.utils.extractBinding( arguments.value, variables.grammar );
                     } ),
                 "orderBy"
             );
@@ -2524,7 +2524,7 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !arrayIsEmpty( arguments.bindings ) ) {
             addBindings(
                 arguments.bindings.map( function( value ) {
-                    return variables.utils.extractBinding( arguments.value );
+                    return variables.utils.extractBinding( arguments.value, variables.grammar );
                 } ),
                 "orderBy"
             );
@@ -2957,7 +2957,8 @@ component displayname="QueryBuilder" accessors="true" {
         var newBindings = arguments.values.map( function( value ) {
             return columns.map( function( column ) {
                 return getUtils().extractBinding(
-                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" )
+                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
+                    variables.grammar
                 );
             } );
         } );
@@ -3073,7 +3074,8 @@ component displayname="QueryBuilder" accessors="true" {
         var newBindings = arguments.values.map( function( value ) {
             return columns.map( function( column ) {
                 return getUtils().extractBinding(
-                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" )
+                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
+                    variables.grammar
                 );
             } );
         } );
@@ -3160,7 +3162,7 @@ component displayname="QueryBuilder" accessors="true" {
                 arguments.values[ column.original ] = value;
                 addBindings( value.getBindings(), "update" );
             } else if ( !getUtils().isExpression( value ) ) {
-                addBindings( getUtils().extractBinding( value ), "update" );
+                addBindings( getUtils().extractBinding( value, variables.grammar ), "update" );
             }
         }
 
@@ -3295,7 +3297,8 @@ component displayname="QueryBuilder" accessors="true" {
             newInsertBindings = arguments.values.map( function( value ) {
                 return columns.map( function( column ) {
                     return getUtils().extractBinding(
-                        value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" )
+                        value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
+                        variables.grammar
                     );
                 } );
             } );
@@ -3635,7 +3638,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public boolean function existsOrFail( struct options = {}, any errorMessage ) {
         if ( !this.exists( arguments.options ) ) {
-            param arguments.errorMessage = "No rows found with constraints [#variables.utils.serializeBindings( this.getBindings() )#]";
+            param arguments.errorMessage = "No rows found with constraints [#variables.utils.serializeBindings( this.getBindings(), variables.grammar )#]";
             throw( type = "RecordNotFound", message = arguments.errorMessage );
         }
         return true;
@@ -3699,7 +3702,7 @@ component displayname="QueryBuilder" accessors="true" {
     public any function firstOrFail( any errorMessage, struct options = {} ) {
         var result = first( arguments.options );
         if ( structIsEmpty( result ) ) {
-            param arguments.errorMessage = "No rows found with constraints [#variables.utils.serializeBindings( this.getBindings() )#]";
+            param arguments.errorMessage = "No rows found with constraints [#variables.utils.serializeBindings( this.getBindings(), variables.grammar )#]";
             if ( isClosure( arguments.errorMessage ) || isCustomFunction( arguments.errorMessage ) ) {
                 arguments.errorMessage = arguments.errorMessage( this );
             }
@@ -4414,6 +4417,18 @@ component displayname="QueryBuilder" accessors="true" {
      */
     function applyColumnFormatter( column ) {
         return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
+    }
+
+    public QueryBuilder function setGrammar( required BaseGrammar grammar ) {
+        if ( !this.getBindings().isEmpty() ) {
+            throw(
+                type = "QBSetGrammarWithBindingsError",
+                message = "You cannot switch grammars after adding bindings.  Please set the grammar before adding bindings.",
+                detail = "The easiest way to fix this error is to set the grammar before any other actions on the query builder."
+            );
+        }
+        variables.grammar = arguments.grammar;
+        return this;
     }
 
 }

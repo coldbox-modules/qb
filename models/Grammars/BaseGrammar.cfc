@@ -1509,6 +1509,21 @@ component displayname="Grammar" accessors="true" singleton {
         return "TINYINT(1)";
     }
 
+    public string function getBooleanSqlType() {
+        return "CF_SQL_TINYINT";
+    }
+
+    public any function convertBooleanValue( required any value ) {
+        return arguments.value ? 1 : 0;
+    }
+
+    function convertToBooleanType( any value ) {
+        return {
+            "value": isNull( value ) ? javacast( "null", "" ) : convertBooleanValue( value ),
+            "cfsqltype": getBooleanSqlType()
+        };
+    }
+
     function typeChar( column ) {
         return "CHAR(#column.getLength()#)";
     }

@@ -1,3 +1,11 @@
+# v11.0.0
+## 13 Nov 2024 — 23:39:23 UTC
+
+### BREAKING
+
++ __QueryUtils:__ Auto boolean casting ([b51aacc](https://github.com/coldbox-modules/qb/commit/b51aacc8724100239d10961be43ea73c3010a4df))
+
+
 # v10.0.2
 ## 31 Oct 2024 — 20:03:18 UTC
 

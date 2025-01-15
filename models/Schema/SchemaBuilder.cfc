@@ -569,4 +569,14 @@ component accessors="true" {
         return statement;
     }
 
+    public SchemaBuilder function withoutWrappingValues() {
+        variables.shouldWrapValues = false;
+        return this;
+    }
+
+    public SchemaBuilder function withWrappingValues() {
+        variables.shouldWrapValues = true;
+        return this;
+    }
+
 }

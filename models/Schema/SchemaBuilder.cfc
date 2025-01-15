@@ -433,7 +433,7 @@ component accessors="true" {
                 "query",
                 variables.pretending
             );
-            return structKeyExists( q, "RecordCount" ) ? q.RecordCount > 0 : false;
+            return isDefined( "q.RecordCount" ) ? q.RecordCount > 0 : false;
         }
         return sql;
     }
@@ -473,7 +473,7 @@ component accessors="true" {
                     variables.queryLog.append( duplicate( data ) );
                 }
             );
-            return structKeyExists( q, "RecordCount" ) ? q.RecordCount > 0 : false;
+            return isDefined( "q.RecordCount" ) ? q.RecordCount > 0 : false;
         }
         return sql;
     }

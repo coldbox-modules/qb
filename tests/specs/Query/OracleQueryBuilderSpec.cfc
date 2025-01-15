@@ -79,6 +79,18 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT substr( foo, 6 ), trim( bar ) FROM ""USERS""";
     }
 
+    function wrappingDefault() {
+        return "SELECT ""FOO"", ""BAR"" FROM ""USERS""";
+    }
+
+    function wrappingGrammarOff() {
+        return "SELECT foo, bar FROM users";
+    }
+
+    function wrappingBuilderOverride() {
+        return "SELECT foo, bar FROM users";
+    }
+
     function subSelect() {
         return "SELECT ""NAME"", (SELECT MAX(updated_date) FROM ""POSTS"" WHERE ""POSTS"".""USER_ID"" = ""USERS"".""ID"") ""LATESTUPDATEDDATE"" FROM ""USERS""";
     }

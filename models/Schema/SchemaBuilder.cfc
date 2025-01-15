@@ -32,6 +32,12 @@ component accessors="true" {
     property name="queryLog" type="array";
 
     /**
+     * Flag for the query to override the grammar default of wrapping values
+     * @default null
+     */
+    property name="shouldWrapValues" type="boolean";
+
+    /**
      * Create a new schema builder.
      *
      * @grammar The specific grammar that will compile the builder statements.
@@ -50,6 +56,7 @@ component accessors="true" {
         variables.defaultSchema = arguments.defaultSchema;
         variables.pretending = false;
         variables.queryLog = [];
+        variables.shouldWrapValues = javacast( "null", "" );
         return this;
     }
 
@@ -492,7 +499,7 @@ component accessors="true" {
         string schema = variables.defaultSchema
     ) {
         structAppend( arguments.options, variables.defaultOptions, false );
-        var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema );
+        var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema, this );
         if ( arguments.execute ) {
             statements.each( function( statement ) {
                 getGrammar().runQuery(

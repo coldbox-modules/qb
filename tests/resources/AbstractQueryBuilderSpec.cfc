@@ -157,6 +157,33 @@ component extends="testbox.system.BaseSpec" {
                                 .reselectRaw( [ "substr( foo, 6 )", "trim( bar )" ] );
                         }, reselectRaw() );
                     } );
+
+                    describe( "wrapping values", function() {
+                        it( "wraps values by default", () => {
+                            testCase( function( builder ) {
+                                builder.from( "users" ).select( [ "foo", "bar" ] );
+                            }, wrappingDefault() );
+                        } );
+
+                        it( "can configure the grammar to not wrap values by default", () => {
+                            testCase( function( builder ) {
+                                builder.getGrammar().setShouldWrapValues( false );
+
+                                builder.from( "users" ).select( [ "foo", "bar" ] );
+                            }, wrappingGrammarOff() );
+                        } );
+
+                        it( "can configure the query builder to not wrap values by default", () => {
+                            testCase( function( builder ) {
+                                builder.getGrammar().setShouldWrapValues( true );
+
+                                builder
+                                    .withoutWrappingValues()
+                                    .from( "users" )
+                                    .select( [ "foo", "bar" ] );
+                            }, wrappingBuilderOverride() );
+                        } );
+                    } );
                 } );
 
                 describe( "sub-selects", function() {

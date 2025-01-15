@@ -8,9 +8,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     function wrapValue( required any value ) {
+        if ( !variables.shouldWrapValues ) {
+            return arguments.value;
+        }
+
         if ( value == "*" ) {
             return value;
         }
+
         arguments.value = reReplace( arguments.value, """", "", "all" );
 
         return "`#value#`";
@@ -28,44 +33,78 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileRenameTable( blueprint, commandParameters ) {
-        return arrayToList(
-            arrayFilter(
-                [
-                    "RENAME TABLE",
-                    wrapTable( blueprint.getTable() ),
-                    "TO",
-                    wrapTable( commandParameters.to )
-                ],
-                function( item ) {
-                    return item != "";
-                }
-            ),
-            " "
-        );
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            return arrayToList(
+                arrayFilter(
+                    [
+                        "RENAME TABLE",
+                        wrapTable( blueprint.getTable() ),
+                        "TO",
+                        wrapTable( commandParameters.to )
+                    ],
+                    function( item ) {
+                        return item != "";
+                    }
+                ),
+                " "
+            );
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
     }
 
     function compileDropForeignKey( blueprint, commandParameters ) {
-        return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP FOREIGN KEY #wrapValue( commandParameters.name )#";
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            return "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP FOREIGN KEY #wrapValue( commandParameters.name )#";
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
     }
 
-    function compileDropAllObjects( options ) {
-        var tables = getAllTableNames( options );
-        var tableList = arrayToList(
-            arrayMap( tables, function( table ) {
-                return wrapTable( table );
-            } ),
-            ", "
-        );
-        return arrayFilter(
-            [
-                compileDisableForeignKeyConstraints(),
-                arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#",
-                compileEnableForeignKeyConstraints()
-            ],
-            function( sql ) {
-                return sql != "";
+    function compileDropAllObjects( required struct options, string schema = "", required SchemaBuilder sb ) {
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.sb.getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.sb.getShouldWrapValues() );
             }
-        );
+
+            var tables = getAllTableNames( options );
+            var tableList = arrayToList(
+                arrayMap( tables, function( table ) {
+                    return wrapTable( table );
+                } ),
+                ", "
+            );
+
+            return arrayFilter(
+                [
+                    compileDisableForeignKeyConstraints(),
+                    arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#",
+                    compileEnableForeignKeyConstraints()
+                ],
+                function( sql ) {
+                    return sql != "";
+                }
+            );
+        } finally {
+            if ( !isNull( arguments.sb.getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
     }
 
     function getAllTableNames( options ) {
@@ -141,15 +180,26 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array columns,
         required QueryBuilder source
     ) {
-        var columnsString = arguments.columns
-            .map( function( column ) {
-                return wrapColumn( column.formatted );
-            } )
-            .toList( ", " );
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.query.getShouldWrapValues() );
+            }
 
-        var cteClause = query.getCommonTables().isEmpty() ? "" : " #compileCommonTables( query, query.getCommonTables() )#";
+            var columnsString = arguments.columns
+                .map( function( column ) {
+                    return wrapColumn( column.formatted );
+                } )
+                .toList( ", " );
 
-        return "INSERT INTO #wrapTable( arguments.query.getTableName() )# (#columnsString#)#cteClause# #compileSelect( arguments.source )#";
+            var cteClause = query.getCommonTables().isEmpty() ? "" : " #compileCommonTables( query, query.getCommonTables() )#";
+
+            return "INSERT INTO #wrapTable( arguments.query.getTableName() )# (#columnsString#)#cteClause# #compileSelect( arguments.source )#";
+        } finally {
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
     }
 
     public string function compileUpsert(
@@ -166,27 +216,38 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
         }
 
-        var insertString = isNull( arguments.source ) ? this.compileInsert(
-            arguments.qb,
-            arguments.insertColumns,
-            arguments.values
-        ) : this.compileInsertUsing( arguments.qb, arguments.insertColumns, arguments.source );
-        var updateString = "";
-        if ( isArray( arguments.updates ) ) {
-            updateString = arguments.updateColumns
-                .map( function( column ) {
-                    return "#wrapValue( column.formatted )# = VALUES(#wrapValue( column.formatted )#)";
-                } )
-                .toList( ", " );
-        } else {
-            updateString = arguments.updateColumns
-                .map( function( column ) {
-                    var value = updates[ column.original ];
-                    return "#wrapValue( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
-                } )
-                .toList( ", " );
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.qb.getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.qb.getShouldWrapValues() );
+            }
+
+            var insertString = isNull( arguments.source ) ? this.compileInsert(
+                arguments.qb,
+                arguments.insertColumns,
+                arguments.values
+            ) : this.compileInsertUsing( arguments.qb, arguments.insertColumns, arguments.source );
+            var updateString = "";
+            if ( isArray( arguments.updates ) ) {
+                updateString = arguments.updateColumns
+                    .map( function( column ) {
+                        return "#wrapValue( column.formatted )# = VALUES(#wrapValue( column.formatted )#)";
+                    } )
+                    .toList( ", " );
+            } else {
+                updateString = arguments.updateColumns
+                    .map( function( column ) {
+                        var value = updates[ column.original ];
+                        return "#wrapValue( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
+                    } )
+                    .toList( ", " );
+            }
+            return insertString & " ON DUPLICATE KEY UPDATE #updateString#";
+        } finally {
+            if ( !isNull( arguments.qb.getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
         }
-        return insertString & " ON DUPLICATE KEY UPDATE #updateString#";
     }
 
     function compileDisableForeignKeyConstraints() {

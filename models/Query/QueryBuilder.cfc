@@ -195,6 +195,12 @@ component displayname="QueryBuilder" accessors="true" {
     property name="updates" type="struct";
 
     /**
+     * Flag for the query to override the grammar default of wrapping values
+     * @default null
+     */
+    property name="shouldWrapValues" type="boolean";
+
+    /**
      * Used to quickly identify QueryBuilder instances
      * instead of resorting to `isInstanceOf` which is slow.
      */
@@ -369,6 +375,7 @@ component displayname="QueryBuilder" accessors="true" {
         };
         variables.pretending = false;
         variables.queryLog = [];
+        variables.shouldWrapValues = javacast( "null", "" );
     }
 
     /**
@@ -4428,6 +4435,16 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
         variables.grammar = arguments.grammar;
+        return this;
+    }
+
+    public QueryBuilder function withoutWrappingValues() {
+        variables.shouldWrapValues = false;
+        return this;
+    }
+
+    public QueryBuilder function withWrappingValues() {
+        variables.shouldWrapValues = true;
         return this;
     }
 

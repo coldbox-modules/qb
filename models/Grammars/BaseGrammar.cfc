@@ -113,7 +113,7 @@ component displayname="Grammar" accessors="true" singleton {
         if ( variables.log.canDebug() ) {
             variables.log.debug(
                 "Executing sql: #data.sql#",
-                "With bindings: #variables.utils.serializeBindings( data.bindings )#"
+                "With bindings: #variables.utils.serializeBindings( data.bindings, this )#"
             );
         }
         var startTick = getTickCount();

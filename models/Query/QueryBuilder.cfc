@@ -4426,7 +4426,7 @@ component displayname="QueryBuilder" accessors="true" {
         return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
     }
 
-    public QueryBuilder function setGrammar( required BaseGrammar grammar ) {
+    public QueryBuilder function setGrammar( required grammar ) {
         if ( !this.getBindings().isEmpty() ) {
             throw(
                 type = "QBSetGrammarWithBindingsError",

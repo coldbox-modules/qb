@@ -307,21 +307,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             } else {
                 updateTable = query.getTableName().getSql();
             }
-            var updateStatement = arrayToList(
-                arrayFilter(
-                    [
-                        "UPDATE",
-                        isNull( query.getLimitValue() ) ? "" : "TOP (#query.getLimitValue()#)",
-                        updateTable,
-                        "SET",
-                        updateList
-                    ],
-                    function( str ) {
-                        return str != "";
-                    }
-                ),
-                " "
-            );
+            var updateStatement = concatenate( [
+                "UPDATE",
+                isNull( query.getLimitValue() ) ? "" : "TOP (#query.getLimitValue()#)",
+                updateTable,
+                "SET",
+                updateList
+            ] );
 
             var returningColumns = arguments.query
                 .getReturning()
@@ -535,20 +527,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             if ( isSimpleValue( commandParameters.name ) ) {
-                return arrayToList(
-                    arrayFilter(
-                        [
-                            "ALTER TABLE",
-                            wrapTable( blueprint.getTable() ),
-                            "DROP COLUMN",
-                            wrapColumn( commandParameters.name )
-                        ],
-                        function( item ) {
-                            return item != "";
-                        }
-                    ),
-                    " "
-                );
+                return concatenate( [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "DROP COLUMN",
+                    wrapColumn( commandParameters.name )
+                ] );
             } else {
                 var statements = [
                     arrayToList(
@@ -657,20 +641,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "ALTER COLUMN",
-                        compileCreateColumn( commandParameters.to, blueprint )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "ALTER COLUMN",
+                compileCreateColumn( commandParameters.to, blueprint )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

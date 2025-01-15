@@ -278,25 +278,17 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        wrapColumn( column.getName() ),
-                        generateType( column, blueprint ),
-                        modifyUnsigned( column ),
-                        generateNullConstraint( column ),
-                        generateComputed( column ),
-                        generateUniqueConstraint( column, blueprint ),
-                        generateAutoIncrement( column, blueprint ),
-                        generateDefault( column, blueprint ),
-                        generateComment( column, blueprint )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                wrapColumn( column.getName() ),
+                generateType( column, blueprint ),
+                modifyUnsigned( column ),
+                generateNullConstraint( column ),
+                generateComputed( column ),
+                generateUniqueConstraint( column, blueprint ),
+                generateAutoIncrement( column, blueprint ),
+                generateDefault( column, blueprint ),
+                generateComment( column, blueprint )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -354,22 +346,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "RENAME COLUMN",
-                        wrapColumn( commandParameters.from ),
-                        "TO",
-                        wrapColumn( commandParameters.to.getName() )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "RENAME COLUMN",
+                wrapColumn( commandParameters.from ),
+                "TO",
+                wrapColumn( commandParameters.to.getName() )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -384,26 +368,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "ALTER COLUMN",
-                        wrapColumn( commandParameters.to.getName() ),
-                        "TYPE",
-                        generateType( commandParameters.to, blueprint ) & ",",
-                        "ALTER COLUMN",
-                        wrapColumn( commandParameters.to.getName() ),
-                        commandParameters.to.getIsNullable() ? "DROP" : "SET",
-                        "NOT NULL"
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "ALTER COLUMN",
+                wrapColumn( commandParameters.to.getName() ),
+                "TYPE",
+                generateType( commandParameters.to, blueprint ) & ",",
+                "ALTER COLUMN",
+                wrapColumn( commandParameters.to.getName() ),
+                commandParameters.to.getIsNullable() ? "DROP" : "SET",
+                "NOT NULL"
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -418,20 +394,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "DROP TABLE",
-                        generateIfExists( blueprint ),
-                        wrapTable( blueprint.getTable() ),
-                        "CASCADE"
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "DROP TABLE",
+                generateIfExists( blueprint ),
+                wrapTable( blueprint.getTable() ),
+                "CASCADE"
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -446,23 +414,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "DROP COLUMN",
-                        isSimpleValue( commandParameters.name ) ? wrapColumn( commandParameters.name ) : wrapColumn(
-                            commandParameters.name.getName()
-                        ),
-                        "CASCADE"
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "DROP COLUMN",
+                isSimpleValue( commandParameters.name ) ? wrapColumn( commandParameters.name ) : wrapColumn(
+                    commandParameters.name.getName()
                 ),
-                " "
-            );
+                "CASCADE"
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -547,20 +507,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "ADD COLUMN",
-                        compileCreateColumn( commandParameters.column, blueprint )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "ADD COLUMN",
+                compileCreateColumn( commandParameters.column, blueprint )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -575,22 +527,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "RENAME CONSTRAINT",
-                        wrapColumn( commandParameters.from ),
-                        "TO",
-                        wrapColumn( commandParameters.to )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "RENAME CONSTRAINT",
+                wrapColumn( commandParameters.from ),
+                "TO",
+                wrapColumn( commandParameters.to )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

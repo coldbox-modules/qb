@@ -39,20 +39,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "RENAME TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "TO",
-                        wrapTable( commandParameters.to )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "RENAME TABLE",
+                wrapTable( blueprint.getTable() ),
+                "TO",
+                wrapTable( commandParameters.to )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

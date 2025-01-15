@@ -449,20 +449,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "ADD COLUMN",
-                        compileCreateColumn( commandParameters.column, blueprint )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "ADD COLUMN",
+                compileCreateColumn( commandParameters.column, blueprint )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -542,22 +534,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "RENAME COLUMN",
-                        wrapColumn( commandParameters.from ),
-                        "TO",
-                        wrapColumn( commandParameters.to.getName() )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "RENAME COLUMN",
+                wrapColumn( commandParameters.from ),
+                "TO",
+                wrapColumn( commandParameters.to.getName() )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

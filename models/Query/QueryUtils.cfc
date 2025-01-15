@@ -297,6 +297,9 @@ component singleton displayname="QueryUtils" accessors="true" {
         if ( isNull( arguments.value ) ) {
             return false;
         }
+        if ( isClosure( arguments.value ) || isCustomFunction( value ) ) {
+            return false;
+        }
         return !isSimpleValue( arguments.value ) &&
         !isArray( arguments.value ) &&
         structKeyExists( arguments.value, "isBuilder" );

@@ -195,12 +195,6 @@ component displayname="QueryBuilder" accessors="true" {
     property name="updates" type="struct";
 
     /**
-     * Flag for the query to override the grammar default of wrapping values
-     * @default null
-     */
-    property name="shouldWrapValues" type="boolean";
-
-    /**
      * Used to quickly identify QueryBuilder instances
      * instead of resorting to `isInstanceOf` which is slow.
      */
@@ -4426,7 +4420,7 @@ component displayname="QueryBuilder" accessors="true" {
         return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
     }
 
-    public QueryBuilder function setGrammar( required BaseGrammar grammar ) {
+    public QueryBuilder function setGrammar( required grammar ) {
         if ( !this.getBindings().isEmpty() ) {
             throw(
                 type = "QBSetGrammarWithBindingsError",
@@ -4446,6 +4440,13 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function withWrappingValues() {
         variables.shouldWrapValues = true;
         return this;
+    }
+
+    public any function getShouldWrapValues() {
+        if ( isNull( variables.shouldWrapValues ) ) {
+            return javacast( "null", "" );
+        }
+        return variables.shouldWrapValues;
     }
 
 }

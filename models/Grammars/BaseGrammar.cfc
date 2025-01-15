@@ -33,11 +33,6 @@ component displayname="Grammar" accessors="true" singleton {
     property name="tableAliasOperator" type="string" default=" AS ";
 
     /**
-     * Flag to wrap values or not.
-     */
-    property name="shouldWrapValues" type="boolean" default="true";
-
-    /**
      * The different components of a select statement in the order of compilation.
      */
     variables.selectComponents = [
@@ -69,6 +64,7 @@ component displayname="Grammar" accessors="true" singleton {
         variables.tablePrefix = "";
         variables.tableAliasOperator = " AS ";
         variables.cteColumnsRequireParentheses = false;
+        variables.shouldWrapValues = true;
         // These are overwritten by WireBox, if it exists.
         variables.interceptorService = {
             "processState": function() {
@@ -740,7 +736,7 @@ component displayname="Grammar" accessors="true" singleton {
             if ( orderBy.direction == "raw" ) {
                 return orderBy.column.getSQL();
             } else if ( orderBy.keyExists( "query" ) ) {
-                return "(#compileSelect( orderBy.query )#) #uCase( orderBy.direction )#";
+                return "(#this.compileSelect( orderBy.query )#) #uCase( orderBy.direction )#";
             } else {
                 return "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
             }
@@ -1032,12 +1028,12 @@ component displayname="Grammar" accessors="true" singleton {
      *
      * @return string
      */
-    private string function concatenate( required array sql ) {
+    private string function concatenate( required array sql, string separator = " " ) {
         return arrayToList(
-            arrayFilter( sql, function( item ) {
+            arrayFilter( arguments.sql, function( item ) {
                 return item != "";
             } ),
-            " "
+            arguments.separator
         );
     }
 
@@ -1255,12 +1251,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function compileCreateBody( blueprint ) {
-        return arrayToList(
-            arrayFilter( [ compileCreateColumns( blueprint ), compileCreateIndexes( blueprint ) ], function( item ) {
-                return item != "";
-            } ),
-            ", "
-        );
+        return concatenate( [ compileCreateColumns( blueprint ), compileCreateIndexes( blueprint ) ], ", " );
     }
 
     function compileCreateColumns( required blueprint ) {
@@ -1290,25 +1281,17 @@ component displayname="Grammar" accessors="true" singleton {
             );
         }
 
-        return arrayToList(
-            arrayFilter(
-                [
-                    wrapColumn( column.getName() ),
-                    generateType( column, blueprint ),
-                    modifyUnsigned( column ),
-                    generateComputed( column ),
-                    generateNullConstraint( column ),
-                    generateUniqueConstraint( column, blueprint ),
-                    generateAutoIncrement( column, blueprint ),
-                    generateDefault( column, blueprint ),
-                    generateComment( column, blueprint )
-                ],
-                function( item ) {
-                    return item != "";
-                }
-            ),
-            " "
-        );
+        return concatenate( [
+            wrapColumn( column.getName() ),
+            generateType( column, blueprint ),
+            modifyUnsigned( column ),
+            generateComputed( column ),
+            generateNullConstraint( column ),
+            generateUniqueConstraint( column, blueprint ),
+            generateAutoIncrement( column, blueprint ),
+            generateDefault( column, blueprint ),
+            generateComment( column, blueprint )
+        ] );
     }
 
     function generateNullConstraint( column ) {
@@ -1349,15 +1332,12 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function compileAddComment( blueprint, commandParameters ) {
-        return arrayToList(
-            [
-                "COMMENT ON COLUMN",
-                wrapColumn( commandParameters.table & "." & commandParameters.column.getName() ),
-                "IS",
-                "'" & commandParameters.column.getCommentValue() & "'"
-            ],
-            " "
-        );
+        return concatenate( [
+            "COMMENT ON COLUMN",
+            wrapColumn( commandParameters.table & "." & commandParameters.column.getName() ),
+            "IS",
+            "'" & commandParameters.column.getCommentValue() & "'"
+        ] );
     }
 
     /*=====  End of Blueprint: Create  ======*/
@@ -1373,12 +1353,7 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter( [ "DROP TABLE", generateIfExists( blueprint ), wrapTable( blueprint.getTable() ) ], function( item ) {
-                    return item != "";
-                } ),
-                " "
-            );
+            return concatenate( [ "DROP TABLE", generateIfExists( blueprint ), wrapTable( blueprint.getTable() ) ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -1430,29 +1405,19 @@ component displayname="Grammar" accessors="true" singleton {
             var existingIndexes = blueprint.getIndexes();
             blueprint.setIndexes( [] );
 
-            var body = arrayToList(
-                arrayFilter( [ compileCreateColumn( commandParameters.column, blueprint ), compileCreateIndexes( blueprint ) ], function( item ) {
-                    return item != "";
-                } ),
+            var body = concatenate(
+                [ compileCreateColumn( commandParameters.column, blueprint ), compileCreateIndexes( blueprint ) ],
                 ", "
             );
 
             blueprint.setIndexes( existingIndexes );
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "ADD",
-                        body
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "ADD",
+                body
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -1468,35 +1433,19 @@ component displayname="Grammar" accessors="true" singleton {
             }
 
             if ( isSimpleValue( commandParameters.name ) ) {
-                return arrayToList(
-                    arrayFilter(
-                        [
-                            "ALTER TABLE",
-                            wrapTable( blueprint.getTable() ),
-                            "DROP COLUMN",
-                            wrapColumn( commandParameters.name )
-                        ],
-                        function( item ) {
-                            return item != "";
-                        }
-                    ),
-                    " "
-                );
+                return concatenate( [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "DROP COLUMN",
+                    wrapColumn( commandParameters.name )
+                ] );
             } else {
-                return arrayToList(
-                    arrayFilter(
-                        [
-                            "ALTER TABLE",
-                            wrapTable( blueprint.getTable() ),
-                            "DROP COLUMN",
-                            wrapColumn( commandParameters.name.getName() )
-                        ],
-                        function( item ) {
-                            return item != "";
-                        }
-                    ),
-                    " "
-                );
+                return concatenate( [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "DROP COLUMN",
+                    wrapColumn( commandParameters.name.getName() )
+                ] );
             }
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -1512,20 +1461,12 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "RENAME TO",
-                        wrapTable( commandParameters.to )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "RENAME TO",
+                wrapTable( commandParameters.to )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -1540,21 +1481,13 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "CHANGE",
-                        wrapColumn( commandParameters.from ),
-                        compileCreateColumn( commandParameters.to, blueprint )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "CHANGE",
+                wrapColumn( commandParameters.from ),
+                compileCreateColumn( commandParameters.to, blueprint )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -1569,22 +1502,14 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "RENAME INDEX",
-                        wrapColumn( commandParameters.from ),
-                        "TO",
-                        wrapColumn( commandParameters.to )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "RENAME INDEX",
+                wrapColumn( commandParameters.from ),
+                "TO",
+                wrapColumn( commandParameters.to )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -1599,21 +1524,13 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "CHANGE",
-                        wrapColumn( commandParameters.from ),
-                        compileCreateColumn( commandParameters.to, blueprint )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "CHANGE",
+                wrapColumn( commandParameters.from ),
+                compileCreateColumn( commandParameters.to, blueprint )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -1700,12 +1617,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeBigInteger( column ) {
-        return arrayToList(
-            arrayFilter( [ "BIGINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
-                return item != "";
-            } ),
-            ""
-        );
+        return concatenate( [ "BIGINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], "" );
     }
 
     function typeBit( column ) {
@@ -1770,12 +1682,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeInteger( column ) {
-        return arrayToList(
-            arrayFilter( [ "INTEGER", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
-                return item != "";
-            } ),
-            ""
-        );
+        return concatenate( [ "INTEGER", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], "" );
     }
 
     function typeJson( column ) {
@@ -1807,12 +1714,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeMediumInteger( column ) {
-        return arrayToList(
-            arrayFilter( [ "MEDIUMINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
-                return item != "";
-            } ),
-            ""
-        );
+        return concatenate( [ "MEDIUMINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], "" );
     }
 
     function typeMediumText( column ) {
@@ -1832,12 +1734,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeSmallInteger( column ) {
-        return arrayToList(
-            arrayFilter( [ "SMALLINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
-                return item != "";
-            } ),
-            ""
-        );
+        return concatenate( [ "SMALLINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], "" );
     }
 
     function typeString( column ) {
@@ -1873,12 +1770,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeTinyInteger( column ) {
-        return arrayToList(
-            arrayFilter( [ "TINYINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], function( item ) {
-                return item != "";
-            } ),
-            ""
-        );
+        return concatenate( [ "TINYINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], "" );
     }
 
     /*=====  End of Column Types  ======*/
@@ -1978,16 +1870,13 @@ component displayname="Grammar" accessors="true" singleton {
                 } )
                 .toList( ", " );
 
-            return arrayToList(
-                [
-                    "CREATE INDEX",
-                    wrapValue( commandParameters.index.getName() ),
-                    "ON",
-                    wrapTable( commandParameters.table ),
-                    "(#columnList#)"
-                ],
-                " "
-            );
+            return concatenate( [
+                "CREATE INDEX",
+                wrapValue( commandParameters.index.getName() ),
+                "ON",
+                wrapTable( commandParameters.table ),
+                "(#columnList#)"
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -2019,16 +1908,13 @@ component displayname="Grammar" accessors="true" singleton {
                 return wrapColumn( column );
             } )
             .toList( ", " );
-        return arrayToList(
-            [
-                "CONSTRAINT #wrapValue( arguments.index.getName() )#",
-                "FOREIGN KEY (#keys#)",
-                "REFERENCES #wrapTable( arguments.index.getTable() )# (#references#)",
-                "ON UPDATE #uCase( arguments.index.getOnUpdateAction() )#",
-                "ON DELETE #uCase( arguments.index.getOnDeleteAction() )#"
-            ],
-            " "
-        );
+        return concatenate( [
+            "CONSTRAINT #wrapValue( arguments.index.getName() )#",
+            "FOREIGN KEY (#keys#)",
+            "REFERENCES #wrapTable( arguments.index.getTable() )# (#references#)",
+            "ON UPDATE #uCase( arguments.index.getOnUpdateAction() )#",
+            "ON DELETE #uCase( arguments.index.getOnDeleteAction() )#"
+        ] );
     }
 
     function indexPrimary( index ) {
@@ -2059,20 +1945,12 @@ component displayname="Grammar" accessors="true" singleton {
                 return "'#val#'";
             } )
             .toList( ", " );
-        return arrayToList(
-            arrayFilter(
-                [
-                    "CONSTRAINT",
-                    wrapValue( arguments.index.getName() ),
-                    "CHECK",
-                    "(#wrapValue( column.getName() )# IN (#values#))"
-                ],
-                function( str ) {
-                    return str != "";
-                }
-            ),
-            " "
-        );
+        return concatenate( [
+            "CONSTRAINT",
+            wrapValue( arguments.index.getName() ),
+            "CHECK",
+            "(#wrapValue( column.getName() )# IN (#values#))"
+        ] );
     }
 
     /*=====  End of Index Types  ======*/
@@ -2095,6 +1973,21 @@ component displayname="Grammar" accessors="true" singleton {
 
     function compileAddType() {
         return "";
+    }
+
+    function getShouldWrapValues() {
+        if ( isNull( variables.shouldWrapValues ) ) {
+            throw( type = "InvalidState", message = "The shouldWrapValues property has not been set." );
+        }
+        return variables.shouldWrapValues;
+    }
+
+    function setShouldWrapValues( required boolean shouldWrap ) {
+        if ( isNull( arguments.shouldWrap ) ) {
+            throw( type = "InvalidState", message = "The shouldWrapValues property has not been set." );
+        }
+        variables.shouldWrapValues = arguments.shouldWrap;
+        return this;
     }
 
 }

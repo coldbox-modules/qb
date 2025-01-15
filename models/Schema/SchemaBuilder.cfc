@@ -32,12 +32,6 @@ component accessors="true" {
     property name="queryLog" type="array";
 
     /**
-     * Flag for the query to override the grammar default of wrapping values
-     * @default null
-     */
-    property name="shouldWrapValues" type="boolean";
-
-    /**
      * Create a new schema builder.
      *
      * @grammar The specific grammar that will compile the builder statements.
@@ -577,6 +571,13 @@ component accessors="true" {
     public SchemaBuilder function withWrappingValues() {
         variables.shouldWrapValues = true;
         return this;
+    }
+
+    public any function getShouldWrapValues() {
+        if ( isNull( variables.shouldWrapValues ) ) {
+            return javacast( "null", "" );
+        }
+        return variables.shouldWrapValues;
     }
 
 }

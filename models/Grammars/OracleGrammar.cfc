@@ -369,12 +369,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 generateComment( column, blueprint )
             ];
 
-            return arrayToList(
-                arrayFilter( values, function( item ) {
-                    return item != "";
-                } ),
-                " "
-            );
+            return concatenate( values );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -389,22 +384,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "RENAME COLUMN",
-                        wrapColumn( commandParameters.from ),
-                        "TO",
-                        wrapColumn( commandParameters.to.getName() )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "RENAME COLUMN",
+                wrapColumn( commandParameters.from ),
+                "TO",
+                wrapColumn( commandParameters.to.getName() )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -422,12 +409,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             var originalIndexes = blueprint.getIndexes();
             blueprint.setIndexes( [] );
 
-            var body = arrayToList(
-                arrayFilter( [ compileCreateColumn( commandParameters.column, blueprint ) ], function( item ) {
-                    return item != "";
-                } ),
-                ", "
-            );
+            var body = concatenate( [ compileCreateColumn( commandParameters.column, blueprint ) ], ", " );
 
             for ( var index in blueprint.getIndexes() ) {
                 blueprint.addConstraint( index );
@@ -435,20 +417,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             blueprint.setIndexes( originalIndexes );
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "ADD",
-                        body
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "ADD",
+                body
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -463,20 +437,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "MODIFY",
-                        "(" & compileCreateColumn( commandParameters.to, blueprint ) & ")"
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "MODIFY",
+                "(" & compileCreateColumn( commandParameters.to, blueprint ) & ")"
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -491,22 +457,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return arrayToList(
-                arrayFilter(
-                    [
-                        "ALTER TABLE",
-                        wrapTable( blueprint.getTable() ),
-                        "RENAME CONSTRAINT",
-                        wrapColumn( commandParameters.from ),
-                        "TO",
-                        wrapColumn( commandParameters.to )
-                    ],
-                    function( item ) {
-                        return item != "";
-                    }
-                ),
-                " "
-            );
+            return concatenate( [
+                "ALTER TABLE",
+                wrapTable( blueprint.getTable() ),
+                "RENAME CONSTRAINT",
+                wrapColumn( commandParameters.from ),
+                "TO",
+                wrapColumn( commandParameters.to )
+            ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -779,9 +737,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return sql;
     }
 
-    function compileColumnExists( table, column, scehma = "" ) {
+    function compileColumnExists( table, column, schema = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "all_tab_columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
-        if ( scehma != "" ) {
+        if ( schema != "" ) {
             sql &= " AND #wrapColumn( "owner" )# = ?";
         }
         return sql;

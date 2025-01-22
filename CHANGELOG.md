@@ -1,3 +1,22 @@
+# v11.0.1
+## 22 Jan 2025 — 20:36:59 UTC
+
+### fix
+
++ __QueryBuilder:__ Allow for setting any Grammar, including AutoDiscover
+ ([f16a047](https://github.com/coldbox-modules/qb/commit/f16a047e0ea5b3cd1b066cf3fe61fe1abfc8eab8))
++ __SchemaBuilder:__ Add in shortcut methods for enabling/disabling value wrapping
+ ([a3db3c6](https://github.com/coldbox-modules/qb/commit/a3db3c60eb45a9e813da9a4e9c33cfc5d8ee2404))
++ __SchemaBuilder:__ Use `isDefined` for BoxLang compatibility
+ ([745023e](https://github.com/coldbox-modules/qb/commit/745023e0d5b60f533df89e87164852354d464bfb))
++ __BaseGrammar:__ Pass in grammar to serializeBindings call
+ ([fb66fb5](https://github.com/coldbox-modules/qb/commit/fb66fb547a897ffe470450b86fd502d65c670917))
+
+### other
+
++ __\*:__ feat: Allow for disabling of wrapping values ([d939066](https://github.com/coldbox-modules/qb/commit/d939066893bb94ba8f40ef901bc3b26088d231be))
+
+
 # v11.0.0
 ## 13 Nov 2024 — 23:39:23 UTC
 

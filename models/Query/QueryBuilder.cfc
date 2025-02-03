@@ -776,10 +776,14 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     private string function swapAlias( required string column, required string oldAlias, required string newAlias ) {
-        if ( listFirst( arguments.column, "." ) != arguments.oldAlias ) {
-            return arguments.column;
+        if ( startsWith( arguments.column, arguments.oldAlias ) ) {
+            return arguments.newAlias & "." & listLast( arguments.column, "." );
         }
-        return arguments.newAlias & "." & listRest( arguments.column, "." );
+        return arguments.column;
+    }
+
+    private boolean function startsWith( required string word, required string substring ) {
+        return left( arguments.word, len( arguments.substring ) ) == arguments.substring;
     }
 
     /**

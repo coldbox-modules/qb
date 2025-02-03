@@ -18,6 +18,22 @@ component extends="testbox.system.BaseSpec" {
                     qb.withAlias( "u" );
                     expect( qb.getColumns() ).toBe( [ "u.id", "u.name" ] );
                 } );
+
+                it( "renames aliases with multiple periods", () => {
+                    var qb = new qb.models.Query.QueryBuilder();
+                    qb.from( "MyServer.dbo.users" ).select( [ "MyServer.dbo.users.id", "MyServer.dbo.users.name" ] );
+                    expect( qb.getColumns() ).toBe( [ "MyServer.dbo.users.id", "MyServer.dbo.users.name" ] );
+                    qb.withAlias( "u1" );
+                    expect( qb.getColumns() ).toBe( [ "u1.id", "u1.name" ] );
+                } );
+
+                it( "renames aliases with schema shortcut periods", () => {
+                    var qb = new qb.models.Query.QueryBuilder();
+                    qb.from( "MyServer..users" ).select( [ "MyServer..users.id", "MyServer..users.name" ] );
+                    expect( qb.getColumns() ).toBe( [ "MyServer..users.id", "MyServer..users.name" ] );
+                    qb.withAlias( "u1" );
+                    expect( qb.getColumns() ).toBe( [ "u1.id", "u1.name" ] );
+                } );
             } );
 
             describe( "wheres", () => {

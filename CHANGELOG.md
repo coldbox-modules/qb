@@ -1,3 +1,17 @@
+# v11.0.2
+## 03 Feb 2025 — 21:46:30 UTC
+
+### fix
+
++ __QueryBuilder:__ Have aliases work with full server qualifications
+ ([4ee1bb9](https://github.com/coldbox-modules/qb/commit/4ee1bb940ec22f197a2489d0f309b7673f0f2da8))
+
+### other
+
++ __\*:__ Use testbox@be
+ ([935533b](https://github.com/coldbox-modules/qb/commit/935533ba546f23eaed452e44dbd4f6bcf1fb4413))
+
+
 # v11.0.1
 ## 22 Jan 2025 — 20:36:59 UTC
 

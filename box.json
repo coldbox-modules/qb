@@ -37,7 +37,7 @@
         "cbpaginator":"^2.4.0"
     },
     "devDependencies":{
-        "testbox":"^6.0.0"
+        "testbox":"be"
     },
     "installPaths":{
         "testbox":"testbox/",

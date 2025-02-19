@@ -84,7 +84,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @return any
      */
-    public any function extractBinding( any value, required BaseGrammar grammar ) {
+    public any function extractBinding( any value, required any grammar ) {
         if ( isNull( arguments.value ) ) {
             return { "cfsqltype": "CF_SQL_VARCHAR", "value": "", "null": true };
         }
@@ -178,7 +178,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @return string
      */
-    public string function inferSqlType( any value, required BaseGrammar grammar ) {
+    public string function inferSqlType( any value, required any grammar ) {
         if ( isNull( arguments.value ) ) {
             return "CF_SQL_VARCHAR";
         }
@@ -644,7 +644,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         return true;
     }
 
-    public string function serializeBindings( required array bindings, required BaseGrammar grammar ) {
+    public string function serializeBindings( required array bindings, required any grammar ) {
         return serializeJSON(
             arguments.bindings.map( function( binding ) {
                 var newBinding = extractBinding( duplicate( binding ), grammar );

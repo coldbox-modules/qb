@@ -1,3 +1,11 @@
+# v11.0.3
+## 19 Feb 2025 — 20:48:45 UTC
+
+### fix
+
++ __QueryUtils:__ Don't overly specify that grammars must extend `BaseGrammar` ([c62e301](https://github.com/coldbox-modules/qb/commit/c62e30186d2e6d2fc890ed933aa7a08fb88d1579))
+
+
 # v11.0.2
 ## 03 Feb 2025 — 21:46:30 UTC
 

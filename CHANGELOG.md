@@ -1,3 +1,11 @@
+# v11.1.0
+## 12 Mar 2025 — 17:06:00 UTC
+
+### feat
+
++ __QueryBuilder:__ Support JOINS in DELETE statements for supported grammars ([8a979ac](https://github.com/coldbox-modules/qb/commit/8a979ac6ce193b1a92de645ad76205e285190391))
+
+
 # v11.0.3
 ## 19 Feb 2025 — 20:48:45 UTC
 

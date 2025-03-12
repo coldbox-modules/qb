@@ -372,8 +372,29 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                     return "DELETED." & wrapColumn( column );
                 } )
                 .toList( ", " );
-            var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
-            return trim( "DELETE FROM #wrapTable( query.getTableName() )##returningClause# #compileWheres( query, query.getWheres() )#" );
+            var returningClause = returningColumns != "" ? "OUTPUT #returningColumns#" : "";
+
+            var hasJoins = !arguments.query.getJoins().isEmpty();
+
+            return trim(
+                arrayToList(
+                    arrayFilter(
+                        [
+                            "DELETE",
+                            hasJoins ? wrapTable( query.getTableName() ) : "",
+                            "FROM",
+                            wrapTable( query.getTableName() ),
+                            returningClause,
+                            hasJoins ? compileJoins( query, query.getJoins() ) : "",
+                            compileWheres( query, query.getWheres() )
+                        ],
+                        function( sql ) {
+                            return sql != "";
+                        }
+                    ),
+                    " "
+                )
+            );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

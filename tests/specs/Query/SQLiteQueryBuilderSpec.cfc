@@ -1101,6 +1101,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function deleteWithJoins() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function crossApply() {
         return { exception: "UnsupportedOperation" }
     }

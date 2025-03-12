@@ -2834,6 +2834,15 @@ component extends="testbox.system.BaseSpec" {
                             .delete( toSql = true );
                     }, deleteReturningIgnoresTableQualifiers() );
                 } );
+
+                it( "can handle delete statements with joins", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .join( "warnings", "users.id", "warnings.userId" )
+                            .delete( toSql = true );
+                    }, deleteWithJoins() );
+                } );
             } );
         } );
     }

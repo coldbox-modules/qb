@@ -978,6 +978,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function deleteWithJoins() {
+        return {
+            sql: "DELETE `users` FROM `users` INNER JOIN `warnings` ON `users`.`id` = `warnings`.`userId`",
+            bindings: []
+        };
+    }
+
     function whereBuilderInstance() {
         return {
             sql: "SELECT * FROM `users` WHERE `email` = ? OR `id` = (SELECT MAX(id) FROM `users` WHERE `email` = ?)",

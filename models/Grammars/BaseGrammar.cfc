@@ -966,8 +966,19 @@ component displayname="Grammar" accessors="true" singleton {
      */
     public string function compileDelete( required QueryBuilder query ) {
         if ( !arguments.query.getReturning().isEmpty() ) {
-            throw( type = "UnsupportedOperation", message = "This grammar does not support a RETURNING clause" );
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support DELETE actions with a RETURNING clause."
+            );
         }
+
+        if ( !arguments.query.getJoins().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support DELETE actions with JOIN clause(s)."
+            );
+        }
+
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

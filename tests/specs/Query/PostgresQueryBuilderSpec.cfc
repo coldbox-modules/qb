@@ -1009,6 +1009,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function deleteWithJoins() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function whereBuilderInstance() {
         return {
             sql: "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" = (SELECT MAX(id) FROM ""users"" WHERE ""email"" = ?)",

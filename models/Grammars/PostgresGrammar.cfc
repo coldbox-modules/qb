@@ -170,6 +170,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     public string function compileDelete( required QueryBuilder query ) {
+        if ( !arguments.query.getJoins().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support DELETE actions with JOIN clause(s)."
+            );
+        }
+
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

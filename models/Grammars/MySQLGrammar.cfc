@@ -194,6 +194,54 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
     }
 
+    /**
+     * Compile a Builder's query into a delete string.
+     *
+     * @query The Builder instance.
+     *
+     * @return string
+     */
+    public string function compileDelete( required QueryBuilder query ) {
+        if ( !arguments.query.getReturning().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support DELETE actions with a RETURNING clause."
+            );
+        }
+
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.query.getShouldWrapValues() );
+            }
+
+            var hasJoins = !arguments.query.getJoins().isEmpty();
+
+            return trim(
+                arrayToList(
+                    arrayFilter(
+                        [
+                            "DELETE",
+                            hasJoins ? wrapTable( query.getTableName() ) : "",
+                            "FROM",
+                            wrapTable( query.getTableName() ),
+                            hasJoins ? compileJoins( query, query.getJoins() ) : "",
+                            compileWheres( query, query.getWheres() )
+                        ],
+                        function( sql ) {
+                            return sql != "";
+                        }
+                    ),
+                    " "
+                )
+            );
+        } finally {
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
     public string function compileUpsert(
         required QueryBuilder qb,
         required array insertColumns,

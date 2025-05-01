@@ -1840,7 +1840,13 @@ component extends="testbox.system.BaseSpec" {
                 statements = [ statements ];
             }
             expect( statements ).toBeArray();
-            expect( statements ).toHaveLength( arrayLen( expected ) );
+            if ( statements.len() != expected.len() ) {
+                debug(
+                    var = statements,
+                    label = "Expected #arrayLen( expected )# statements but got #arrayLen( statements )#"
+                );
+                expect( statements ).toHaveLength( arrayLen( expected ) );
+            }
             for ( var i = 1; i <= expected.len(); i++ ) {
                 expect( statements[ i ] ).toBeWithCase( expected[ i ] );
             }

@@ -10,6 +10,8 @@ component singleton {
             case "MySQL":
             case "MariaDB":
                 return wirebox.getInstance( "MySQLGrammar@qb" );
+            case "Derby":
+                return wirebox.getInstance( "DerbyGrammar@qb" );
             case "PostgreSQL":
                 return wirebox.getInstance( "PostgresGrammar@qb" );
             case "Microsoft SQL Server":

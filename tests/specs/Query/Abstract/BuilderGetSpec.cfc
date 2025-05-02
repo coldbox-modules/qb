@@ -33,10 +33,10 @@ component extends="testbox.system.BaseSpec" {
                 expect( arrayLen( bindings ) ).toBe( 2, "2 bindings should exist" );
                 var binding = bindings[ 1 ];
                 expect( binding.value ).toBe( "en-US" );
-                expect( binding.cfsqltype ).toBe( "cf_sql_varchar" );
+                expect( binding.cfsqltype ).toBe( "varchar" );
                 var binding = bindings[ 2 ];
                 expect( binding.value ).toBe( 10 );
-                expect( binding.cfsqltype ).toBe( "CF_SQL_INTEGER" );
+                expect( binding.cfsqltype ).toBe( "INTEGER" );
             } );
 
             it( "retreives a map of bindings", function() {

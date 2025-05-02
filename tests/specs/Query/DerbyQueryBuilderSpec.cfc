@@ -235,7 +235,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             sql: "SELECT * FROM ""users"" WHERE ""active"" = ?",
             bindings: [
                 {
-                    "cfsqltype": "CF_SQL_OTHER",
+                    "cfsqltype": "OTHER",
                     "value": true,
                     "list": false,
                     "null": false
@@ -729,7 +729,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             bindings: [
                 {
                     "value": true,
-                    "cfsqltype": "CF_SQL_OTHER",
+                    "cfsqltype": "OTHER",
                     "null": false,
                     "list": false
                 }
@@ -743,7 +743,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             bindings: [
                 {
                     "value": true,
-                    "cfsqltype": "CF_SQL_BOOLEAN",
+                    "cfsqltype": "BOOLEAN",
                     "null": false,
                     "list": false
                 }

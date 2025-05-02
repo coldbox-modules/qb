@@ -39,7 +39,7 @@ The differences become even more stark when we introduce more complexity:
 // Plain old CFML
 q = queryExecute(
     "SELECT * FROM posts WHERE published_at IS NOT NULL AND author_id IN ?",
-    [ { value = '5,10,27', cfsqltype = 'CF_SQL_NUMERIC', list = true } ]
+    [ { value = '5,10,27', cfsqltype = 'NUMERIC', list = true } ]
 );
 
 // qb
@@ -65,7 +65,7 @@ q = query.from('posts')
 
 q = queryExecute(
     "SELECT post_id, author_id, title, body FROM posts INNER JOIN authors ON authors.id = posts.author_id WHERE author LIKE ? ORDER BY published_at",
-    [ { value = 'Ja%', cfsqltype = 'CF_SQL_VARCHAR', list = false, null = false } ]
+    [ { value = 'Ja%', cfsqltype = 'VARCHAR', list = false, null = false } ]
 );
 ```
 

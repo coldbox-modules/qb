@@ -11,36 +11,48 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
     function run() {
         describe( "inferSqlType()", function() {
+            it( "maintains the passed in cfsqltype if provided", () => {
+                var binding = utils.extractBinding( { "value": 1, "cfsqltype": "BIT" }, variables.mockGrammar );
+                expect( binding.cfsqltype ).toBe( "BIT" );
+                expect( binding.sqltype ).toBe( "BIT" );
+            } );
+
+            it( "maintains the passed in sqltype if provided", () => {
+                var binding = utils.extractBinding( { "value": 1, "sqltype": "BIT" }, variables.mockGrammar );
+                expect( binding.cfsqltype ).toBe( "BIT" );
+                expect( binding.sqltype ).toBe( "BIT" );
+            } );
+
             it( "strings", function() {
-                expect( utils.inferSqlType( "a string", variables.mockGrammar ) ).toBe( "CF_SQL_VARCHAR" );
+                expect( utils.inferSqlType( "a string", variables.mockGrammar ) ).toBe( "VARCHAR" );
             } );
 
             describe( "numbers", function() {
                 it( "integers", function() {
-                    expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "CF_SQL_INTEGER" );
+                    expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "INTEGER" );
                     variables.utils.setAutoDeriveNumericType( false );
-                    expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "CF_SQL_NUMERIC" );
+                    expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "NUMERIC" );
                     variables.utils.setAutoDeriveNumericType( true );
                 } );
 
                 it( "decimals", function() {
-                    expect( utils.inferSqlType( 4.50, variables.mockGrammar ) ).toBe( "CF_SQL_DECIMAL" );
+                    expect( utils.inferSqlType( 4.50, variables.mockGrammar ) ).toBe( "DECIMAL" );
                     variables.utils.setAutoDeriveNumericType( false );
-                    expect( utils.inferSqlType( 4.50, variables.mockGrammar ) ).toBe( "CF_SQL_NUMERIC" );
+                    expect( utils.inferSqlType( 4.50, variables.mockGrammar ) ).toBe( "NUMERIC" );
                     variables.utils.setAutoDeriveNumericType( true );
                 } );
 
                 it( "really long decimals", function() {
                     variables.utils.setAutoDeriveNumericType( true );
-                    expect( utils.inferSqlType( 19482.279999997998, variables.mockGrammar ) ).toBe( "CF_SQL_DECIMAL" );
+                    expect( utils.inferSqlType( 19482.279999997998, variables.mockGrammar ) ).toBe( "DECIMAL" );
                 } );
             } );
 
             it( "dates", function() {
-                expect( utils.inferSqlType( now(), variables.mockGrammar ) ).toBe( "CF_SQL_TIMESTAMP" );
+                expect( utils.inferSqlType( now(), variables.mockGrammar ) ).toBe( "TIMESTAMP" );
                 variables.utils.setStrictDateDetection( true );
-                // expect( utils.inferSqlType( now(), variables.mockGrammar ) ).toBe( "CF_SQL_TIMESTAMP" );
-                // expect( utils.inferSqlType( "06 12345" ), variables.mockGrammar ).toBe( "CF_SQL_VARCHAR" );
+                // expect( utils.inferSqlType( now(), variables.mockGrammar ) ).toBe( "TIMESTAMP" );
+                // expect( utils.inferSqlType( "06 12345" ), variables.mockGrammar ).toBe( "VARCHAR" );
                 variables.utils.setStrictDateDetection( false );
             } );
 
@@ -53,19 +65,24 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
             } );
 
             it( "null", function() {
-                expect( utils.inferSqlType( javacast( "null", "" ), variables.mockGrammar ) ).toBe( "CF_SQL_VARCHAR" );
-                expect( utils.extractBinding( javacast( "null", "" ), variables.mockGrammar ) ).toBe( { "null": true, "cfsqltype": "CF_SQL_VARCHAR", "value": "" } );
+                expect( utils.inferSqlType( javacast( "null", "" ), variables.mockGrammar ) ).toBe( "VARCHAR" );
+                expect( utils.extractBinding( javacast( "null", "" ), variables.mockGrammar ) ).toBe( {
+                    "null": true,
+                    "cfsqltype": "VARCHAR",
+                    "sqltype": "VARCHAR",
+                    "value": ""
+                } );
                 makePublic( utils, "checkIsActuallyNumeric", "publicCheckIsActuallyNumeric" );
                 expect( utils.publicCheckIsActuallyNumeric( javacast( "null", "" ) ) ).toBe( false );
                 makePublic( utils, "isFloatingPoint", "publicIsFloatingPoint" );
                 expect(
-                    utils.publicIsFloatingPoint( { "value": javacast( "null", "" ), "cfsqltype": "CF_SQL_DECIMAL", "null": true } )
+                    utils.publicIsFloatingPoint( { "value": javacast( "null", "" ), "cfsqltype": "DECIMAL", "null": true } )
                 ).toBe( false );
                 makePublic( utils, "checkIsActuallyDate", "publicCheckIsActuallyDate" );
                 expect( utils.publicCheckIsActuallyDate( javacast( "null", "" ) ) ).toBe( false );
                 makePublic( utils, "calculateNumberOfDecimalDigits", "publicCalculateNumberOfDecimalDigits" );
                 expect(
-                    utils.publicCalculateNumberOfDecimalDigits( { "value": javacast( "null", "" ), "cfsqltype": "CF_SQL_DECIMAL", "null": true } )
+                    utils.publicCalculateNumberOfDecimalDigits( { "value": javacast( "null", "" ), "cfsqltype": "DECIMAL", "null": true } )
                 ).toBe( 0 );
             } );
 
@@ -82,70 +99,79 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                     afterEach( () => variables.mockGrammar.$reset() );
 
                     it( "without boolean support in the grammar", () => {
-                        expect( utils.inferSqlType( true, variables.mockGrammar ) ).toBe( "CF_SQL_TINYINT" );
-                        expect( utils.inferSqlType( "true", variables.mockGrammar ) ).toBe( "CF_SQL_VARCHAR" );
-                        expect( utils.inferSqlType( false, variables.mockGrammar ) ).toBe( "CF_SQL_TINYINT" );
-                        expect( utils.inferSqlType( "false", variables.mockGrammar ) ).toBe( "CF_SQL_VARCHAR" );
+                        expect( utils.inferSqlType( true, variables.mockGrammar ) ).toBe( "TINYINT" );
+                        expect( utils.inferSqlType( "true", variables.mockGrammar ) ).toBe( "VARCHAR" );
+                        expect( utils.inferSqlType( false, variables.mockGrammar ) ).toBe( "TINYINT" );
+                        expect( utils.inferSqlType( "false", variables.mockGrammar ) ).toBe( "VARCHAR" );
 
                         expect( utils.extractBinding( true, variables.mockGrammar ) ).toBe( {
                             "list": false,
                             "null": false,
-                            "cfsqltype": "CF_SQL_TINYINT",
+                            "cfsqltype": "TINYINT",
+                            "sqltype": "TINYINT",
                             "value": 1
                         } );
                         expect( utils.extractBinding( "true", variables.mockGrammar ) ).toBe( {
                             "list": false,
                             "null": false,
-                            "cfsqltype": "CF_SQL_VARCHAR",
+                            "cfsqltype": "VARCHAR",
+                            "sqltype": "VARCHAR",
                             "value": "true"
                         } );
                         expect( utils.extractBinding( false, variables.mockGrammar ) ).toBe( {
                             "list": false,
                             "null": false,
-                            "cfsqltype": "CF_SQL_TINYINT",
+                            "cfsqltype": "TINYINT",
+                            "sqltype": "TINYINT",
                             "value": 0
                         } );
                         expect( utils.extractBinding( "false", variables.mockGrammar ) ).toBe( {
                             "list": false,
                             "null": false,
-                            "cfsqltype": "CF_SQL_VARCHAR",
+                            "cfsqltype": "VARCHAR",
+                            "sqltype": "VARCHAR",
                             "value": "false"
                         } );
                     } );
 
                     it( "with boolean support in the grammar", () => {
-                        variables.mockGrammar.$( "getBooleanSqlType", "CF_SQL_OTHER" );
+                        variables.mockGrammar.$( "getBooleanSqlType", "OTHER" );
                         variables.mockGrammar
                             .$( "convertToBooleanType" )
                             .$callback( ( any value ) => {
                                 return {
                                     "value": isNull( value ) ? javacast( "null", "" ) : !!value,
-                                    "cfsqltype": "CF_SQL_OTHER"
+                                    "cfsqltype": "OTHER",
+                                    "sqltype": "OTHER"
                                 };
                             } );
 
                         expect( utils.extractBinding( true, variables.mockGrammar ) ).toBe( {
                             "list": false,
                             "null": false,
-                            "cfsqltype": "CF_SQL_OTHER",
+                            "cfsqltype": "OTHER",
+                            "sqltype": "OTHER",
                             "value": true
                         } );
                         expect( utils.extractBinding( "true", variables.mockGrammar ) ).toBe( {
                             "list": false,
                             "null": false,
-                            "cfsqltype": "CF_SQL_VARCHAR",
+                            "cfsqltype": "VARCHAR",
+                            "sqltype": "VARCHAR",
                             "value": "true"
                         } );
                         expect( utils.extractBinding( false, variables.mockGrammar ) ).toBe( {
                             "list": false,
                             "null": false,
-                            "cfsqltype": "CF_SQL_OTHER",
+                            "cfsqltype": "OTHER",
+                            "sqltype": "OTHER",
                             "value": false
                         } );
                         expect( utils.extractBinding( "false", variables.mockGrammar ) ).toBe( {
                             "list": false,
                             "null": false,
-                            "cfsqltype": "CF_SQL_VARCHAR",
+                            "cfsqltype": "VARCHAR",
+                            "sqltype": "VARCHAR",
                             "value": "false"
                         } );
                     } );
@@ -154,10 +180,10 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             describe( "it infers the sql type from the members of an array", function() {
                 it( "if all the members of the array are the same", function() {
-                    expect( utils.inferSqlType( [ 1, 2 ], variables.mockGrammar ) ).toBe( "CF_SQL_INTEGER" );
+                    expect( utils.inferSqlType( [ 1, 2 ], variables.mockGrammar ) ).toBe( "INTEGER" );
                 } );
 
-                it( "but defaults to CF_SQL_VARCHAR if they are different", function() {
+                it( "but defaults to VARCHAR if they are different", function() {
                     expect(
                         utils.inferSqlType(
                             [
@@ -168,7 +194,7 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                             ],
                             variables.mockGrammar
                         )
-                    ).toBe( "CF_SQL_VARCHAR" );
+                    ).toBe( "VARCHAR" );
                 } );
             } );
         } );
@@ -180,20 +206,22 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
                 expect( binding ).toBeStruct();
                 expect( binding.value ).toBe( dateTimeFormat( datetime, "yyyy-mm-dd'T'HH:nn:ss.SSSXXX" ) );
-                expect( binding.cfsqltype ).toBe( "CF_SQL_TIMESTAMP" );
+                expect( binding.cfsqltype ).toBe( "TIMESTAMP" );
+                expect( binding.sqltype ).toBe( "TIMESTAMP" );
                 expect( binding.list ).toBe( false );
                 expect( binding.null ).toBe( false );
             } );
 
             it( "automatically sets a scale if needed", function() {
                 var binding = utils.extractBinding(
-                    { "value": 3.14159, "cfsqltype": "CF_SQL_DECIMAL" },
+                    { "value": 3.14159, "cfsqltype": "DECIMAL" },
                     variables.mockGrammar
                 );
 
                 expect( binding ).toBeStruct();
                 expect( binding.value ).toBe( 3.14159 );
-                expect( binding.cfsqltype ).toBe( "CF_SQL_DECIMAL" );
+                expect( binding.cfsqltype ).toBe( "DECIMAL" );
+                expect( binding.sqltype ).toBe( "DECIMAL" );
                 expect( binding ).toHaveKey( "scale" );
                 expect( binding.scale ).toBe( 5 );
                 expect( binding.list ).toBe( false );
@@ -202,13 +230,14 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             it( "does not set a scale for integers", function() {
                 var binding = utils.extractBinding(
-                    { "value": 3.14159, "cfsqltype": "CF_SQL_INTEGER" },
+                    { "value": 3.14159, "cfsqltype": "INTEGER" },
                     variables.mockGrammar
                 );
 
                 expect( binding ).toBeStruct();
                 expect( binding.value ).toBe( 3.14159 );
-                expect( binding.cfsqltype ).toBe( "CF_SQL_INTEGER" );
+                expect( binding.cfsqltype ).toBe( "INTEGER" );
+                expect( binding.sqltype ).toBe( "INTEGER" );
                 expect( binding ).notToHaveKey( "scale" );
                 expect( binding.list ).toBe( false );
                 expect( binding.null ).toBe( false );
@@ -218,13 +247,14 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 try {
                     utils.setAutoAddScale( false );
                     var binding = utils.extractBinding(
-                        { "value": 3.14159, "cfsqltype": "CF_SQL_DECIMAL" },
+                        { "value": 3.14159, "cfsqltype": "DECIMAL" },
                         variables.mockGrammar
                     );
 
                     expect( binding ).toBeStruct();
                     expect( binding.value ).toBe( 3.14159 );
-                    expect( binding.cfsqltype ).toBe( "CF_SQL_DECIMAL" );
+                    expect( binding.cfsqltype ).toBe( "DECIMAL" );
+                    expect( binding.sqltype ).toBe( "DECIMAL" );
                     expect( binding ).notToHaveKey( "scale" );
                     expect( binding.list ).toBe( false );
                     expect( binding.null ).toBe( false );
@@ -235,13 +265,14 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             it( "uses a passed in scale if provided", function() {
                 var binding = utils.extractBinding(
-                    { "value": 3.14159, "cfsqltype": "CF_SQL_DECIMAL", "scale": 2 },
+                    { "value": 3.14159, "cfsqltype": "DECIMAL", "scale": 2 },
                     variables.mockGrammar
                 );
 
                 expect( binding ).toBeStruct();
                 expect( binding.value ).toBe( 3.14159 );
-                expect( binding.cfsqltype ).toBe( "CF_SQL_DECIMAL" );
+                expect( binding.cfsqltype ).toBe( "DECIMAL" );
+                expect( binding.sqltype ).toBe( "DECIMAL" );
                 expect( binding ).toHaveKey( "scale" );
                 expect( binding.scale ).toBe( 2 );
                 expect( binding.list ).toBe( false );
@@ -316,7 +347,8 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( queryTwo.getRawBindings().where ).toBe( [
                     {
                         value: "baz",
-                        cfsqltype: "cf_sql_varchar",
+                        cfsqltype: "varchar",
+                        sqltype: "varchar",
                         null: false,
                         list: false
                     }

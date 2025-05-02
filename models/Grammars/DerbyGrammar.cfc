@@ -583,7 +583,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     public string function getBooleanSqlType() {
-        return "CF_SQL_OTHER";
+        return "OTHER";
     }
 
     function typeDatetime( column ) {

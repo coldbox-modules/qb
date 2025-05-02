@@ -431,7 +431,7 @@ component extends="testbox.system.BaseSpec" {
                                 builder
                                     .select( "*" )
                                     .from( "users" )
-                                    .where( "createdDate", ">=", { value: "01/01/2019", cfsqltype: "CF_SQL_DATE" } );
+                                    .where( "createdDate", ">=", { value: "01/01/2019", cfsqltype: "DATE" } );
                             }, basicWhereWithQueryParamStruct() );
                         } );
 
@@ -711,8 +711,8 @@ component extends="testbox.system.BaseSpec" {
                                     .from( "users" )
                                     .whereBetween(
                                         "createdDate",
-                                        { value: "1/1/2019", cfsqltype: "CF_SQL_DATE" },
-                                        { value: "12/31/2019", cfsqltype: "CF_SQL_DATE" }
+                                        { value: "1/1/2019", cfsqltype: "DATE" },
+                                        { value: "12/31/2019", cfsqltype: "DATE" }
                                     );
                             }, whereBetweenWithQueryParamStructs() );
                         } );
@@ -805,9 +805,7 @@ component extends="testbox.system.BaseSpec" {
 
                         it( "can add where in statements from an array", function() {
                             testCase( function( builder ) {
-                                builder
-                                    .from( "users" )
-                                    .whereIn( "id", [ 1, { value: 2, cfsqltype: "CF_SQL_INTEGER" }, 3 ] );
+                                builder.from( "users" ).whereIn( "id", [ 1, { value: 2, cfsqltype: "INTEGER" }, 3 ] );
                             }, whereInArrayOfQueryParamStructs() );
                         } );
 
@@ -2318,7 +2316,7 @@ component extends="testbox.system.BaseSpec" {
                             return builder
                                 .from( "users" )
                                 .insert(
-                                    values = { "active": { "value": true, "cfsqltype": "CF_SQL_BOOLEAN" } },
+                                    values = { "active": { "value": true, "cfsqltype": "BOOLEAN" } },
                                     toSql = true
                                 );
                         },

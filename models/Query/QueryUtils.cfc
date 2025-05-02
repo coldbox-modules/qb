@@ -21,19 +21,19 @@ component singleton displayname="QueryUtils" accessors="true" {
     /**
      * allow overriding default numeric SQL type inferral
      */
-    property name="numericSQLType" default="CF_SQL_NUMERIC";
+    property name="numericSQLType" default="NUMERIC";
 
     /**
      * Allow overriding default integer numeric SQL type inferral.
      * Only applies when `autoDeriveNumericType` is true.
      */
-    property name="integerSQLType" default="CF_SQL_INTEGER";
+    property name="integerSQLType" default="INTEGER";
 
     /**
      * Allow overriding default decimal numeric SQL type inferral.
      * Only applies when `autoDeriveNumericType` is true.
      */
-    property name="decimalSQLType" default="CF_SQL_DECIMAL";
+    property name="decimalSQLType" default="DECIMAL";
 
     /**
      * Automatically add a scale to floating point bindings.
@@ -59,11 +59,11 @@ component singleton displayname="QueryUtils" accessors="true" {
     public QueryUtils function init(
         boolean strictDateDetection = true,
         boolean convertEmptyStringsToNull = false,
-        string numericSQLType = "CF_SQL_NUMERIC",
+        string numericSQLType = "NUMERIC",
         boolean autoAddScale = true,
         boolean autoDeriveNumericType = true,
-        string integerSqlType = "CF_SQL_INTEGER",
-        string decimalSqlType = "CF_SQL_DECIMAL",
+        string integerSqlType = "INTEGER",
+        string decimalSqlType = "DECIMAL",
         any log
     ) {
         variables.strictDateDetection = arguments.strictDateDetection;
@@ -92,7 +92,12 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     public any function extractBinding( any value, required any grammar ) {
         if ( isNull( arguments.value ) || ( variables.convertEmptyStringsToNull && !len( arguments.value ) ) ) {
-            return { "cfsqltype": "CF_SQL_VARCHAR", "value": "", "null": true };
+            return {
+                "cfsqltype": "VARCHAR",
+                "sqltype": "VARCHAR",
+                "value": "",
+                "null": true
+            };
         }
 
         if ( isBuilder( arguments.value ) ) {
@@ -109,19 +114,28 @@ component singleton displayname="QueryUtils" accessors="true" {
             binding = { value: normalizeSqlValue( value ) };
         }
 
+        if ( structKeyExists( binding, "sqltype" ) && !structKeyExists( binding, "cfsqltype" ) ) {
+            param binding.cfsqltype = binding.sqltype;
+        }
+
+        if ( structKeyExists( binding, "cfsqltype" ) && !structKeyExists( binding, "sqltype" ) ) {
+            param binding.sqltype = binding.cfsqltype;
+        }
+
         if ( !structKeyExists( binding, "cfsqltype" ) ) {
             if ( checkIsActuallyBoolean( binding.value ) ) {
                 structAppend( binding, arguments.grammar.convertToBooleanType( binding.value ), true );
             } else {
-                binding.cfsqltype = inferSqlType( binding.value, arguments.grammar );
+                binding.sqltype = inferSqlType( binding.value, arguments.grammar );
+                binding.cfsqltype = binding.sqltype;
             }
         }
 
-        if ( binding.cfsqltype == "CF_SQL_TIMESTAMP" ) {
+        if ( binding.cfsqltype == "TIMESTAMP" ) {
             binding.value = dateTimeFormat( binding.value, "yyyy-mm-dd'T'HH:nn:ss.SSSXXX" );
-        } else if ( binding.cfsqltype == "CF_SQL_DATE" ) {
+        } else if ( binding.cfsqltype == "DATE" ) {
             binding.value = dateFormat( binding.value, "yyyy-mm-dd" );
-        } else if ( binding.cfsqltype == "CF_SQL_TIME" ) {
+        } else if ( binding.cfsqltype == "TIME" ) {
             binding.value = timeFormat( binding.value, "HH:mm:ss.nZ" );
         }
         structAppend( binding, { list: false, null: false }, false );
@@ -129,6 +143,9 @@ component singleton displayname="QueryUtils" accessors="true" {
         if ( variables.autoAddScale && isFloatingPoint( binding ) ) {
             param binding.scale = calculateNumberOfDecimalDigits( binding );
         }
+
+        // binding.sqltype = replace( binding.cfsqltype, "", "" );
+        // binding.cfsqltype = binding.sqltype;
 
         return binding;
     }
@@ -153,7 +170,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 index++;
 
                 if ( !isStruct( thisBinding ) ) {
-                    return castAsSqlType( value = thisBinding, sqltype = "cf_sql_varchar" );
+                    return castAsSqlType( value = thisBinding, sqltype = "varchar" );
                 }
 
                 if ( inline ) {
@@ -178,15 +195,15 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     /**
-     * Infer the correct cf_sql_type from a value.
+     * Infer the correct type from a value.
      *
-     * @value The value from which to infer the cf_sql_type.
+     * @value The value from which to infer the type.
      *
      * @return string
      */
     public string function inferSqlType( any value, required any grammar ) {
         if ( isNull( arguments.value ) ) {
-            return "CF_SQL_VARCHAR";
+            return "VARCHAR";
         }
 
         if ( isArray( value ) ) {
@@ -195,7 +212,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 function( val ) {
                     return inferSqlType( val, grammar );
                 },
-                "CF_SQL_VARCHAR"
+                "VARCHAR"
             );
         }
 
@@ -208,14 +225,14 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         if ( checkIsActuallyDate( value ) ) {
-            return "CF_SQL_TIMESTAMP";
+            return "TIMESTAMP";
         }
 
         if ( checkIsActuallyBoolean( value ) ) {
             return arguments.grammar.getBooleanSqlType();
         }
 
-        return "CF_SQL_VARCHAR";
+        return "VARCHAR";
     }
 
     public any function castAsSqlType( any value, required string sqltype ) {
@@ -224,35 +241,35 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         switch ( arguments.sqltype ) {
-            case "CF_SQL_INTEGER":
-            case "CF_SQL_NUMERIC":
-            case "CF_SQL_DECIMAL":
-            case "CF_SQL_FLOAT":
-            case "CF_SQL_SMALLINT":
-            case "CF_SQL_REAL":
-            case "CF_SQL_DOUBLE":
-            case "CF_SQL_TINYINT":
-            case "CF_SQL_MONEY":
-            case "CF_SQL_MONEY4":
-            case "CF_SQL_BIGINT":
-            case "CF_SQL_BIT":
+            case "INTEGER":
+            case "NUMERIC":
+            case "DECIMAL":
+            case "FLOAT":
+            case "SMALLINT":
+            case "REAL":
+            case "DOUBLE":
+            case "TINYINT":
+            case "MONEY":
+            case "MONEY4":
+            case "BIGINT":
+            case "BIT":
                 return ( value * 1 );
-            case "CF_SQL_DATE":
+            case "DATE":
                 return "'#dateFormat( value, "yyyy-mm-dd" )#'";
-            case "CF_SQL_TIME":
+            case "TIME":
                 return "'#timeFormat( value, "HH:mm:ss.lll" )#'";
-            case "CF_SQL_TIMESTAMP":
+            case "TIMESTAMP":
                 return "'#dateTimeFormat( value, "yyyy-mm-dd HH:nn:ss.lll" )#'";
-            case "CF_SQL_NULL":
+            case "NULL":
                 return "NULL";
-            case "CF_SQL_BLOB":
-            case "CF_SQL_CLOB":
+            case "BLOB":
+            case "CLOB":
                 return toBase64( value );
-            case "CF_SQL_VARCHAR":
-            case "CF_SQL_NVARCHAR":
-            case "CF_SQL_CHAR":
-            case "CF_SQL_NCHAR":
-            case "CF_SQL_IDSTAMP":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "CHAR":
+            case "NCHAR":
+            case "IDSTAMP":
             default:
                 return "'" & replace(
                     toString( arguments.value ),

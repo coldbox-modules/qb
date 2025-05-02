@@ -1665,7 +1665,7 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     public string function getBooleanSqlType() {
-        return "CF_SQL_TINYINT";
+        return "TINYINT";
     }
 
     public any function convertBooleanValue( required any value ) {
@@ -1675,7 +1675,8 @@ component displayname="Grammar" accessors="true" singleton {
     function convertToBooleanType( any value ) {
         return {
             "value": isNull( value ) ? javacast( "null", "" ) : convertBooleanValue( value ),
-            "cfsqltype": getBooleanSqlType()
+            "cfsqltype": getBooleanSqlType(),
+            "sqltype": getBooleanSqlType()
         };
     }
 

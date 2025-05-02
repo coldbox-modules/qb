@@ -607,7 +607,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     public string function getBooleanSqlType() {
-        return "CF_SQL_NUMERIC";
+        return "NUMERIC";
     }
 
     function typeDatetime( column ) {

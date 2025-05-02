@@ -761,7 +761,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     public string function getBooleanSqlType() {
-        return "CF_SQL_BIT";
+        return "BIT";
     }
 
     function typeChar( column ) {

@@ -117,7 +117,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( bindings ) ).toBe( 1, "1 binding should exist" );
                         var binding = bindings[ 1 ];
                         expect( binding.value ).toBe( "::some value::" );
-                        expect( binding.cfsqltype ).toBe( "cf_sql_varchar" );
+                        expect( binding.cfsqltype ).toBe( "varchar" );
                     } );
                 } );
 

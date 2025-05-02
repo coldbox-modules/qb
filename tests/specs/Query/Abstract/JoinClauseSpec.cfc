@@ -163,7 +163,7 @@ component extends="testbox.system.BaseSpec" {
 
                         var binding = bindings[ 1 ];
                         expect( binding.value ).toBe( "en-US" );
-                        expect( binding.cfsqltype ).toBe( "cf_sql_varchar" );
+                        expect( binding.cfsqltype ).toBe( "varchar" );
                     } );
                 } );
 

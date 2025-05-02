@@ -1060,7 +1060,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
                     expect( runQueryLog[ 1 ].bindings ).toBe( [
                         {
-                            "CFSQLTYPE": "CF_SQL_INTEGER",
+                            "CFSQLTYPE": "INTEGER",
+                            "SQLTYPE": "INTEGER",
                             "VALUE": 1,
                             "LIST": false,
                             "NULL": false
@@ -1087,7 +1088,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
                     expect( runQueryLog[ 1 ].bindings ).toBe( [
                         {
-                            "CFSQLTYPE": "CF_SQL_INTEGER",
+                            "CFSQLTYPE": "INTEGER",
+                            "SQLTYPE": "INTEGER",
                             "VALUE": 1,
                             "LIST": false,
                             "NULL": false
@@ -1114,7 +1116,8 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
                     expect( runQueryLog[ 1 ].bindings ).toBe( [
                         {
-                            "CFSQLTYPE": "CF_SQL_INTEGER",
+                            "CFSQLTYPE": "INTEGER",
+                            "SQLTYPE": "INTEGER",
                             "VALUE": 1,
                             "LIST": false,
                             "NULL": false

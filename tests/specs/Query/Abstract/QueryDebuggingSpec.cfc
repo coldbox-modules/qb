@@ -31,11 +31,11 @@ component extends="testbox.system.BaseSpec" {
 
                 if ( isLucee() ) {
                     expect( query.toSQL( showBindings = true ) ).toBe(
-                        "SELECT * FROM ""users"" INNER JOIN ""logins"" ON ""users"".""id"" = ""logins"".""user_id"" AND ""logins"".""created_date"" > {""value"":""2019-06-01T00:00:00-06:00"",""cfsqltype"":""CF_SQL_TIMESTAMP"",""null"":false} WHERE ""users"".""type"" IN ({""value"":""admin"",""cfsqltype"":""CF_SQL_VARCHAR"",""null"":false}, {""value"":""manager"",""cfsqltype"":""CF_SQL_VARCHAR"",""null"":false}) AND ""active"" IS NOT NULL ORDER BY ""logins"".""created_date"" DESC"
+                        "SELECT * FROM ""users"" INNER JOIN ""logins"" ON ""users"".""id"" = ""logins"".""user_id"" AND ""logins"".""created_date"" > {""value"":""2019-06-01T00:00:00-06:00"",""cfsqltype"":""TIMESTAMP"",""null"":false} WHERE ""users"".""type"" IN ({""value"":""admin"",""cfsqltype"":""VARCHAR"",""null"":false}, {""value"":""manager"",""cfsqltype"":""VARCHAR"",""null"":false}) AND ""active"" IS NOT NULL ORDER BY ""logins"".""created_date"" DESC"
                     );
                 } else {
                     expect( query.toSQL( showBindings = true ) ).toBe(
-                        "SELECT * FROM ""users"" INNER JOIN ""logins"" ON ""users"".""id"" = ""logins"".""user_id"" AND ""logins"".""created_date"" > {""value"":""2019-06-01T00:00:00-06:00"",""cfsqltype"":""CF_SQL_TIMESTAMP"",""null"":false} WHERE ""users"".""type"" IN ({""value"":""admin"",""cfsqltype"":""CF_SQL_VARCHAR"",""null"":false}, {""value"":""manager"",""cfsqltype"":""CF_SQL_VARCHAR"",""null"":false}) AND ""active"" IS NOT NULL ORDER BY ""logins"".""created_date"" DESC"
+                        "SELECT * FROM ""users"" INNER JOIN ""logins"" ON ""users"".""id"" = ""logins"".""user_id"" AND ""logins"".""created_date"" > {""value"":""2019-06-01T00:00:00-06:00"",""cfsqltype"":""TIMESTAMP"",""null"":false} WHERE ""users"".""type"" IN ({""value"":""admin"",""cfsqltype"":""VARCHAR"",""null"":false}, {""value"":""manager"",""cfsqltype"":""VARCHAR"",""null"":false}) AND ""active"" IS NOT NULL ORDER BY ""logins"".""created_date"" DESC"
                     );
                 }
             } );

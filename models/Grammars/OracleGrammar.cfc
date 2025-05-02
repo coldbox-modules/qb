@@ -47,6 +47,26 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     /**
+     * Compiles the table portion of a sql statement.
+     *
+     * @query The Builder instance.
+     * @from The selected table.
+     *
+     * @return string
+     */
+    private string function compileTableName( required QueryBuilder query, required any tableName ) {
+        if ( !len( arguments.tableName ) ) {
+            return "FROM DUAL";
+        }
+
+        var fullTable = arguments.tableName;
+        if ( query.getAlias() != "" ) {
+            fullTable &= " #query.getAlias()#";
+        }
+        return "FROM " & wrapTable( fullTable );
+    }
+
+    /**
      * Compiles the lock portion of a sql statement.
      *
      * @query The Builder instance.

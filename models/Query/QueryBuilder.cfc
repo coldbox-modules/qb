@@ -575,6 +575,13 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    public QueryBuilder function clearFrom() {
+        variables.tableName = "";
+        variables.alias = "";
+        clearBindings( only = [ "from" ] );
+        return this;
+    }
+
     private void function parseIntoTableAndAlias( required string table ) {
         var parts = arguments.table.split( "\s(?:[Aa][Ss]\s)?" );
         variables.tableName = trim( parts[ 1 ] );

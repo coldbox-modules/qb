@@ -280,6 +280,10 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function compileTableName( required QueryBuilder query, required any tableName ) {
+        if ( !len( arguments.tableName ) ) {
+            return "";
+        }
+
         var fullTable = arguments.tableName;
         if ( query.getAlias() != "" ) {
             fullTable &= " #query.getAlias()#";

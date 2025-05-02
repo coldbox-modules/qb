@@ -305,6 +305,21 @@ component extends="testbox.system.BaseSpec" {
                                 } );
                         }, fromSubBindings() );
                     } );
+
+                    it( "can select from no table or a dummy table like DUAL", () => {
+                        testCase( function( builder ) {
+                            builder.selectRaw( "1 + 1" );
+                        }, fromEmpty() );
+                    } );
+
+                    it( "can clear a configured table", () => {
+                        testCase( function( builder ) {
+                            builder
+                                .from( "users" )
+                                .selectRaw( "1 + 1" )
+                                .clearFrom();
+                        }, clearFrom() );
+                    } );
                 } );
 
                 describe( "locking", function() {

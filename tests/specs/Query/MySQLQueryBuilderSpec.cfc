@@ -125,6 +125,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function fromEmpty() {
+        return "SELECT 1 + 1";
+    }
+
+    function clearFrom() {
+        return "SELECT 1 + 1";
+    }
+
     function noLock() {
         return { sql: "SELECT * FROM `users` WHERE `id` = ?", bindings: [ 1 ] };
     }

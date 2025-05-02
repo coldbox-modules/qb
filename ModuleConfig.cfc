@@ -12,6 +12,7 @@ component {
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
             "strictDateDetection": true,
+            "convertEmptyStringsToNull": false,
             "numericSQLType": "CF_SQL_NUMERIC",
             "integerSQLType": "CF_SQL_INTEGER",
             "decimalSQLType": "CF_SQL_DECIMAL",
@@ -49,6 +50,7 @@ component {
             .map( alias = "QueryUtils@qb", force = true )
             .to( "qb.models.Query.QueryUtils" )
             .initArg( name = "strictDateDetection", value = settings.strictDateDetection )
+            .initArg( name = "convertEmptyStringsToNull", value = settings.convertEmptyStringsToNull )
             .initArg( name = "numericSQLType", value = settings.numericSQLType )
             .initArg( name = "autoAddScale", value = settings.autoAddScale )
             .initArg( name = "autoDeriveNumericType", value = settings.autoDeriveNumericType )

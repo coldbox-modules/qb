@@ -44,6 +44,14 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 variables.utils.setStrictDateDetection( false );
             } );
 
+            it( "empty strings as null", () => {
+                var bindingA = utils.extractBinding( "", variables.mockGrammar );
+                expect( bindingA.null ).toBeFalse();
+                variables.utils.setConvertEmptyStringsToNull( true );
+                var bindingB = utils.extractBinding( "", variables.mockGrammar );
+                expect( bindingB.null ).toBeTrue();
+            } );
+
             it( "null", function() {
                 expect( utils.inferSqlType( javacast( "null", "" ), variables.mockGrammar ) ).toBe( "CF_SQL_VARCHAR" );
                 expect( utils.extractBinding( javacast( "null", "" ), variables.mockGrammar ) ).toBe( { "null": true, "cfsqltype": "CF_SQL_VARCHAR", "value": "" } );

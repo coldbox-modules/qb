@@ -14,6 +14,11 @@ component singleton displayname="QueryUtils" accessors="true" {
     property name="strictDateDetection" default="true";
 
     /**
+     * If true, empty strings are converted to nulls.
+     */
+    property name="convertEmptyStringsToNull" default="false";
+
+    /**
      * allow overriding default numeric SQL type inferral
      */
     property name="numericSQLType" default="CF_SQL_NUMERIC";
@@ -53,6 +58,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     public QueryUtils function init(
         boolean strictDateDetection = true,
+        boolean convertEmptyStringsToNull = false,
         string numericSQLType = "CF_SQL_NUMERIC",
         boolean autoAddScale = true,
         boolean autoDeriveNumericType = true,
@@ -85,7 +91,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return any
      */
     public any function extractBinding( any value, required any grammar ) {
-        if ( isNull( arguments.value ) ) {
+        if ( isNull( arguments.value ) || ( variables.convertEmptyStringsToNull && !len( arguments.value ) ) ) {
             return { "cfsqltype": "CF_SQL_VARCHAR", "value": "", "null": true };
         }
 

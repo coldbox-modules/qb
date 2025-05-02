@@ -1566,6 +1566,12 @@ component extends="testbox.system.BaseSpec" {
                         }, orderBy() );
                     } );
 
+                    it( "can order by random", function() {
+                        testCase( function( builder ) {
+                            builder.from( "users" ).orderByRandom();
+                        }, orderByRandom() );
+                    } );
+
                     it( "can add a simple order by using the asc shortcut method", function() {
                         testCase( function( builder ) {
                             builder.from( "users" ).orderByAsc( "email" );

@@ -2526,6 +2526,18 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Adds a random order to the query.
+     *
+     * @sql    The sql to add directly to the orders.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function orderByRandom() {
+        variables.orders.append( { direction: "random" } );
+        return this;
+    }
+
+    /**
      * Adds a raw statement as an order by
      *
      * @sql    The sql to add directly to the orders.

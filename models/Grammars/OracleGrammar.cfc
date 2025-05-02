@@ -46,6 +46,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return compileOracleLockType( query, sql );
     }
 
+    private string function orderByRandom() {
+        return "DBMS_RANDOM.VALUE";
+    }
+
     /**
      * Compiles the table portion of a sql statement.
      *

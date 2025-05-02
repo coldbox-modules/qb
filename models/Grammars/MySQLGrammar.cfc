@@ -1,5 +1,9 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    private string function orderByRandom() {
+        return "RAND()";
+    }
+
     /**
      * Parses and wraps a value from the Builder for use in a sql statement.
      *

@@ -210,6 +210,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         var orderBys = orders.map( function( orderBy ) {
             if ( orderBy.direction == "raw" ) {
                 return orderBy.column.getSQL();
+            } else if ( orderBy.direction == "random" ) {
+                return orderByRandom();
             } else if ( orderBy.keyExists( "query" ) ) {
                 return "(#compileSelect( orderBy.query )#) #uCase( orderBy.direction )#";
             } else {
@@ -218,6 +220,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         } );
 
         return "ORDER BY #orderBys.toList( ", " )#";
+    }
+
+    private string function orderByRandom() {
+        return "NEWID()";
     }
 
     /**

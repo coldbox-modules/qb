@@ -555,6 +555,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM ""USERS"" ORDER BY ""EMAIL"" ASC";
     }
 
+    function orderByRandom() {
+        return "SELECT * FROM ""USERS"" ORDER BY DBMS_RANDOM.VALUE";
+    }
+
     function orderByDesc() {
         return "SELECT * FROM ""USERS"" ORDER BY ""EMAIL"" DESC";
     }

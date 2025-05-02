@@ -540,6 +540,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT * FROM [users] ORDER BY [email] ASC";
     }
 
+    function orderByRandom() {
+        return "SELECT * FROM [users] ORDER BY NEWID()";
+    }
+
     function orderByDesc() {
         return "SELECT * FROM [users] ORDER BY [email] DESC";
     }

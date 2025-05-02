@@ -739,6 +739,8 @@ component displayname="Grammar" accessors="true" singleton {
         var orderBys = orders.map( function( orderBy ) {
             if ( orderBy.direction == "raw" ) {
                 return orderBy.column.getSQL();
+            } else if ( orderBy.direction == "random" ) {
+                return orderByRandom();
             } else if ( orderBy.keyExists( "query" ) ) {
                 return "(#this.compileSelect( orderBy.query )#) #uCase( orderBy.direction )#";
             } else {
@@ -747,6 +749,10 @@ component displayname="Grammar" accessors="true" singleton {
         } );
 
         return "ORDER BY #orderBys.toList( ", " )#";
+    }
+
+    private string function orderByRandom() {
+        return "RANDOM()";
     }
 
     /**

@@ -4,3 +4,4 @@ tests/results
 Engine.war
 *.sublime-workspace
 .tmp
+.engine/

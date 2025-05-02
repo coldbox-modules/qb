@@ -334,10 +334,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             return trim(
-                updateStatement & " FROM #wrapTable( query.getTableName() )# " & compileJoins(
+                updateStatement & returningClause & " FROM #wrapTable( query.getTableName() )# " & compileJoins(
                     arguments.query,
                     arguments.query.getJoins()
-                ) & returningClause & " " & compileWheres( query, query.getWheres() )
+                ) & " " & compileWheres( query, query.getWheres() )
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

@@ -874,6 +874,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function updateReturningWithJoin() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function updateReturningIgnoresTableQualifiers() {
         return { exception: "UnsupportedOperation" };
     }

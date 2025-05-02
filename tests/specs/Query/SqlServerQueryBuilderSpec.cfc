@@ -884,6 +884,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function updateReturningWithJoin() {
+        return {
+            "sql": "UPDATE [zzz] SET [created] = ?, [user_id] = ? OUTPUT INSERTED.[xxx] FROM [zzz] INNER JOIN [aaa] ON [aaa].[ddd] = [zzz].[ddd] WHERE [aaa].[id] IN (?, ?, ?)",
+            "bindings": [ "2025-01-01 00:00:00", 1, 1, 2, 3 ]
+        }
+    }
+
     function updateReturningIgnoresTableQualifiers() {
         return {
             "sql": "UPDATE [users] SET [email] = ? OUTPUT INSERTED.[modifiedDate] WHERE [tablePrefix].[id] = ?",

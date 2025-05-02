@@ -2595,6 +2595,19 @@ component extends="testbox.system.BaseSpec" {
                     }, updateReturningRaw() );
                 } );
 
+                it( "can update with returning and joins", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "zzz" )
+                            .returning( "xxx" )
+                            .join( "aaa", ( j ) => {
+                                j.on( "aaa.ddd", "zzz.ddd" )
+                            } )
+                            .whereIn( "aaa.id", [ 1, 2, 3 ] )
+                            .update( values = { "zzz.user_id": 1, "zzz.created": "2025-01-01 00:00:00" }, toSQL = true );
+                    }, updateReturningWithJoin() );
+                } );
+
                 it( "returning ignores table qualifiers in update statements", function() {
                     testCase( function( builder ) {
                         return builder

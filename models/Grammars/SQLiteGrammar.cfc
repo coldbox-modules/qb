@@ -137,14 +137,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 } )
                 .toList( ", " );
 
-            var updateStatement = "UPDATE #wrapTable( query.getTableName() )#";
-            var joinStatement = "";
-            if ( !arguments.query.getJoins().isEmpty() ) {
-                joinStatement = " FROM #wrapTable( query.getTableName() )# " & compileJoins(
-                    arguments.query,
-                    arguments.query.getJoins()
-                );
+            var updateStatement = "UPDATE #wrapTable( query.getTableName() )# SET #updateList#";
+
+            var joins = arguments.query.getJoins();
+
+            if ( joins.isEmpty() ) {
+                updateStatement = trim( "#updateStatement# #compileWheres( query, query.getWheres() )#" );
             }
+
+            updateStatement = trim( "#updateStatement# #compileLimitValue( query, query.getLimitValue() )#" );
 
             var returningColumns = arguments.query
                 .getReturning()
@@ -152,11 +153,26 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
 
-            return trim(
-                trim(
-                    updateStatement & " SET #updateList##joinStatement# #compileWheres( query, query.getWheres() )# #compileLimitValue( query, query.getLimitValue() )#"
-                ) & returningClause
+            if ( joins.isEmpty() ) {
+                return updateStatement & returningClause;
+            }
+
+            var firstJoin = joins[ 1 ];
+            var whereStatement = replace(
+                compileWheres( query, query.getWheres() ),
+                "WHERE",
+                "AND",
+                "one"
             );
+            updateStatement &= " FROM #wrapTable( firstJoin.getTable() )# #compileWheres( arguments.query, firstJoin.getWheres() )#";
+
+            if ( joins.len() <= 1 ) {
+                return trim( updateStatement & " " & whereStatement & returningClause );
+            }
+
+            var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );
+
+            return trim( "#updateStatement# #compileJoins( arguments.query, restJoins )# #whereStatement##returningClause#" );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

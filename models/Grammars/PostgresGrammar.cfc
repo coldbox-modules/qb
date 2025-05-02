@@ -148,8 +148,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "one"
             );
             updateStatement &= " FROM #wrapTable( firstJoin.getTable() )# #compileWheres( arguments.query, firstJoin.getWheres() )#";
+
             if ( joins.len() <= 1 ) {
-                return trim( updateStatement & " " & whereStatement );
+                return trim( updateStatement & " " & whereStatement & returningClause );
             }
 
             var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );

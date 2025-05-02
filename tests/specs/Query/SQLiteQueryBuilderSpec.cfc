@@ -955,16 +955,16 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function updateWithJoin() {
-        return "UPDATE ""employees"" SET ""departmentName"" = departments.name FROM ""employees"" INNER JOIN ""departments"" ON ""departments"".""id"" = ""employees"".""departmentId""";
+        return "UPDATE ""employees"" SET ""departmentName"" = departments.name FROM ""departments"" WHERE ""departments"".""id"" = ""employees"".""departmentId""";
     }
 
     function updateWithJoinAndAliases() {
-        return "UPDATE ""employees"" AS ""e"" SET ""departmentName"" = d.name FROM ""employees"" AS ""e"" INNER JOIN ""departments"" AS ""d"" ON ""d"".""id"" = ""e"".""departmentId""";
+        return "UPDATE ""employees"" AS ""e"" SET ""departmentName"" = d.name FROM ""departments"" AS ""d"" WHERE ""d"".""id"" = ""e"".""departmentId""";
     }
 
     function updateWithJoinAndWhere() {
         return {
-            sql: "UPDATE ""employees"" SET ""departmentName"" = departments.name FROM ""employees"" INNER JOIN ""departments"" ON ""departments"".""id"" = ""employees"".""departmentId"" WHERE ""departments"".""active"" = ?",
+            sql: "UPDATE ""employees"" SET ""departmentName"" = departments.name FROM ""departments"" WHERE ""departments"".""id"" = ""employees"".""departmentId"" AND ""departments"".""active"" = ?",
             bindings: [ 1 ]
         };
     }
@@ -989,6 +989,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             "sql": "UPDATE ""users"" SET ""email"" = ? WHERE ""id"" = ? RETURNING DELETED.modifiedDate AS oldModifiedDate, INSERTED.modifiedDate AS newModifiedDate",
             "bindings": [ "john@example.com", 1 ]
         };
+    }
+
+    function updateReturningWithJoin() {
+        return {
+            "sql": "UPDATE ""zzz"" SET ""created"" = ?, ""user_id"" = ? FROM ""aaa"" WHERE ""aaa"".""ddd"" = ""zzz"".""ddd"" AND ""aaa"".""id"" IN (?, ?, ?) RETURNING ""xxx""",
+            "bindings": [ "2025-01-01 00:00:00", 1, 1, 2, 3 ]
+        }
     }
 
     function updateReturningIgnoresTableQualifiers() {

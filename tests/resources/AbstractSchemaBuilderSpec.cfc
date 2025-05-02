@@ -1689,6 +1689,12 @@ component extends="testbox.system.BaseSpec" {
                     }, dropTable() );
                 } );
 
+                it( "truncate table", function() {
+                    testCase( function( schema ) {
+                        return schema.truncate( "users", {}, false );
+                    }, truncateTable() );
+                } );
+
                 it( "dropIfExists", function() {
                     testCase( function( schema ) {
                         return schema.dropIfExists( "users", {}, false );

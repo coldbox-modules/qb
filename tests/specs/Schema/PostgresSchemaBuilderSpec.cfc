@@ -568,6 +568,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "DROP TABLE ""users"" CASCADE" ];
     }
 
+    function truncateTable() {
+        return [ "TRUNCATE TABLE ""users""" ];
+    }
+
     function dropIfExists() {
         return [ "DROP TABLE IF EXISTS ""users"" CASCADE" ];
     }

@@ -1376,6 +1376,21 @@ component displayname="Grammar" accessors="true" singleton {
         }
     }
 
+    function compileTruncate( required blueprint ) {
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            return concatenate( [ "TRUNCATE TABLE", generateIfExists( blueprint ), wrapTable( blueprint.getTable() ) ] );
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
     function generateIfExists( blueprint ) {
         return blueprint.getIfExists() ? "IF EXISTS" : "";
     }

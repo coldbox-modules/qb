@@ -561,6 +561,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "DROP TABLE `users`" ];
     }
 
+    function truncateTable() {
+        return [ "TRUNCATE TABLE `users`" ];
+    }
+
     function dropIfExists() {
         return [ "DROP TABLE IF EXISTS `users`" ];
     }

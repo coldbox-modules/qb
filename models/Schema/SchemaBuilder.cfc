@@ -256,6 +256,44 @@ component accessors="true" {
     }
 
     /**
+     * Truncate an existing table in the database.
+     *
+     * @table    The name of the table to truncate.
+     * @options  A struct of options to forward to the `queryExecute` call. Default: `{}`.
+     * @execute  Flag to immediately execute the statement.  Default: `true`.
+     *
+     * @returns  The blueprint instance
+     */
+    public Blueprint function truncate( required string table, struct options = {}, boolean execute = true ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
+        blueprint.addCommand( "truncate" );
+        blueprint.setTable( arguments.table );
+        if ( arguments.execute ) {
+            blueprint
+                .toSql()
+                .each( function( statement ) {
+                    getGrammar().runQuery(
+                        statement,
+                        [],
+                        options,
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
+                    );
+                } );
+        }
+        return blueprint;
+    }
+
+    /**
      * Drop an existing table if it exists in the database.
      *
      * @table    The name of the table to drop.

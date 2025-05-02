@@ -110,7 +110,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function guid() {
-        return [ "CREATE TABLE ""users"" (""id"" CHAR(36) NOT NULL)" ];
+        return [ "CREATE TABLE ""users"" (""id"" UUID NOT NULL)" ];
     }
 
     function increments() {
@@ -362,7 +362,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function nullable() {
-        return [ "CREATE TABLE ""users"" (""id"" CHAR(36))" ];
+        return [ "CREATE TABLE ""users"" (""id"" UUID)" ];
     }
 
     function unsigned() {

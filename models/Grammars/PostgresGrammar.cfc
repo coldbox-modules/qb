@@ -562,6 +562,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "OTHER";
     }
 
+    function typeGUID( column ) {
+        return "UUID";
+    }
+
     public any function convertBooleanValue( required any value ) {
         return !!arguments.value;
     }

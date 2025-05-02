@@ -3224,7 +3224,7 @@ component displayname="QueryBuilder" accessors="true" {
         required any target,
         any update,
         any source,
-        boolean deleteUnmatched = false,
+        any deleteUnmatched = false,
         struct options = {},
         boolean toSql = false
     ) {
@@ -3325,6 +3325,17 @@ component displayname="QueryBuilder" accessors="true" {
                 }
             } );
         } );
+
+        if ( isClosure( arguments.deleteUnmatched ) || isCustomFunction( arguments.deleteUnmatched ) ) {
+            var deleteRestrictions = newQuery().setColumnFormatter( ( column ) => {
+                if ( listLen( column, "." ) > 1 ) {
+                    return column;
+                }
+                return "qb_target.#column#";
+            } );
+            arguments.deleteUnmatched( deleteRestrictions );
+            arguments.deleteUnmatched = deleteRestrictions;
+        }
 
         var sql = getGrammar().compileUpsert(
             this,

@@ -2816,6 +2816,37 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, upsertWithDelete() );
                 } );
+
+                it( "can delete unmatched source rows in an upsert with additional restrictions (SQL Server)", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "users" )
+                            .upsert(
+                                source = function( q ) {
+                                    q.from( "activeDirectoryUsers" )
+                                        .select( [
+                                            "username",
+                                            "active",
+                                            "createdDate",
+                                            "modifiedDate"
+                                        ] )
+                                        .where( "active", 1 );
+                                },
+                                values = [
+                                    "username",
+                                    "active",
+                                    "createdDate",
+                                    "modifiedDate"
+                                ],
+                                target = [ "username" ],
+                                update = [ "active", "modifiedDate" ],
+                                deleteUnmatched = ( q ) => {
+                                    q.where( "active", 1 );
+                                },
+                                toSql = true
+                            );
+                    }, upsertWithDeleteRestricted() );
+                } );
             } );
 
             describe( "delete statements", function() {

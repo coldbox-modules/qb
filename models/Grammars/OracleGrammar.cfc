@@ -201,9 +201,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required any updates,
         required array target,
         QueryBuilder source,
-        boolean deleteUnmatched = false
+        any deleteUnmatched = false
     ) {
-        if ( arguments.deleteUnmatched ) {
+        if ( !isBoolean( arguments.deleteUnmatched ) || arguments.deleteUnmatched ) {
             throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
         }
 

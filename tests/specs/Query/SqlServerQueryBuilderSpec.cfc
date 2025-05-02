@@ -989,6 +989,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertWithDeleteRestricted() {
+        return {
+            sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers] WHERE [active] = ?) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]) WHEN NOT MATCHED BY SOURCE AND [qb_target].[active] = ? THEN DELETE;",
+            bindings: [ 1, 1 ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM [users]";
     }

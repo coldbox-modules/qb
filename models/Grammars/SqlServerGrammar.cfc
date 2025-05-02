@@ -410,7 +410,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         required any updates,
         required array target,
         QueryBuilder source,
-        boolean deleteUnmatched = false
+        any deleteUnmatched = false
     ) {
         try {
             var originalShouldWrapValues = getShouldWrapValues();
@@ -468,7 +468,20 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
             var updateStatement = updateList == "" ? "" : " WHEN MATCHED THEN UPDATE SET #updateList#";
 
-            var deleteStatement = arguments.deleteUnmatched ? " WHEN NOT MATCHED BY SOURCE THEN DELETE" : "";
+            var deleteStatement = "";
+            if ( isBoolean( arguments.deleteUnmatched ) ) {
+                if ( arguments.deleteUnmatched ) {
+                    deleteStatement = " WHEN NOT MATCHED BY SOURCE THEN DELETE";
+                }
+            } else if ( utils.isBuilder( arguments.deleteUnmatched ) ) {
+                var deleteRestrictionsStatement = replace(
+                    compileWheres( arguments.deleteUnmatched, arguments.deleteUnmatched.getWheres() ),
+                    "WHERE",
+                    "AND",
+                    "one"
+                ) & " ";
+                deleteStatement = " WHEN NOT MATCHED BY SOURCE #deleteRestrictionsStatement#THEN DELETE";
+            }
 
             var returningColumns = arguments.qb
                 .getReturning()

@@ -2622,7 +2622,7 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "updates an existing record when the where clause brings back at least one record", function() {
                     testCase( function( builder ) {
-                        grammar.$( "runQuery", queryNew( "aggregate", "varchar", [ { "aggregate": 5 } ] ) );
+                        grammar.$( "runQuery", queryNew( "aggregate", "varchar", [ { "aggregate": 1 } ] ) );
                         return builder
                             .from( "users" )
                             .where( "email", "foo" )

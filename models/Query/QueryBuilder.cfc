@@ -3633,8 +3633,15 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return      boolean
      */
-    public boolean function exists( struct options = {} ) {
-        return count( options = arguments.options ) > 0;
+    public any function exists( struct options = {}, boolean toSQL = false ) {
+        var existsQuery = newQuery().selectRaw(
+            "CASE WHEN EXISTS (#getGrammar().compileSelect( this )#) THEN 1 ELSE 0 END AS aggregate",
+            this.getBindings()
+        );
+        return arguments.toSQL ? existsQuery.toSQL() : existsQuery
+            .setReturnFormat( "query" )
+            .get( options = arguments.options )
+            .aggregate == 1;
     }
 
     /**
@@ -3982,6 +3989,7 @@ component displayname="QueryBuilder" accessors="true" {
     private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
         structAppend( arguments.options, getDefaultOptions(), false );
         var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] );
+
         var result = grammar.runQuery(
             sql = variables.sqlCommenter.appendSqlComments(
                 sql = sql,

@@ -1008,7 +1008,7 @@ component extends="testbox.system.BaseSpec" {
             describe( "exists", function() {
                 it( "returns true if any records come back from the query", function() {
                     var builder = getBuilder();
-                    builder.$( "runQuery", queryNew( "aggregate", "varchar", [ { "aggregate": 6 } ] ) );
+                    builder.getGrammar().$( "runQuery", queryNew( "aggregate", "varchar", [ { "aggregate": 1 } ] ) );
                     expect(
                         builder
                             .select( "*" )
@@ -1021,13 +1021,21 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "returns false if no records come back from the query", function() {
                     var builder = getBuilder();
-                    builder.$( "runQuery", queryNew( "aggregate", "varchar", [ { "aggregate": 0 } ] ) );
+                    builder.getGrammar().$( "runQuery", queryNew( "aggregate", "varchar", [ { "aggregate": 0 } ] ) );
                     expect(
                         builder
                             .select( "*" )
                             .from( "users" )
                             .exists()
                     ).toBe( false );
+                } );
+
+                it( "generates the correct sql for exists", () => {
+                    var sql = getBuilder()
+                        .from( "users" )
+                        .where( "active", 1 )
+                        .exists( toSQL = true );
+                    expect( sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""active"" = ?) THEN 1 ELSE 0 END AS aggregate" );
                 } );
             } );
 
@@ -1036,13 +1044,7 @@ component extends="testbox.system.BaseSpec" {
                     var builder = getBuilder();
                     var expectedCount = 1;
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
-                    builder
-                        .$( "runQuery" )
-                        .$args(
-                            sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
-                            options = {}
-                        )
-                        .$results( expectedQuery );
+                    builder.getGrammar().$( "runQuery", expectedQuery )
 
                     var results = builder
                         .from( "users" )
@@ -1051,26 +1053,26 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( results ).toBeTrue();
 
-                    var runQueryLog = builder.$callLog().runQuery;
+                    var runQueryLog = builder.getGrammar().$callLog().runQuery;
+                    debug( runQueryLog );
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( {
-                        sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
-                        options: {}
-                    } );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
+                    expect( runQueryLog[ 1 ].bindings ).toBe( [
+                        {
+                            "CFSQLTYPE": "CF_SQL_INTEGER",
+                            "VALUE": 1,
+                            "LIST": false,
+                            "NULL": false
+                        }
+                    ] );
                 } );
 
                 it( "throws a RecordNotFound exception if no rows are found", function() {
                     var builder = getBuilder();
                     var expectedCount = 0;
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
-                    builder
-                        .$( "runQuery" )
-                        .$args(
-                            sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
-                            options = {}
-                        )
-                        .$results( expectedQuery );
+                    builder.getGrammar().$( "runQuery", expectedQuery );
 
                     expect( function() {
                         builder
@@ -1079,26 +1081,25 @@ component extends="testbox.system.BaseSpec" {
                             .existsOrFail();
                     } ).toThrow( type = "RecordNotFound" );
 
-                    var runQueryLog = builder.$callLog().runQuery;
+                    var runQueryLog = builder.getGrammar().$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( {
-                        sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
-                        options: {}
-                    } );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
+                    expect( runQueryLog[ 1 ].bindings ).toBe( [
+                        {
+                            "CFSQLTYPE": "CF_SQL_INTEGER",
+                            "VALUE": 1,
+                            "LIST": false,
+                            "NULL": false
+                        }
+                    ] );
                 } );
 
                 it( "can supply a custom errorMessage", function() {
                     var builder = getBuilder();
                     var expectedCount = 0;
                     var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedCount } ] );
-                    builder
-                        .$( "runQuery" )
-                        .$args(
-                            sql = "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
-                            options = {}
-                        )
-                        .$results( expectedQuery );
+                    builder.getGrammar().$( "runQuery", expectedQuery );
 
                     expect( function() {
                         builder
@@ -1107,13 +1108,18 @@ component extends="testbox.system.BaseSpec" {
                             .existsOrFail( errorMessage = "Whoops" );
                     } ).toThrow( type = "RecordNotFound", regex = "Whoops" );
 
-                    var runQueryLog = builder.$callLog().runQuery;
+                    var runQueryLog = builder.getGrammar().$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ] ).toBe( {
-                        sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users"" WHERE ""id"" = ?",
-                        options: {}
-                    } );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
+                    expect( runQueryLog[ 1 ].bindings ).toBe( [
+                        {
+                            "CFSQLTYPE": "CF_SQL_INTEGER",
+                            "VALUE": 1,
+                            "LIST": false,
+                            "NULL": false
+                        }
+                    ] );
                 } );
             } );
         } );

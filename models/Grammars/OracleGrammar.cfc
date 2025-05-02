@@ -653,7 +653,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeUnicodeLongText( column ) {
-        return "CLOB";
+        return "NCLOB";
     }
 
     function typeMediumInteger( column ) {
@@ -691,7 +691,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeUnicodeString( column ) {
-        return "VARCHAR2(#column.getLength()#)";
+        return "NVARCHAR2(#column.getLength()#)";
     }
 
     function typeText( column ) {
@@ -699,7 +699,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeUnicodeText( column ) {
-        return "CLOB";
+        return "NCLOB";
     }
 
     function typeTime( column ) {

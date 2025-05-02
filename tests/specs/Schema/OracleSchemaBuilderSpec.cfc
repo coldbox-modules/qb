@@ -42,12 +42,12 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function simpleTable() {
-        return [ "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, ""PASSWORD"" VARCHAR2(255) NOT NULL)" ];
+        return [ "CREATE TABLE ""USERS"" (""USERNAME"" NVARCHAR2(255) NOT NULL, ""PASSWORD"" NVARCHAR2(255) NOT NULL)" ];
     }
 
     function complicatedTable() {
         return [
-            "CREATE TABLE ""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, ""USERNAME"" VARCHAR2(255) NOT NULL, ""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, ""PASSWORD"" VARCHAR2(100) NOT NULL, ""COUNTRY_ID"" NUMBER(10, 0) NOT NULL, ""CREATED_DATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, ""MODIFIED_DATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""), CONSTRAINT ""FK_USERS_COUNTRY_ID"" FOREIGN KEY (""COUNTRY_ID"") REFERENCES ""COUNTRIES"" (""ID"") ON DELETE CASCADE)",
+            "CREATE TABLE ""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, ""USERNAME"" NVARCHAR2(255) NOT NULL, ""FIRST_NAME"" NVARCHAR2(255) NOT NULL, ""LAST_NAME"" NVARCHAR2(255) NOT NULL, ""PASSWORD"" NVARCHAR2(100) NOT NULL, ""COUNTRY_ID"" NUMBER(10, 0) NOT NULL, ""CREATED_DATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, ""MODIFIED_DATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""), CONSTRAINT ""FK_USERS_COUNTRY_ID"" FOREIGN KEY (""COUNTRY_ID"") REFERENCES ""COUNTRIES"" (""ID"") ON DELETE CASCADE)",
             "CREATE SEQUENCE ""SEQ_USERS""",
             "CREATE OR REPLACE TRIGGER ""TRG_USERS"" BEFORE INSERT ON ""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
         ];
@@ -184,7 +184,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function unicodeLongText() {
-        return longText();
+        return [ "CREATE TABLE ""POSTS"" (""BODY"" NCLOB NOT NULL)" ];
     }
 
     function mediumIncrements() {
@@ -280,7 +280,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function unicodeString() {
-        return string();
+        return [ "CREATE TABLE ""USERS"" (""USERNAME"" NVARCHAR2(255) NOT NULL)" ];
     }
 
     function stringWithLength() {
@@ -292,7 +292,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function unicodeText() {
-        return text();
+        return [ "CREATE TABLE ""POSTS"" (""BODY"" NCLOB NOT NULL)" ];
     }
 
     function time() {
@@ -428,25 +428,25 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function columnUnique() {
         return [
-            "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME""))"
+            "CREATE TABLE ""USERS"" (""USERNAME"" NVARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME""))"
         ];
     }
 
     function tableUnique() {
         return [
-            "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME""))"
+            "CREATE TABLE ""USERS"" (""USERNAME"" NVARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_USERNAME"" UNIQUE (""USERNAME""))"
         ];
     }
 
     function uniqueOverridingName() {
         return [
-            "CREATE TABLE ""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_UNAME"" UNIQUE (""USERNAME""))"
+            "CREATE TABLE ""USERS"" (""USERNAME"" NVARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_UNAME"" UNIQUE (""USERNAME""))"
         ];
     }
 
     function uniqueMultipleColumns() {
         return [
-            "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_FIRST_NAME_LAST_NAME"" UNIQUE (""FIRST_NAME"", ""LAST_NAME""))"
+            "CREATE TABLE ""USERS"" (""FIRST_NAME"" NVARCHAR2(255) NOT NULL, ""LAST_NAME"" NVARCHAR2(255) NOT NULL, CONSTRAINT ""UNQ_USERS_FIRST_NAME_LAST_NAME"" UNIQUE (""FIRST_NAME"", ""LAST_NAME""))"
         ];
     }
 
@@ -508,14 +508,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function compositeIndex() {
         return [
-            "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL)",
+            "CREATE TABLE ""USERS"" (""FIRST_NAME"" NVARCHAR2(255) NOT NULL, ""LAST_NAME"" NVARCHAR2(255) NOT NULL)",
             "CREATE INDEX ""IDX_USERS_FIRST_NAME_LAST_NAME"" ON ""USERS"" (""FIRST_NAME"", ""LAST_NAME"")"
         ];
     }
 
     function overrideIndexName() {
         return [
-            "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL)",
+            "CREATE TABLE ""USERS"" (""FIRST_NAME"" NVARCHAR2(255) NOT NULL, ""LAST_NAME"" NVARCHAR2(255) NOT NULL)",
             "CREATE INDEX ""INDEX_FULL_NAME"" ON ""USERS"" (""FIRST_NAME"", ""LAST_NAME"")"
         ];
     }
@@ -534,13 +534,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function compositePrimaryKey() {
         return [
-            "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_USERS_FIRST_NAME_LAST_NAME"" PRIMARY KEY (""FIRST_NAME"", ""LAST_NAME""))"
+            "CREATE TABLE ""USERS"" (""FIRST_NAME"" NVARCHAR2(255) NOT NULL, ""LAST_NAME"" NVARCHAR2(255) NOT NULL, CONSTRAINT ""PK_USERS_FIRST_NAME_LAST_NAME"" PRIMARY KEY (""FIRST_NAME"", ""LAST_NAME""))"
         ];
     }
 
     function overridePrimaryKeyIndexName() {
         return [
-            "CREATE TABLE ""USERS"" (""FIRST_NAME"" VARCHAR2(255) NOT NULL, ""LAST_NAME"" VARCHAR2(255) NOT NULL, CONSTRAINT ""PK_FULL_NAME"" PRIMARY KEY (""FIRST_NAME"", ""LAST_NAME""))"
+            "CREATE TABLE ""USERS"" (""FIRST_NAME"" NVARCHAR2(255) NOT NULL, ""LAST_NAME"" NVARCHAR2(255) NOT NULL, CONSTRAINT ""PK_FULL_NAME"" PRIMARY KEY (""FIRST_NAME"", ""LAST_NAME""))"
         ];
     }
 
@@ -584,12 +584,12 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function modifyColumn() {
-        return [ "ALTER TABLE ""USERS"" MODIFY (""NAME"" CLOB NOT NULL)" ];
+        return [ "ALTER TABLE ""USERS"" MODIFY (""NAME"" NCLOB NOT NULL)" ];
     }
 
     function modifyMultipleColumns() {
         return [
-            "ALTER TABLE ""USERS"" MODIFY (""NAME"" CLOB NOT NULL)",
+            "ALTER TABLE ""USERS"" MODIFY (""NAME"" NCLOB NOT NULL)",
             "ALTER TABLE ""USERS"" MODIFY (""PURCHASED_DATE"" TIMESTAMP)"
         ];
     }

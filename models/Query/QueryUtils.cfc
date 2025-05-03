@@ -509,7 +509,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         var className = "";
-        if ( isDefined( "arguments.value.$bx" ) ) {
+        if ( server.keyExists( "boxlang" ) && !server.boxlang.modules.some( ( moduleName ) => findNoCase( "compat-cfml", moduleName ) > 0 ) ) {
             className = listLast( arguments.value.$bx.$class.getName(), "." );
         } else {
             className = listLast( toString( getMetadata( arguments.value ) ), "." )

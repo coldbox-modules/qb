@@ -54,7 +54,11 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return any
      */
     public any function extractBinding( any value, required any grammar ) {
-        if ( isNull( arguments.value ) || ( variables.convertEmptyStringsToNull && !len( arguments.value ) ) ) {
+        if (
+            isNull( arguments.value ) || (
+                variables.convertEmptyStringsToNull && isSimpleValue( arguments.value ) && !len( arguments.value )
+            )
+        ) {
             return {
                 "cfsqltype": "VARCHAR",
                 "sqltype": "VARCHAR",

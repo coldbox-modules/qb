@@ -281,7 +281,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function compileTableName( required QueryBuilder query, required any tableName ) {
-        if ( !len( arguments.tableName ) ) {
+        if ( isNull( arguments.tableName ) || ( isSimpleValue( arguments.tableName ) && !len( arguments.tableName ) ) ) {
             return "";
         }
 

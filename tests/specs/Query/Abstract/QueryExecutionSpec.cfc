@@ -930,7 +930,7 @@ component extends="testbox.system.BaseSpec" {
                 it( "can return a default value when there is no records in a table", function() {
                     var builder = getBuilder();
                     var expectedMin = "2025-01-01 00:00:00";
-                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedMin } ] );
+                    var expectedQuery = queryNew( "aggregate", "timestamp", [ { aggregate: expectedMin } ] );
                     builder
                         .$( "runQuery" )
                         .$args(

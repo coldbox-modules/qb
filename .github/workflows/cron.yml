@@ -11,9 +11,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "lucee@be", "adobe@2021", "adobe@2023", "adobe@be", "boxlang@be"]
-        javaVersion: ["openjdk8", "openjdk11"]
+        cfengine: ["lucee@5", "lucee@6", "lucee@be", "adobe@2021", "adobe@2023", "adobe@2025", "adobe@be", "boxlang@1", "boxlang@be", "boxlang-cfml@1"]
+        experimental: [ false ]
         fullNull: ["true", "false"]
+        include:
+          - cfengine: "lucee@5"
+            experimental: true
+          - cfengine: "lucee@6"
+            experimental: true
+          - cfengine: "adobe@2021"
+            experimental: true
+          - cfengine: "adobe@2023"
+            experimental: true
+          - cfengine: "boxlang-cfml@1"
+            experimental: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3.2.0
@@ -36,15 +47,11 @@ jobs:
 
       - name: Start server
         run: |
-          if [[ "${{ matrix.cfengine }}" == *"boxlang"* ]] ; then
-            box server start cfengine=${{ matrix.cfengine }} javaVersion=openjdk21_jdk
-            box run-script bx-modules:install
-            box server restart
-          else
-            box server start cfengine=${{ matrix.cfengine }} javaVersion=${{ matrix.javaVersion }}
-          fi
+          box server start serverConfigFile="server-${{ matrix.cfengine }}.json" --noSaveSettings --debug
+          curl http://127.0.0.1:60299
 
       - name: Run TestBox Tests
         env:
           FULL_NULL: ${{matrix.fullNull}}
+        continue-on-error: ${{ matrix.experimental }}
         run: box testbox run

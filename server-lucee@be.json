@@ -1,0 +1,16 @@
+{
+    "name":"qb-lucee@be",
+    "app":{
+        "serverHomeDirectory":".engine/luceeBE",
+        "cfengine":"lucee@be"
+    },
+    "web":{
+        "http":{
+            "port":"60299"
+        },
+        "rewrites":{
+            "enable":"true"
+        }
+    },
+    "openBrowser":"false"
+}

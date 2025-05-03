@@ -127,7 +127,8 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function json() {
-        return [ "CREATE TABLE `users` (`personalizations` TEXT NOT NULL)" ];
+        return [ "CREATE TABLE `users` (`personalizations` JSON NOT NULL)" ];
+    }
     }
 
     function lineString() {

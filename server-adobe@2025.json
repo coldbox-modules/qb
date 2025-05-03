@@ -13,10 +13,11 @@
         }
     },
     "jvm":{
-        "heapSize":"1024"
+        "heapSize":"1024",
+        "javaVersion":"openjdk21_jre"
     },
     "openBrowser":"false",
-    "scripts" : {
+    "scripts":{
         "onServerInstall":"cfpm install zip,debugger"
     }
 }

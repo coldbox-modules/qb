@@ -39,8 +39,8 @@ jobs:
           distribution: 'zulu'
           java-version: 11
 
-      - name: Set Up CommandBox
-        uses: elpete/setup-commandbox@v1.0.0
+      - name: Setup CommandBox CLI
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
 
       - name: Install CommandBox-BoxLang
         run: box install commandbox-boxlang
@@ -73,8 +73,8 @@ jobs:
           distribution: 'zulu'
           java-version: 11
 
-      - name: Set Up CommandBox
-        uses: elpete/setup-commandbox@v1.0.0
+      - name: Setup CommandBox CLI
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
 
       - name: Install CFFormat
         run: box install commandbox-cfformat

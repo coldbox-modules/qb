@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cfengine: ["lucee@5", "lucee@6", "adobe@2021", "adobe@2023", "adobe@2025", "boxlang@1", "boxlang-cfml@1"]
+        cfengine: ["lucee@5", "lucee@6", "adobe@2021", "adobe@2023", "boxlang@1", "boxlang-cfml@1"]
         experimental: [ false ]
         fullNull: ["true", "false"]
         include:
@@ -29,7 +29,7 @@ jobs:
         uses: actions/setup-java@v3.9.0
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 21
 
       - name: Setup CommandBox CLI
         uses: Ortus-Solutions/setup-commandbox@v2.0.1

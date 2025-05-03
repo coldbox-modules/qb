@@ -573,6 +573,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return "";
     }
 
+    function compileCreateAs( blueprint, commandParameters ) {
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            var query = commandParameters[ "query" ];
+            return replace(
+                compileSelect( query ),
+                "FROM",
+                "INTO #wrapTable( blueprint.getTable() )# FROM",
+                "one"
+            );
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
     function compileDropColumn( blueprint, commandParameters ) {
         try {
             var originalShouldWrapValues = getShouldWrapValues();

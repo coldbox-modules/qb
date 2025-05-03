@@ -146,6 +146,46 @@ component accessors="true" {
         return blueprint;
     }
 
+    public Blueprint function createAs(
+        required string newTableName,
+        required function callback,
+        struct options = {},
+        boolean execute = true
+    ) {
+        structAppend( arguments.options, variables.defaultOptions, false );
+        var query = new models.Query.QueryBuilder( getGrammar() );
+        arguments.callback( query );
+
+        var blueprint = new Blueprint(
+            this,
+            getGrammar(),
+            arguments.options,
+            getDefaultSchema()
+        );
+        blueprint.addCommand( "createAs", { query: query } );
+        blueprint.setCreating( true );
+        blueprint.setTable( arguments.newTableName );
+
+        if ( arguments.execute ) {
+            blueprint
+                .toSql()
+                .each( function( statement ) {
+                    getGrammar().runQuery(
+                        statement,
+                        query.getBindings(),
+                        options,
+                        "result",
+                        variables.pretending,
+                        function( data ) {
+                            variables.queryLog.append( duplicate( data ) );
+                        }
+                    );
+                } );
+        }
+
+        return blueprint;
+    }
+
     public Blueprint function alterView(
         required string view,
         required function callback,

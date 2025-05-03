@@ -1878,6 +1878,22 @@ component displayname="Grammar" accessors="true" singleton {
         }
     }
 
+    function compileCreateAs( blueprint, commandParameters ) {
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            var query = commandParameters[ "query" ];
+            return "CREATE TABLE #wrapTable( blueprint.getTable() )# AS (#compileSelect( query )#)";
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
     /*===================================
     =            Index Types            =
     ===================================*/

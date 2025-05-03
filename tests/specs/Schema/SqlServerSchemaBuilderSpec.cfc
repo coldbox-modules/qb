@@ -619,6 +619,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "DROP VIEW [active_users]" ];
     }
 
+    function createTableAs() {
+        return [ "SELECT * INTO [active_users] FROM [users] WHERE [active] = ?" ];
+    }
+
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
         arguments.mockGrammar = isNull( arguments.mockGrammar ) ? getMockBox()

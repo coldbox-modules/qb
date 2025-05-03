@@ -1802,6 +1802,21 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            describe( "create table as and select into", function() {
+                it( "can create a basic view from a QueryBuilder", function() {
+                    testCase( function( schema ) {
+                        return schema.createAs(
+                            "active_users",
+                            function( query ) {
+                                query.from( "users" ).where( "active", 1 );
+                            },
+                            {},
+                            false
+                        );
+                    }, createTableAs() );
+                } );
+            } );
+
             it( "has table", function() {
                 testCase( function( schema ) {
                     return schema.hasTable( name = "users", options = {}, execute = false );
@@ -1871,7 +1886,10 @@ component extends="testbox.system.BaseSpec" {
             }
         } catch ( any e ) {
             if ( !isSimpleValue( expected ) && !isArray( expected ) && structKeyExists( expected, "exception" ) ) {
-                expect( e.type ).toBe( expected.exception );
+                if ( e.type != expected.exception ) {
+                    debug( e );
+                    expect( e.type ).toBe( expected.exception );
+                }
                 return;
             }
             rethrow;

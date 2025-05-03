@@ -377,6 +377,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return """#arguments.value#""";
     }
 
+    function compileCreateAs( blueprint, commandParameters ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support CREATE AS" );
+    }
+
     function compileCreateColumn( column, blueprint ) {
         if ( utils.isExpression( column ) ) {
             return column.getSql();

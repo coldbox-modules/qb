@@ -625,6 +625,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "DROP VIEW ""active_users""" ];
     }
 
+    function createTableAs() {
+        return { "exception": "UnsupportedOperation" };
+    }
+
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );
         arguments.mockGrammar = isNull( arguments.mockGrammar ) ? getMockBox()

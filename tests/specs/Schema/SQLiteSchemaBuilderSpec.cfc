@@ -606,7 +606,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "DROP VIEW ""active_users""" ];
     }
 
-
+    function createTableAs() {
+        return [ "CREATE TABLE ""active_users"" AS (SELECT * FROM ""users"" WHERE ""active"" = ?)" ];
+    }
 
     private function getBuilder( mockGrammar ) {
         var utils = getMockBox().createMock( "qb.models.Query.QueryUtils" );

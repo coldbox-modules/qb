@@ -60,11 +60,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function selectConcat() {
-        return "SELECT CONCAT(a,b,c,d) AS ""my_alias"" FROM ""users""";
+        return "SELECT a || b || c || d AS ""my_alias"" FROM ""users""";
     }
 
     function selectConcatArray() {
-        return "SELECT CONCAT(a,b,c,d) AS ""my_alias"" FROM ""users""";
+        return "SELECT a || b || c || d AS ""my_alias"" FROM ""users""";
     }
 
     function clearSelect() {

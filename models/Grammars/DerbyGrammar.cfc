@@ -317,6 +317,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
     }
 
+    public string function compileConcat( required string alias, required array items ) {
+        return "#arrayToList( items, " || " )# AS #wrapAlias( alias )#";
+    }
+
     /**
      * Compiles the offset portion of a sql statement.
      *

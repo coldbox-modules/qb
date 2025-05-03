@@ -43,10 +43,6 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
 
             it( "dates", function() {
                 expect( utils.inferSqlType( now(), variables.mockGrammar ) ).toBe( "TIMESTAMP" );
-                variables.utils.setStrictDateDetection( true );
-                // expect( utils.inferSqlType( now(), variables.mockGrammar ) ).toBe( "TIMESTAMP" );
-                // expect( utils.inferSqlType( "06 12345" ), variables.mockGrammar ).toBe( "VARCHAR" );
-                variables.utils.setStrictDateDetection( false );
             } );
 
             it( "empty strings as null", () => {

@@ -11,7 +11,6 @@ component {
             "defaultGrammar": "AutoDiscover@qb",
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
-            "strictDateDetection": true,
             "convertEmptyStringsToNull": false,
             "numericSQLType": "NUMERIC",
             "integerSQLType": "INTEGER",
@@ -48,7 +47,6 @@ component {
         binder
             .map( alias = "QueryUtils@qb", force = true )
             .to( "qb.models.Query.QueryUtils" )
-            .initArg( name = "strictDateDetection", value = settings.strictDateDetection )
             .initArg( name = "convertEmptyStringsToNull", value = settings.convertEmptyStringsToNull )
             .initArg( name = "numericSQLType", value = settings.numericSQLType )
             .initArg( name = "autoAddScale", value = settings.autoAddScale )

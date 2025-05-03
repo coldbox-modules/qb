@@ -9,11 +9,6 @@ component singleton displayname="QueryUtils" accessors="true" {
     property name="log" inject="logbox:logger:{this}";
 
     /**
-     * qb strictDateDetection so we can do some conditional behavior in data type detections
-     */
-    property name="strictDateDetection" default="true";
-
-    /**
      * If true, empty strings are converted to nulls.
      */
     property name="convertEmptyStringsToNull" default="false";
@@ -36,21 +31,17 @@ component singleton displayname="QueryUtils" accessors="true" {
     /**
      * Creates a new QueryUtils helper.
      *
-     * @strictDateDetection   Flag to only parse date objects as timestamps.
-     *                        If false, strings that pass `isDate` are also treated as timestamps.
      * @autoAddScale          Automatically add a scale to floating point bindings.
      *
      * @return               qb.models.Query.QueryUtils
      */
     public QueryUtils function init(
-        boolean strictDateDetection = true,
         boolean convertEmptyStringsToNull = false,
         boolean autoAddScale = true,
         string integerSqlType = "INTEGER",
         string decimalSqlType = "DECIMAL",
         any log
     ) {
-        variables.strictDateDetection = arguments.strictDateDetection;
         variables.autoAddScale = arguments.autoAddScale;
         variables.integerSqlType = arguments.integerSqlType;
         variables.decimalSqlType = arguments.decimalSqlType;
@@ -516,14 +507,10 @@ component singleton displayname="QueryUtils" accessors="true" {
             return false;
         }
 
-        if ( variables.strictDateDetection ) {
-            return isDate( arguments.value ) && arrayContainsNoCase(
-                [ "OleDateTime", "DateTimeImpl", "DateTime" ],
-                listLast( toString( getMetadata( arguments.value ) ), "." )
-            );
-        } else {
-            return isDate( arguments.value );
-        }
+        return isDate( arguments.value ) && arrayContainsNoCase(
+            [ "OleDateTime", "DateTimeImpl", "DateTime" ],
+            listLast( toString( getMetadata( arguments.value ) ), "." )
+        );
     }
 
     /**

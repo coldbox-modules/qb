@@ -859,6 +859,30 @@ component extends="testbox.system.BaseSpec" {
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );
 
+                it( "can return a default value for max if no records are found", function() {
+                    var builder = getBuilder();
+                    var expectedMax = 100;
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedMax } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COALESCE(MAX(""age""), 100) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).max( "age", 100 );
+
+                    expect( results ).toBe( expectedMax );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(MAX(""age""), 100) AS ""aggregate"" FROM ""users""", options: {} } );
+
+                    expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                } );
+
                 it( "can return the max date of a table", function() {
                     var builder = getBuilder();
                     var expectedMax = now();
@@ -899,6 +923,33 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT MIN(""age"") AS ""aggregate"" FROM ""users""", options: {} } );
+
+                    expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                } );
+
+                it( "can return a default value when there is no records in a table", function() {
+                    var builder = getBuilder();
+                    var expectedMin = "2025-01-01 00:00:00";
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: expectedMin } ] );
+                    builder
+                        .$( "runQuery" )
+                        .$args(
+                            sql = "SELECT COALESCE(MIN(""createdDate""), GETDATE()) AS ""aggregate"" FROM ""users""",
+                            options = {}
+                        )
+                        .$results( expectedQuery );
+
+                    var results = builder.from( "users" ).min( "createdDate", "GETDATE()" );
+
+                    expect( results ).toBe( expectedMin );
+
+                    var runQueryLog = builder.$callLog().runQuery;
+                    expect( runQueryLog ).toBeArray();
+                    expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                    expect( runQueryLog[ 1 ] ).toBe( {
+                        sql: "SELECT COALESCE(MIN(""createdDate""), GETDATE()) AS ""aggregate"" FROM ""users""",
+                        options: {}
+                    } );
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );

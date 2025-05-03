@@ -3543,9 +3543,13 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return numeric
      */
-    public any function count( string column = "*", struct options = {}, boolean toSQL = false ) {
+    public any function count(
+        string column = "*",
+        any defaultValue = 0,
+        struct options = {},
+        boolean toSQL = false
+    ) {
         arguments.type = "count";
-        arguments.defaultValue = 0;
         return aggregateQuery( argumentCollection = arguments );
     }
 
@@ -3558,7 +3562,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    public any function max( required string column, struct options = {} ) {
+    public any function max( required string column, any defaultValue, struct options = {} ) {
         arguments.type = "max";
         return aggregateQuery( argumentCollection = arguments );
     }
@@ -3572,7 +3576,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    public any function min( required string column, struct options = {} ) {
+    public any function min( required string column, any defaultValue, struct options = {} ) {
         arguments.type = "min";
         return aggregateQuery( argumentCollection = arguments );
     }
@@ -3586,9 +3590,8 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return any
      */
-    public numeric function sum( required any column, struct options = {} ) {
+    public numeric function sum( required any column, any defaultValue = 0, struct options = {} ) {
         arguments.type = "sum";
-        arguments.defaultValue = 0;
         return aggregateQuery( argumentCollection = arguments );
     }
 

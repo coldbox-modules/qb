@@ -11,7 +11,7 @@ component {
             "defaultGrammar": "AutoDiscover@qb",
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
-            "convertEmptyStringsToNull": false,
+            "convertEmptyStringsToNull": true,
             "numericSQLType": "NUMERIC",
             "integerSQLType": "INTEGER",
             "decimalSQLType": "DECIMAL",

@@ -232,26 +232,6 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( binding.null ).toBe( false );
             } );
 
-            it( "does not set a scale when autoSetScale is set to false", function() {
-                try {
-                    utils.setAutoAddScale( false );
-                    var binding = utils.extractBinding(
-                        { "value": 3.14159, "cfsqltype": "DECIMAL" },
-                        variables.mockGrammar
-                    );
-
-                    expect( binding ).toBeStruct();
-                    expect( binding.value ).toBe( 3.14159 );
-                    expect( binding.cfsqltype ).toBe( "DECIMAL" );
-                    expect( binding.sqltype ).toBe( "DECIMAL" );
-                    expect( binding ).notToHaveKey( "scale" );
-                    expect( binding.list ).toBe( false );
-                    expect( binding.null ).toBe( false );
-                } finally {
-                    utils.setAutoAddScale( true );
-                }
-            } );
-
             it( "uses a passed in scale if provided", function() {
                 var binding = utils.extractBinding(
                     { "value": 3.14159, "cfsqltype": "DECIMAL", "scale": 2 },

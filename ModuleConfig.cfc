@@ -15,7 +15,6 @@ component {
             "numericSQLType": "NUMERIC",
             "integerSQLType": "INTEGER",
             "decimalSQLType": "DECIMAL",
-            "autoAddScale": true,
             "defaultOptions": {},
             "sqlCommenter": {
                 "enabled": false,
@@ -49,7 +48,6 @@ component {
             .to( "qb.models.Query.QueryUtils" )
             .initArg( name = "convertEmptyStringsToNull", value = settings.convertEmptyStringsToNull )
             .initArg( name = "numericSQLType", value = settings.numericSQLType )
-            .initArg( name = "autoAddScale", value = settings.autoAddScale )
             .initArg( name = "integerSQLType", value = settings.integerSQLType )
             .initArg( name = "decimalSQLType", value = settings.decimalSQLType );
 

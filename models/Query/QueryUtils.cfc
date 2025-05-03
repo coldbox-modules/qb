@@ -24,25 +24,15 @@ component singleton displayname="QueryUtils" accessors="true" {
     property name="decimalSQLType" default="DECIMAL";
 
     /**
-     * Automatically add a scale to floating point bindings.
-     */
-    property name="autoAddScale" default="true";
-
-    /**
      * Creates a new QueryUtils helper.
-     *
-     * @autoAddScale          Automatically add a scale to floating point bindings.
-     *
      * @return               qb.models.Query.QueryUtils
      */
     public QueryUtils function init(
         boolean convertEmptyStringsToNull = false,
-        boolean autoAddScale = true,
         string integerSqlType = "INTEGER",
         string decimalSqlType = "DECIMAL",
         any log
     ) {
-        variables.autoAddScale = arguments.autoAddScale;
         variables.integerSqlType = arguments.integerSqlType;
         variables.decimalSqlType = arguments.decimalSqlType;
         if ( !isNull( arguments.log ) ) {
@@ -113,7 +103,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
         structAppend( binding, { list: false, null: false }, false );
 
-        if ( variables.autoAddScale && isFloatingPoint( binding ) ) {
+        if ( isFloatingPoint( binding ) ) {
             param binding.scale = calculateNumberOfDecimalDigits( binding );
         }
 

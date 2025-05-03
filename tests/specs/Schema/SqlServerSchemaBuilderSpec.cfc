@@ -124,6 +124,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE [users] ([personalizations] NVARCHAR(MAX) NOT NULL)" ];
     }
 
+    function jsonb() {
+        return [ "CREATE TABLE [users] ([personalizations] NVARCHAR(MAX) NOT NULL)" ];
+    }
+
     function lineString() {
         return [ "CREATE TABLE [users] ([positions] GEOGRAPHY NOT NULL)" ];
     }

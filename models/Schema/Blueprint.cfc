@@ -123,6 +123,11 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    public Column function jsonb( required string name ) {
+        arguments.type = "jsonb";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     public Column function longText( required string name ) {
         arguments.type = "longText";
         return appendColumn( argumentCollection = arguments );

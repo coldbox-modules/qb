@@ -813,6 +813,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return "NVARCHAR(MAX)";
     }
 
+    function typeJsonb( column ) {
+        return "NVARCHAR(MAX)";
+    }
+
     function typeLongText( column ) {
         return "VARCHAR(MAX)";
     }

@@ -644,6 +644,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "CLOB";
     }
 
+    function typeJsonb( column ) {
+        return "CLOB";
+    }
+
     function typeLineString( column ) {
         return "SDO_GEOMETRY";
     }

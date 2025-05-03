@@ -406,6 +406,19 @@ component extends="testbox.system.BaseSpec" {
                     }, json() );
                 } );
 
+                it( "jsonb", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "users",
+                            function( table ) {
+                                table.jsonb( "personalizations" );
+                            },
+                            {},
+                            false
+                        );
+                    }, jsonb() );
+                } );
+
                 it( "lineString", function() {
                     testCase( function( schema ) {
                         return schema.create(

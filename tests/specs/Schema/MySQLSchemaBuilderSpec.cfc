@@ -129,6 +129,9 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function json() {
         return [ "CREATE TABLE `users` (`personalizations` JSON NOT NULL)" ];
     }
+
+    function jsonb() {
+        return [ "CREATE TABLE `users` (`personalizations` JSON NOT NULL)" ];
     }
 
     function lineString() {

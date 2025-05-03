@@ -128,6 +128,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""users"" (""personalizations"" CLOB NOT NULL)" ];
     }
 
+    function jsonb() {
+        return [ "CREATE TABLE ""users"" (""personalizations"" CLOB NOT NULL)" ];
+    }
+
     function longText() {
         return [ "CREATE TABLE ""posts"" (""body"" CLOB NOT NULL)" ];
     }

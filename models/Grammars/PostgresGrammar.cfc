@@ -602,6 +602,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "JSON";
     }
 
+    function typeJsonb( column ) {
+        return "JSONB";
+    }
+
     function typeBigInteger( column ) {
         if ( column.getAutoIncrement() ) {
             return "BIGSERIAL";

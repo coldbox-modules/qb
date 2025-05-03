@@ -175,6 +175,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""USERS"" (""PERSONALIZATIONS"" CLOB NOT NULL)" ];
     }
 
+    function jsonb() {
+        return [ "CREATE TABLE ""USERS"" (""PERSONALIZATIONS"" CLOB NOT NULL)" ];
+    }
+
     function lineString() {
         return [ "CREATE TABLE ""USERS"" (""POSITIONS"" SDO_GEOMETRY NOT NULL)" ];
     }

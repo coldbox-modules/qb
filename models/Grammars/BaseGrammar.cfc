@@ -1726,6 +1726,10 @@ component displayname="Grammar" accessors="true" singleton {
         return "TEXT";
     }
 
+    function typeJsonb( column ) {
+        return "TEXT";
+    }
+
     function typeLongText( column ) {
         return "TEXT";
     }

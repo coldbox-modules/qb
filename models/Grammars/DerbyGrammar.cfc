@@ -619,6 +619,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "CLOB";
     }
 
+    function typeJsonb( column ) {
+        return "CLOB";
+    }
+
     function typeLineString( column ) {
         throw( type = "UnsupportedOperation", message = "This grammar does not support LineString columns." );
     }

@@ -343,6 +343,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function typeJson( column ) {
         return "JSON";
     }
+
+    function typeJsonb( column ) {
+        return "JSON";
+    }
+
     function typeLineString( column ) {
         return "LINESTRING";
     }

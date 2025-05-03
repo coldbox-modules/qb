@@ -2824,7 +2824,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return  numeric
      */
     private numeric function getCountForPagination( struct options = {} ) {
-        if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() ) {
+        if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
             return newQuery().fromSub( "aggregate_table", this ).count( options = arguments.options );
         }
         return count( options = arguments.options );
@@ -3934,7 +3934,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return   qb.models.Query.QueryBuilder
      */
     public QueryBuilder function chunk( required numeric max, required callback, struct options = {} ) {
-        var count = count( options = arguments.options );
+        var count = getCountForPagination( options = options );
         for ( var i = 1; i <= count; i += max ) {
             var shouldContinue = callback(
                 variables

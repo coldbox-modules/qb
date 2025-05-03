@@ -3859,7 +3859,10 @@ component displayname="QueryBuilder" accessors="true" {
                     return defaultValue;
                 }
             } else {
-                return result[ getMetadata( result )[ 1 ].name ][ 1 ];
+                var firstColumnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
+                    result
+                )[ 1 ].name
+                return result[ firstColumnName ][ 1 ];
             }
         } );
     }
@@ -3897,7 +3900,9 @@ component displayname="QueryBuilder" accessors="true" {
             var formattedColumn = applyColumnFormatter( column );
             select( formattedColumn );
             var result = get( options = options );
-            var columnName = getMetadata( result )[ 1 ].name;
+            var columnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
+                result
+            )[ 1 ].name;
             var results = [];
             for ( var row in result ) {
                 results.append( row[ columnName ] );

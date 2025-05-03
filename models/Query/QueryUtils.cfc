@@ -101,7 +101,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         if ( binding.cfsqltype == "TIMESTAMP" ) {
             binding.value = dateTimeFormat( binding.value, "yyyy-mm-dd'T'HH:nn:ss.SSSXXX" );
         } else if ( binding.cfsqltype == "DATE" ) {
-            binding.value = dateFormat( binding.value, "yyyy-mm-dd" );
+            binding.value = dateFormat( binding.value, "yyyy-MM-dd" );
         } else if ( binding.cfsqltype == "TIME" ) {
             binding.value = timeFormat( binding.value, "HH:mm:ss.nZ" );
         }
@@ -341,9 +341,14 @@ component singleton displayname="QueryUtils" accessors="true" {
             return [];
         }
 
-        var queryColumns = getMetadata( arguments.q ).map( function( item ) {
-            return item.name;
-        } );
+        var queryColumns = [];
+        if ( getFunctionList().keyExists( "queryColumnArray" ) ) {
+            queryColumns = queryColumnArray( arguments.q );
+        } else {
+            queryColumns = getMetadata( arguments.q ).map( function( item ) {
+                return item.name;
+            } );
+        }
 
         var results = [];
         arrayResize( results, arguments.q.recordCount );
@@ -367,7 +372,9 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     public query function queryRemoveColumns( required query q, required string columns ) {
         var columnsToRemove = arguments.columns.listToArray();
-        var queryColumnInfo = getMetadata( q );
+        var queryColumnInfo = getFunctionList().keyExists( "queryColumnArray" ) ? queryColumnArray( q ).map( ( name ) => ( { "name": name, "TypeName": "varchar" } ) ) : getMetadata(
+            q
+        );
         var queryAsArray = queryToArrayOfStructs( q );
         queryAsArray.each( function( row ) {
             columnsToRemove.each( function( col ) {
@@ -501,9 +508,16 @@ component singleton displayname="QueryUtils" accessors="true" {
             return false;
         }
 
+        var className = "";
+        if ( isDefined( "arguments.value.$bx" ) ) {
+            className = listLast( arguments.value.$bx.$class.getName(), "." );
+        } else {
+            className = listLast( toString( getMetadata( arguments.value ) ), "." )
+        }
+
         return isDate( arguments.value ) && arrayContainsNoCase(
             [ "OleDateTime", "DateTimeImpl", "DateTime" ],
-            listLast( toString( getMetadata( arguments.value ) ), "." )
+            className
         );
     }
 

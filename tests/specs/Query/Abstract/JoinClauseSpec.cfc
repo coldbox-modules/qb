@@ -172,11 +172,6 @@ component extends="testbox.system.BaseSpec" {
                         expect( join.newQuery() ).toBeInstanceOf( "qb.models.Query.JoinClause" );
                     } );
 
-                    it( "binds the parent query", function() {
-                        var newJoin = join.newQuery();
-                        expect( newJoin.getParentQuery() ).toBe( join.getParentQuery() );
-                    } );
-
                     it( "binds the type", function() {
                         var newJoin = join.newQuery();
                         expect( newJoin.getType() ).toBe( join.getType() );

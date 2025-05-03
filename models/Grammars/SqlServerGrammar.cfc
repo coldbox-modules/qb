@@ -13,6 +13,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         "aggregate",
         "columns",
         "tableName",
+        "forClause",
         "lockType",
         "joins",
         "wheres",
@@ -38,6 +39,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         variables.cteColumnsRequireParentheses = true;
 
         return this;
+    }
+
+    private string function compileForClause( required QueryBuilder query, any forClause ) {
+        if ( isNull( arguments.forClause ) ) {
+            return "";
+        }
+
+        return "FOR #forClause.getSQL()#";
     }
 
     /**

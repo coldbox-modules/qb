@@ -133,6 +133,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT 1 + 1";
     }
 
+    function forRaw() {
+        return "SELECT [id], [name] FROM [users] FOR JSON AUTO";
+    }
+
     function noLock() {
         return { "sql": "SELECT * FROM [users] WITH (NOLOCK) WHERE [id] = ?", "bindings": [ 1 ] };
     }

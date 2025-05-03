@@ -115,6 +115,11 @@ component displayname="QueryBuilder" accessors="true" {
     property name="tableName" type="any";
 
     /**
+     * A raw FOR clause. Only supported on SQL Server. Default: null
+     */
+    property name="forClause" type="any";
+
+    /**
      * The alias name for the base table. Default: null
      */
     property name="alias" type="any";
@@ -579,6 +584,11 @@ component displayname="QueryBuilder" accessors="true" {
         variables.tableName = "";
         variables.alias = "";
         clearBindings( only = [ "from" ] );
+        return this;
+    }
+
+    public QueryBuilder function forRaw( required any expression ) {
+        variables.forClause = raw( arguments.expression );
         return this;
     }
 

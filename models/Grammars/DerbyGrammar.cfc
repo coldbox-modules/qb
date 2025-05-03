@@ -8,6 +8,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         "aggregate",
         "columns",
         "tableName",
+        "forClause",
         "joins",
         "wheres",
         "groups",

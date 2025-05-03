@@ -133,6 +133,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return "SELECT 1 + 1";
     }
 
+    function forRaw() {
+        return { "exception": "UnsupportedOperation" };
+    }
+
     function noLock() {
         return { sql: "SELECT * FROM `users` WHERE `id` = ?", bindings: [ 1 ] };
     }

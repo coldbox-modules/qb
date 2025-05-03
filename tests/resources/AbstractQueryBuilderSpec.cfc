@@ -320,6 +320,15 @@ component extends="testbox.system.BaseSpec" {
                                 .clearFrom();
                         }, clearFrom() );
                     } );
+
+                    it( "can add raw expressions after the from clause", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select( [ "id", "name" ] )
+                                .from( "users" )
+                                .forRaw( "JSON AUTO" );
+                        }, forRaw() );
+                    } );
                 } );
 
                 describe( "locking", function() {
@@ -2949,7 +2958,10 @@ component extends="testbox.system.BaseSpec" {
             } );
         } catch ( any e ) {
             if ( !isSimpleValue( expected ) && structKeyExists( expected, "exception" ) ) {
-                expect( e.type ).toBe( expected.exception );
+                if ( e.type != expected.exception ) {
+                    debug( e );
+                    expect( e.type ).toBe( expected.exception );
+                }
                 return;
             }
             rethrow;

@@ -40,6 +40,7 @@ component displayname="Grammar" accessors="true" singleton {
         "aggregate",
         "columns",
         "tableName",
+        "forClause",
         "joins",
         "wheres",
         "groups",
@@ -289,6 +290,14 @@ component displayname="Grammar" accessors="true" singleton {
             fullTable &= " #query.getAlias()#";
         }
         return "FROM " & wrapTable( fullTable );
+    }
+
+    private string function compileForClause( required QueryBuilder query, any forClause ) {
+        if ( isNull( arguments.forClause ) ) {
+            return "";
+        }
+
+        throw( type = "UnsupportedOperation", message = "This grammar does not support FOR clauses" );
     }
 
     /**

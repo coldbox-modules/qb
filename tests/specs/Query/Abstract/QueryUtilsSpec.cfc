@@ -30,20 +30,13 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
             describe( "numbers", function() {
                 it( "integers", function() {
                     expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "INTEGER" );
-                    variables.utils.setAutoDeriveNumericType( false );
-                    expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "NUMERIC" );
-                    variables.utils.setAutoDeriveNumericType( true );
                 } );
 
                 it( "decimals", function() {
                     expect( utils.inferSqlType( 4.50, variables.mockGrammar ) ).toBe( "DECIMAL" );
-                    variables.utils.setAutoDeriveNumericType( false );
-                    expect( utils.inferSqlType( 4.50, variables.mockGrammar ) ).toBe( "NUMERIC" );
-                    variables.utils.setAutoDeriveNumericType( true );
                 } );
 
                 it( "really long decimals", function() {
-                    variables.utils.setAutoDeriveNumericType( true );
                     expect( utils.inferSqlType( 19482.279999997998, variables.mockGrammar ) ).toBe( "DECIMAL" );
                 } );
             } );

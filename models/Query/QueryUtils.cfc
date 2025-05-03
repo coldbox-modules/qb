@@ -19,19 +19,12 @@ component singleton displayname="QueryUtils" accessors="true" {
     property name="convertEmptyStringsToNull" default="false";
 
     /**
-     * allow overriding default numeric SQL type inferral
-     */
-    property name="numericSQLType" default="NUMERIC";
-
-    /**
      * Allow overriding default integer numeric SQL type inferral.
-     * Only applies when `autoDeriveNumericType` is true.
      */
     property name="integerSQLType" default="INTEGER";
 
     /**
      * Allow overriding default decimal numeric SQL type inferral.
-     * Only applies when `autoDeriveNumericType` is true.
      */
     property name="decimalSQLType" default="DECIMAL";
 
@@ -41,35 +34,24 @@ component singleton displayname="QueryUtils" accessors="true" {
     property name="autoAddScale" default="true";
 
     /**
-     * Automatically derive the numeric sql type based on the number.
-     */
-    property name="autoDeriveNumericType" default="true";
-
-    /**
      * Creates a new QueryUtils helper.
      *
      * @strictDateDetection   Flag to only parse date objects as timestamps.
      *                        If false, strings that pass `isDate` are also treated as timestamps.
-     * @numericSQLType        Allows overriding inferred numeric SQL type default by adding a setting in coldbox.cfc module settings
      * @autoAddScale          Automatically add a scale to floating point bindings.
-     * @autoDeriveNumericType Automatically derive the numeric sql type based on the number.
      *
      * @return               qb.models.Query.QueryUtils
      */
     public QueryUtils function init(
         boolean strictDateDetection = true,
         boolean convertEmptyStringsToNull = false,
-        string numericSQLType = "NUMERIC",
         boolean autoAddScale = true,
-        boolean autoDeriveNumericType = true,
         string integerSqlType = "INTEGER",
         string decimalSqlType = "DECIMAL",
         any log
     ) {
         variables.strictDateDetection = arguments.strictDateDetection;
-        variables.numericSQLType = arguments.numericSQLType;
         variables.autoAddScale = arguments.autoAddScale;
-        variables.autoDeriveNumericType = arguments.autoDeriveNumericType;
         variables.integerSqlType = arguments.integerSqlType;
         variables.decimalSqlType = arguments.decimalSqlType;
         if ( !isNull( arguments.log ) ) {
@@ -217,11 +199,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         if ( checkIsActuallyNumeric( value ) ) {
-            if ( variables.autoDeriveNumericType ) {
-                return deriveNumericSqlType( value );
-            } else {
-                return variables.numericSQLType;
-            }
+            return deriveNumericSqlType( value );
         }
 
         if ( checkIsActuallyDate( value ) ) {

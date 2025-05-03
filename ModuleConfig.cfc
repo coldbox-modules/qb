@@ -17,7 +17,6 @@ component {
             "integerSQLType": "INTEGER",
             "decimalSQLType": "DECIMAL",
             "autoAddScale": true,
-            "autoDeriveNumericType": true,
             "defaultOptions": {},
             "sqlCommenter": {
                 "enabled": false,
@@ -53,7 +52,6 @@ component {
             .initArg( name = "convertEmptyStringsToNull", value = settings.convertEmptyStringsToNull )
             .initArg( name = "numericSQLType", value = settings.numericSQLType )
             .initArg( name = "autoAddScale", value = settings.autoAddScale )
-            .initArg( name = "autoDeriveNumericType", value = settings.autoDeriveNumericType )
             .initArg( name = "integerSQLType", value = settings.integerSQLType )
             .initArg( name = "decimalSQLType", value = settings.decimalSQLType );
 

@@ -342,8 +342,8 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         var queryColumns = [];
-        if ( getFunctionList().keyExists( "queryColumnArray" ) ) {
-            queryColumns = queryColumnArray( arguments.q );
+        if ( isPureBoxLang() ) {
+            queryColumns = arguments.q.getColumnNames();
         } else {
             queryColumns = getMetadata( arguments.q ).map( function( item ) {
                 return item.name;
@@ -372,9 +372,11 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     public query function queryRemoveColumns( required query q, required string columns ) {
         var columnsToRemove = arguments.columns.listToArray();
-        var queryColumnInfo = getFunctionList().keyExists( "queryColumnArray" ) ? queryColumnArray( q ).map( ( name ) => ( { "name": name, "TypeName": "varchar" } ) ) : getMetadata(
-            q
-        );
+        var queryColumnInfo = isPureBoxLang() ? q
+            .getColumnNames()
+            .map( ( name ) => {
+                return { "name": name, "TypeName": "varchar" };
+            } ) : getMetadata( q );
         var queryAsArray = queryToArrayOfStructs( q );
         queryAsArray.each( function( row ) {
             columnsToRemove.each( function( col ) {
@@ -509,7 +511,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         var className = "";
-        if ( server.keyExists( "boxlang" ) && !server.boxlang.modules.some( ( moduleName ) => findNoCase( "compat-cfml", moduleName ) > 0 ) ) {
+        if ( isPureBoxLang() ) {
             className = listLast( arguments.value.$bx.$class.getName(), "." );
         } else {
             className = listLast( toString( getMetadata( arguments.value ) ), "." )
@@ -681,6 +683,10 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
         var decimalPortion = numStringParts[ 2 ];
         return len( decimalPortion );
+    }
+
+    private boolean function isPureBoxLang() {
+        return server.keyExists( "boxlang" ) && !server.boxlang.modules.some( ( moduleName ) => findNoCase( "compat-cfml", moduleName ) > 0 );
     }
 
 }

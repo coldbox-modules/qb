@@ -61,9 +61,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                     return wrapColumn( column.formatted );
                 } )
                 .toList( ", " );
+
             var returningColumns = arguments.query
                 .getReturning()
                 .map( function( column ) {
+                    if ( getUtils().isExpression( column ) ) {
+                        return trim( column.getSQL() );
+                    }
                     if ( listLen( column, "." ) > 1 ) {
                         return column;
                     }
@@ -71,6 +75,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 } )
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
+
             var placeholderString = values
                 .map( function( valueArray ) {
                     return "(" & valueArray

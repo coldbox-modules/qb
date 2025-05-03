@@ -2353,6 +2353,15 @@ component extends="testbox.system.BaseSpec" {
                     }, returning() );
                 } );
 
+                it( "can return all from an insert", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users" )
+                            .returningAll()
+                            .insert( values = { "email": "foo", "name": "bar" }, toSql = true );
+                    }, returningAll() );
+                } );
+
                 it( "returning ignores table qualifiers", function() {
                     testCase( function( builder ) {
                         return builder

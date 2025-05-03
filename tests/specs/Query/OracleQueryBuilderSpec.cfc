@@ -833,6 +833,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function returningAll() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function returningIgnoresTableQualifiers() {
         return { exception: "UnsupportedOperation" };
     }

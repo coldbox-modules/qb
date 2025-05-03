@@ -3151,6 +3151,11 @@ component displayname="QueryBuilder" accessors="true" {
         return this;
     }
 
+    public QueryBuilder function returningAll() {
+        variables.returning = [ "*" ];
+        return this;
+    }
+
     /**
      * Updates a table with a struct of column and value pairs.
      * This call must come after setting the query's table using `from` or `table`.

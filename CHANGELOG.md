@@ -1,3 +1,66 @@
+# v12.0.0
+## 03 May 2025 — 05:48:20 UTC
+
+### BREAKING
+
++ __QueryUtils:__ Remove `autoAddScale` setting ([db178d1](https://github.com/coldbox-modules/qb/commit/db178d1f2bc8208072387927d426d6f9dff130e7))
++ __QueryUtils:__ Remove `strictDateDetection` setting ([c3cb496](https://github.com/coldbox-modules/qb/commit/c3cb496e8043546db7529484afb26db1300c6e73))
++ __QueryUtils:__ Remove `autoDeriveNumericType` setting ([3259cf3](https://github.com/coldbox-modules/qb/commit/3259cf333fe7eecfc10dd48556084f1af9116f9b))
++ __QueryBuilder:__ Allow for default values for `max`, `min`, `count`, and `sum` ([66ddd2e](https://github.com/coldbox-modules/qb/commit/66ddd2e1d6f3080ef97e78886d3fb65981380551))
++ __QueryUtils:__ Support `sqltype` alongside `cfsqltype`. ([a13a54f](https://github.com/coldbox-modules/qb/commit/a13a54f00a8046166d1835ae05aecc460105f513))
++ __QueryUtils:__ Add new `convertEmptyStringsToNull` flag. ([021a432](https://github.com/coldbox-modules/qb/commit/021a432a8b87a212e5426db80bc57754439a24c8))
+
+### chore
+
++ __CI:__ Disable adobe@2025 while we determine why it won't start in CI but starts locally
+ ([d461d0e](https://github.com/coldbox-modules/qb/commit/d461d0ea22015d67ecb2123531ead038194a6f93))
++ __CI:__ Fix CI for BoxLang and ACF@2025
+ ([76beca3](https://github.com/coldbox-modules/qb/commit/76beca3a52c6fcef66ba4b004659bfa1502ed9f6))
++ __CI:__ Fill out test matrix across workflows
+ ([303bea0](https://github.com/coldbox-modules/qb/commit/303bea04b2a5725907d8ef4a3b3b78bfa2c536ed))
++ __CI:__ Fill out better test matrix
+ ([96970a9](https://github.com/coldbox-modules/qb/commit/96970a992e1d75e642f48499c468085db4261fe1))
++ __QueryUtils:__ Default `convertEmptyStringsToNull` to true
+ ([7836576](https://github.com/coldbox-modules/qb/commit/783657688bef42cbf782e6ae7575cabef311070f))
++ __CI:__ Add different server.json files for each engine combination
+ ([17e22dd](https://github.com/coldbox-modules/qb/commit/17e22dd4c4f1f8fff2974ee5dddf8c65d1114022))
+
+### feat
+
++ __SchemaBuilder:__ Add support for `CREATE TABLE ... AS` and `SELECT ... INTO` using `schema.createAs` method ([1e138c1](https://github.com/coldbox-modules/qb/commit/1e138c1707f6b3fe1c0b8d343b1dab0c8747d1c7))
++ __SqlServerGrammar:__ Add support for for clauses, to return JSON or XML from a query ([eb3434b](https://github.com/coldbox-modules/qb/commit/eb3434bed7842ec26b366840cac6ee9705d5883f))
++ __QueryBuilder:__ Add `returningAll()` method — shortcut for `returning( "*" )` ([1ae7521](https://github.com/coldbox-modules/qb/commit/1ae7521f3b04b7ae574b62f65bd0cd6aa890d526))
++ __PostgresGrammar:__ Add `jsonb()` support ([434c2c8](https://github.com/coldbox-modules/qb/commit/434c2c8554439f35b01ba1efa791761e0c9a10c4))
++ __MySQLGrammar:__ Use `JSON` type for `json()` columns ([6784932](https://github.com/coldbox-modules/qb/commit/67849328fb4d0277cb65a90a57315d4a185b2e19))
++ __QueryBuilder:__ `.orderByRandom()` method ([a2f6698](https://github.com/coldbox-modules/qb/commit/a2f66982da6687433179fb7fead1557ae0d9f7da))
++ __SchemaBuilder:__ Add `truncate` method ([d756709](https://github.com/coldbox-modules/qb/commit/d756709ca3e0f337446583c02b1f9e934983d979))
++ __QueryBuilder:__ Allow restricting the delete unmatched clause in `upsert` ([d5c0ac7](https://github.com/coldbox-modules/qb/commit/d5c0ac7b6470d654a29ce01bcec7a73ad4678e6a))
++ __QueryBuilder:__ Support queries without a FROM clause ([c6ea79b](https://github.com/coldbox-modules/qb/commit/c6ea79b44004126cbc128fe74df7bc5b8a554c71))
++ __DerbyGrammar:__ Add Derby support
+ ([57032c0](https://github.com/coldbox-modules/qb/commit/57032c073b7beba7a1155d650cc969bb5f3ac6c4))
+
+### fix
+
++ __compat:__ More compat fixes for BoxLang and ACF
+ ([d0ba99d](https://github.com/coldbox-modules/qb/commit/d0ba99d2bc8544913087c6ad414eddd8b039a0f1))
++ __compat:__ Use more complicated method to determine pure BoxLang mode
+ ([0dd3269](https://github.com/coldbox-modules/qb/commit/0dd32695cd1f390ccfcc975f70ec9f102a392926))
++ __compat:__ BoxLang@1 compatibility
+ ([2541fe0](https://github.com/coldbox-modules/qb/commit/2541fe007839d5e2e4bbf63f6a64f18d6518be37))
++ __compat:__ Fix issues in ACF@2021
+ ([95965bc](https://github.com/coldbox-modules/qb/commit/95965bc4c4ae4e853a4e224e5c7741b6f574af70))
++ __QueryBuilder:__ Fix count call for `chunk` and `paginate` methods ([12b7bfd](https://github.com/coldbox-modules/qb/commit/12b7bfd8420875db2c4f1059ea225bc7634f7faa))
++ __DerbyGrammar:__ Use correct concat operator for `DerbyGrammar`
+ ([882aa7b](https://github.com/coldbox-modules/qb/commit/882aa7b644f6c023efd1235eab929299def3ad0b))
++ __PostgresGrammar:__ Use native `UUID` type for `guid()` ([3b8f89f](https://github.com/coldbox-modules/qb/commit/3b8f89fab9945c97990f8462cadd33104f27049d))
++ __OracleGrammar:__ Support Unicode versions of column types ([0bc959e](https://github.com/coldbox-modules/qb/commit/0bc959eab6e08a7a0a970e831ed31964bf71a111))
++ __QueryBuilder:__ Fix for UPDATE clauses with JOINS and RETURNING ([8db4177](https://github.com/coldbox-modules/qb/commit/8db4177280fcd52dc411a50d39b1b8c45d82a320))
+
+### perf
+
++ __QueryBuilder:__ Improve performance for exists queries ([07091d9](https://github.com/coldbox-modules/qb/commit/07091d9c1b78555e8d3269500df13248b41dcce1))
+
+
 # v11.1.0
 ## 12 Mar 2025 — 17:06:00 UTC
 

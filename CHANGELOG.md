@@ -1,3 +1,11 @@
+# v12.1.0
+## 14 May 2025 — 22:43:34 UTC
+
+### feat
+
++ __QueryUtils:__ Add a check for non-query param structs ([e58fd14](https://github.com/coldbox-modules/qb/commit/e58fd142594c7b97de2f72a96f6396aa2da253bf))
+
+
 # v12.0.0
 ## 03 May 2025 — 05:48:20 UTC
 

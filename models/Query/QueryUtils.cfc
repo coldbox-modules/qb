@@ -76,6 +76,9 @@ component singleton displayname="QueryUtils" accessors="true" {
             if ( structKeyExists( value, "isExpression" ) && value.isExpression == true ) {
                 return value;
             }
+
+            checkForNonQueryParamStructKeys( value );
+
             binding = value;
         } else {
             binding = { value: normalizeSqlValue( value ) };
@@ -687,6 +690,27 @@ component singleton displayname="QueryUtils" accessors="true" {
 
     private boolean function isPureBoxLang() {
         return server.keyExists( "boxlang" ) && !server.boxlang.modules.some( ( moduleName ) => findNoCase( "compat-cfml", moduleName ) > 0 );
+    }
+
+    private void function checkForNonQueryParamStructKeys( required struct param ) {
+        var validKeys = [
+            "value",
+            "cfsqltype",
+            "sqltype",
+            "null",
+            "nulls",
+            "list",
+            "separator",
+            "scale",
+            "maxlength"
+        ];
+        var extraKeys = param.keyArray().filter( ( key ) => !validKeys.containsNoCase( key ) );
+        if ( !extraKeys.isEmpty() ) {
+            throw(
+                type = "QBInvalidQueryParam",
+                message = "Invalid keys detected in your query param struct: [#extraKeys.sort( "textnocase" ).toList( ", " )#]. Usually this happens when you meant to serialize the struct to JSON first."
+            );
+        }
     }
 
 }

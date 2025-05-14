@@ -247,6 +247,23 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                 expect( binding.list ).toBe( false );
                 expect( binding.null ).toBe( false );
             } );
+
+            it( "checks that structs that are passed look like query param structs", () => {
+                expect( () => {
+                    var binding = utils.extractBinding(
+                        {
+                            "foo": "bar",
+                            "value": "something",
+                            "null": true,
+                            "enabled": true
+                        },
+                        variables.mockGrammar
+                    );
+                } ).toThrow(
+                    type = "QBInvalidQueryParam",
+                    regex = "Invalid keys detected in your query param struct: \[enabled, foo\]\. Usually this happens when you meant to serialize the struct to JSON first\."
+                );
+            } );
         } );
 
         describe( "queryToArrayOfStructs()", function() {

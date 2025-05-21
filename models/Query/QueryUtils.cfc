@@ -694,15 +694,16 @@ component singleton displayname="QueryUtils" accessors="true" {
 
     private void function checkForNonQueryParamStructKeys( required struct param ) {
         var validKeys = [
-            "value",
             "cfsqltype",
-            "sqltype",
+            "list",
+            "maxlength",
+            "name",
             "null",
             "nulls",
-            "list",
+            "sqltype",
             "separator",
             "scale",
-            "maxlength"
+            "value"
         ];
         var extraKeys = param.keyArray().filter( ( key ) => !validKeys.containsNoCase( key ) );
         if ( !extraKeys.isEmpty() ) {

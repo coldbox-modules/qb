@@ -1,3 +1,12 @@
+# v12.1.1
+## 21 May 2025 — 19:07:29 UTC
+
+### fix
+
++ __QueryUtils:__ Add `name` as a valid query param key
+ ([d2a6e90](https://github.com/coldbox-modules/qb/commit/d2a6e904f214aaf1a3d3b1f84d7220a845e71e64))
+
+
 # v12.1.0
 ## 14 May 2025 — 22:43:34 UTC
 

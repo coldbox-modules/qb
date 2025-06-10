@@ -714,4 +714,27 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
     }
 
+    public boolean function isValidQueryParamStruct( required any param ) {
+        if ( !isStruct( arguments.param ) || isObject( arguments.param ) ) {
+            return false;
+        }
+
+        var validKeys = [
+            "cfsqltype",
+            "list",
+            "maxlength",
+            "name",
+            "null",
+            "nulls",
+            "sqltype",
+            "separator",
+            "scale",
+            "value"
+        ];
+        return param
+            .keyArray()
+            .filter( ( key ) => !validKeys.containsNoCase( key ) )
+            .isEmpty();
+    }
+
 }

@@ -3833,6 +3833,24 @@ component displayname="QueryBuilder" accessors="true" {
         return true;
     }
 
+    public void function expectToExist( struct options = {}, any message, any detail ) {
+        if ( !this.exists( arguments.options ) ) {
+            param arguments.message = "No rows found with constraints [#variables.utils.serializeBindings( this.getBindings(), variables.grammar )#]";
+            param arguments.detail = "";
+
+            throw( type = "TestBox.AssertionFailed", message = arguments.message, detail = arguments.detail );
+        }
+    }
+
+    public void function expectNotToExist( struct options = {}, any message, any detail ) {
+        if ( this.exists( arguments.options ) ) {
+            param arguments.message = "Found row(s) but expected none with constraints [#variables.utils.serializeBindings( this.getBindings(), variables.grammar )#]";
+            param arguments.detail = "";
+
+            throw( type = "TestBox.AssertionFailed", message = arguments.message, detail = arguments.detail );
+        }
+    }
+
     /*******************************************************************************\
     |                               select functions                                |
     \*******************************************************************************/

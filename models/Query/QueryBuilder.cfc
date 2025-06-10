@@ -3691,10 +3691,67 @@ component displayname="QueryBuilder" accessors="true" {
         string column = "*",
         any defaultValue = 0,
         struct options = {},
-        boolean toSQL = false
+        boolean toSQL = false,
+        any showBindings = false
     ) {
         arguments.type = "count";
         return aggregateQuery( argumentCollection = arguments );
+    }
+
+    public void function expectToHaveCount(
+        required numeric expectedCount,
+        any message,
+        any detail,
+        struct options = {},
+        string column = "*",
+        any defaultValue = 0
+    ) {
+        var queryCount = this.count(
+            column = arguments.column,
+            defaultValue = arguments.defaultValue,
+            options = arguments.options
+        );
+
+        if ( queryCount != arguments.expectedCount ) {
+            param arguments.message = "Expected #arguments.expectedCount# #arguments.expectedCount == 1 ? "record" : "records"# but received #queryCount#.";
+            param arguments.detail = "Executed SQL statement: #this.count(
+                column = arguments.column,
+                defaultValue = arguments.defaultValue,
+                options = arguments.options,
+                toSQL = true,
+                showBindings = "inline"
+            )#";
+
+            throw( type = "TestBox.AssertionFailed", message = arguments.message, detail = arguments.detail );
+        }
+    }
+
+    public void function expectNotToHaveCount(
+        required numeric expectedCount,
+        any message,
+        any detail,
+        struct options = {},
+        string column = "*",
+        any defaultValue = 0
+    ) {
+        var queryCount = this.count(
+            column = arguments.column,
+            defaultValue = arguments.defaultValue,
+            options = arguments.options
+        );
+
+        if ( queryCount == arguments.expectedCount ) {
+            param arguments.message = "Expected not to find #arguments.expectedCount# #arguments.expectedCount == 1 ? "record" : "records"# but did.";
+            param arguments.detail = "Executed SQL statement: #this.count(
+                column = arguments.column,
+                defaultValue = arguments.defaultValue,
+                options = arguments.options,
+                toSQL = true,
+                showBindings = "inline"
+            )#";
+
+            throw( type = "TestBox.AssertionFailed", message = arguments.message, detail = arguments.detail );
+        }
     }
 
     /**
@@ -3769,7 +3826,8 @@ component displayname="QueryBuilder" accessors="true" {
         required any column = "*",
         struct options = {},
         any defaultValue,
-        boolean toSQL = false
+        boolean toSQL = false,
+        any showBindings = false
     ) {
         return withAggregate(
             {
@@ -3781,7 +3839,7 @@ component displayname="QueryBuilder" accessors="true" {
                 return withReturnFormat( "query", function() {
                     return withColumns( column, function() {
                         if ( toSQL ) {
-                            return this.toSQL();
+                            return this.toSQL( showBindings = showBindings );
                         }
 
                         var result = get( options = options );
@@ -3833,7 +3891,7 @@ component displayname="QueryBuilder" accessors="true" {
         return true;
     }
 
-    public void function expectToExist( struct options = {}, any message, any detail ) {
+    public void function expectToExist( any message, any detail, struct options = {} ) {
         if ( !this.exists( arguments.options ) ) {
             param arguments.message = "No rows found with constraints [#variables.utils.serializeBindings( this.getBindings(), variables.grammar )#]";
             param arguments.detail = "";
@@ -3842,7 +3900,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
     }
 
-    public void function expectNotToExist( struct options = {}, any message, any detail ) {
+    public void function expectNotToExist( any message, any detail, struct options = {} ) {
         if ( this.exists( arguments.options ) ) {
             param arguments.message = "Found row(s) but expected none with constraints [#variables.utils.serializeBindings( this.getBindings(), variables.grammar )#]";
             param arguments.detail = "";

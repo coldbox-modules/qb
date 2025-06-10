@@ -31,6 +31,26 @@ component extends="testbox.system.BaseSpec" {
                     variables.qb.expectNotToExist();
                 } ).notToThrow( type = "TestBox.AssertionFailed" );
             } );
+
+            it( "can expect to find a certain number of records", () => {
+                variables.qb.$( "count", 1 );
+                expect( () => {
+                    variables.qb.expectToHaveCount( 1 );
+                } ).notToThrow( type = "TestBox.AssertionFailed" );
+
+                expect( () => {
+                    variables.qb.expectNotToHaveCount( 1 );
+                } ).toThrow( type = "TestBox.AssertionFailed" );
+
+                variables.qb.$( "count", 2 );
+                expect( () => {
+                    variables.qb.expectToHaveCount( 1 );
+                } ).toThrow( type = "TestBox.AssertionFailed" );
+
+                expect( () => {
+                    variables.qb.expectNotToHaveCount( 1 );
+                } ).notToThrow( type = "TestBox.AssertionFailed" );
+            } );
         } );
     }
 

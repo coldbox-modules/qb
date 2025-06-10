@@ -1,4 +1,4 @@
-component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
+component extends="testbox.system.BaseSpec" {
 
     function beforeAll() {
         variables.utils = new qb.models.Query.QueryUtils();
@@ -320,10 +320,10 @@ component displayname="QueryUtilsSpec" extends="testbox.system.BaseSpec" {
                     .where( "bar", "baz" );
                 var queryTwo = queryOne.clone();
                 expect( queryTwo.getTableName() ).toBe( "foo" );
-                expect( queryTwo.getColumns() ).toBe( [ "one", "two" ] );
+                expect( queryTwo.getColumns().map( ( c ) => c.value ) ).toBe( [ "one", "two" ] );
                 expect( queryTwo.getWheres() ).toBe( [
                     {
-                        column: "bar",
+                        column: { "type": "simple", "value": "bar" },
                         combinator: "and",
                         operator: "=",
                         value: "baz",

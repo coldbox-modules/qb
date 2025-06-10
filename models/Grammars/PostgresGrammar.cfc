@@ -226,14 +226,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             if ( isArray( arguments.updates ) ) {
                 updateString = arguments.updateColumns
                     .map( function( column ) {
-                        return "#wrapValue( column.formatted )# = EXCLUDED.#wrapValue( column.formatted )#";
+                        return "#wrapColumn( column.formatted )# = EXCLUDED.#wrapColumn( column.formatted )#";
                     } )
                     .toList( ", " );
             } else {
                 updateString = arguments.updateColumns
                     .map( function( column ) {
                         var value = updates[ column.original ];
-                        return "#wrapValue( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
+                        return "#wrapColumn( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
                     } )
                     .toList( ", " );
             }
@@ -287,7 +287,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             return concatenate( [
-                wrapColumn( column.getName() ),
+                wrapColumn( { "type": "simple", "value": column.getName() } ),
                 generateType( column, blueprint ),
                 modifyUnsigned( column ),
                 generateNullConstraint( column ),
@@ -358,9 +358,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "RENAME COLUMN",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 "TO",
-                wrapColumn( commandParameters.to.getName() )
+                wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -380,11 +380,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "ALTER COLUMN",
-                wrapColumn( commandParameters.to.getName() ),
+                wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } ),
                 "TYPE",
                 generateType( commandParameters.to, blueprint ) & ",",
                 "ALTER COLUMN",
-                wrapColumn( commandParameters.to.getName() ),
+                wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } ),
                 commandParameters.to.getIsNullable() ? "DROP" : "SET",
                 "NOT NULL"
             ] );
@@ -422,13 +422,19 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
+            // This used to be a ternary, but ACF didn't choose the right branch
+            var columnString = "";
+            if ( isSimpleValue( commandParameters.name ) ) {
+                columnString = wrapColumn( { "type": "simple", "value": commandParameters.name } );
+            } else {
+                columnString = wrapColumn( { "type": "simple", "value": commandParameters.name.getName() } );
+            }
+
             return concatenate( [
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "DROP COLUMN",
-                isSimpleValue( commandParameters.name ) ? wrapColumn( commandParameters.name ) : wrapColumn(
-                    commandParameters.name.getName()
-                ),
+                columnString,
                 "CASCADE"
             ] );
         } finally {
@@ -482,10 +488,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function getAllTableNames( options, schema = "" ) {
-        var sql = "SELECT #wrapColumn( "table_name" )# FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_schema" )# = 'public'";
+        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )# FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_schema" } )# = 'public'";
         var args = [];
         if ( schema != "" ) {
-            sql &= " AND #wrapColumn( "table_schema" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
             args.append( schema );
         }
         var tablesQuery = runQuery( sql, args, options, "query" );
@@ -497,9 +503,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileTableExists( tableName, schemaName = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( "table_schema" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
         }
         return sql;
     }
@@ -539,9 +545,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "RENAME CONSTRAINT",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 "TO",
-                wrapColumn( commandParameters.to )
+                wrapColumn( { "type": "simple", "value": commandParameters.to } )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -707,7 +713,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var references = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapColumn( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
         return "CONSTRAINT #wrapValue( index.getName() )# UNIQUE (#references#)";
@@ -725,7 +731,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             var values = arrayMap( commandParameters.values, function( val ) {
                 return "'" & val & "'";
             } );
-            return "CREATE TYPE #wrapColumn( commandParameters.name )# AS ENUM (#arrayToList( values, ", " )#)";
+            return "CREATE TYPE #wrapColumn( { "type": "simple", "value": commandParameters.name } )# AS ENUM (#arrayToList( values, ", " )#)";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

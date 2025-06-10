@@ -74,11 +74,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             var returningColumns = arguments.query
                 .getReturning()
                 .map( function( column ) {
-                    if ( getUtils().isExpression( column ) ) {
+                    if ( column.type == "raw" ) {
                         return trim( column.getSQL() );
                     }
-                    if ( listLen( column, "." ) > 1 ) {
-                        return column;
+                    if ( listLen( column.value, "." ) > 1 ) {
+                        return column.value;
                     }
                     return "INSERTED." & wrapColumn( column );
                 } )
@@ -338,11 +338,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             var returningColumns = arguments.query
                 .getReturning()
                 .map( function( column ) {
-                    if ( getUtils().isExpression( column ) ) {
-                        return trim( column.getSQL() );
+                    if ( column.type == "raw" ) {
+                        return trim( column.value.getSQL() );
                     }
-                    if ( listLen( column, "." ) > 1 ) {
-                        return column;
+                    if ( listLen( column.value, "." ) > 1 ) {
+                        return column.value;
                     }
                     return "INSERTED." & wrapColumn( column );
                 } )
@@ -383,11 +383,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             var returningColumns = arguments.query
                 .getReturning()
                 .map( function( column ) {
-                    if ( getUtils().isExpression( column ) ) {
-                        return trim( column.getSQL() );
+                    if ( column.type == "raw" ) {
+                        return trim( column.value.getSQL() );
                     }
-                    if ( listLen( column, "." ) > 1 ) {
-                        return column;
+                    if ( listLen( column.value, "." ) > 1 ) {
+                        return column.value;
                     }
                     return "DELETED." & wrapColumn( column );
                 } )
@@ -467,7 +467,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
             var constraintString = arguments.target
                 .map( function( column ) {
-                    return "#wrapColumn( "qb_target.#column.formatted#" )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+                    return "#wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
                 } )
                 .toList( " AND " );
 
@@ -475,7 +475,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             if ( isArray( arguments.updates ) ) {
                 updateList = arguments.updates
                     .map( function( column ) {
-                        return "#wrapColumn( column.formatted )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+                        return "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
                     } )
                     .toList( ", " );
             } else {
@@ -606,7 +606,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                     "ALTER TABLE",
                     wrapTable( blueprint.getTable() ),
                     "DROP COLUMN",
-                    wrapColumn( commandParameters.name )
+                    wrapColumn( { "type": "simple", "value": commandParameters.name } )
                 ] );
             } else {
                 var statements = [
@@ -615,7 +615,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                             "ALTER TABLE",
                             wrapTable( blueprint.getTable() ),
                             "DROP COLUMN",
-                            wrapColumn( commandParameters.name.getName() )
+                            wrapColumn( { "type": "simple", "value": commandParameters.name.getName() } )
                         ],
                         " "
                     )
@@ -656,7 +656,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "EXEC sp_rename #wrapValue( blueprint.getTable() & "." & commandParameters.from )#, #wrapColumn( commandParameters.to.getName() )#, [COLUMN]";
+            return "EXEC sp_rename #wrapValue( blueprint.getTable() & "." & commandParameters.from )#, #wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } )#, [COLUMN]";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -730,10 +730,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function getAllTableNames( options, schema = "" ) {
-        var sql = "SELECT #wrapColumn( "table_name" )# FROM #wrapTable( "information_schema.tables" )#";
+        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )# FROM #wrapTable( "information_schema.tables" )#";
         var args = [];
         if ( schema != "" ) {
-            sql &= " WHERE #wrapColumn( "table_schema" )# = ?";
+            sql &= " WHERE #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
             args.append( schema );
         }
         var tablesQuery = runQuery( sql, args, options, "query" );

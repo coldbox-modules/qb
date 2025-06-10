@@ -243,14 +243,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             if ( isArray( arguments.updates ) ) {
                 updateString = arguments.updateColumns
                     .map( function( column ) {
-                        return "#wrapValue( column.formatted )# = EXCLUDED.#wrapValue( column.formatted )#";
+                        return "#wrapColumn( column.formatted )# = EXCLUDED.#wrapColumn( column.formatted )#";
                     } )
                     .toList( ", " );
             } else {
                 updateString = arguments.updateColumns
                     .map( function( column ) {
                         var value = updates[ column.original ];
-                        return "#wrapValue( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
+                        return "#wrapColumn( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
                     } )
                     .toList( ", " );
             }
@@ -425,7 +425,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                     return "'#value#'";
                 } )
                 .toList( ", " );
-            return "CHECK (#wrapColumn( column.getName() )# IN (#values#))";
+            return "CHECK (#wrapColumn( { "type": "simple", "value": column.getName() } )# IN (#values#))";
         }
 
         return column.getIsUnique() ? "UNIQUE" : "";
@@ -561,9 +561,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "RENAME COLUMN",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 "TO",
-                wrapColumn( commandParameters.to.getName() )
+                wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -579,22 +579,22 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     =======================================*/
 
     function compileTableExists( tableName, schemaName = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "pragma_table_list" )# WHERE #wrapColumn( "type" )# = 'table' AND #wrapColumn( "name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "pragma_table_list" )# WHERE #wrapColumn( { "type": "simple", "value": "type" } )# = 'table' AND #wrapColumn( { "type": "simple", "value": "name" } )# = ?";
 
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( "schema" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "schema" } )# = ?";
         } else {
-            sql &= " AND #wrapColumn( "schema" )# = 'main'";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "schema" } )# = 'main'";
         }
         return sql;
     }
 
     function compileColumnExists( table, column, schema = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "pragma_table_list" )# tl JOIN pragma_table_info(tl.name) ti WHERE tl.#wrapColumn( "type" )# = 'table' AND tl.#wrapColumn( "name" )# = ? AND ti.#wrapColumn( "name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "pragma_table_list" )# tl JOIN pragma_table_info(tl.name) ti WHERE tl.#wrapColumn( { "type": "simple", "value": "type" } )# = 'table' AND tl.#wrapColumn( { "type": "simple", "value": "name" } )# = ? AND ti.#wrapColumn( { "type": "simple", "value": "name" } )# = ?";
         if ( schema != "" ) {
-            sql &= " AND tl.#wrapColumn( "schema" )# = ?";
+            sql &= " AND tl.#wrapColumn( { "type": "simple", "value": "schema" } )# = ?";
         } else {
-            sql &= " AND tl.#wrapColumn( "schema" )# = 'main'";
+            sql &= " AND tl.#wrapColumn( { "type": "simple", "value": "schema" } )# = 'main'";
         }
         return sql;
     }
@@ -609,7 +609,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var references = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapColumn( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
 
@@ -624,7 +624,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var references = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapColumn( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
         return "PRIMARY KEY (#references#)";
@@ -635,13 +635,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var keys = arguments.index
             .getForeignKey()
             .map( function( key ) {
-                return wrapColumn( key );
+                return wrapColumn( { "type": "simple", "value": key } );
             } )
             .toList( ", " );
         var references = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapColumn( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
         return arrayToList(

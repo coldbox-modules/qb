@@ -39,9 +39,9 @@ component extends="testbox.system.BaseSpec" {
 
                 var clause = clauses[ 1 ];
                 expect( clause ).toBeStruct();
-                expect( clause.first ).toBe( "first.id", "First column should be [first.id]" );
+                expect( clause.first.value ).toBe( "first.id", "First column should be [first.id]" );
                 expect( clause.operator ).toBe( "=", "Operator should be [=]" );
-                expect( clause.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                expect( clause.second.value ).toBe( "second.first_id", "First column should be [second.first_id]" );
                 expect( clause.combinator ).toBe( "and" );
             } );
 
@@ -71,9 +71,9 @@ component extends="testbox.system.BaseSpec" {
 
                 var clause = clauses[ 1 ];
                 expect( clause ).toBeStruct();
-                expect( clause.first ).toBe( "first.id", "First column should be [first.id]" );
+                expect( clause.first.value ).toBe( "first.id", "First column should be [first.id]" );
                 expect( clause.operator ).toBe( "=", "Operator should be [=]" );
-                expect( clause.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                expect( clause.second.value ).toBe( "second.first_id", "First column should be [second.first_id]" );
                 expect( clause.combinator ).toBe( "and" );
             } );
 
@@ -103,9 +103,9 @@ component extends="testbox.system.BaseSpec" {
 
                 var clause = clauses[ 1 ];
                 expect( clause ).toBeStruct();
-                expect( clause.first ).toBe( "first.id", "First column should be [first.id]" );
+                expect( clause.first.value ).toBe( "first.id", "First column should be [first.id]" );
                 expect( clause.operator ).toBe( "=", "Operator should be [=]" );
-                expect( clause.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                expect( clause.second.value ).toBe( "second.first_id", "First column should be [second.first_id]" );
                 expect( clause.combinator ).toBe( "and" );
             } );
 
@@ -127,16 +127,16 @@ component extends="testbox.system.BaseSpec" {
 
                 var clauseOne = clauses[ 1 ];
                 expect( clauseOne ).toBeStruct();
-                expect( clauseOne.first ).toBe( "first.id", "First column should be [first.id]" );
+                expect( clauseOne.first.value ).toBe( "first.id", "First column should be [first.id]" );
                 expect( clauseOne.operator ).toBe( "=", "Operator should be [=]" );
-                expect( clauseOne.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                expect( clauseOne.second.value ).toBe( "second.first_id", "First column should be [second.first_id]" );
                 expect( clauseOne.combinator ).toBe( "and" );
 
                 var clauseTwo = clauses[ 2 ];
                 expect( clauseTwo ).toBeStruct();
-                expect( clauseTwo.first ).toBe( "first.locale", "First column should be [first.locale]" );
+                expect( clauseTwo.first.value ).toBe( "first.locale", "First column should be [first.locale]" );
                 expect( clauseTwo.operator ).toBe( "=", "Operator should be [=]" );
-                expect( clauseTwo.second ).toBe( "second.locale", "First column should be [second.locale]" );
+                expect( clauseTwo.second.value ).toBe( "second.locale", "First column should be [second.locale]" );
                 expect( clauseTwo.combinator ).toBe( "and" );
             } );
 
@@ -158,16 +158,16 @@ component extends="testbox.system.BaseSpec" {
 
                 var clauseOne = clauses[ 1 ];
                 expect( clauseOne ).toBeStruct();
-                expect( clauseOne.first ).toBe( "first.id", "First column should be [first.id]" );
+                expect( clauseOne.first.value ).toBe( "first.id", "First column should be [first.id]" );
                 expect( clauseOne.operator ).toBe( "=", "Operator should be [=]" );
-                expect( clauseOne.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                expect( clauseOne.second.value ).toBe( "second.first_id", "First column should be [second.first_id]" );
                 expect( clauseOne.combinator ).toBe( "and" );
 
                 var clauseTwo = clauses[ 2 ];
                 expect( clauseTwo ).toBeStruct();
-                expect( clauseTwo.first ).toBe( "first.locale", "First column should be [first.locale]" );
+                expect( clauseTwo.first.value ).toBe( "first.locale", "First column should be [first.locale]" );
                 expect( clauseTwo.operator ).toBe( "=", "Operator should be [=]" );
-                expect( clauseTwo.second ).toBe( "second.locale", "First column should be [second.locale]" );
+                expect( clauseTwo.second.value ).toBe( "second.locale", "First column should be [second.locale]" );
                 expect( clauseTwo.combinator ).toBe( "and" );
             } );
 

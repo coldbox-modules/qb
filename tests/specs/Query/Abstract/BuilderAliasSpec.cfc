@@ -6,33 +6,47 @@ component extends="testbox.system.BaseSpec" {
                 it( "it renames aliases in the select clause", () => {
                     var qb = new qb.models.Query.QueryBuilder();
                     qb.from( "users AS u" ).select( [ "u.id", "u.name" ] );
-                    expect( qb.getColumns() ).toBe( [ "u.id", "u.name" ] );
+                    expect( qb.getColumns().map( ( c ) => c.value ) ).toBe( [ "u.id", "u.name" ] );
                     qb.withAlias( "u1" );
-                    expect( qb.getColumns() ).toBe( [ "u1.id", "u1.name" ] );
+                    expect( qb.getColumns().map( ( c ) => c.value ) ).toBe( [ "u1.id", "u1.name" ] );
+                } );
+
+                it( "renames aliases in subselects", () => {
+                    var qb = new qb.models.Query.QueryBuilder();
+                    qb.from( "RMME_C" ).select( [ "RMME_C.ID_B", "RMME_C.ID_C", "RMME_C.ID_D" ] );
+                    qb.subselect( "inlined_dValue", ( q ) => {
+                        q.from( "RMME_D" )
+                            .select( [ "RMME_D.dValue" ] )
+                            .whereColumn( "RMME_C.ID_D", "RMME_D.ID_D" )
+                            .limit( 1 );
+                    } );
+                    expect( qb.toSQL() ).toBe( "SELECT ""RMME_C"".""ID_B"", ""RMME_C"".""ID_C"", ""RMME_C"".""ID_D"", (SELECT ""RMME_D"".""dValue"" FROM ""RMME_D"" WHERE ""RMME_C"".""ID_D"" = ""RMME_D"".""ID_D"" LIMIT 1) AS ""inlined_dValue"" FROM ""RMME_C""" );
+                    qb.withAlias( "C_2" );
+                    expect( qb.toSQL() ).toBe( "SELECT ""C_2"".""ID_B"", ""C_2"".""ID_C"", ""C_2"".""ID_D"", (SELECT ""RMME_D"".""dValue"" FROM ""RMME_D"" WHERE ""C_2"".""ID_D"" = ""RMME_D"".""ID_D"" LIMIT 1) AS ""inlined_dValue"" FROM ""RMME_C"" AS ""C_2""" );
                 } );
 
                 it( "renames the base table name if used in column declarations", () => {
                     var qb = new qb.models.Query.QueryBuilder();
                     qb.from( "users" ).select( [ "users.id", "users.name" ] );
-                    expect( qb.getColumns() ).toBe( [ "users.id", "users.name" ] );
+                    expect( qb.getColumns().map( ( c ) => c.value ) ).toBe( [ "users.id", "users.name" ] );
                     qb.withAlias( "u" );
-                    expect( qb.getColumns() ).toBe( [ "u.id", "u.name" ] );
+                    expect( qb.getColumns().map( ( c ) => c.value ) ).toBe( [ "u.id", "u.name" ] );
                 } );
 
                 it( "renames aliases with multiple periods", () => {
                     var qb = new qb.models.Query.QueryBuilder();
                     qb.from( "MyServer.dbo.users" ).select( [ "MyServer.dbo.users.id", "MyServer.dbo.users.name" ] );
-                    expect( qb.getColumns() ).toBe( [ "MyServer.dbo.users.id", "MyServer.dbo.users.name" ] );
+                    expect( qb.getColumns().map( ( c ) => c.value ) ).toBe( [ "MyServer.dbo.users.id", "MyServer.dbo.users.name" ] );
                     qb.withAlias( "u1" );
-                    expect( qb.getColumns() ).toBe( [ "u1.id", "u1.name" ] );
+                    expect( qb.getColumns().map( ( c ) => c.value ) ).toBe( [ "u1.id", "u1.name" ] );
                 } );
 
                 it( "renames aliases with schema shortcut periods", () => {
                     var qb = new qb.models.Query.QueryBuilder();
                     qb.from( "MyServer..users" ).select( [ "MyServer..users.id", "MyServer..users.name" ] );
-                    expect( qb.getColumns() ).toBe( [ "MyServer..users.id", "MyServer..users.name" ] );
+                    expect( qb.getColumns().map( ( c ) => c.value ) ).toBe( [ "MyServer..users.id", "MyServer..users.name" ] );
                     qb.withAlias( "u1" );
-                    expect( qb.getColumns() ).toBe( [ "u1.id", "u1.name" ] );
+                    expect( qb.getColumns().map( ( c ) => c.value ) ).toBe( [ "u1.id", "u1.name" ] );
                 } );
             } );
 

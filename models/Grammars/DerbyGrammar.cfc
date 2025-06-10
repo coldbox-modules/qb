@@ -263,7 +263,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             var valuesString = arrayToList(
                 arguments.insertColumns.map( function( column ) {
-                    return wrapColumn( "qb_src.#column.formatted#" );
+                    return wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } );
                 } ),
                 ", "
             );
@@ -289,7 +289,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             var constraintString = arguments.target
                 .map( function( column ) {
-                    return "#wrapColumn( "qb_target.#column.formatted#" )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+                    return "#wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
                 } )
                 .toList( " AND " );
 
@@ -297,7 +297,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             if ( isArray( arguments.updates ) ) {
                 updateList = arguments.updates
                     .map( function( column ) {
-                        return "#wrapColumn( column.formatted )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+                        return "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
                     } )
                     .toList( ", " );
             } else {
@@ -407,7 +407,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             var values = [
-                wrapColumn( column.getName() ),
+                wrapColumn( { "type": "simple", "value": column.getName() } ),
                 generateType( column, blueprint ),
                 modifyUnsigned( column ),
                 generateComputed( column ),
@@ -437,9 +437,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "RENAME COLUMN",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 "TO",
-                wrapColumn( commandParameters.to.getName() )
+                wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -494,9 +494,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "RENAME CONSTRAINT",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 "TO",
-                wrapColumn( commandParameters.to )
+                wrapColumn( { "type": "simple", "value": commandParameters.to } )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -717,23 +717,23 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function compileTableExists( tableName, schemaName = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "sys.systables t" )#";
         if ( schemaName != "" ) {
-            sql &= " JOIN #wrapTable( "sys.sysschemas s" )# ON #wrapColumn( "t.schemaid" )# = #wrapColumn( "s.schemaid" )#";
+            sql &= " JOIN #wrapTable( "sys.sysschemas s" )# ON #wrapColumn( { "type": "simple", "value": "t.schemaid" } )# = #wrapColumn( { "type": "simple", "value": "s.schemaid" } )#";
         }
-        sql &= " WHERE #wrapColumn( "t.tablename" )# = ?";
+        sql &= " WHERE #wrapColumn( { "type": "simple", "value": "t.tablename" } )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( "s.schemanname" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemanname" } )# = ?";
         }
         return sql;
     }
 
     function compileColumnExists( table, column, schema = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "sys.syscolumns c" )# JOIN #wrapTable( "sys.systables t" )# ON #wrapColumn( "c.referenceid" )# = #wrapColumn( "t.tableid" )#";
+        var sql = "SELECT 1 FROM #wrapTable( "sys.syscolumns c" )# JOIN #wrapTable( "sys.systables t" )# ON #wrapColumn( { "type": "simple", "value": "c.referenceid" } )# = #wrapColumn( { "type": "simple", "value": "t.tableid" } )#";
         if ( schema != "" ) {
-            sql &= " JOIN #wrapTable( "sys.sysschemas s" )# ON #wrapColumn( "t.schemaid" )# = #wrapColumn( "s.schemaid" )#";
+            sql &= " JOIN #wrapTable( "sys.sysschemas s" )# ON #wrapColumn( { "type": "simple", "value": "t.schemaid" } )# = #wrapColumn( { "type": "simple", "value": "s.schemaid" } )#";
         }
-        sql &= " WHERE #wrapColumn( "t.tablename" )# = ? AND #wrapColumn( "c.columnname" )# = ?";
+        sql &= " WHERE #wrapColumn( { "type": "simple", "value": "t.tablename" } )# = ? AND #wrapColumn( { "type": "simple", "value": "c.columnname" } )# = ?";
         if ( schema != "" ) {
-            sql &= " AND #wrapColumn( "s.schemanname" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemanname" } )# = ?";
         }
         return sql;
     }

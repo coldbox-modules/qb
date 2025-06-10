@@ -16,7 +16,7 @@
         "heapSize":"1024"
     },
     "openBrowser":"false",
-    "scripts" : {
+    "scripts":{
         "onServerInstall":"cfpm install zip,debugger"
     }
 }

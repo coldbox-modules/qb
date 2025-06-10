@@ -275,14 +275,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             if ( isArray( arguments.updates ) ) {
                 updateString = arguments.updateColumns
                     .map( function( column ) {
-                        return "#wrapValue( column.formatted )# = VALUES(#wrapValue( column.formatted )#)";
+                        return "#wrapColumn( column.formatted )# = VALUES(#wrapColumn( column.formatted )#)";
                     } )
                     .toList( ", " );
             } else {
                 updateString = arguments.updateColumns
                     .map( function( column ) {
                         var value = updates[ column.original ];
-                        return "#wrapValue( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
+                        return "#wrapColumn( column.formatted )# = #getUtils().isExpression( value ) ? value.getSQL() : "?"#";
                     } )
                     .toList( ", " );
             }

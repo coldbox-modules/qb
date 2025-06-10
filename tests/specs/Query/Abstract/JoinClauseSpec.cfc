@@ -59,9 +59,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
 
                         var clause = clauses[ 1 ];
-                        expect( clause.first ).toBe( "first.id", "First column should be [first.id]" );
+                        expect( clause.first.value ).toBe( "first.id", "First column should be [first.id]" );
                         expect( clause.operator ).toBe( "=", "Operator should be [=]" );
-                        expect( clause.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                        expect( clause.second.value ).toBe(
+                            "second.first_id",
+                            "First column should be [second.first_id]"
+                        );
                         expect( clause.combinator ).toBe( "and" );
                     } );
 
@@ -72,9 +75,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
 
                         var clause = clauses[ 1 ];
-                        expect( clause.first ).toBe( "first.id", "First column should be [first.id]" );
+                        expect( clause.first.value ).toBe( "first.id", "First column should be [first.id]" );
                         expect( clause.operator ).toBe( "=", "Operator should be [=]" );
-                        expect( clause.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                        expect( clause.second.value ).toBe(
+                            "second.first_id",
+                            "First column should be [second.first_id]"
+                        );
                         expect( clause.combinator ).toBe( "and" );
                     } );
 
@@ -86,15 +92,21 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( clauses ) ).toBe( 2, "Two clauses should exist in the join statement" );
 
                         var clauseOne = clauses[ 1 ];
-                        expect( clauseOne.first ).toBe( "first.id", "First column should be [first.id]" );
+                        expect( clauseOne.first.value ).toBe( "first.id", "First column should be [first.id]" );
                         expect( clauseOne.operator ).toBe( "=", "Operator should be [=]" );
-                        expect( clauseOne.second ).toBe( "second.first_id", "First column should be [second.first_id]" );
+                        expect( clauseOne.second.value ).toBe(
+                            "second.first_id",
+                            "First column should be [second.first_id]"
+                        );
                         expect( clauseOne.combinator ).toBe( "and" );
 
                         var clauseTwo = clauses[ 2 ];
-                        expect( clauseTwo.first ).toBe( "first.locale", "First column should be [first.locale]" );
+                        expect( clauseTwo.first.value ).toBe( "first.locale", "First column should be [first.locale]" );
                         expect( clauseTwo.operator ).toBe( "=", "Operator should be [=]" );
-                        expect( clauseTwo.second ).toBe( "second.locale", "First column should be [second.locale]" );
+                        expect( clauseTwo.second.value ).toBe(
+                            "second.locale",
+                            "First column should be [second.locale]"
+                        );
                         expect( clauseTwo.combinator ).toBe( "and" );
                     } );
 
@@ -117,12 +129,12 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
 
                         var clause = clauses[ 1 ];
-                        expect( clause.first ).toBe(
+                        expect( clause.first.value ).toBe(
                             "first.another_value",
                             "First column should be [first.another_value]"
                         );
                         expect( clause.operator ).toBe( ">=", "Operator should be [>=]" );
-                        expect( clause.second ).toBe(
+                        expect( clause.second.value ).toBe(
                             "second.another_value",
                             "First column should be [second.another_value]"
                         );
@@ -138,7 +150,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
 
                         var clause = clauses[ 1 ];
-                        expect( clause.column ).toBe( "second.locale", "First column should be [second.locale]" );
+                        expect( clause.column.value ).toBe( "second.locale", "First column should be [second.locale]" );
                         expect( clause.operator ).toBe( "=", "Operator should be [>=]" );
                         expect( clause.combinator ).toBe( "and" );
                     } );
@@ -150,7 +162,7 @@ component extends="testbox.system.BaseSpec" {
                         expect( arrayLen( clauses ) ).toBe( 1, "Only one clause should exist in the join statement" );
 
                         var clause = clauses[ 1 ];
-                        expect( clause.column ).toBe( "second.locale", "First column should be [second.locale]" );
+                        expect( clause.column.value ).toBe( "second.locale", "First column should be [second.locale]" );
                         expect( clause.operator ).toBe( "=", "Operator should be [>=]" );
                         expect( clause.combinator ).toBe( "and" );
                     } );

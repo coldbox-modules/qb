@@ -1030,7 +1030,7 @@ component displayname="Grammar" accessors="true" singleton {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
-            var shouldIncludeDistinct = query.getDistinct() && aggregate.column != "*";
+            var shouldIncludeDistinct = query.getDistinct() && aggregate.column.type == "simple" && aggregate.column.value != "*";
             var aggString = "#uCase( aggregate.type )#(#shouldIncludeDistinct ? "DISTINCT " : ""##wrapColumn( aggregate.column )#)";
             if ( aggregate.keyExists( "defaultValue" ) && !isNull( aggregate.defaultValue ) ) {
                 aggString = "COALESCE(#aggString#, #aggregate.defaultValue#)";
@@ -1154,11 +1154,15 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function wrapColumn( required any column ) {
-        if ( getUtils().isExpression( arguments.column ) ) {
-            return trim( arguments.column.getSQL() );
+        if ( arguments.column.type == "raw" ) {
+            return trim( arguments.column.value.getSQL() );
         }
 
-        arguments.column = trim( arguments.column );
+        if ( arguments.column.type == "builder" ) {
+            return trim( wrapTable( "(#arguments.column.value.toSQL()#) AS #arguments.column.alias#" ) );
+        }
+
+        arguments.column = trim( arguments.column.value );
         var alias = "";
         if ( arguments.column.findNoCase( " as " ) > 0 ) {
             var matches = reFindNoCase(
@@ -1193,16 +1197,12 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function extractAlias( required any column ) {
-        // In this case, isInstanceOf takes ~30 ms while this takes ~0 ms
-        if (
-            !isSimpleValue( arguments.column ) &&
-            isObject( arguments.column ) &&
-            structKeyExists( arguments.column, "getSQL" )
-        ) {
-            arguments.column = trim( arguments.column.getSQL() );
+        if ( arguments.column.type == "raw" ) {
+            arguments.column = trim( arguments.column.value.getSQL() );
+        } else {
+            arguments.column = trim( arguments.column.value );
         }
 
-        arguments.column = trim( arguments.column );
         var alias = "";
         if ( arguments.column.findNoCase( " as " ) > 0 ) {
             var matches = reFindNoCase(
@@ -1312,7 +1312,7 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         return concatenate( [
-            wrapColumn( column.getName() ),
+            wrapColumn( { "type": "simple", "value": column.getName() } ),
             generateType( column, blueprint ),
             modifyUnsigned( column ),
             generateComputed( column ),
@@ -1364,7 +1364,7 @@ component displayname="Grammar" accessors="true" singleton {
     function compileAddComment( blueprint, commandParameters ) {
         return concatenate( [
             "COMMENT ON COLUMN",
-            wrapColumn( commandParameters.table & "." & commandParameters.column.getName() ),
+            wrapColumn( { "type": "simple", "value": commandParameters.table & "." & commandParameters.column.getName() } ),
             "IS",
             "'" & commandParameters.column.getCommentValue() & "'"
         ] );
@@ -1482,14 +1482,14 @@ component displayname="Grammar" accessors="true" singleton {
                     "ALTER TABLE",
                     wrapTable( blueprint.getTable() ),
                     "DROP COLUMN",
-                    wrapColumn( commandParameters.name )
+                    wrapColumn( { "type": "simple", "value": commandParameters.name } )
                 ] );
             } else {
                 return concatenate( [
                     "ALTER TABLE",
                     wrapTable( blueprint.getTable() ),
                     "DROP COLUMN",
-                    wrapColumn( commandParameters.name.getName() )
+                    wrapColumn( { "type": "simple", "value": commandParameters.name.getName() } )
                 ] );
             }
         } finally {
@@ -1530,7 +1530,7 @@ component displayname="Grammar" accessors="true" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "CHANGE",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 compileCreateColumn( commandParameters.to, blueprint )
             ] );
         } finally {
@@ -1551,9 +1551,9 @@ component displayname="Grammar" accessors="true" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "RENAME INDEX",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 "TO",
-                wrapColumn( commandParameters.to )
+                wrapColumn( { "type": "simple", "value": commandParameters.to } )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -1573,7 +1573,7 @@ component displayname="Grammar" accessors="true" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "CHANGE",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 compileCreateColumn( commandParameters.to, blueprint )
             ] );
         } finally {
@@ -1954,7 +1954,7 @@ component displayname="Grammar" accessors="true" singleton {
         var columnsString = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapValue( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
         return "INDEX #wrapValue( arguments.index.getName() )# (#columnsString#)";
@@ -1965,13 +1965,13 @@ component displayname="Grammar" accessors="true" singleton {
         var keys = arguments.index
             .getForeignKey()
             .map( function( key ) {
-                return wrapColumn( key );
+                return wrapColumn( { "type": "simple", "value": key } );
             } )
             .toList( ", " );
         var references = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapColumn( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
         return concatenate( [
@@ -1987,7 +1987,7 @@ component displayname="Grammar" accessors="true" singleton {
         var references = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapColumn( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
         return "CONSTRAINT #wrapValue( arguments.index.getName() )# PRIMARY KEY (#references#)";
@@ -1997,7 +1997,7 @@ component displayname="Grammar" accessors="true" singleton {
         var references = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapColumn( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
         return "CONSTRAINT #wrapValue( arguments.index.getName() )# UNIQUE (#references#)";
@@ -2022,17 +2022,17 @@ component displayname="Grammar" accessors="true" singleton {
     /*=====  End of Index Types  ======*/
 
     function compileTableExists( tableName, schemaName = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( "table_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( "table_schema" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
         }
         return sql;
     }
 
     function compileColumnExists( table, column, schema = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "information_schema.columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "information_schema.columns" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ? AND #wrapColumn( { "type": "simple", "value": "column_name" } )# = ?";
         if ( schema != "" ) {
-            sql &= " AND #wrapColumn( "table_schema" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
         }
         return sql;
     }

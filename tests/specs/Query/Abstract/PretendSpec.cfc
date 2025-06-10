@@ -1,4 +1,4 @@
-component displayname="PretendSpec" extends="testbox.system.BaseSpec" {
+component extends="testbox.system.BaseSpec" {
 
     function run() {
         describe( "pretend", function() {

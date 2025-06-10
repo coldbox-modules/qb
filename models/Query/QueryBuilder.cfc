@@ -105,7 +105,8 @@ component displayname="QueryBuilder" accessors="true" {
 
     /**
      * An array of columns to select.
-     * @default [ "*" ]
+     * Columns are an array of structs with `type` and `value` keys.
+     * @default [ { "type": "raw", "value": "*" } ]
      */
     property name="columns" type="array";
 
@@ -343,7 +344,7 @@ component displayname="QueryBuilder" accessors="true" {
     private void function setDefaultValues() {
         variables.distinct = false;
         variables.aggregate = {};
-        variables.columns = [ "*" ];
+        variables.columns = [ { "type": "simple", "value": "*" } ];
         variables.tableName = "";
         variables.alias = "";
         variables.lockType = "none";
@@ -425,13 +426,37 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function select( any columns = "*" ) {
-        variables.columns = normalizeToArray( arguments.columns ).map( function( column ) {
-            return applyColumnFormatter( column );
-        } );
+        variables.columns = normalizeToArray( arguments.columns )
+            .map( ( column ) => applyColumnFormatter( column ) )
+            .map( ( column ) => mapToColumnType( column ) );
+
         if ( variables.columns.isEmpty() ) {
-            variables.columns = [ "*" ];
+            variables.columns = [ { "type": "simple", "value": "*" } ];
         }
         return this;
+    }
+
+    private struct function mapToColumnType( required any column ) {
+        if ( isSimpleValue( arguments.column ) ) {
+            return { "type": "simple", "value": arguments.column };
+        } else if ( getUtils().isExpression( arguments.column ) ) {
+            return { "type": "raw", "value": arguments.column };
+        } else if ( getUtils().isBuilder( arguments.column ) ) {
+            return { "type": "builder", "value": arguments.column };
+        } else if (
+            isStruct( arguments.column ) && structKeyExists( arguments.column, "type" ) && structKeyExists(
+                arguments.column,
+                "value"
+            )
+        ) {
+            return arguments.column;
+        } else {
+            throw(
+                type = "QBInvalidColumn",
+                message = "Invalid column type. Please file a bug on the qb repo.",
+                extendedinfo = serializeJSON( arguments.column )
+            );
+        }
     }
 
     /**
@@ -448,10 +473,9 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.query = newQuery();
             callback( arguments.query );
         }
-        return selectRaw(
-            getGrammar().wrapTable( "(#arguments.query.toSQL()#) AS #arguments.alias#" ),
-            arguments.query.getBindings()
-        );
+        variables.columns.append( { "type": "builder", "value": arguments.query, "alias": arguments.alias } );
+        addBindings( arguments.query.getBindings(), "select" );
+        return this;
     }
 
     /**
@@ -470,13 +494,16 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function addSelect( required any columns ) {
         if (
             variables.columns.isEmpty() ||
-            ( variables.columns.len() == 1 && isSimpleValue( variables.columns[ 1 ] ) && variables.columns[ 1 ] == "*" )
+            (
+                variables.columns.len() == 1 && isSimpleValue( variables.columns[ 1 ].value ) && variables.columns[ 1 ].value == "*"
+            )
         ) {
             variables.columns = [];
         }
-        var newColumns = normalizeToArray( arguments.columns ).map( function( column ) {
-            return applyColumnFormatter( column );
-        } );
+        var newColumns = normalizeToArray( arguments.columns )
+            .map( ( column ) => applyColumnFormatter( column ) )
+            .map( ( column ) => mapToColumnType( column ) );
+
         arrayAppend( variables.columns, newColumns, true );
         return this;
     }
@@ -510,7 +537,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function clearSelect() {
-        variables.columns = [ "*" ];
+        variables.columns = [ { "type": "simple", "value": "*" } ];
         clearBindings( only = [ "select" ] );
         return this;
     }
@@ -626,8 +653,13 @@ component displayname="QueryBuilder" accessors="true" {
     private void function renameAliasesInColumns( required string oldAlias, required string newAlias ) {
         for ( var i = 1; i <= variables.columns.len(); i++ ) {
             var column = variables.columns[ i ];
-            if ( isSimpleValue( column ) ) {
-                variables.columns[ i ] = swapAlias( column, arguments.oldAlias, arguments.newAlias );
+            if ( column.type == "simple" ) {
+                variables.columns[ i ] = {
+                    "type": "simple",
+                    "value": swapAlias( column.value, arguments.oldAlias, arguments.newAlias )
+                };
+            } else if ( column.type == "builder" ) {
+                column.value.renameAliases( arguments.oldAlias, arguments.newAlias );
             }
         }
     }
@@ -648,8 +680,8 @@ component displayname="QueryBuilder" accessors="true" {
     private void function renameAliasesInGroups( required string oldAlias, required string newAlias ) {
         for ( var i = 1; i <= variables.groups.len(); i++ ) {
             var column = variables.groups[ i ];
-            if ( isSimpleValue( column ) ) {
-                variables.groups[ i ] = swapAlias( column, arguments.oldAlias, arguments.newAlias );
+            if ( column.type == "simple" ) {
+                variables.groups[ i ].value = swapAlias( column.value, arguments.oldAlias, arguments.newAlias );
             }
         }
     }
@@ -657,7 +689,9 @@ component displayname="QueryBuilder" accessors="true" {
     private void function renameAliasesInHavings( required string oldAlias, required string newAlias ) {
         for ( var having in variables.havings ) {
             if ( having.keyExists( "column" ) ) {
-                having.column = swapAlias( having.column, arguments.oldAlias, arguments.newAlias );
+                if ( having.column.type == "simple" ) {
+                    having.column.value = swapAlias( having.column.value, arguments.oldAlias, arguments.newAlias );
+                }
             }
         }
     }
@@ -665,7 +699,9 @@ component displayname="QueryBuilder" accessors="true" {
     private void function renameAliasesInOrders( required string oldAlias, required string newAlias ) {
         for ( var order in variables.orders ) {
             if ( order.direction != "raw" ) {
-                order.column = swapAlias( order.column, arguments.oldAlias, arguments.newAlias );
+                if ( order.column.type == "simple" ) {
+                    order.column.value = swapAlias( order.column.value, arguments.oldAlias, arguments.newAlias );
+                }
             }
         }
     }
@@ -675,7 +711,13 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( arguments.where.column.type == "simple" ) {
+            arguments.where.column.value = swapAlias(
+                arguments.where.column.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
     }
 
     private void function renameAliasInWhereColumn(
@@ -683,8 +725,20 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.first = swapAlias( arguments.where.first, arguments.oldAlias, arguments.newAlias );
-        arguments.where.second = swapAlias( arguments.where.second, arguments.oldAlias, arguments.newAlias );
+        if ( arguments.where.first.type == "simple" ) {
+            arguments.where.first.value = swapAlias(
+                arguments.where.first.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
+        if ( arguments.where.second.type == "simple" ) {
+            arguments.where.second.value = swapAlias(
+                arguments.where.second.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
     }
 
     private void function renameAliasInWhereSub(
@@ -692,7 +746,13 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( where.column.type == "simple" ) {
+            arguments.where.column.value = swapAlias(
+                arguments.where.column.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
         arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
     }
 
@@ -701,7 +761,13 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( arguments.where.column.type == "simple" ) {
+            arguments.where.column.value = swapAlias(
+                arguments.where.column.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
     }
 
     private void function renameAliasInWhereNotIn(
@@ -709,7 +775,13 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( arguments.where.column.type == "simple" ) {
+            arguments.where.column.value = swapAlias(
+                arguments.where.column.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
     }
 
     private void function renameAliasInWhereRaw(
@@ -749,7 +821,13 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( arguments.where.column.type == "simple" ) {
+            arguments.where.column.value = swapAlias(
+                arguments.where.column.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
     }
 
     private void function renameAliasInWhereNotNull(
@@ -757,7 +835,13 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( arguments.where.column.type == "simple" ) {
+            arguments.where.column.value = swapAlias(
+                arguments.where.column.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
     }
 
     private void function renameAliasInWhereNullSub(
@@ -781,7 +865,13 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( arguments.where.column.type == "simple" ) {
+            arguments.where.column.value = swapAlias(
+                arguments.where.column.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
     }
 
     private void function renameAliasInWhereNotBetween(
@@ -789,7 +879,13 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        arguments.where.column = swapAlias( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( arguments.where.column.type == "simple" ) {
+            arguments.where.column.value = swapAlias(
+                arguments.where.column.value,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
+        }
     }
 
     private string function swapAlias( required string column, required string oldAlias, required string newAlias ) {
@@ -1719,7 +1815,7 @@ component displayname="QueryBuilder" accessors="true" {
         arrayAppend(
             variables.wheres,
             {
-                column: applyColumnFormatter( arguments.column ),
+                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
                 operator: arguments.operator,
                 value: arguments.value,
                 combinator: arguments.combinator,
@@ -1773,7 +1869,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
         variables.wheres.append( {
             type: "sub",
-            column: applyColumnFormatter( arguments.column ),
+            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
             operator: arguments.operator,
             query: arguments.query,
             combinator: arguments.combinator
@@ -1826,7 +1922,7 @@ component displayname="QueryBuilder" accessors="true" {
         var type = negate ? "notIn" : "in";
         variables.wheres.append( {
             type: type,
-            column: applyColumnFormatter( arguments.column ),
+            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
             values: arguments.values,
             combinator: arguments.combinator
         } );
@@ -1867,7 +1963,7 @@ component displayname="QueryBuilder" accessors="true" {
         var type = negate ? "notInSub" : "inSub";
         variables.wheres.append( {
             type: type,
-            column: applyColumnFormatter( arguments.column ),
+            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
             query: arguments.query,
             combinator: arguments.combinator
         } );
@@ -1937,9 +2033,9 @@ component displayname="QueryBuilder" accessors="true" {
 
         variables.wheres.append( {
             type: "column",
-            first: applyColumnFormatter( arguments.first ),
+            first: mapToColumnType( applyColumnFormatter( arguments.first ) ),
             operator: arguments.operator,
-            second: applyColumnFormatter( arguments.second ),
+            second: mapToColumnType( applyColumnFormatter( arguments.second ) ),
             combinator: arguments.combinator
         } );
 
@@ -2053,7 +2149,11 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         var type = negate ? "notNull" : "null";
-        variables.wheres.append( { type: type, column: applyColumnFormatter( arguments.column ), combinator: arguments.combinator } );
+        variables.wheres.append( {
+            type: type,
+            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+            combinator: arguments.combinator
+        } );
         return this;
     }
 
@@ -2145,7 +2245,7 @@ component displayname="QueryBuilder" accessors="true" {
 
         variables.wheres.append( {
             type: type,
-            column: applyColumnFormatter( arguments.column ),
+            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
             start: arguments.start,
             end: arguments.end,
             combinator: arguments.combinator
@@ -2215,7 +2315,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function groupBy( required groups ) {
         var groupBys = normalizeToArray( arguments.groups );
         for ( var groupBy in groupBys ) {
-            variables.groups.append( applyColumnFormatter( groupBy ) );
+            variables.groups.append( mapToColumnType( applyColumnFormatter( groupBy ) ) );
         }
         return this;
     }
@@ -2271,7 +2371,7 @@ component displayname="QueryBuilder" accessors="true" {
             variables.havings,
             {
                 type: "normal",
-                column: applyColumnFormatter( arguments.column ),
+                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
                 operator: arguments.operator,
                 value: arguments.value,
                 combinator: arguments.combinator
@@ -2443,7 +2543,7 @@ component displayname="QueryBuilder" accessors="true" {
             }
 
             // now append the simple value column name and determined direction
-            variables.orders.append( { direction: dir, column: applyColumnFormatter( colName ) } );
+            variables.orders.append( { direction: dir, column: mapToColumnType( applyColumnFormatter( colName ) ) } );
             return this;
         }
 
@@ -2456,7 +2556,7 @@ component displayname="QueryBuilder" accessors="true" {
                 var dir = (
                     structKeyExists( column, "direction" ) && arrayFindNoCase( variables.directions, column.direction )
                 ) ? column.direction : direction;
-                variables.orders.append( { direction: dir, column: applyColumnFormatter( column.column ) } );
+                variables.orders.append( { direction: dir, column: mapToColumnType( applyColumnFormatter( column.column ) ) } );
             }
             return this;
         }
@@ -2466,12 +2566,12 @@ component displayname="QueryBuilder" accessors="true" {
             // assume position 1 is the column name and position 2 if it exists and is a valid direction ( asc | desc ) use it.
             variables.orders.append( {
                 direction: ( arrayLen( column ) == 2 && arrayFindNoCase( variables.directions, column[ 2 ] ) ) ? column[ 2 ] : direction,
-                column: applyColumnFormatter( column[ 1 ] )
+                column: mapToColumnType( applyColumnFormatter( column[ 1 ] ) )
             } );
             return this;
         }
 
-        variables.orders.append( { direction: direction, column: applyColumnFormatter( column ) } );
+        variables.orders.append( { direction: direction, column: mapToColumnType( applyColumnFormatter( column ) ) } );
         return this;
     }
 
@@ -2700,9 +2800,9 @@ component displayname="QueryBuilder" accessors="true" {
         arrayAppend(
             variables.commonTables,
             {
-                name: arguments.name,
+                name: mapToColumnType( arguments.name ),
                 query: arguments.input,
-                columns: arguments.columns.map( applyColumnFormatter ),
+                columns: arguments.columns.map( applyColumnFormatter ).map( mapToColumnType ),
                 recursive: arguments.recursive
             }
         );
@@ -3007,6 +3107,10 @@ component displayname="QueryBuilder" accessors="true" {
             } );
         } );
 
+        columns.each( ( c ) => {
+            c.formatted = mapToColumnType( c.formatted );
+        } );
+
         var sql = getGrammar().compileInsert( this, columns, newBindings );
 
         clearBindings( except = "insert" );
@@ -3045,7 +3149,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.columns = arguments.source
                 .getColumns()
                 .map( function( column ) {
-                    return getGrammar().extractAlias( column );
+                    return getGrammar().extractAlias( mapToColumnType( column ) );
                 } );
         }
 
@@ -3055,6 +3159,10 @@ component displayname="QueryBuilder" accessors="true" {
         } );
 
         addBindingsFromBuilder( arguments.source );
+
+        formattedColumns.each( ( c ) => {
+            c.formatted = mapToColumnType( c.formatted );
+        } );
 
         var sql = getGrammar().compileInsertUsing( this, formattedColumns, arguments.source );
 
@@ -3129,6 +3237,13 @@ component displayname="QueryBuilder" accessors="true" {
             return { "original": column, "formatted": formatted };
         } );
 
+        columns.each( ( c ) => {
+            c.formatted = mapToColumnType( c.formatted );
+        } );
+        arguments.target.each( ( c ) => {
+            c.formatted = mapToColumnType( c.formatted );
+        } );
+
         var sql = getGrammar().compileInsertIgnore(
             this,
             columns,
@@ -3148,7 +3263,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function returning( required any columns ) {
         variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
         variables.returning = variables.returning.map( function( column ) {
-            return listLast( applyColumnFormatter( column ), "." );
+            return mapToColumnType( listLast( applyColumnFormatter( column ), "." ) );
         } );
         return this;
     }
@@ -3156,13 +3271,13 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function returningRaw( required any columns ) {
         variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
         variables.returning = variables.returning.map( function( column ) {
-            return new Expression( column );
+            return mapToColumnType( new Expression( column ) );
         } );
         return this;
     }
 
     public QueryBuilder function returningAll() {
-        variables.returning = [ "*" ];
+        variables.returning = [ { "type": "simple", "value": "*" } ];
         return this;
     }
 
@@ -3204,6 +3319,10 @@ component displayname="QueryBuilder" accessors="true" {
                 addBindings( getUtils().extractBinding( value, variables.grammar ), "update" );
             }
         }
+
+        updateArray.each( ( c ) => {
+            c.formatted = mapToColumnType( c.formatted );
+        } );
 
         var sql = getGrammar().compileUpdate( this, updateArray, arguments.values );
 
@@ -3363,6 +3482,16 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.deleteUnmatched( deleteRestrictions );
             arguments.deleteUnmatched = deleteRestrictions;
         }
+
+        columns.each( ( c ) => {
+            c.formatted = mapToColumnType( c.formatted );
+        } );
+        updateArray.each( ( c ) => {
+            c.formatted = mapToColumnType( c.formatted );
+        } );
+        arguments.target.each( ( c ) => {
+            c.formatted = mapToColumnType( c.formatted );
+        } );
 
         var sql = getGrammar().compileUpsert(
             this,
@@ -3645,7 +3774,7 @@ component displayname="QueryBuilder" accessors="true" {
         return withAggregate(
             {
                 type: type,
-                column: column,
+                column: mapToColumnType( arguments.column ),
                 defaultValue: isNull( arguments.defaultValue ) ? javacast( "null", "" ) : arguments.defaultValue
             },
             function() {
@@ -4273,7 +4402,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return any
      */
     private any function withColumns( required any columns, required any callback ) {
-        var originalColumns = [ "*" ];
+        var originalColumns = [ { "type": "simple", "value": "*" } ];
         if ( getUnions().isEmpty() ) {
             originalColumns = getColumns();
             select( arguments.columns );

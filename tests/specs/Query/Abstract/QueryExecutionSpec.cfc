@@ -90,7 +90,7 @@ component extends="testbox.system.BaseSpec" {
 
                     builder.select( "id" ).from( "users" );
                     builder.get( "name" );
-                    expect( builder.getColumns() ).toBe( [ "id" ] );
+                    expect( builder.getColumns().map( ( c ) => c.value ) ).toBe( [ "id" ] );
                 } );
             } );
 
@@ -759,7 +759,7 @@ component extends="testbox.system.BaseSpec" {
                     builder.select( [ "id", "name" ] ).from( "users" );
                     builder.from( "users" ).count();
 
-                    expect( builder.getColumns() ).toBe( [ "id", "name" ] );
+                    expect( builder.getColumns().map( ( c ) => c.value ) ).toBe( [ "id", "name" ] );
                 } );
 
                 it( "ignores orders in the aggregate query and sets them back afterward", function() {
@@ -773,7 +773,7 @@ component extends="testbox.system.BaseSpec" {
                     builder.from( "users" ).orderBy( "name" );
                     builder.from( "users" ).count();
 
-                    expect( builder.getOrders() ).toBe( [ { "column": "name", "direction": "asc" } ] );
+                    expect( builder.getOrders() ).toBe( [ { "column": { "type": "simple", "value": "name" }, "direction": "asc" } ] );
                 } );
 
                 it( "should clear out the aggregate properties after an aggregate has been executed", function() {
@@ -1105,7 +1105,6 @@ component extends="testbox.system.BaseSpec" {
                     expect( results ).toBeTrue();
 
                     var runQueryLog = builder.getGrammar().$callLog().runQuery;
-                    debug( runQueryLog );
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );

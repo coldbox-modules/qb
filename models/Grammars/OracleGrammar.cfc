@@ -225,7 +225,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             var valuesString = arrayToList(
                 arguments.insertColumns.map( function( column ) {
-                    return wrapColumn( "QB_SRC.#column.formatted#" );
+                    return wrapColumn( { "type": "simple", "value": "QB_SRC.#column.formatted.value#" } );
                 } ),
                 ", "
             );
@@ -251,7 +251,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             var constraintString = arguments.target
                 .map( function( column ) {
-                    return "#wrapColumn( "qb_target.#column.formatted#" )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+                    return "#wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
                 } )
                 .toList( " AND " );
 
@@ -259,7 +259,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             if ( isArray( arguments.updates ) ) {
                 updateList = arguments.updates
                     .map( function( column ) {
-                        return "#wrapColumn( column.formatted )# = #wrapColumn( "qb_src.#column.formatted#" )#";
+                        return "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
                     } )
                     .toList( ", " );
             } else {
@@ -382,7 +382,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             var values = [
-                wrapColumn( column.getName() ),
+                wrapColumn( { "type": "simple", "value": column.getName() } ),
                 generateType( column, blueprint ),
                 modifyUnsigned( column ),
                 generateComputed( column ),
@@ -412,9 +412,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "RENAME COLUMN",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 "TO",
-                wrapColumn( commandParameters.to.getName() )
+                wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -485,9 +485,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
                 "RENAME CONSTRAINT",
-                wrapColumn( commandParameters.from ),
+                wrapColumn( { "type": "simple", "value": commandParameters.from } ),
                 "TO",
-                wrapColumn( commandParameters.to )
+                wrapColumn( { "type": "simple", "value": commandParameters.to } )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -732,13 +732,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var keys = arguments.index
             .getForeignKey()
             .map( function( key ) {
-                return wrapColumn( key );
+                return wrapColumn( { "type": "simple", "value": key } );
             } )
             .toList( ", " );
         var references = arguments.index
             .getColumns()
             .map( function( column ) {
-                return wrapColumn( column );
+                return wrapColumn( { "type": "simple", "value": column } );
             } )
             .toList( ", " );
         return arrayToList(
@@ -758,17 +758,17 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileTableExists( tableName, schemaName = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "all_tables" )# WHERE #wrapColumn( "table_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "all_tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( "owner" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "owner" } )# = ?";
         }
         return sql;
     }
 
     function compileColumnExists( table, column, schema = "" ) {
-        var sql = "SELECT 1 FROM #wrapTable( "all_tab_columns" )# WHERE #wrapColumn( "table_name" )# = ? AND #wrapColumn( "column_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "all_tab_columns" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ? AND #wrapColumn( { "type": "simple", "value": "column_name" } )# = ?";
         if ( schema != "" ) {
-            sql &= " AND #wrapColumn( "owner" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "owner" } )# = ?";
         }
         return sql;
     }
@@ -801,10 +801,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     private boolean function hasSequence( required Blueprint blueprint, required string sequenceName ) {
-        var sql = "SELECT 1 FROM #wrapTable( "all_sequences" )# WHERE #wrapColumn( "sequence_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "all_sequences" )# WHERE #wrapColumn( { "type": "simple", "value": "sequence_name" } )# = ?";
         var params = [ arguments.sequenceName ];
         if ( arguments.blueprint.getDefaultSchema() != "" ) {
-            sql &= " AND #wrapColumn( "owner" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "owner" } )# = ?";
             params.append( arguments.blueprint.getDefaultSchema() );
         }
         var result = queryExecute( sql, params, arguments.blueprint.getQueryOptions() );
@@ -812,10 +812,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     private boolean function hasTrigger( required Blueprint blueprint, required string triggerName ) {
-        var sql = "SELECT 1 FROM #wrapTable( "all_triggers" )# WHERE #wrapColumn( "trigger_name" )# = ?";
+        var sql = "SELECT 1 FROM #wrapTable( "all_triggers" )# WHERE #wrapColumn( { "type": "simple", "value": "trigger_name" } )# = ?";
         var params = [ arguments.triggerName ];
         if ( arguments.blueprint.getDefaultSchema() != "" ) {
-            sql &= " AND #wrapColumn( "owner" )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "owner" } )# = ?";
             params.append( arguments.blueprint.getDefaultSchema() );
         }
         var result = queryExecute( sql, params, arguments.blueprint.getQueryOptions() );

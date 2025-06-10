@@ -1,4 +1,4 @@
-component displayname="QueryLogSpec" extends="testbox.system.BaseSpec" {
+component extends="testbox.system.BaseSpec" {
 
     function run() {
         describe( "queryLog", function() {

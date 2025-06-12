@@ -1,3 +1,23 @@
+# v13.0.0
+## 12 Jun 2025 — 15:52:28 UTC
+
+### BREAKING
+
++ __QueryBuilder:__ Fix for renaming aliases in subselects ([2b792c7](https://github.com/coldbox-modules/qb/commit/2b792c723adcd97f3f7ca409a9db980ae7ed743c))
+
+### chore
+
++ __CI:__ Use Java 21 in pipelines
+ ([50e25f6](https://github.com/coldbox-modules/qb/commit/50e25f625eb98f80de52176a3145314582a26b77))
+
+### feat
+
++ __QueryBuilder:__ Add TestBox expectations for counts ([79bad63](https://github.com/coldbox-modules/qb/commit/79bad634aa1ec5dce3bed070a01f6e3828a7b83f))
++ __QueryBuilder:__ Add TestBox expectations for exists checks ([b7fae5a](https://github.com/coldbox-modules/qb/commit/b7fae5ae79528f050b7a5907ee241000e6703eb7))
++ __QueryUtils:__ Add method to check if a struct is a valid query param
+ ([30981f8](https://github.com/coldbox-modules/qb/commit/30981f80b3a4851e1de63f8878e9088c5fc53cd9))
+
+
 # v12.1.1
 ## 21 May 2025 — 19:07:29 UTC
 

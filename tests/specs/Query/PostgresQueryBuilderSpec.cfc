@@ -1020,6 +1020,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function upsertUpdateToNull() {
+        return {
+            sql: "INSERT INTO ""vendors"" (""code"", ""count"", ""name"", ""vendorCode"") VALUES (?, ?, ?, ?) ON CONFLICT (""vendorCode"", ""code"") DO UPDATE SET ""count"" = vendors.count + 1, ""name"" = ?",
+            bindings: [ "BB", 1, "NULL", "AA", "NULL" ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM ""users""";
     }

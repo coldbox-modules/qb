@@ -2869,6 +2869,24 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, upsertWithDeleteRestricted() );
                 } );
+
+                it( "can update fields to null", () => {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "vendors" )
+                            .upsert(
+                                target = [ "vendorCode", "code" ],
+                                values = {
+                                    "vendorCode": "AA",
+                                    "code": "BB",
+                                    "name": javacast( "null", "" ),
+                                    "count": 1
+                                },
+                                update = { "count": builder.raw( "vendors.count + 1" ), "name": javacast( "null", "" ) },
+                                toSQL = true
+                            );
+                    }, upsertUpdateToNull() );
+                } );
             } );
 
             describe( "delete statements", function() {

@@ -303,8 +303,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             } else {
                 updateList = arguments.updateColumns
                     .map( function( column ) {
-                        var value = updates[ column.original ];
-                        return "#wrapColumn( column.formatted )# = #utils.isExpression( value ) ? value.getSql() : "?"#";
+                        var equalsClause = "?";
+                        if (
+                            !isNull( updates[ column.original ] ) && getUtils().isExpression(
+                                updates[ column.original ]
+                            )
+                        ) {
+                            equalsClause = updates[ column.original ].getSQL();
+                        }
+                        return "#wrapColumn( column.formatted )# = #equalsClause#";
                     } )
                     .toList( ", " );
             }

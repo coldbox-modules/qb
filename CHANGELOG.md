@@ -1,3 +1,11 @@
+# v13.0.1
+## 16 Jun 2025 — 20:56:06 UTC
+
+### fix
+
++ __QueryBuilder:__ Allow nulls in update clauses ([c36fe5a](https://github.com/coldbox-modules/qb/commit/c36fe5ac4ffac3e453ed0de1e81c3cbe3c6d8d99))
+
+
 # v13.0.0
 ## 12 Jun 2025 — 15:52:28 UTC
 

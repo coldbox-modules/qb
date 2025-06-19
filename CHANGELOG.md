@@ -1,3 +1,12 @@
+# v13.0.2
+## 19 Jun 2025 — 17:26:27 UTC
+
+### fix
+
++ __QueryBuilder:__ Apply a `limit( 1 )` to exists aggregates
+ ([2d90588](https://github.com/coldbox-modules/qb/commit/2d90588173ba4dbd8e2848b980afe02d309078ed))
+
+
 # v13.0.1
 ## 16 Jun 2025 — 20:56:06 UTC
 

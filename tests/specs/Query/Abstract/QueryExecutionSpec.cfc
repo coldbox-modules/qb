@@ -1086,7 +1086,7 @@ component extends="testbox.system.BaseSpec" {
                         .from( "users" )
                         .where( "active", 1 )
                         .exists( toSQL = true );
-                    expect( sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""active"" = ?) THEN 1 ELSE 0 END AS aggregate" );
+                    expect( sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""active"" = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate" );
                 } );
             } );
 
@@ -1107,7 +1107,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.getGrammar().$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate" );
                     expect( runQueryLog[ 1 ].bindings ).toBe( [
                         {
                             "CFSQLTYPE": "INTEGER",
@@ -1135,7 +1135,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.getGrammar().$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate" );
                     expect( runQueryLog[ 1 ].bindings ).toBe( [
                         {
                             "CFSQLTYPE": "INTEGER",
@@ -1163,7 +1163,7 @@ component extends="testbox.system.BaseSpec" {
                     var runQueryLog = builder.getGrammar().$callLog().runQuery;
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
-                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ?) THEN 1 ELSE 0 END AS aggregate" );
+                    expect( runQueryLog[ 1 ].sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate" );
                     expect( runQueryLog[ 1 ].bindings ).toBe( [
                         {
                             "CFSQLTYPE": "INTEGER",

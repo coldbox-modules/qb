@@ -3862,10 +3862,13 @@ component displayname="QueryBuilder" accessors="true" {
      * @return      boolean
      */
     public any function exists( struct options = {}, boolean toSQL = false ) {
+        var originalLimit = this.getLimitValue();
+        this.setLimitValue( 1 );
         var existsQuery = newQuery().selectRaw(
             "CASE WHEN EXISTS (#getGrammar().compileSelect( this )#) THEN 1 ELSE 0 END AS aggregate",
             this.getBindings()
         );
+        this.setLimitValue( isNull( originalLimit ) ? javacast( "null", "" ) : originalLimit );
         return arguments.toSQL ? existsQuery.toSQL() : existsQuery
             .setReturnFormat( "query" )
             .get( options = arguments.options )

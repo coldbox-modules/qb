@@ -33,6 +33,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         string decimalSqlType = "DECIMAL",
         any log
     ) {
+        variables.convertEmptyStringsToNull = arguments.convertEmptyStringsToNull;
         variables.integerSqlType = arguments.integerSqlType;
         variables.decimalSqlType = arguments.decimalSqlType;
         if ( !isNull( arguments.log ) ) {

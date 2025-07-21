@@ -1128,4 +1128,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" }
     }
 
+    function aggregateExists() {
+        return {
+            "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM `users` WHERE `id` = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate",
+            "bindings": [ 1 ]
+        };
+    }
+
 }

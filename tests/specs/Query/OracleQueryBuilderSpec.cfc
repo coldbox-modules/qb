@@ -1141,4 +1141,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" }
     }
 
+    function aggregateExists() {
+        return {
+            "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"" WHERE ""ID"" = ?) results ) WHERE ""QB_RN"" <= 1) THEN 1 ELSE 0 END AS aggregate FROM DUAL",
+            "bindings": [ 1 ]
+        };
+    }
+
 }

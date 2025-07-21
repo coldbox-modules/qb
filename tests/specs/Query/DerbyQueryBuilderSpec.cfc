@@ -1123,4 +1123,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" }
     }
 
+    function aggregateExists() {
+        return {
+            "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ? OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY) THEN 1 ELSE 0 END AS aggregate",
+            "bindings": [ 1 ]
+        };
+    }
+
 }

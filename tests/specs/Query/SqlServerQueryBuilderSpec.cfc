@@ -1165,4 +1165,11 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return builder;
     }
 
+    function aggregateExists() {
+        return {
+            "sql": "SELECT CASE WHEN EXISTS (SELECT TOP (1) * FROM [users] WHERE [id] = ?) THEN 1 ELSE 0 END AS aggregate",
+            "bindings": [ 1 ]
+        };
+    }
+
 }

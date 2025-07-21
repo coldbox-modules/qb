@@ -2090,6 +2090,17 @@ component extends="testbox.system.BaseSpec" {
                     } );
                 } );
 
+                describe( "aggregates", function() {
+                    it( "exists", () => {
+                        testCase( function( builder ) {
+                            return builder
+                                .from( "users" )
+                                .where( "id", 1 )
+                                .exists( toSql = true )
+                        }, aggregateExists() );
+                    } );
+                } );
+
                 describe( "common table expressions (i.e. CTEs)", function() {
                     it( "can create CTE from closure", function() {
                         testCase( function( builder ) {

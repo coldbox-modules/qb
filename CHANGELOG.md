@@ -1,3 +1,17 @@
+# v13.0.3
+## 21 Jul 2025 — 19:00:07 UTC
+
+### chore
+
++ __tests:__ Add additional test for exists aggregate queries
+ ([17c4e20](https://github.com/coldbox-modules/qb/commit/17c4e20529b8471f0cab5daa04d6a3a94f60799b))
+
+### fix
+
++ __QueryUtils:__ Persist `convertEmptyStringsToNull` constructor argument ([d08e237](https://github.com/coldbox-modules/qb/commit/d08e237a85eba992f1e1c3e8a659a81e900bcb43))
++ __QueryBuilder:__ Reset `tableName` in `exists` aggregate queries ([f9290d2](https://github.com/coldbox-modules/qb/commit/f9290d245895fdc4bd351858c1a71ad07336870e))
+
+
 # v13.0.2
 ## 19 Jun 2025 — 17:26:27 UTC
 

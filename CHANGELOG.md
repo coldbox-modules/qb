@@ -1,3 +1,11 @@
+# v13.0.4
+## 07 Aug 2025 — 14:37:23 UTC
+
+### fix
+
++ __QueryBuilder:__ Fix for using operators with dynamic where constraints ([681d6d4](https://github.com/coldbox-modules/qb/commit/681d6d4dd714b7880bad35e58c261ef99839ddb7))
+
+
 # v13.0.3
 ## 21 Jul 2025 — 19:00:07 UTC
 

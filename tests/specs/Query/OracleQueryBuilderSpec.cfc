@@ -36,6 +36,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { "sql": "SELECT ""USERS"".""FOO"" FROM ""USERS"" WHERE ""USERS"".""FOO"" = ?", "bindings": [ "bar" ] };
     }
 
+    function parseOperatorsWithDynamicWhere() {
+        return { "sql" : "SELECT ""ID"" FROM ""users"" WHERE ""ID"" > ?", "bindings": [ 1 ] }
+    }
+
     function parseColumnAliasInWhereSubselect() {
         return {
             "sql": "SELECT ""U"".*, ""USER_ROLES"".""ROLEID"", ""ROLES"".""ROLECODE"" FROM ""USERS"" ""U"" INNER JOIN ""USER_ROLES"" ON ""USER_ROLES"".""USERID"" = ""U"".""USERID"" LEFT JOIN ""ROLES"" ON ""USER_ROLES"".""ROLEID"" = ""ROLES"".""ROLEID"" WHERE ""USER_ROLES"".""ROLEID"" = (SELECT ""ROLEID"" FROM ""ROLES"" WHERE ""ROLECODE"" = ?)",

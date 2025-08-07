@@ -93,6 +93,12 @@ component extends="testbox.system.BaseSpec" {
                         }, wrapColumnsAndAliases() );
                     } );
 
+                    it( "parses operators like > in dynamic whereColumns", function() {
+                        testCase( function( builder ) {
+                            builder.select( "ID").from( "users").whereID(">", 1 )
+                        }, parseOperatorsWithDynamicWhere() )
+                    } );
+
                     it( "selects raw values correctly", function() {
                         testCase( function( builder ) {
                             builder.select( builder.raw( "substr( foo, 6 )" ) ).from( "users" );

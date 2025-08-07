@@ -36,8 +36,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { "sql": "SELECT `users`.`foo` FROM `users` WHERE `users`.`foo` = ?", "bindings": [ "bar" ] };
     }
 
+    function dynamicWhere() {
+        return { "sql": "SELECT `ID` FROM `users` WHERE `ID` = ?", "bindings": [ 1 ] };
+    }
+
     function parseOperatorsWithDynamicWhere() {
-        return { "sql" : "SELECT `ID` FROM `users` WHERE `ID` > ?", "bindings": [ 1 ] }
+        return { "sql": "SELECT `ID` FROM `users` WHERE `ID` > ?", "bindings": [ 1 ] };
+    }
+
+    function parseOperatorsWithDynamicAndWhere() {
+        return { "sql": "SELECT `ID` FROM `users` WHERE `ID` > ? AND `ID` < ?", "bindings": [ 1, 10 ] };
+    }
+
+    function parseOperatorsWithDynamicOrWhere() {
+        return { "sql": "SELECT `ID` FROM `users` WHERE `ID` > ? OR `ID` < ?", "bindings": [ 1, 0 ] };
     }
 
     function parseColumnAliasInWhereSubselect() {

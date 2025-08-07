@@ -4639,8 +4639,14 @@ component displayname="QueryBuilder" accessors="true" {
          */
         if ( !arrayIsEmpty( reMatchNoCase( "^where(.+)", missingMethodName ) ) ) {
             var args = { "column": mid( missingMethodName, 6, len( missingMethodName ) - 5 ) };
-            for ( var key in missingMethodArguments ) {
-                args[ "operator" ] = missingMethodArguments[ key ];
+            var missingArgsNames = structKeyArray( missingMethodArguments );
+            for ( var i = 1; i <= missingArgsNames.len(); i++ ) {
+                var key = missingArgsNames[ i ];
+                if ( isNumeric( key ) ) {
+                    args[ i + 1 ] = missingMethodArguments[ key ];
+                } else {
+                    args[ key ] = missingMethodArguments[ key ];
+                }
             }
             return where( argumentCollection = args );
         }
@@ -4652,10 +4658,15 @@ component displayname="QueryBuilder" accessors="true" {
          */
         if ( !arrayIsEmpty( reMatchNoCase( "^andWhere(.+)", missingMethodName ) ) ) {
             var args = { "column": mid( missingMethodName, 9, len( missingMethodName ) - 8 ) };
-            for ( var key in missingMethodArguments ) {
-                args[ "operator" ] = missingMethodArguments[ key ];
+            var missingArgsNames = structKeyArray( missingMethodArguments );
+            for ( var i = 1; i <= missingArgsNames.len(); i++ ) {
+                var key = missingArgsNames[ i ];
+                if ( isNumeric( key ) ) {
+                    args[ i + 1 ] = missingMethodArguments[ key ];
+                } else {
+                    args[ key ] = missingMethodArguments[ key ];
+                }
             }
-
             return andWhere( argumentCollection = args );
         }
 
@@ -4666,10 +4677,15 @@ component displayname="QueryBuilder" accessors="true" {
          */
         if ( !arrayIsEmpty( reMatchNoCase( "^orWhere(.+)", missingMethodName ) ) ) {
             var args = { "column": mid( missingMethodName, 8, len( missingMethodName ) - 7 ) };
-            for ( var key in missingMethodArguments ) {
-                args[ "operator" ] = missingMethodArguments[ key ];
+            var missingArgsNames = structKeyArray( missingMethodArguments );
+            for ( var i = 1; i <= missingArgsNames.len(); i++ ) {
+                var key = missingArgsNames[ i ];
+                if ( isNumeric( key ) ) {
+                    args[ i + 1 ] = missingMethodArguments[ key ];
+                } else {
+                    args[ key ] = missingMethodArguments[ key ];
+                }
             }
-
             return orWhere( argumentCollection = args );
         }
 

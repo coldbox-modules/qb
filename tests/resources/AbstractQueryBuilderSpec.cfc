@@ -93,10 +93,42 @@ component extends="testbox.system.BaseSpec" {
                         }, wrapColumnsAndAliases() );
                     } );
 
-                    it( "parses operators like > in dynamic whereColumns", function() {
+                    it( "handles dynamic whereColumns", function() {
                         testCase( function( builder ) {
-                            builder.select( "ID").from( "users").whereID(">", 1 )
-                        }, parseOperatorsWithDynamicWhere() )
+                            builder
+                                .select( "ID" )
+                                .from( "users" )
+                                .whereID( 1 );
+                        }, dynamicWhere() );
+                    } );
+
+                    it( "parses operators in dynamic whereColumns", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select( "ID" )
+                                .from( "users" )
+                                .whereID( ">", 1 );
+                        }, parseOperatorsWithDynamicWhere() );
+                    } );
+
+                    it( "parses operators in dynamic andWhereColumns", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select( "ID" )
+                                .from( "users" )
+                                .whereID( ">", 1 )
+                                .andWhereID( "<", 10 );
+                        }, parseOperatorsWithDynamicAndWhere() );
+                    } );
+
+                    it( "parses operators in dynamic orWhereColumns", function() {
+                        testCase( function( builder ) {
+                            builder
+                                .select( "ID" )
+                                .from( "users" )
+                                .whereID( ">", 1 )
+                                .orWhereID( "<", 0 );
+                        }, parseOperatorsWithDynamicOrWhere() );
                     } );
 
                     it( "selects raw values correctly", function() {

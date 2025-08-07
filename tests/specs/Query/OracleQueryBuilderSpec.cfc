@@ -36,6 +36,22 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { "sql": "SELECT ""USERS"".""FOO"" FROM ""USERS"" WHERE ""USERS"".""FOO"" = ?", "bindings": [ "bar" ] };
     }
 
+    function dynamicWhere() {
+        return { "sql": "SELECT ""ID"" FROM ""USERS"" WHERE ""ID"" = ?", "bindings": [ 1 ] };
+    }
+
+    function parseOperatorsWithDynamicWhere() {
+        return { "sql": "SELECT ""ID"" FROM ""USERS"" WHERE ""ID"" > ?", "bindings": [ 1 ] };
+    }
+
+    function parseOperatorsWithDynamicAndWhere() {
+        return { "sql": "SELECT ""ID"" FROM ""USERS"" WHERE ""ID"" > ? AND ""ID"" < ?", "bindings": [ 1, 10 ] };
+    }
+
+    function parseOperatorsWithDynamicOrWhere() {
+        return { "sql": "SELECT ""ID"" FROM ""USERS"" WHERE ""ID"" > ? OR ""ID"" < ?", "bindings": [ 1, 0 ] };
+    }
+
     function parseColumnAliasInWhereSubselect() {
         return {
             "sql": "SELECT ""U"".*, ""USER_ROLES"".""ROLEID"", ""ROLES"".""ROLECODE"" FROM ""USERS"" ""U"" INNER JOIN ""USER_ROLES"" ON ""USER_ROLES"".""USERID"" = ""U"".""USERID"" LEFT JOIN ""ROLES"" ON ""USER_ROLES"".""ROLEID"" = ""ROLES"".""ROLEID"" WHERE ""USER_ROLES"".""ROLEID"" = (SELECT ""ROLEID"" FROM ""ROLES"" WHERE ""ROLECODE"" = ?)",

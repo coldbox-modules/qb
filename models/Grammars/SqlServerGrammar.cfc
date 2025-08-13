@@ -13,7 +13,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         "aggregate",
         "columns",
         "tableName",
-        "forClause",
         "lockType",
         "joins",
         "wheres",
@@ -22,7 +21,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         "unions",
         "orders",
         "offsetValue",
-        "limitValue"
+        "limitValue",
+        "forClause"
     ];
 
 

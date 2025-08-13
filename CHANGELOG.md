@@ -1,3 +1,11 @@
+# v13.0.5
+## 13 Aug 2025 — 14:33:32 UTC
+
+### fix
+
++ __SqlServerGrammar:__ Move `FOR` clause to last position ([cfed85d](https://github.com/coldbox-modules/qb/commit/cfed85d3b6eca38c61a2827afc327ec0436bf1f3))
+
+
 # v13.0.4
 ## 07 Aug 2025 — 14:37:23 UTC
 

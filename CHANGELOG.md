@@ -1,3 +1,11 @@
+# v13.0.6
+## 20 Aug 2025 — 18:56:02 UTC
+
+### other
+
++ __\*:__ perf: Remove `duplicate` calls ([0ae195b](https://github.com/coldbox-modules/qb/commit/0ae195be430559686f6b027a1671dcd8b2bdaa97))
+
+
 # v13.0.5
 ## 13 Aug 2025 — 14:33:32 UTC
 

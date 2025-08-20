@@ -4260,7 +4260,7 @@ component displayname="QueryBuilder" accessors="true" {
             returnObject = returnObject,
             pretend = variables.pretending,
             postProcessHook = function( data ) {
-                variables.queryLog.append( duplicate( data ) );
+                variables.queryLog.append( data );
             }
         );
 

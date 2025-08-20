@@ -649,7 +649,7 @@ component singleton displayname="QueryUtils" accessors="true" {
     public string function serializeBindings( required array bindings, required any grammar ) {
         return serializeJSON(
             arguments.bindings.map( function( binding ) {
-                var newBinding = extractBinding( duplicate( binding ), grammar );
+                var newBinding = extractBinding( binding, grammar );
                 if ( isBinary( newBinding.value ) ) {
                     newBinding.value = toBase64( newBinding.value );
                 }

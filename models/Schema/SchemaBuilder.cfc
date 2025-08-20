@@ -98,7 +98,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -137,7 +137,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -177,7 +177,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -217,7 +217,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -248,7 +248,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -287,7 +287,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -325,7 +325,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -364,7 +364,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -409,7 +409,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -453,7 +453,7 @@ component accessors="true" {
                         "result",
                         variables.pretending,
                         function( data ) {
-                            variables.queryLog.append( duplicate( data ) );
+                            variables.queryLog.append( data );
                         }
                     );
                 } );
@@ -549,7 +549,7 @@ component accessors="true" {
                 "query",
                 variables.pretending,
                 function( data ) {
-                    variables.queryLog.append( duplicate( data ) );
+                    variables.queryLog.append( data );
                 }
             );
             return isDefined( "q.RecordCount" ) ? q.RecordCount > 0 : false;
@@ -581,7 +581,7 @@ component accessors="true" {
                     "result",
                     variables.pretending,
                     function( data ) {
-                        variables.queryLog.append( duplicate( data ) );
+                        variables.queryLog.append( data );
                     }
                 );
             } );
@@ -608,7 +608,7 @@ component accessors="true" {
                 "result",
                 variables.pretending,
                 function( data ) {
-                    variables.queryLog.append( duplicate( data ) );
+                    variables.queryLog.append( data );
                 }
             );
         }
@@ -634,7 +634,7 @@ component accessors="true" {
                 "result",
                 variables.pretending,
                 function( data ) {
-                    variables.queryLog.append( duplicate( data ) );
+                    variables.queryLog.append( data );
                 }
             );
         }

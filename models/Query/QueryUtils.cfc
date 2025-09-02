@@ -292,6 +292,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
         return !isSimpleValue( arguments.value ) &&
         !isArray( arguments.value ) &&
+        isStruct( arguments.value ) &&
         structKeyExists( arguments.value, "isBuilder" );
     }
 
@@ -303,9 +304,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return boolean
      */
     public boolean function isNotBuilder( required any value ) {
-        return isSimpleValue( arguments.value ) ||
-        isArray( arguments.value ) ||
-        !structKeyExists( arguments.value, "isBuilder" );
+        return !isBuilder( isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value );
     }
 
     /**

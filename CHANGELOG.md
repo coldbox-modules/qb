@@ -1,3 +1,11 @@
+# v13.0.7
+## 02 Sep 2025 — 18:05:06 UTC
+
+### fix
+
++ __QueryUtils:__ Minor fix for `isBuilder` checks on BoxLang ([bb1b712](https://github.com/coldbox-modules/qb/commit/bb1b7129a3cbfb9109bbafbfed172d683c88ef50))
+
+
 # v13.0.6
 ## 20 Aug 2025 — 18:56:02 UTC
 

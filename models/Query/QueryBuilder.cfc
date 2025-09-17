@@ -2935,7 +2935,11 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private numeric function getCountForPagination( struct options = {} ) {
         if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
-            return newQuery().fromSub( "aggregate_table", this ).count( options = arguments.options );
+            var originalOrders = this.getOrders();
+            this.setOrders( [] );
+            var count = newQuery().fromSub( "aggregate_table", this ).count( options = arguments.options );
+            this.setOrders( originalOrders );
+            return count;
         }
         return count( options = arguments.options );
     }

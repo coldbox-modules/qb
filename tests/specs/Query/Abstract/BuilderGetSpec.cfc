@@ -22,7 +22,7 @@ component extends="testbox.system.BaseSpec" {
                 qb.$property( propertyName = "wirebox", mock = mockWirebox );
             } );
 
-            it( "retreives bindings in a flat array", function() {
+            it( "retrieves bindings in a flat array", function() {
                 qb.join( "second", function( join ) {
                         join.where( "second.locale", "=", "en-US" );
                     } )

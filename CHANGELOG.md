@@ -1,3 +1,12 @@
+# v13.0.8
+## 17 Sep 2025 — 19:21:28 UTC
+
+### fix
+
++ __QueryBuilder:__ Fix for pagination with both `GROUP BY` and `ORDER BY` clauses
+ ([9abac2b](https://github.com/coldbox-modules/qb/commit/9abac2b95f5627b1af64af8a2b12c95f7926e5c9))
+
+
 # v13.0.7
 ## 02 Sep 2025 — 18:05:06 UTC
 

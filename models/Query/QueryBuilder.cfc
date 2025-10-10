@@ -2031,6 +2031,19 @@ component displayname="QueryBuilder" accessors="true" {
             throw( type = "InvalidSQLType", message = "Illegal operator" );
         }
 
+        if (
+            isClosure( arguments.second ) ||
+            isCustomFunction( arguments.second ) ||
+            getUtils().isBuilder( arguments.second )
+        ) {
+            return whereSub(
+                arguments.first,
+                arguments.operator,
+                arguments.second,
+                arguments.combinator
+            );
+        }
+
         variables.wheres.append( {
             type: "column",
             first: mapToColumnType( applyColumnFormatter( arguments.first ) ),

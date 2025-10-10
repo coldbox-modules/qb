@@ -17,7 +17,7 @@
         "javaVersion":"openjdk21_jre",
         "args":"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8888"
     },
-    "openBrowser":"false",
+    "openBrowser":"true",
     "env":{},
     "scripts":{
         "onServerInitialInstall":"install bx-esapi --noSave"

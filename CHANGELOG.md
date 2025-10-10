@@ -1,3 +1,11 @@
+# v13.0.9
+## 10 Oct 2025 — 16:24:26 UTC
+
+### fix
+
++ __QueryBuilder:__ Process `whereSub` from inside `whereColumn` ([3bf7ec9](https://github.com/coldbox-modules/qb/commit/3bf7ec98cab18c0f2be27d3e02ad07f096e88bf9))
+
+
 # v13.0.8
 ## 17 Sep 2025 — 19:21:28 UTC
 

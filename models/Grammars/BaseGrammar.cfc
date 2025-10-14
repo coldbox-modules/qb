@@ -157,12 +157,12 @@ component displayname="Grammar" accessors="true" singleton {
      * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
      */
     private function tryPostInterceptor( data ) {
-        if ( structKeyExists( application, "applicationName" ) && application.applicationName == "CommandBox CLI" ) {
+        param variables.useAnnounceMethodForInterceptorService = structKeyExists( variables.interceptorService, "announce" );
+        if ( variables.useAnnounceMethodForInterceptorService ) {
             variables.interceptorService.announce( "postQBExecute", data );
-            return;
+        } else {
+            variables.interceptorService.processState( "postQBExecute", data );
         }
-
-        variables.interceptorService.processState( "postQBExecute", data );
         return;
     }
 

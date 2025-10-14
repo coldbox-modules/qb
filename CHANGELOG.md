@@ -1,3 +1,12 @@
+# v13.0.12
+## 14 Oct 2025 — 15:47:55 UTC
+
+### fix
+
++ __BaseGrammar:__ Missed another interceptorService update
+ ([3fbc268](https://github.com/coldbox-modules/qb/commit/3fbc2681a1510c3f1b124ddeac0880966780849e))
+
+
 # v13.0.11
 ## 14 Oct 2025 — 02:34:56 UTC
 

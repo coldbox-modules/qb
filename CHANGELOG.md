@@ -1,3 +1,12 @@
+# v13.0.10
+## 14 Oct 2025 — 02:06:29 UTC
+
+### fix
+
++ __BaseGrammar:__ Support official way of announcing interceptors since ColdBox 6
+ ([b6b988d](https://github.com/coldbox-modules/qb/commit/b6b988d291d55522b56be4ccc6269a7d7eab844a))
+
+
 # v13.0.9
 ## 10 Oct 2025 — 16:24:26 UTC
 

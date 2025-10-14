@@ -69,6 +69,8 @@ component displayname="Grammar" accessors="true" singleton {
         // These are overwritten by WireBox, if it exists.
         variables.interceptorService = {
             "processState": function() {
+            },
+            "announce": function() {
             }
         };
         variables.log = {
@@ -142,7 +144,12 @@ component displayname="Grammar" accessors="true" singleton {
      * This method exists because the API for InterceptorService differs between ColdBox and CommandBox
      */
     private function tryPreInterceptor( data ) {
-        variables.interceptorService.processState( "preQBExecute", data );
+        param variables.useAnnounceMethodForInterceptorService = variables.interceptorService.keyExists( "announce" );
+        if ( variables.useAnnounceMethodForInterceptorService ) {
+            variables.interceptorService.announce( "preQBExecute", data );
+        } else {
+            variables.interceptorService.processState( "preQBExecute", data );
+        }
         return;
     }
 

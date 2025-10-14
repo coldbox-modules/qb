@@ -1,3 +1,12 @@
+# v13.0.11
+## 14 Oct 2025 — 02:34:56 UTC
+
+### fix
+
++ __BaseGrammar:__ Cannot use member function of keyExists on components
+ ([3ae7bb8](https://github.com/coldbox-modules/qb/commit/3ae7bb8c230d051b8fdca3df2d6ef21dfc85b9de))
+
+
 # v13.0.10
 ## 14 Oct 2025 — 02:06:29 UTC
 

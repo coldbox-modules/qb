@@ -1,3 +1,11 @@
+# v13.0.13
+## 23 Oct 2025 — 19:00:38 UTC
+
+### fix
+
++ __JoinClause:__ Fix incorrect JoinClause query generation ([d22dd4f](https://github.com/coldbox-modules/qb/commit/d22dd4f8d8c3a2f67218e196134ee969df8af9b0))
+
+
 # v13.0.12
 ## 14 Oct 2025 — 15:47:55 UTC
 

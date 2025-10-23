@@ -6,7 +6,7 @@
     },
     "web":{
         "http":{
-            "port":"60299"
+            "port":"60298"
         },
         "rewrites":{
             "enable":"true"
@@ -14,8 +14,7 @@
     },
     "JVM":{
         "heapSize":"1024",
-        "javaVersion":"openjdk21_jre",
-        "args":"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8888"
+        "javaVersion":"openjdk21_jre"
     },
     "openBrowser":"false",
     "env":{},

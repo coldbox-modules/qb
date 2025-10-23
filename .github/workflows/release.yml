@@ -40,7 +40,7 @@ jobs:
       - name: Start server
         run: |
           box server start serverConfigFile="server-${{ matrix.cfengine }}.json" --noSaveSettings --debug
-          curl http://127.0.0.1:60299
+          curl http://127.0.0.1:60298
 
       - name: Run TestBox Tests
         env:

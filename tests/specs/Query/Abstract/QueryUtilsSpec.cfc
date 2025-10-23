@@ -194,7 +194,11 @@ component extends="testbox.system.BaseSpec" {
                 var binding = utils.extractBinding( datetime, variables.mockGrammar );
 
                 expect( binding ).toBeStruct();
-                expect( binding.value ).toBe( dateTimeFormat( datetime, "yyyy-mm-dd'T'HH:nn:ss.SSSXXX" ) );
+                var formattedExpectedDate = isBoxLang() ? dateTimeFormat( datetime, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX" ) : dateTimeFormat(
+                    datetime,
+                    "yyyy-mm-dd'T'HH:nn:ss.lllXXX"
+                );
+                expect( binding.value ).toBe( formattedExpectedDate );
                 expect( binding.cfsqltype ).toBe( "TIMESTAMP" );
                 expect( binding.sqltype ).toBe( "TIMESTAMP" );
                 expect( binding.list ).toBe( false );

@@ -18,7 +18,7 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             // TODO: Update with BoxLang specific path
-            xit( "can output the configured sql with the bindings substituted in", function() {
+            it( "can output the configured sql with the bindings substituted in", function() {
                 var query = getBuilder()
                     .from( "users" )
                     .join( "logins", function( j ) {
@@ -29,15 +29,9 @@ component extends="testbox.system.BaseSpec" {
                     .whereNotNull( "active" )
                     .orderBy( "logins.created_date", "desc" );
 
-                if ( isLucee() ) {
-                    expect( query.toSQL( showBindings = true ) ).toBe(
-                        "SELECT * FROM ""users"" INNER JOIN ""logins"" ON ""users"".""id"" = ""logins"".""user_id"" AND ""logins"".""created_date"" > {""value"":""2019-06-01T00:00:00-06:00"",""cfsqltype"":""TIMESTAMP"",""null"":false} WHERE ""users"".""type"" IN ({""value"":""admin"",""cfsqltype"":""VARCHAR"",""null"":false}, {""value"":""manager"",""cfsqltype"":""VARCHAR"",""null"":false}) AND ""active"" IS NOT NULL ORDER BY ""logins"".""created_date"" DESC"
-                    );
-                } else {
-                    expect( query.toSQL( showBindings = true ) ).toBe(
-                        "SELECT * FROM ""users"" INNER JOIN ""logins"" ON ""users"".""id"" = ""logins"".""user_id"" AND ""logins"".""created_date"" > {""value"":""2019-06-01T00:00:00-06:00"",""cfsqltype"":""TIMESTAMP"",""null"":false} WHERE ""users"".""type"" IN ({""value"":""admin"",""cfsqltype"":""VARCHAR"",""null"":false}, {""value"":""manager"",""cfsqltype"":""VARCHAR"",""null"":false}) AND ""active"" IS NOT NULL ORDER BY ""logins"".""created_date"" DESC"
-                    );
-                }
+                expect( query.toSQL( showBindings = true ) ).toBe(
+                    "SELECT * FROM ""users"" INNER JOIN ""logins"" ON ""users"".""id"" = ""logins"".""user_id"" AND ""logins"".""created_date"" > {""value"":""2019-06-01T00:00:00.000Z"",""cfsqltype"":""TIMESTAMP"",""null"":false} WHERE ""users"".""type"" IN ({""value"":""admin"",""cfsqltype"":""VARCHAR"",""null"":false}, {""value"":""manager"",""cfsqltype"":""VARCHAR"",""null"":false}) AND ""active"" IS NOT NULL ORDER BY ""logins"".""created_date"" DESC"
+                );
             } );
 
             it( "provides a useful error message when calling `from` with a closure", function() {

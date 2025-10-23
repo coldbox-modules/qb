@@ -1159,7 +1159,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function joinCallbackWhereExists() {
         return {
-            "sql": 'SELECT * FROM "LEFTTABLE" "LT" LEFT JOIN "RIGHTTABLE" "RT" ON "RT"."ID" = "LT"."ID" AND EXISTS (SELECT 1 FROM "EXISTSTABLE" "ET" WHERE "ET"."ID" = "LT"."ID")',
+            "sql": "SELECT * FROM ""LEFTTABLE"" ""LT"" LEFT JOIN ""RIGHTTABLE"" ""RT"" ON ""RT"".""ID"" = ""LT"".""ID"" AND EXISTS (SELECT 1 FROM ""EXISTSTABLE"" ""ET"" WHERE ""ET"".""ID"" = ""LT"".""ID"")",
             "bindings": []
         };
     }

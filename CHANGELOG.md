@@ -1,3 +1,12 @@
+# v13.0.14
+## 23 Oct 2025 — 22:43:23 UTC
+
+### fix
+
++ __QueryUtils:__ More datetime formatting fixes for BoxLang Prime
+ ([b85caa7](https://github.com/coldbox-modules/qb/commit/b85caa70dfcca8392466ccfe8bb7f483fb80c409))
+
+
 # v13.0.13
 ## 23 Oct 2025 — 19:00:38 UTC
 

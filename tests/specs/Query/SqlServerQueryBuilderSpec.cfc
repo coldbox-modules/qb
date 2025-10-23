@@ -1174,6 +1174,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function joinCallbackWhereExists() {
+        return {
+            "sql": "SELECT * FROM [LeftTable] AS [lt] LEFT JOIN [RightTable] AS [rt] ON [rt].[id] = [lt].[id] AND EXISTS (SELECT 1 FROM [ExistsTable] AS [et] WHERE [et].[id] = [lt].[id])",
+            "bindings": []
+        };
+    }
+
     private function getBuilder() {
         variables.utils = getMockBox().createMock( "qb.models.Query.QueryUtils" ).init();
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init( variables.utils );

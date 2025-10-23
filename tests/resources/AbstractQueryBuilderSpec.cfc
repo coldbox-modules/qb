@@ -1497,7 +1497,7 @@ component extends="testbox.system.BaseSpec" {
                         }, correctlyPositionsBindingsUsingCrossApply() );
                     } );
 
-                    it( "duplicate {cross,outer} applies eliminated", function() {
+                    it( "eliminates duplicate cross or outer applies", function() {
                         testCase( function( builder ) {
                             var gen = function( name ) {
                                 return function( qb ) {
@@ -1516,6 +1516,21 @@ component extends="testbox.system.BaseSpec" {
                                 .crossApply( "D", gen( "crossapply_D" ) )
                                 .outerApply( "E", gen( "outerapply_E" ) )
                         }, duplicateCrossAndOuterAppliesEliminated() );
+                    } );
+
+                    it( "can join with a callback that includes a whereExists clause", function() {
+                        testCase( ( builder ) => {
+                            builder
+                                .from( "LeftTable AS lt" )
+                                .leftJoin( "RightTable AS rt", ( j ) => {
+                                    j.on( "rt.id", "lt.id" )
+                                        .whereExists( ( qb ) => {
+                                            qb.selectRaw( 1 )
+                                                .from( "ExistsTable AS et" )
+                                                .whereColumn( "et.id", "lt.id" );
+                                        } );
+                                } );
+                        }, joinCallbackWhereExists() );
                     } );
                 } );
 

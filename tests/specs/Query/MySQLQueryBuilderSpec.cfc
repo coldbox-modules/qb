@@ -1144,6 +1144,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" }
     }
 
+    function joinCallbackWhereExists() {
+        return {
+            "sql": 'SELECT * FROM `LeftTable` AS `lt` LEFT JOIN `RightTable` AS `rt` ON `rt`.`id` = `lt`.`id` AND EXISTS (SELECT 1 FROM `ExistsTable` AS `et` WHERE `et`.`id` = `lt`.`id`)',
+            "bindings": []
+        };
+    }
+
     function aggregateExists() {
         return {
             "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM `users` WHERE `id` = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate",

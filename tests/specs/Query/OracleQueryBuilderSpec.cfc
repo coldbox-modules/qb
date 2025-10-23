@@ -1157,6 +1157,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" }
     }
 
+    function joinCallbackWhereExists() {
+        return {
+            "sql": 'SELECT * FROM "LEFTTABLE" "LT" LEFT JOIN "RIGHTTABLE" "RT" ON "RT"."ID" = "LT"."ID" AND EXISTS (SELECT 1 FROM "EXISTSTABLE" "ET" WHERE "ET"."ID" = "LT"."ID")',
+            "bindings": []
+        };
+    }
+
     function aggregateExists() {
         return {
             "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"" WHERE ""ID"" = ?) results ) WHERE ""QB_RN"" <= 1) THEN 1 ELSE 0 END AS aggregate FROM DUAL",

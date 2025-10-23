@@ -117,15 +117,6 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
     }
 
     /**
-     * Returns a new Join Clause based off of the current join clause.
-     *
-     * @return qb.models.Builder.JoinClause
-     */
-    public QueryBuilder function newQuery() {
-        return new qb.models.Query.JoinClause( parentQuery = getParentQuery(), type = getType(), table = getTable() );
-    }
-
-    /**
      * Returns whether the object is a JoinClause.
      * This exists because isInstanceOf is super slow!
      *

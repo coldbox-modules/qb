@@ -4601,7 +4601,15 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return boolean
      */
-    private boolean function isInvalidOperator( required string operator ) {
+    private boolean function isInvalidOperator( required any operator ) {
+        if ( isNull( arguments.operator ) ) {
+            return true;
+        }
+
+        if ( !isSimpleValue( arguments.operator ) ) {
+            return true;
+        }
+
         return !arrayContains( variables.operators, lCase( arguments.operator ) );
     }
 

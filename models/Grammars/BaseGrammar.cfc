@@ -439,7 +439,7 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         var placeholder = "?";
-        if ( variables.utils.isExpression( where.value ) ) {
+        if ( !isNull( where.value ) && variables.utils.isExpression( where.value ) ) {
             placeholder = where.value.getSql();
         }
 

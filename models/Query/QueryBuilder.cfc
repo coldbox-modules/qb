@@ -1770,15 +1770,15 @@ component displayname="QueryBuilder" accessors="true" {
         value,
         string combinator = "and"
     ) {
-        if ( isClosure( column ) || isCustomFunction( column ) ) {
-            return whereNested( column, combinator );
+        if ( isClosure( arguments.column ) || isCustomFunction( arguments.column ) ) {
+            return whereNested( arguments.column, arguments.combinator );
         }
 
         if ( isInvalidCombinator( arguments.combinator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
 
-        if ( isNull( arguments.value ) ) {
+        if ( isNull( arguments.value ) && isInvalidOperator( arguments.operator ) ) {
             arguments.value = arguments.operator;
             arguments.operator = "=";
         } else if ( isInvalidOperator( arguments.operator ) ) {
@@ -1786,14 +1786,26 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if (
-            isClosure( value ) ||
-            isCustomFunction( value ) ||
-            getUtils().isBuilder( value )
+            !isNull( arguments.value ) && (
+                isClosure( arguments.value ) ||
+                isCustomFunction( arguments.value ) ||
+                getUtils().isBuilder( arguments.value )
+            )
         ) {
-            return whereSub( column, operator, value, combinator );
+            return whereSub(
+                arguments.column,
+                arguments.operator,
+                arguments.value,
+                arguments.combinator
+            );
         }
 
-        return whereBasic( column, operator, value, combinator );
+        return whereBasic(
+            arguments.column,
+            arguments.operator,
+            isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
+            arguments.combinator
+        );
     }
 
     /**
@@ -1817,14 +1829,20 @@ component displayname="QueryBuilder" accessors="true" {
             {
                 column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
                 operator: arguments.operator,
-                value: arguments.value,
+                value: isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
                 combinator: arguments.combinator,
                 type: "basic"
             }
         );
 
-        if ( getUtils().isNotExpression( arguments.value ) ) {
-            addBindings( utils.extractBinding( arguments.value, variables.grammar ), "where" );
+        if ( isNull( arguments.value ) || getUtils().isNotExpression( arguments.value ) ) {
+            addBindings(
+                utils.extractBinding(
+                    isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
+                    variables.grammar
+                ),
+                "where"
+            );
         }
 
         return this;

@@ -258,7 +258,8 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return boolean
      */
     public boolean function isExpression( required any value ) {
-        return !isSimpleValue( arguments.value ) &&
+        return !isNull( arguments.value ) &&
+        !isSimpleValue( arguments.value ) &&
         !isArray( arguments.value ) &&
         structKeyExists( arguments.value, "isExpression" );
     }

@@ -619,6 +619,15 @@ component extends="testbox.system.BaseSpec" {
                                 withFullBindings = true
                             );
                         } );
+
+                        it( "can handle null values passed to where clauses", () => {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .where( "id", "=", javacast( "null", "" ) );
+                            }, nullWhere() );
+                        } );
                     } );
 
                     describe( "where exists", function() {

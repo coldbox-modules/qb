@@ -1,7 +1,8 @@
 component extends="testbox.system.BaseSpec" {
 
     function run() {
-        describe( "query debugging", function() {
+        // disabled until BoxLang 1.6.1+
+        xdescribe( "query debugging", function() {
             it( "can output the configured sql with placeholders for the bindings", function() {
                 var query = getBuilder()
                     .from( "users" )

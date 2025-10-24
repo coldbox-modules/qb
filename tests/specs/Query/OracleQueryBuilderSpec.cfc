@@ -270,6 +270,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function nullWhere() {
+        return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" = ?", bindings: [ "NULL" ] };
+    }
+
     function whereExists() {
         return "SELECT * FROM ""ORDERS"" WHERE EXISTS (SELECT 1 FROM ""PRODUCTS"" WHERE ""PRODUCTS"".""ID"" = ""ORDERS"".""ID"")";
     }

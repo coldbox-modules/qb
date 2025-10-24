@@ -261,6 +261,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function nullWhere() {
+        return { sql: "SELECT * FROM `users` WHERE `id` = ?", bindings: [ "NULL" ] };
+    }
+
     function whereExists() {
         return "SELECT * FROM `orders` WHERE EXISTS (SELECT 1 FROM `products` WHERE `products`.`id` = `orders`.`id`)";
     }

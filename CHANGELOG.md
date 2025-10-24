@@ -1,3 +1,12 @@
+# v13.0.15
+## 24 Oct 2025 — 19:46:34 UTC
+
+### fix
+
++ __QueryUtils:__ Handle nulls inside `isExpression` check
+ ([4adcad1](https://github.com/coldbox-modules/qb/commit/4adcad15a1b3a63b8ee71acfaa1263224e1d9dd5))
+
+
 # v13.0.14
 ## 23 Oct 2025 — 22:43:23 UTC
 

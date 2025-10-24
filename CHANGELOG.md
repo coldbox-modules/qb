@@ -1,3 +1,12 @@
+# v13.0.16
+## 24 Oct 2025 — 19:57:33 UTC
+
+### fix
+
++ __QueryBuilder:__ Handle more cases for isInvalidOperator
+ ([6f73d1b](https://github.com/coldbox-modules/qb/commit/6f73d1b85b79d368a9fce2c6347af832b70bd4c4))
+
+
 # v13.0.15
 ## 24 Oct 2025 — 19:46:34 UTC
 

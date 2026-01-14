@@ -1,3 +1,14 @@
+# v13.0.17
+## 14 Jan 2026 — 19:57:56 UTC
+
+### fix
+
++ __DerbyGrammar:__ Fix test for BoxLang type strictness
+ ([cae1a7c](https://github.com/coldbox-modules/qb/commit/cae1a7ccc95c94aea21a9c538daff5b7777d65bc))
++ __QueryBuilder:__ Handle raw statements in `whereBetween` statements
+ ([0645aff](https://github.com/coldbox-modules/qb/commit/0645aff4479b920685ce310dd897f01af05ca403))
+
+
 # v13.0.16
 ## 24 Oct 2025 — 19:57:33 UTC
 

@@ -256,7 +256,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             bindings: [
                 {
                     "cfsqltype": "OTHER",
-                    "value": true,
+                    "value": 1,
                     "list": false,
                     "null": false
                 }
@@ -759,7 +759,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             sql: "INSERT INTO ""users"" (""active"") VALUES (?)",
             bindings: [
                 {
-                    "value": true,
+                    "value": 1,
                     "cfsqltype": "OTHER",
                     "null": false,
                     "list": false

@@ -576,8 +576,12 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereBetween( required QueryBuilder query, required struct where ) {
-        var start = isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)";
-        var end = isSimpleValue( where.end ) ? "?" : "(#compileSelect( where.end )#)";
+        var start = variables.utils.isExpression( where.start ) ? where.start.getSql() : (
+            isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)"
+        );
+        var end = variables.utils.isExpression( where.end ) ? where.end.getSql() : (
+            isSimpleValue( where.end ) ? "?" : "(#compileSelect( where.end )#)"
+        );
         return "#wrapColumn( where.column )# BETWEEN #start# AND #end#";
     }
 

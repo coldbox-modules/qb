@@ -779,6 +779,19 @@ component extends="testbox.system.BaseSpec" {
                             }, whereBetween() );
                         } );
 
+                        it( "can add where between statements with raw expressions", function() {
+                            testCase( function( builder ) {
+                                builder
+                                    .select( "*" )
+                                    .from( "users" )
+                                    .whereBetween(
+                                        "createdDate",
+                                        builder.raw( "GETDATE() - 7" ),
+                                        builder.raw( "GETDATE()" )
+                                    );
+                            }, whereBetweenRaw() );
+                        } );
+
                         it( "can add where between statements with query param structs", function() {
                             testCase( function( builder ) {
                                 builder

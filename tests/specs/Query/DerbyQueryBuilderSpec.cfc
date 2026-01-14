@@ -310,6 +310,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM ""users"" WHERE ""id"" BETWEEN ? AND ?", bindings: [ 1, 2 ] };
     }
 
+    function whereBetweenRaw() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""createdDate"" BETWEEN GETDATE() - 7 AND GETDATE()",
+            bindings: []
+        };
+    }
+
     function whereBetweenWithQueryParamStructs() {
         return {
             sql: "SELECT * FROM ""users"" WHERE ""createdDate"" BETWEEN ? AND ?",

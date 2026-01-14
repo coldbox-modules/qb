@@ -688,7 +688,7 @@ component displayname="QueryBuilder" accessors="true" {
 
     private void function renameAliasesInHavings( required string oldAlias, required string newAlias ) {
         for ( var having in variables.havings ) {
-            if ( having.keyExists( "column" ) ) {
+            if ( structKeyExists( having, "column" ) ) {
                 if ( having.column.type == "simple" ) {
                     having.column.value = swapAlias( having.column.value, arguments.oldAlias, arguments.newAlias );
                 }
@@ -2255,11 +2255,24 @@ component displayname="QueryBuilder" accessors="true" {
             callback( arguments.end );
         }
 
-        addBindings( utils.extractBinding( arguments.start, variables.grammar ), "where" );
-        addBindings( utils.extractBinding( arguments.end, variables.grammar ), "where" );
+        addBindings(
+            utils.isExpression( arguments.start ) ? arguments.start.getBindings() : utils.extractBinding(
+                arguments.start,
+                variables.grammar
+            ),
+            "where"
+        );
+        addBindings(
+            utils.isExpression( arguments.end ) ? arguments.end.getBindings() : utils.extractBinding(
+                arguments.end,
+                variables.grammar
+            ),
+            "where"
+        );
 
         if (
-            isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && arguments.start.keyExists(
+            isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && structKeyExists(
+                arguments.start,
                 "value"
             )
         ) {
@@ -2267,7 +2280,8 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if (
-            isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && arguments.end.keyExists(
+            isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && structKeyExists(
+                arguments.end,
                 "value"
             )
         ) {

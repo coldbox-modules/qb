@@ -6,7 +6,7 @@ component extends="testbox.system.BaseSpec" {
                 variables.query = prepareMock( new qb.models.Query.QueryBuilder() );
             } );
             describe( "initialization", function() {
-                it( "requires a parentQuery, type, and a table", function() {
+                it( "requires a joiningQuery, type, and a table", function() {
                     expect( function() {
                         new qb.models.Query.JoinClause();
                     } ).toThrow();

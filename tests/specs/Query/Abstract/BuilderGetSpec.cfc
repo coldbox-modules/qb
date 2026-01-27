@@ -16,7 +16,7 @@ component extends="testbox.system.BaseSpec" {
                     .$( "getInstance" )
                     .$args(
                         name = "JoinClause@Quick",
-                        initArguments = { parentQuery: qb, type: "inner", table: "second" }
+                        initArguments = { joiningQuery: qb, type: "inner", table: "second" }
                     )
                     .$results( mockJoinClause );
                 qb.$property( propertyName = "wirebox", mock = mockWirebox );

@@ -6,7 +6,7 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
     /**
      * A reference to the parent query to which this join clause belongs.
      */
-    property name="parentQuery" type="qb.models.Query.QueryBuilder";
+    property name="joiningQuery" type="qb.models.Query.QueryBuilder";
 
     /**
      * The join type of the join clause.
@@ -44,7 +44,7 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
     /**
      * Creates a basic join clause.
      *
-     * @parentQuery A reference to the query to which this join clause belongs.
+     * @joiningQuery A reference to the query to which this join clause belongs.
      * @type The join type of this join clause.
      * @table The table to join.
      * @crossApplySqlStringWithBindParams The already-`toSql`'d table expression for the {cross,outer}Apply case
@@ -52,7 +52,7 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
      * @return qb.models.Query.JoinClause
      */
     public JoinClause function init(
-        required QueryBuilder parentQuery,
+        required QueryBuilder joiningQuery,
         required string type,
         required any table,
         string lateralRawExpression
@@ -67,14 +67,14 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
             throw( type = "InvalidSQLType", message = "[#type#] is not a valid sql join type" );
         }
 
-        variables.parentQuery = arguments.parentQuery;
+        variables.joiningQuery = arguments.joiningQuery;
         variables.type = arguments.type;
         variables.table = arguments.table;
         variables.lateralRawExpression = isNull( arguments.lateralRawExpression )
          ? ""
          : arguments.lateralRawExpression;
 
-        super.init( parentQuery.getGrammar(), parentQuery.getUtils() );
+        super.init( joiningQuery.getGrammar(), joiningQuery.getUtils() );
 
         return this;
     }

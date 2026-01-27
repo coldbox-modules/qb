@@ -1054,7 +1054,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @returns qb.models.Query.JoinClause
      */
     public JoinClause function newJoin( required any table, string type = "inner" ) {
-        return new qb.models.Query.JoinClause( parentQuery = this, type = arguments.type, table = arguments.table );
+        return new qb.models.Query.JoinClause( joiningQuery = this, type = arguments.type, table = arguments.table );
     }
 
     /**
@@ -1098,7 +1098,7 @@ component displayname="QueryBuilder" accessors="true" {
             return this;
         }
 
-        var join = new qb.models.Query.JoinClause( parentQuery = this, type = arguments.type, table = arguments.table );
+        var join = new qb.models.Query.JoinClause( joiningQuery = this, type = arguments.type, table = arguments.table );
 
         if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
             first( join );
@@ -1482,7 +1482,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         var join = new qb.models.Query.JoinClause(
-            parentQuery = this,
+            joiningQuery = this,
             type = type,
             table = arguments.name,
             lateralRawExpression = arguments.tableLikeSource.toSQL()
@@ -4658,7 +4658,12 @@ component displayname="QueryBuilder" accessors="true" {
          * If a parent query has been set, and has this exact method name,
          * forward on the method call to the parent query.
          */
-        if ( !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, missingMethodName ) ) {
+        if (
+            !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, "populateQuery" ) && structKeyExists(
+                variables.parentQuery,
+                missingMethodName
+            )
+        ) {
             return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
         }
 
@@ -4750,7 +4755,7 @@ component displayname="QueryBuilder" accessors="true" {
          * If a parent query has been set, populate it with this query
          * and then forward on the method call to the parent query.
          */
-        if ( !isNull( variables.parentQuery ) ) {
+        if ( !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, "populateQuery" ) ) {
             return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
         }
 

@@ -1,3 +1,12 @@
+# v13.0.18
+## 27 Jan 2026 — 21:32:02 UTC
+
+### fix
+
++ __JoinClause:__ Rename JoinClause's parentQuery because of conflicts with qb's parentQuery
+ ([f6d65fe](https://github.com/coldbox-modules/qb/commit/f6d65fe85fa9bbcb15df2648082274ccb51dec58))
+
+
 # v13.0.17
 ## 14 Jan 2026 — 19:57:56 UTC
 

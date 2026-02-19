@@ -1,3 +1,12 @@
+# v13.0.19
+## 19 Feb 2026 — 19:37:21 UTC
+
+### fix
+
++ __SQLServerGrammar:__ Fix for using `returning` in an `upsert` clause
+ ([0245dd1](https://github.com/coldbox-modules/qb/commit/0245dd1aa2e6fc6af9a7efc0d4678a1486a617b8))
+
+
 # v13.0.18
 ## 27 Jan 2026 — 21:32:02 UTC
 

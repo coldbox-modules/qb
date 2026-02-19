@@ -513,11 +513,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             var returningColumns = arguments.qb
                 .getReturning()
                 .map( function( column ) {
-                    if ( getUtils().isExpression( column ) ) {
+                    if ( column.type == "raw" ) {
                         return trim( column.getSQL() );
                     }
-                    if ( listLen( column, "." ) > 1 ) {
-                        return column;
+                    if ( listLen( column.value, "." ) > 1 ) {
+                        return column.value;
                     }
                     return "INSERTED." & wrapColumn( column );
                 } )

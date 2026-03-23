@@ -342,18 +342,14 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var defaultValue = column.getDefaultValue();
         // Normalize PostgreSQL cast shorthand (value::TYPE) so runtimes that
         // parse ":" for named params don't break schema DDL execution.
-        var castMatch = reFindNoCase(
-            "::([a-zA-Z_][a-zA-Z0-9_\\[\\]\\.\\s]*)$",
-            defaultValue,
-            1,
-            true
-        );
-        if ( castMatch.pos[ 1 ] > 0 ) {
-            var castPosition = castMatch.pos[ 1 ];
-            var castLength = castMatch.len[ 1 ];
+<<<<<<< HEAD
+        var castPosition = findLast( "::", defaultValue );
+        if ( castPosition > 0 ) {
             var valuePart = left( defaultValue, castPosition - 1 );
-            var typePart = right( defaultValue, castLength - 2 );
-            defaultValue = "CAST(#valuePart# AS #typePart#)";
+            var typePart = mid( defaultValue, castPosition + 2, len( defaultValue ) );
+            if ( reFindNoCase( "^[a-zA-Z_][a-zA-Z0-9_\\[\\]\\.\\s]*$", typePart ) ) {
+                defaultValue = "CAST(#valuePart# AS #typePart#)";
+            }
         }
 
         switch ( column.getType() ) {

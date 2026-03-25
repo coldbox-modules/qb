@@ -1,3 +1,26 @@
+# v13.1.0
+## 25 Mar 2026 — 16:23:05 UTC
+
+### chore
+
++ __gitignore:__ Add .idea folder to .gitignore
+ ([e00696c](https://github.com/coldbox-modules/qb/commit/e00696c711c442dbfcd7beeb49409f6e5eefad11))
+
+### feat
+
++ __querybuilder:__ add collectQueryLog setting
+ ([46b3af5](https://github.com/coldbox-modules/qb/commit/46b3af5e60defb662e5109c0c5192ccf85fdfb5c))
++ __querybuilder:__ add validateOperatorsAndCombinators setting
+ ([59bf2b8](https://github.com/coldbox-modules/qb/commit/59bf2b8539e584e1400167408fd2b6555d48c7ef))
++ __queryutils:__ add validateQueryParamStructKeys setting
+ ([24c464a](https://github.com/coldbox-modules/qb/commit/24c464a38ae66e7d44220ff76514587db7360909))
+
+### fix
+
++ __postgres:__ normalize cast shorthand in default expressions
+ ([0d60086](https://github.com/coldbox-modules/qb/commit/0d600861475e80c769ddcfc9fb649ea8453a169a))
+
+
 # v13.0.19
 ## 19 Feb 2026 — 19:37:21 UTC
 

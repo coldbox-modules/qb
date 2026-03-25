@@ -339,14 +339,32 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function wrapDefaultType( column ) {
+        var defaultValue = column.getDefaultValue();
+        // Normalize PostgreSQL cast shorthand (value::TYPE) so runtimes that
+        // parse ":" for named params don't break schema DDL execution.
+        var castPosition = 0;
+        for ( var i = len( defaultValue ) - 1; i >= 1; i-- ) {
+            if ( mid( defaultValue, i, 2 ) == "::" ) {
+                castPosition = i;
+                break;
+            }
+        }
+        if ( castPosition > 0 ) {
+            var valuePart = trim( left( defaultValue, castPosition - 1 ) );
+            var typePart = trim( mid( defaultValue, castPosition + 2, len( defaultValue ) ) );
+            if ( typePart != "" ) {
+                defaultValue = "CAST(#valuePart# AS #typePart#)";
+            }
+        }
+
         switch ( column.getType() ) {
             case "boolean":
-                return uCase( column.getDefaultValue() );
+                return uCase( defaultValue );
             case "char":
             case "string":
-                return "'#column.getDefaultValue()#'";
+                return "'#defaultValue#'";
             default:
-                return column.getDefaultValue();
+                return defaultValue;
         }
     }
 

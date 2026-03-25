@@ -1,5 +1,24 @@
 component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "postgres specific behavior", function() {
+            it( "normalizes cast shorthand in default expressions", function() {
+                testCase( function( schema ) {
+                    return schema.create(
+                        "expenses",
+                        function( table ) {
+                            table.jsonb( "extracted_data" ).default( "'{}'::JSONB" );
+                        },
+                        {},
+                        false
+                    );
+                }, defaultForJsonbCastShorthand() );
+            } );
+        } );
+    }
+
     function emptyTable() {
         return [ "CREATE TABLE ""users"" ()" ];
     }
@@ -634,6 +653,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function createTableAs() {
         return [ "CREATE TABLE ""active_users"" AS (SELECT * FROM ""users"" WHERE ""active"" = ?)" ];
+    }
+
+    function defaultForJsonbCastShorthand() {
+        return [ "CREATE TABLE ""expenses"" (""extracted_data"" JSONB NOT NULL DEFAULT CAST('{}' AS JSONB))" ];
     }
 
     private function getBuilder( mockGrammar ) {

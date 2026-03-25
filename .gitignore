@@ -5,3 +5,4 @@ Engine.war
 *.sublime-workspace
 .tmp
 .engine/
+.idea/

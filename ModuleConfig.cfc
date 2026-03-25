@@ -12,6 +12,7 @@ component {
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
             "convertEmptyStringsToNull": true,
+            "validateQueryParamStructKeys": true,
             "numericSQLType": "NUMERIC",
             "integerSQLType": "INTEGER",
             "decimalSQLType": "DECIMAL",
@@ -47,6 +48,7 @@ component {
             .map( alias = "QueryUtils@qb", force = true )
             .to( "qb.models.Query.QueryUtils" )
             .initArg( name = "convertEmptyStringsToNull", value = settings.convertEmptyStringsToNull )
+            .initArg( name = "validateQueryParamStructKeys", value = settings.validateQueryParamStructKeys )
             .initArg( name = "numericSQLType", value = settings.numericSQLType )
             .initArg( name = "integerSQLType", value = settings.integerSQLType )
             .initArg( name = "decimalSQLType", value = settings.decimalSQLType );

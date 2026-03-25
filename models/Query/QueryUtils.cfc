@@ -14,6 +14,11 @@ component singleton displayname="QueryUtils" accessors="true" {
     property name="convertEmptyStringsToNull" default="false";
 
     /**
+     * If true, invalid keys in query param structs throw a helpful exception.
+     */
+    property name="validateQueryParamStructKeys" default="true";
+
+    /**
      * Allow overriding default integer numeric SQL type inferral.
      */
     property name="integerSQLType" default="INTEGER";
@@ -29,11 +34,13 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     public QueryUtils function init(
         boolean convertEmptyStringsToNull = false,
+        boolean validateQueryParamStructKeys = true,
         string integerSqlType = "INTEGER",
         string decimalSqlType = "DECIMAL",
         any log
     ) {
         variables.convertEmptyStringsToNull = arguments.convertEmptyStringsToNull;
+        variables.validateQueryParamStructKeys = arguments.validateQueryParamStructKeys;
         variables.integerSqlType = arguments.integerSqlType;
         variables.decimalSqlType = arguments.decimalSqlType;
         if ( !isNull( arguments.log ) ) {
@@ -78,7 +85,9 @@ component singleton displayname="QueryUtils" accessors="true" {
                 return value;
             }
 
-            checkForNonQueryParamStructKeys( value );
+            if ( variables.validateQueryParamStructKeys ) {
+                checkForNonQueryParamStructKeys( value );
+            }
 
             binding = value;
         } else {

@@ -268,6 +268,25 @@ component extends="testbox.system.BaseSpec" {
                     regex = "Invalid keys detected in your query param struct: \[enabled, foo\]\. Usually this happens when you meant to serialize the struct to JSON first\."
                 );
             } );
+
+            it( "can skip query param struct key validation when configured", () => {
+                var relaxedUtils = new qb.models.Query.QueryUtils( validateQueryParamStructKeys = false );
+
+                var binding = relaxedUtils.extractBinding(
+                    {
+                        "foo": "bar",
+                        "value": "something",
+                        "null": true,
+                        "enabled": true
+                    },
+                    variables.mockGrammar
+                );
+
+                expect( binding.foo ).toBe( "bar" );
+                expect( binding.enabled ).toBeTrue();
+                expect( binding.null ).toBeTrue();
+                expect( binding.list ).toBeFalse();
+            } );
         } );
 
         describe( "queryToArrayOfStructs()", function() {

@@ -95,6 +95,12 @@ component displayname="QueryBuilder" accessors="true" {
      */
     property name="queryLog" type="array";
 
+    /**
+     * If true, executed queries are appended to the query log.
+     * @default true
+     */
+    property name="collectQueryLog" type="boolean";
+
     /******************** Query Properties ********************/
 
     /**
@@ -300,6 +306,8 @@ component displayname="QueryBuilder" accessors="true" {
      *                              to the sqlcommenter specification.
      * @shouldMaxRowsOverrideToAll  Callback function to determine if a given maxrows value
      *                              should be treated as all records.
+     * @collectQueryLog             Whether this builder should append execution data to queryLog.
+     *                              Default: true
      *
      * @return                      qb.models.Query.QueryBuilder
      */
@@ -314,7 +322,8 @@ component displayname="QueryBuilder" accessors="true" {
         parentQuery,
         defaultOptions = {},
         sqlCommenter = new qb.models.SQLCommenter.NullSQLCommenter(),
-        shouldMaxRowsOverrideToAll
+        shouldMaxRowsOverrideToAll,
+        boolean collectQueryLog = true
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
@@ -335,6 +344,7 @@ component displayname="QueryBuilder" accessors="true" {
         setReturnFormat( arguments.returnFormat );
         mergeDefaultOptions( arguments.defaultOptions );
         setSqlCommenter( arguments.sqlCommenter );
+        setCollectQueryLog( arguments.collectQueryLog );
 
         if ( isNull( arguments.shouldMaxRowsOverrideToAll ) ) {
             arguments.shouldMaxRowsOverrideToAll = function( maxRows ) {
@@ -4321,7 +4331,9 @@ component displayname="QueryBuilder" accessors="true" {
             returnObject = returnObject,
             pretend = variables.pretending,
             postProcessHook = function( data ) {
-                variables.queryLog.append( data );
+                if ( this.getCollectQueryLog() ) {
+                    variables.queryLog.append( data );
+                }
             }
         );
 

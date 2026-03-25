@@ -12,6 +12,7 @@ component {
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
             "validateOperatorsAndCombinators": true,
+            "collectQueryLog": true,
             "convertEmptyStringsToNull": true,
             "validateQueryParamStructKeys": true,
             "numericSQLType": "NUMERIC",
@@ -61,6 +62,7 @@ component {
             .initArg( name = "utils", ref = "QueryUtils@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "validateOperatorsAndCombinators", value = settings.validateOperatorsAndCombinators )
+            .initArg( name = "collectQueryLog", value = settings.collectQueryLog )
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
             .initArg( name = "defaultOptions", value = settings.defaultOptions )
             .initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" )

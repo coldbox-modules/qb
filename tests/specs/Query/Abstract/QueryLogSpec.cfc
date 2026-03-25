@@ -147,6 +147,17 @@ component extends="testbox.system.BaseSpec" {
                 expect( schema.getQueryLog()[ 1 ] ).toHaveKey( "executionTime" );
                 expect( schema.getQueryLog()[ 1 ].executionTime ).toBeNumeric().toBe( 0 );
             } );
+
+            it( "can disable query log collection", function() {
+                var qb = new qb.models.Query.QueryBuilder( collectQueryLog = false );
+                qb.pretend()
+                    .select( "*" )
+                    .from( "users" )
+                    .get();
+
+                expect( qb.getQueryLog() ).toBeArray();
+                expect( qb.getQueryLog() ).toHaveLength( 0 );
+            } );
         } );
     }
 

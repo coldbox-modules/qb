@@ -161,6 +161,31 @@ component extends="testbox.system.BaseSpec" {
                             qb.where( "::some column::", "::invalid operator::", "::some value::" );
                         } ).toThrow( type = "InvalidSQLType", regex = "Illegal operator" );
                     } );
+
+                    it( "can disable operator and combinator validation", function() {
+                        var relaxedQB = new qb.models.Query.QueryBuilder( validateOperatorsAndCombinators = false );
+                        getMockBox().prepareMock( relaxedQB );
+                        relaxedQB.$property( propertyName = "utils", mock = new qb.models.Query.QueryUtils() );
+
+                        expect( function() {
+                            relaxedQB.where(
+                                "::some column::",
+                                "::invalid operator::",
+                                "::some value::",
+                                "::invalid combinator::"
+                            );
+                        } ).notToThrow();
+
+                        expect( relaxedQB.getWheres() ).toBe( [
+                            {
+                                column: { "type": "simple", "value": "::some column::" },
+                                operator: "::invalid operator::",
+                                value: "::some value::",
+                                combinator: "::invalid combinator::",
+                                type: "basic"
+                            }
+                        ] );
+                    } );
                 } );
             } );
         } );

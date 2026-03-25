@@ -32,6 +32,13 @@ component displayname="QueryBuilder" accessors="true" {
     property name="preventDuplicateJoins";
 
     /**
+     * validateOperatorsAndCombinators
+     * If true, QB validates operators and combinators in where/having clauses.
+     * @default true
+     */
+    property name="validateOperatorsAndCombinators";
+
+    /**
      * paginationCollector
      * A component or struct with a `generateWithResults` method.
      * The `generateWithResults` method will recieve the following arguments:
@@ -278,6 +285,9 @@ component displayname="QueryBuilder" accessors="true" {
      *                              and is eventually returned to the caller. Default: 'array'
      * @preventDuplicateJoins       Whether QB should ignore a .join() statement that matches an existing join
      *                              Default: false
+     * @validateOperatorsAndCombinators
+     *                              Whether QB validates operators/combinators before storing clauses.
+     *                              Default: true
      * @paginationCollector         The closure that processes the pagination result.
      *                              Default: cbpaginator.models.Pagination
      * @columnFormatter             The closure that modifies each column before being
@@ -298,6 +308,7 @@ component displayname="QueryBuilder" accessors="true" {
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
         preventDuplicateJoins = false,
+        validateOperatorsAndCombinators = true,
         paginationCollector = new cbpaginator.models.Pagination(),
         columnFormatter,
         parentQuery,
@@ -309,6 +320,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.utils = arguments.utils;
 
         setPreventDuplicateJoins( arguments.preventDuplicateJoins );
+        setValidateOperatorsAndCombinators( arguments.validateOperatorsAndCombinators );
         if ( isNull( arguments.columnFormatter ) ) {
             arguments.columnFormatter = function( column ) {
                 return column;
@@ -1774,14 +1786,14 @@ component displayname="QueryBuilder" accessors="true" {
             return whereNested( arguments.column, arguments.combinator );
         }
 
-        if ( isInvalidCombinator( arguments.combinator ) ) {
+        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
 
         if ( isNull( arguments.value ) && isInvalidOperator( arguments.operator ) ) {
             arguments.value = arguments.operator;
             arguments.operator = "=";
-        } else if ( isInvalidOperator( arguments.operator ) ) {
+        } else if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( arguments.operator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal operator" );
         }
 
@@ -2045,7 +2057,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.operator = "=";
         }
 
-        if ( isInvalidOperator( operator ) ) {
+        if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( operator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal operator" );
         }
 
@@ -2381,7 +2393,7 @@ component displayname="QueryBuilder" accessors="true" {
         value,
         string combinator = "and"
     ) {
-        if ( isInvalidCombinator( arguments.combinator ) ) {
+        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
 
@@ -2408,7 +2420,7 @@ component displayname="QueryBuilder" accessors="true" {
         if ( isNull( arguments.value ) ) {
             arguments.value = arguments.operator;
             arguments.operator = "=";
-        } else if ( isInvalidOperator( arguments.operator ) ) {
+        } else if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( arguments.operator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal operator" );
         }
 

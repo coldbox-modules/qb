@@ -68,8 +68,6 @@ component displayname="Grammar" accessors="true" singleton {
         variables.shouldWrapValues = true;
         // These are overwritten by WireBox, if it exists.
         variables.interceptorService = {
-            "processState": function() {
-            },
             "announce": function() {
             }
         };
@@ -148,7 +146,7 @@ component displayname="Grammar" accessors="true" singleton {
         if ( variables.useAnnounceMethodForInterceptorService ) {
             variables.interceptorService.announce( "preQBExecute", data );
         } else {
-            variables.interceptorService.processState( "preQBExecute", data );
+            variables.interceptorService.announce( "preQBExecute", data );
         }
         return;
     }
@@ -161,7 +159,7 @@ component displayname="Grammar" accessors="true" singleton {
         if ( variables.useAnnounceMethodForInterceptorService ) {
             variables.interceptorService.announce( "postQBExecute", data );
         } else {
-            variables.interceptorService.processState( "postQBExecute", data );
+            variables.interceptorService.announce( "postQBExecute", data );
         }
         return;
     }

@@ -1017,6 +1017,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertUpdateWithExplicitValue() {
+        return {
+            sql: "INSERT INTO `vendors` (`code`, `count`, `name`, `vendorCode`) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE `count` = vendors.count + 1, `name` = ?",
+            bindings: [
+                "BB",
+                1,
+                "New Name",
+                "AA",
+                "New Name"
+            ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM `users`";
     }

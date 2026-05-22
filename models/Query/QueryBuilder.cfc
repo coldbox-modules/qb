@@ -3543,6 +3543,24 @@ component displayname="QueryBuilder" accessors="true" {
             } );
         } );
 
+        if ( isStruct( arguments.update ) ) {
+            var updates = arguments.update;
+            updateArray.each( function( column ) {
+                if (
+                    isNull( updates[ column.original ] ) ||
+                    getUtils().isNotExpression( updates[ column.original ] )
+                ) {
+                    addBindings(
+                        getUtils().extractBinding(
+                            isNull( updates[ column.original ] ) ? javacast( "null", "" ) : updates[ column.original ],
+                            variables.grammar
+                        ),
+                        "where"
+                    );
+                }
+            } );
+        }
+
         if ( isClosure( arguments.deleteUnmatched ) || isCustomFunction( arguments.deleteUnmatched ) ) {
             var deleteRestrictions = newQuery().setColumnFormatter( ( column ) => {
                 if ( listLen( column, "." ) > 1 ) {

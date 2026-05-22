@@ -1146,6 +1146,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertUpdateWithExplicitValue() {
+        return {
+            sql: "INSERT INTO ""vendors"" (""code"", ""count"", ""name"", ""vendorCode"") VALUES (?, ?, ?, ?) ON CONFLICT (""vendorCode"", ""code"") DO UPDATE SET ""count"" = vendors.count + 1, ""name"" = ?",
+            bindings: [
+                "BB",
+                1,
+                "New Name",
+                "AA",
+                "New Name"
+            ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM ""users""";
     }

@@ -1287,6 +1287,66 @@ component extends="testbox.system.BaseSpec" {
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                 expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"" FROM ""users""" );
             } );
+
+            it( "returns native struct returntypes without applying the builder return format", function() {
+                var builder = getBuilder();
+                var expectedResults = { "jane": { "id": 1, "name": "jane" }, "john": { "id": 2, "name": "john" } };
+                builder
+                    .$( "runQuery" )
+                    .$args(
+                        sql = "SELECT ""id"", ""name"" FROM ""users""",
+                        options = { "returntype": "struct", "columnkey": "name", "result": "local.result" }
+                    )
+                    .$results( expectedResults );
+                builder
+                    .$( "runQuery" )
+                    .$args(
+                        sql = "SELECT ""id"", ""name"" FROM ""users""",
+                        options = { "returntype": "struct", "columnkey": "name" }
+                    )
+                    .$results( expectedResults );
+
+                var results = builder
+                    .select( [ "id", "name" ] )
+                    .from( "users" )
+                    .get( options = { "returntype": "struct", "columnkey": "name" } );
+
+                expect( results ).toBe( expectedResults );
+                var runQueryLog = builder.$callLog().runQuery;
+                expect( runQueryLog ).toBeArray();
+                expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"", ""name"" FROM ""users""" );
+                expect( runQueryLog[ 1 ].options ).toBe( { "returntype": "struct", "columnkey": "name" } );
+            } );
+
+            it( "does not invoke custom return formats for native returntypes", function() {
+                var builder = getBuilder();
+                builder.setReturnFormat( function( q ) {
+                    fail( "The builder return format should not run for native returntypes." );
+                } );
+                var expectedResults = { "jane": { "id": 1, "name": "jane" } };
+                builder
+                    .$( "runQuery" )
+                    .$args(
+                        sql = "SELECT ""id"", ""name"" FROM ""users""",
+                        options = { "returntype": "struct", "columnkey": "name", "result": "local.result" }
+                    )
+                    .$results( expectedResults );
+                builder
+                    .$( "runQuery" )
+                    .$args(
+                        sql = "SELECT ""id"", ""name"" FROM ""users""",
+                        options = { "returntype": "struct", "columnkey": "name" }
+                    )
+                    .$results( expectedResults );
+
+                var results = builder
+                    .select( [ "id", "name" ] )
+                    .from( "users" )
+                    .get( options = { "returntype": "struct", "columnkey": "name" } );
+
+                expect( results ).toBe( expectedResults );
+            } );
         } );
 
         describe( "compiling the same builder multiple times", function() {

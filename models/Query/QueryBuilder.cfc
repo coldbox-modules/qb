@@ -4310,6 +4310,10 @@ component displayname="QueryBuilder" accessors="true" {
             return;
         }
 
+        if ( hasExplicitReturnType( arguments.options ) ) {
+            return q;
+        }
+
         if ( isQuery( q ) ) {
             return returnFormat( q );
         }
@@ -4323,6 +4327,10 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         return { result: q.result, query: returnFormat( q.query ) };
+    }
+
+    private boolean function hasExplicitReturnType( required struct options ) {
+        return arguments.options.keyExists( "returntype" ) && !isNull( arguments.options.returntype );
     }
 
     /**

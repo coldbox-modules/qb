@@ -2945,34 +2945,38 @@ component extends="testbox.system.BaseSpec" {
                 } );
 
                 it( "can delete unmatched source rows in an upsert with additional restrictions (SQL Server)", function() {
-                    testCase( function( builder ) {
-                        return builder
-                            .table( "users" )
-                            .upsert(
-                                source = function( q ) {
-                                    q.from( "activeDirectoryUsers" )
-                                        .select( [
-                                            "username",
-                                            "active",
-                                            "createdDate",
-                                            "modifiedDate"
-                                        ] )
-                                        .where( "active", 1 );
-                                },
-                                values = [
-                                    "username",
-                                    "active",
-                                    "createdDate",
-                                    "modifiedDate"
-                                ],
-                                target = [ "username" ],
-                                update = [ "active", "modifiedDate" ],
-                                deleteUnmatched = ( q ) => {
-                                    q.where( "active", 1 );
-                                },
-                                toSql = true
-                            );
-                    }, upsertWithDeleteRestricted() );
+                    testCase(
+                        callback = function( builder ) {
+                            return builder
+                                .table( "users" )
+                                .upsert(
+                                    source = function( q ) {
+                                        q.from( "activeDirectoryUsers" )
+                                            .select( [
+                                                "username",
+                                                "active",
+                                                "createdDate",
+                                                "modifiedDate"
+                                            ] )
+                                            .where( "active", { value: 1, cfsqltype: "INTEGER" } );
+                                    },
+                                    values = [
+                                        "username",
+                                        "active",
+                                        "createdDate",
+                                        "modifiedDate"
+                                    ],
+                                    target = [ "username" ],
+                                    update = [ "active", "modifiedDate" ],
+                                    deleteUnmatched = ( q ) => {
+                                        q.where( "active", { value: 0, cfsqltype: "INTEGER" } );
+                                    },
+                                    toSql = true
+                                );
+                        },
+                        expected = upsertWithDeleteRestricted(),
+                        withFullBindings = true
+                    );
                 } );
 
                 it( "can update fields to null", () => {
@@ -3067,7 +3071,11 @@ component extends="testbox.system.BaseSpec" {
             }
 
             expect( local.sql ).toBeWithCase( expected.sql );
-            getTestBindings( builder, arguments.withFullBindings ).each( ( testBinding, index ) => {
+            var testBindings = getTestBindings( builder, arguments.withFullBindings );
+            if ( arguments.withFullBindings ) {
+                expect( testBindings ).toHaveLength( expected.bindings.len() );
+            }
+            testBindings.each( ( testBinding, index ) => {
                 var expectedBinding = expected.bindings[ index ];
                 if ( isStruct( expectedBinding ) ) {
                     expect( testBinding ).toBeStruct();

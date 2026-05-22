@@ -3554,6 +3554,10 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.deleteUnmatched = deleteRestrictions;
         }
 
+        if ( getUtils().isBuilder( arguments.deleteUnmatched ) ) {
+            addBindingsFromBuilder( arguments.deleteUnmatched );
+        }
+
         columns.each( ( c ) => {
             c.formatted = mapToColumnType( c.formatted );
         } );

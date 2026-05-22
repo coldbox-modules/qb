@@ -1055,6 +1055,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertUpdateWithExplicitValue() {
+        return {
+            sql: "MERGE [vendors] AS [qb_target] USING (VALUES (?, ?, ?, ?)) AS [qb_src] ([code], [count], [name], [vendorCode]) ON [qb_target].[vendorCode] = [qb_src].[vendorCode] AND [qb_target].[code] = [qb_src].[code] WHEN MATCHED THEN UPDATE SET [count] = vendors.count + 1, [name] = ? WHEN NOT MATCHED BY TARGET THEN INSERT ([code], [count], [name], [vendorCode]) VALUES ([code], [count], [name], [vendorCode]);",
+            bindings: [
+                "BB",
+                1,
+                "New Name",
+                "AA",
+                "New Name"
+            ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM [users]";
     }

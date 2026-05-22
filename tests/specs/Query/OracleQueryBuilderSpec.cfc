@@ -1036,6 +1036,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertUpdateWithExplicitValue() {
+        return {
+            sql: "MERGE INTO ""VENDORS"" ""QB_TARGET"" USING (SELECT ?, ?, ?, ? FROM dual) ""QB_SRC"" ON ""QB_TARGET"".""VENDORCODE"" = ""QB_SRC"".""VENDORCODE"" AND ""QB_TARGET"".""CODE"" = ""QB_SRC"".""CODE"" WHEN MATCHED THEN UPDATE SET ""COUNT"" = vendors.count + 1, ""NAME"" = ? WHEN NOT MATCHED THEN INSERT (""CODE"", ""COUNT"", ""NAME"", ""VENDORCODE"") VALUES (""QB_SRC"".""CODE"", ""QB_SRC"".""COUNT"", ""QB_SRC"".""NAME"", ""QB_SRC"".""VENDORCODE"")",
+            bindings: [
+                "BB",
+                1,
+                "New Name",
+                "AA",
+                "New Name"
+            ]
+        };
+    }
+
     function deleteAll() {
         return "DELETE FROM ""USERS""";
     }

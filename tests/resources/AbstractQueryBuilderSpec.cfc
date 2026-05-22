@@ -2996,6 +2996,27 @@ component extends="testbox.system.BaseSpec" {
                             );
                     }, upsertUpdateToNull() );
                 } );
+
+                it( "adds bindings for explicit update values", () => {
+                    testCase(
+                        callback = function( builder ) {
+                            return builder
+                                .table( "vendors" )
+                                .upsert(
+                                    target = [ "vendorCode", "code" ],
+                                    values = {
+                                        "vendorCode": "AA",
+                                        "code": "BB",
+                                        "name": "New Name",
+                                        "count": 1
+                                    },
+                                    update = { "count": builder.raw( "vendors.count + 1" ), "name": "New Name" },
+                                    toSQL = true
+                                );
+                        },
+                        expected = upsertUpdateWithExplicitValue()
+                    );
+                } );
             } );
 
             describe( "delete statements", function() {
@@ -3072,9 +3093,7 @@ component extends="testbox.system.BaseSpec" {
 
             expect( local.sql ).toBeWithCase( expected.sql );
             var testBindings = getTestBindings( builder, arguments.withFullBindings );
-            if ( arguments.withFullBindings ) {
-                expect( testBindings ).toHaveLength( expected.bindings.len() );
-            }
+            expect( testBindings ).toHaveLength( expected.bindings.len() );
             testBindings.each( ( testBinding, index ) => {
                 var expectedBinding = expected.bindings[ index ];
                 if ( isStruct( expectedBinding ) ) {

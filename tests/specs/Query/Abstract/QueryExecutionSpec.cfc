@@ -885,8 +885,9 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "can return the max date of a table", function() {
                     var builder = getBuilder();
-                    var expectedMax = now();
-                    var expectedQuery = queryNew( "aggregate", "timestamp", [ { aggregate: expectedMax } ] );
+                    var maxDate = now();
+                    var expectedQuery = queryNew( "aggregate", "timestamp", [ { aggregate: maxDate } ] );
+                    var expectedMax = expectedQuery.aggregate;
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT MAX(""login_date"") AS ""aggregate"" FROM ""users""", options = {} )

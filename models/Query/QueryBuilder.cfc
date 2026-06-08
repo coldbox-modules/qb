@@ -4377,7 +4377,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
         structAppend( arguments.options, getDefaultOptions(), false );
-        normalizeQueryExecuteReturnTypeOptions( arguments.options );
+        guardAgainstReturnTypeOption( arguments.options );
         var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] );
 
         var result = grammar.runQuery(
@@ -4435,7 +4435,8 @@ component displayname="QueryBuilder" accessors="true" {
             columnFormatter = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
             parentQuery = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery(),
             defaultOptions = getDefaultOptions(),
-            validateQueryExecuteReturnType = getValidateQueryExecuteReturnType()
+            validateQueryExecuteReturnType = getValidateQueryExecuteReturnType(),
+            collectQueryLog = getCollectQueryLog()
         );
     }
 
@@ -4560,7 +4561,6 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function setReturnFormat( required any format, struct options = {} ) {
-        structDelete( variables.defaultOptions, "returntype" );
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
         } else {
@@ -4605,7 +4605,7 @@ component displayname="QueryBuilder" accessors="true" {
         return result;
     }
 
-    private void function normalizeQueryExecuteReturnTypeOptions( required struct options ) {
+    private void function guardAgainstReturnTypeOption( required struct options ) {
         if ( !arguments.options.keyExists( "returntype" ) ) {
             return;
         }

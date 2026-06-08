@@ -1393,6 +1393,36 @@ component extends="testbox.system.BaseSpec" {
                 expect( results ).toBe( "account-1" );
             } );
 
+            it( "carries return formatter settings to new queries and clones", function() {
+                var registry = new qb.models.Query.ReturnFormatterRegistry();
+                registry.registerReturnFormatter( "firstId", function( options ) {
+                    return function( q ) {
+                        return q.id[ 1 ];
+                    };
+                } );
+                var builder = getMockBox()
+                    .createMock( "qb.models.Query.QueryBuilder" )
+                    .init(
+                        grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                        returnFormatterRegistry = registry,
+                        validateQueryExecuteReturnType = true,
+                        collectQueryLog = false
+                    );
+
+                var newBuilder = builder.newQuery();
+                var clonedBuilder = builder.clone();
+
+                expect( newBuilder.getReturnFormatterRegistry() ).toBe( registry );
+                expect( newBuilder.getValidateQueryExecuteReturnType() ).toBeTrue();
+                expect( newBuilder.getCollectQueryLog() ).toBeFalse();
+                newBuilder.setReturnFormat( "firstId" );
+
+                expect( clonedBuilder.getReturnFormatterRegistry() ).toBe( registry );
+                expect( clonedBuilder.getValidateQueryExecuteReturnType() ).toBeTrue();
+                expect( clonedBuilder.getCollectQueryLog() ).toBeFalse();
+                clonedBuilder.setReturnFormat( "firstId" );
+            } );
+
             it( "creates a default return formatter registry when none is passed", function() {
                 var builder = getBuilder();
                 builder.setReturnFormat( "none" );
@@ -1458,6 +1488,26 @@ component extends="testbox.system.BaseSpec" {
 
                 expect( results ).toBe( expectedQuery );
                 expect( builder.getGrammar().$callLog().runQuery[ 1 ].options ).toBe( {} );
+            } );
+
+            it( "can strip native queryExecute returntype options from default options without mutating them", function() {
+                var builder = getBuilder();
+                builder.mergeDefaultOptions( { "returntype": "array", "columnkey": "id", "columnKey": "id" } );
+                builder.setReturnFormat( "query" );
+                var expectedQuery = queryNew( "id", "integer", [ { "id": 1 } ] );
+                builder
+                    .getGrammar()
+                    .$( "runQuery" )
+                    .$results( expectedQuery );
+
+                var results = builder
+                    .select( "id" )
+                    .from( "users" )
+                    .get();
+
+                expect( results ).toBe( expectedQuery );
+                expect( builder.getGrammar().$callLog().runQuery[ 1 ].options ).toBe( {} );
+                expect( builder.getDefaultOptions() ).toBe( { "returntype": "array", "columnkey": "id", "columnKey": "id" } );
             } );
 
             it( "can validate native queryExecute returntype options", function() {

@@ -64,7 +64,8 @@ component accessors="true" singleton {
         }
 
         var definition = variables.returnFormatters[ arguments.name ];
-        var formatterOptions = duplicate( definition.options );
+        var formatterOptions = {};
+        structAppend( formatterOptions, definition.options, true );
         structAppend( formatterOptions, arguments.options, true );
 
         var factory = resolveFactory( definition.factory, definition.properties );

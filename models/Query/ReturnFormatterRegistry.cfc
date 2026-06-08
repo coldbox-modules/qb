@@ -67,7 +67,13 @@ component accessors="true" singleton {
         var formatterOptions = duplicate( definition.options );
         structAppend( formatterOptions, arguments.options, true );
 
-        return resolveFactory( definition.factory, definition.properties )( formatterOptions );
+        var factory = resolveFactory( definition.factory, definition.properties );
+
+        if ( isClosure( factory ) || isCustomFunction( factory ) ) {
+            return factory( formatterOptions );
+        }
+
+        return factory.toFormatter( formatterOptions );
     }
 
     public boolean function hasReturnFormatter( required string name ) {
@@ -140,13 +146,10 @@ component accessors="true" singleton {
                 );
             }
 
-            var wireboxFactory = variables.wirebox.getInstance(
+            return variables.wirebox.getInstance(
                 name = arguments.factory,
                 initArguments = { "properties": arguments.properties }
             );
-            return function( options ) {
-                return wireboxFactory.toFormatter( arguments.options );
-            };
         }
 
         if ( !structKeyExists( arguments.factory, "toFormatter" ) ) {
@@ -156,10 +159,7 @@ component accessors="true" singleton {
             );
         }
 
-        var componentFactory = arguments.factory;
-        return function( options ) {
-            return componentFactory.toFormatter( arguments.options );
-        };
+        return arguments.factory;
     }
 
 }

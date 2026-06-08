@@ -4337,18 +4337,35 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( isQuery( q ) ) {
-            return returnFormat( q );
+            return applyReturnFormat( q );
         }
 
         if ( isArray( q ) ) {
-            return returnFormat( q );
+            return applyReturnFormat( q );
         }
 
         if ( !q.keyExists( "result" ) || !q.keyExists( "query" ) ) {
-            return returnFormat( q );
+            return applyReturnFormat( q );
         }
 
-        return { result: q.result, query: returnFormat( q.query ) };
+        return { result: q.result, query: applyReturnFormat( q.query ) };
+    }
+
+    private any function applyReturnFormat( required any q ) {
+        var formatter = getReturnFormat();
+
+        if ( isClosure( formatter ) || isCustomFunction( formatter ) ) {
+            return formatter( arguments.q );
+        }
+
+        if ( structKeyExists( formatter, "format" ) ) {
+            return formatter.format( arguments.q );
+        }
+
+        throw(
+            type = "InvalidFormat",
+            message = "The configured return formatter must be a closure or a component with a format method."
+        );
     }
 
     /**

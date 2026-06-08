@@ -7,11 +7,10 @@ component {
     this.cfmapping = "qb";
 
     function configure() {
-        settings = {
-            "defaultGrammar": "AutoDiscover@qb",
-            "defaultReturnFormat": "array",
-            "defaultReturnFormatOptions": {},
-            "preventDuplicateJoins": false,
+		settings = {
+			"defaultGrammar": "AutoDiscover@qb",
+			"defaultReturnFormat": "array",
+			"preventDuplicateJoins": false,
             "validateOperatorsAndCombinators": true,
             "validateQueryExecuteReturnType": false,
             "collectQueryLog": true,
@@ -77,11 +76,10 @@ component {
             .initArg( name = "returnFormatterRegistry", ref = "ReturnFormatterRegistry@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "validateOperatorsAndCombinators", value = settings.validateOperatorsAndCombinators )
-            .initArg( name = "validateQueryExecuteReturnType", value = settings.validateQueryExecuteReturnType )
-            .initArg( name = "collectQueryLog", value = settings.collectQueryLog )
-            .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
-            .initArg( name = "defaultReturnFormatOptions", value = settings.defaultReturnFormatOptions )
-            .initArg( name = "defaultOptions", value = settings.defaultOptions )
+			.initArg( name = "validateQueryExecuteReturnType", value = settings.validateQueryExecuteReturnType )
+			.initArg( name = "collectQueryLog", value = settings.collectQueryLog )
+			.initArg( name = "returnFormat", value = settings.defaultReturnFormat )
+			.initArg( name = "defaultOptions", value = settings.defaultOptions )
             .initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" )
             .initArg( name = "shouldMaxRowsOverrideToAll", value = settings.shouldMaxRowsOverrideToAll );
 

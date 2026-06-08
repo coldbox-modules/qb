@@ -301,8 +301,6 @@ component displayname="QueryBuilder" accessors="true" {
      *                              Default: qb.models.Query.QueryUtils
      * @returnFormat                The closure (or string format shortcut) that modifies the query
      *                              and is eventually returned to the caller. Default: 'array'
-     * @defaultReturnFormatOptions  Options passed to the default return formatter.
-     *                              Default: {}
      * @returnFormatterRegistry     Registry used to resolve named return formatters.
      * @preventDuplicateJoins       Whether QB should ignore a .join() statement that matches an existing join
      *                              Default: false
@@ -333,7 +331,6 @@ component displayname="QueryBuilder" accessors="true" {
         grammar = new qb.models.Grammars.BaseGrammar(),
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
-        struct defaultReturnFormatOptions = {},
         returnFormatterRegistry,
         preventDuplicateJoins = false,
         validateOperatorsAndCombinators = true,
@@ -367,7 +364,7 @@ component displayname="QueryBuilder" accessors="true" {
             setParentQuery( arguments.parentQuery );
         }
         param variables.defaultOptions = {};
-        setReturnFormat( arguments.returnFormat, arguments.defaultReturnFormatOptions );
+        setReturnFormat( arguments.returnFormat );
         mergeDefaultOptions( arguments.defaultOptions );
         setSqlCommenter( arguments.sqlCommenter );
         setCollectQueryLog( arguments.collectQueryLog );

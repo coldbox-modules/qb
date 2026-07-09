@@ -50,6 +50,10 @@ jobs:
 
   release:
     name: Semantic Release
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
     if: "!contains(github.event.head_commit.message, '__SEMANTIC RELEASE VERSION UPDATE__')"
     needs: tests
     runs-on: ubuntu-latest

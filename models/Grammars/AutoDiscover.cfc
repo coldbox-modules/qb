@@ -26,7 +26,7 @@ component singleton {
     }
 
     function onMissingMethod( missingMethodName, missingMethodArguments ) {
-        if ( !structKeyExists( variables, "grammar" ) ) {
+        if ( isNull( variables.grammar ) || !structKeyExists( variables, "grammar" ) ) {
             variables.grammar = autoDiscoverGrammar();
         }
         return invoke( variables.grammar, missingMethodName, missingMethodArguments );

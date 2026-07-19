@@ -14,6 +14,7 @@ component {
             "validateOperatorsAndCombinators": true,
             "collectQueryLog": true,
             "convertEmptyStringsToNull": true,
+            "shouldWrapValues": true,
             "validateQueryParamStructKeys": true,
             "numericSQLType": "NUMERIC",
             "integerSQLType": "INTEGER",
@@ -72,6 +73,13 @@ component {
             .map( alias = "SchemaBuilder@qb", force = true )
             .to( "qb.models.Schema.SchemaBuilder" )
             .initArg( name = "grammar", ref = settings.defaultGrammar );
+
+        // Apply shouldWrapValues setting to the configured grammar singleton.
+        // When defaultGrammar is AutoDiscover@qb, the setting is forwarded via
+        // onMissingMethod to whatever concrete grammar AutoDiscover resolves at runtime.
+        if ( structKeyExists( settings, "shouldWrapValues" ) ) {
+            wirebox.getInstance( settings.defaultGrammar ).setShouldWrapValues( settings.shouldWrapValues );
+        }
     }
 
 }

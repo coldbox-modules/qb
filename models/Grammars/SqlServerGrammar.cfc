@@ -852,11 +852,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function typeJson( column ) {
-        return "NVARCHAR(MAX)";
+        return "JSON";
     }
 
     function typeJsonb( column ) {
-        return "NVARCHAR(MAX)";
+        return "JSON";
     }
 
     function typeLongText( column ) {

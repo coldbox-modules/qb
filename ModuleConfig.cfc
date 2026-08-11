@@ -7,10 +7,10 @@ component {
     this.cfmapping = "qb";
 
     function configure() {
-		settings = {
-			"defaultGrammar": "AutoDiscover@qb",
-			"defaultReturnFormat": "array",
-			"preventDuplicateJoins": false,
+        settings = {
+            "defaultGrammar": "AutoDiscover@qb",
+            "defaultReturnFormat": "array",
+            "preventDuplicateJoins": false,
             "validateOperatorsAndCombinators": true,
             "validateQueryExecuteReturnType": false,
             "collectQueryLog": true,
@@ -58,11 +58,6 @@ component {
             .initArg( name = "decimalSQLType", value = settings.decimalSQLType );
 
         binder
-            .map( alias = "StructFormatter@qb", force = true )
-            .to( "qb.models.Query.Formatters.StructFormatter" )
-            .initArg( name = "utils", ref = "QueryUtils@qb" );
-
-        binder
             .map( alias = "ReturnFormatterRegistry@qb", force = true )
             .to( "qb.models.Query.ReturnFormatterRegistry" )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
@@ -76,10 +71,10 @@ component {
             .initArg( name = "returnFormatterRegistry", ref = "ReturnFormatterRegistry@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "validateOperatorsAndCombinators", value = settings.validateOperatorsAndCombinators )
-			.initArg( name = "validateQueryExecuteReturnType", value = settings.validateQueryExecuteReturnType )
-			.initArg( name = "collectQueryLog", value = settings.collectQueryLog )
-			.initArg( name = "returnFormat", value = settings.defaultReturnFormat )
-			.initArg( name = "defaultOptions", value = settings.defaultOptions )
+            .initArg( name = "validateQueryExecuteReturnType", value = settings.validateQueryExecuteReturnType )
+            .initArg( name = "collectQueryLog", value = settings.collectQueryLog )
+            .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
+            .initArg( name = "defaultOptions", value = settings.defaultOptions )
             .initArg( name = "sqlCommenter", ref = "ColdBoxSQLCommenter@qb" )
             .initArg( name = "shouldMaxRowsOverrideToAll", value = settings.shouldMaxRowsOverrideToAll );
 

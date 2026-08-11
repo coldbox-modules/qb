@@ -15,10 +15,9 @@ component displayname="QueryBuilder" accessors="true" {
     property name="utils";
 
     /**
-     * returnFormat callback
-     * If provided, the result of the callback is returned as the result of builder.
-     * Can optionally pass either "array" or "query"
-     * and the correct callback will be generated
+     * Resolved return formatter.
+     * If provided as a callback, its result is returned as the result of the builder.
+     * Named formatters are resolved through the return formatter registry.
      * @default "array"
      */
     property name="returnFormat";
@@ -4552,10 +4551,11 @@ component displayname="QueryBuilder" accessors="true" {
 
     /**
      * Sets the return format for the query.
-     * The return format can be a simple string like "query" to return queries or "array" to return an array of structs.
-     * Alternative, the return format can be a closure.  The closure is passed the query as the only argument.  The result of the closure is returned as the result of the query.
+     * The format can be a registered formatter name such as "array", "query", "none", or "struct".
+     * Alternatively, the format can be a closure. The closure receives the query as its only argument,
+     * and its result is returned as the result of the builder.
      *
-     * @format "query", "array", or a closure.
+     * @format A registered formatter name or closure.
      * @options Options passed to named return formatter factories.
      *
      * @return qb.models.Query.QueryBuilder
@@ -4591,7 +4591,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Runs the code inside the callback with the return format specified and then sets the return format back to its original value.
      *
-     * @returnFormat "query", "array", or a closure.
+     * @returnFormat A registered formatter name or closure.
      * @callback The code to execute with the given return format.
      * @options Options passed to named return formatter factories.
      *

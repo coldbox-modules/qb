@@ -556,6 +556,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function addTimestamps() {
+        return [
+            "ALTER TABLE ""users"" ADD COLUMN ""createdDate"" TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE ""users"" ADD COLUMN ""modifiedDate"" TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        ];
+    }
+
     function addMultiple() {
         return [
             "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" TEXT NOT NULL CHECK (""tshirt_size"" IN ('S', 'M', 'L', 'XL', 'XXL'))",

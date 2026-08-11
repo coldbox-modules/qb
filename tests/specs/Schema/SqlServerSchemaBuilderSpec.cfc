@@ -535,6 +535,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function addTimestamps() {
+        return [
+            "ALTER TABLE [users] ADD [createdDate] DATETIME2 NOT NULL CONSTRAINT [df_users_createdDate] DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE [users] ADD [modifiedDate] DATETIME2 NOT NULL CONSTRAINT [df_users_modifiedDate] DEFAULT CURRENT_TIMESTAMP"
+        ];
+    }
+
     function addMultiple() {
         return [
             "ALTER TABLE [users] ADD [tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_users_tshirt_size] CHECK ([tshirt_size] IN ('S', 'M', 'L', 'XL', 'XXL'))",

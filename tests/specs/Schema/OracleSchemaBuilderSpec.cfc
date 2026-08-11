@@ -605,6 +605,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function addTimestamps() {
+        return [
+            "ALTER TABLE ""USERS"" ADD ""CREATEDDATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL",
+            "ALTER TABLE ""USERS"" ADD ""MODIFIEDDATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL"
+        ];
+    }
+
     function addMultiple() {
         return [
             "ALTER TABLE ""USERS"" ADD ""TSHIRT_SIZE"" VARCHAR2(255) NOT NULL",

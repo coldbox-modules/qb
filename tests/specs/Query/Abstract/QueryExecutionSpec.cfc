@@ -1579,6 +1579,18 @@ component extends="testbox.system.BaseSpec" {
             it( "returns an empty array for no values", function() {
                 expect( getBuilder().from( "users" ).insertBulk( values = [], toSql = true ) ).toBe( [] );
             } );
+
+            it( "uses a non-positive chunk size to insert all rows", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .insertBulk(
+                        values = [ { "email": "one@example.com" }, { "email": "two@example.com" } ],
+                        chunkSize = -1,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [ "INSERT INTO ""users"" (""email"") VALUES (?), (?)" ] );
+            } );
         } );
     }
 

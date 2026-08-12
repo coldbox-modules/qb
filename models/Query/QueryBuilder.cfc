@@ -3674,12 +3674,12 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Inserts a large set of rows using parameter-aware batches.
-     * Grammars may provide a more efficient bulk strategy in the future without
-     * changing this public API.
+     * Inserts a large set of rows using a grammar's native bulk strategy when available,
+     * falling back to parameter-aware batches otherwise.
      *
      * @values An array of structs to insert in to the table.
-     * @chunkSize The preferred number of rows per batch. A value of zero uses the largest safe batch for the grammar. Default: 0.
+     * @sqlTypes SQL types keyed by column name. Types are inferred for columns not provided.
+     * @chunkSize The preferred number of rows per batch. A non-positive value uses all rows, subject to grammar parameter limits. Default: -1.
      * @options Any options to pass to `queryExecute`. Default: {}.
      * @toSql If true, returns the raw SQL strings instead of running the queries. Useful for debugging. Default: false.
      *
@@ -3687,16 +3687,13 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public array function insertBulk(
         required array values,
-        numeric chunkSize = 0,
+        struct sqlTypes = {},
+        numeric chunkSize = -1,
         struct options = {},
         boolean toSql = false
     ) {
         if ( arguments.values.isEmpty() ) {
             return [];
-        }
-
-        if ( arguments.chunkSize < 0 ) {
-            throw( type = "InvalidChunkSize", message = "The insertBulk chunkSize must be zero or greater." );
         }
 
         var columnCount = arguments.values[ 1 ].count();
@@ -3705,7 +3702,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         var safeChunkSize = arguments.values.len();
-        if ( getGrammar().parameterLimit > 0 ) {
+        if ( !getGrammar().supportsBulkInsert() && getGrammar().parameterLimit > 0 ) {
             safeChunkSize = max( 1, floor( getGrammar().parameterLimit / columnCount ) );
         }
         if ( arguments.chunkSize > 0 ) {
@@ -3715,17 +3712,88 @@ component displayname="QueryBuilder" accessors="true" {
         var results = [];
         for ( var offset = 1; offset <= arguments.values.len(); offset += safeChunkSize ) {
             var batchSize = min( safeChunkSize, arguments.values.len() - offset + 1 );
-            var batchQuery = clone();
-            results.append(
-                batchQuery.insert(
-                    values = arguments.values.slice( offset, batchSize ),
-                    options = arguments.options,
-                    toSql = arguments.toSql
-                )
-            );
+            var batch = arguments.values.slice( offset, batchSize );
+
+            if ( getGrammar().supportsBulkInsert() ) {
+                var sql = compileNativeBulkInsert( batch, arguments.sqlTypes );
+                if ( arguments.toSql ) {
+                    results.append( sql );
+                } else {
+                    results.append( runQuery( sql, arguments.options, "result" ) );
+                    clearBindings( only = [ "insert" ] );
+                }
+            } else {
+                var batchQuery = clone();
+                results.append(
+                    batchQuery.insert( values = batch, options = arguments.options, toSql = arguments.toSql )
+                );
+            }
         }
 
         return results;
+    }
+
+    /**
+     * Prepares a batch for a grammar's native bulk insert compiler.
+     */
+    private string function compileNativeBulkInsert( required array values, required struct sqlTypes ) {
+        var columns = arguments.values[ 1 ]
+            .keyArray()
+            .map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": mapToColumnType( formatted ) };
+            } );
+        columns.sort( ( a, b ) => compareNoCase( a.formatted.value, b.formatted.value ) );
+
+        var serializedValues = arguments.values.map( function( row ) {
+            var serializedRow = {};
+            columns.each( function( column ) {
+                if ( !row.keyExists( column.original ) || isNull( row[ column.original ] ) ) {
+                    serializedRow[ column.original ] = javacast( "null", "" );
+                    return;
+                }
+                if ( getUtils().isExpression( row[ column.original ] ) ) {
+                    throw( type = "InvalidBulkValue", message = "Bulk insert values cannot contain SQL expressions." );
+                }
+                var binding = getUtils().extractBinding( row[ column.original ], variables.grammar );
+                serializedRow[ column.original ] = binding.null ? javacast( "null", "" ) : binding.value;
+            } );
+            return serializedRow;
+        } );
+
+        var bulkValues = arguments.values;
+        var explicitSqlTypes = arguments.sqlTypes;
+        columns.each( function( column ) {
+            var columnValues = bulkValues.map( function( row ) {
+                return row.keyExists( column.original ) ? row[ column.original ] : javacast( "null", "" );
+            } );
+            var sqlType = explicitSqlTypes.keyExists( column.original )
+             ? explicitSqlTypes[ column.original ]
+             : getGrammar().resolveWhereInBulkSqlType( getUtils().inferSqlType( columnValues, variables.grammar ) );
+            sqlType = trim( sqlType );
+            if (
+                sqlType == "" ||
+                !reFindNoCase(
+                    "^[a-z][a-z0-9_]*(?:\s+[a-z][a-z0-9_]*)*(?:\s*\(\s*(?:max|\d+)(?:\s*,\s*\d+)?\s*\))?$",
+                    sqlType
+                )
+            ) {
+                throw( type = "InvalidSQLType", message = "Invalid SQL type [#sqlType#] for a bulk insert." );
+            }
+            column.bulkSqlType = sqlType;
+        } );
+
+        addBindings(
+            [
+                getUtils().extractBinding(
+                    { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
+                    variables.grammar
+                )
+            ],
+            "insert"
+        );
+
+        return getGrammar().compileBulkInsert( this, columns );
     }
 
     /**

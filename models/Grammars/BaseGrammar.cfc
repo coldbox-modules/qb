@@ -934,6 +934,23 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Whether this grammar provides a native bulk insert strategy.
+     */
+    public boolean function supportsBulkInsert() {
+        return false;
+    }
+
+    /**
+     * Compile a native bulk insert statement.
+     *
+     * @query The Builder instance.
+     * @columns The columns and resolved SQL types to insert.
+     */
+    public string function compileBulkInsert( required any query, required array columns ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support native bulk inserts." );
+    }
+
+    /**
      * Compile a Builder's query into an insert string ignoring duplicate key values.
      *
      * @qb The Builder instance.

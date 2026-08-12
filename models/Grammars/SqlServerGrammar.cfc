@@ -1,5 +1,50 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
+    public boolean function supportsBulkInsert() {
+        return true;
+    }
+
+    public string function compileBulkInsert( required any query, required array columns ) {
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.query.getShouldWrapValues() );
+            }
+
+            var columnsString = arguments.columns.map( ( column ) => wrapColumn( column.formatted ) ).toList( ", " );
+            var returningColumns = arguments.query
+                .getReturning()
+                .map( function( column ) {
+                    if ( column.type == "raw" ) {
+                        return trim( column.getSQL() );
+                    }
+                    if ( listLen( column.value, "." ) > 1 ) {
+                        return column.value;
+                    }
+                    return "INSERTED." & wrapColumn( column );
+                } )
+                .toList( ", " );
+            var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
+            var withColumns = arguments.columns
+                .map( function( column ) {
+                    var escapedPath = replace(
+                        replace( column.original, "\", "\\", "all" ),
+                        """",
+                        "\""",
+                        "all"
+                    );
+                    return "#wrapColumn( column.formatted )# #column.bulkSqlType# '$.""#escapedPath#""'";
+                } )
+                .toList( ", " );
+
+            return "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#)#returningClause# SELECT #columnsString# FROM OPENJSON(?) WITH (#withColumns#)";
+        } finally {
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
     public string function compileWhereInBulkValues( required string sqlType ) {
         return "SELECT [value] FROM OPENJSON(?) WITH ([value] #arguments.sqlType# '$')";
     }

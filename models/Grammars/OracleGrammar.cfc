@@ -608,15 +608,23 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return "";
         }
 
-        var table = uCase( blueprint.getTable() );
+        var qualifiedTable = uCase( blueprint.getTable() );
+        var table = listLast( qualifiedTable, "." );
+        var schema = listLen( qualifiedTable, "." ) > 1 ? listDeleteAt(
+            qualifiedTable,
+            listLen( qualifiedTable, "." ),
+            "."
+        ) : "";
         var columnName = uCase( column.getName() );
         var sequenceName = "SEQ_#table#";
         var triggerName = "TRG_#table#";
-        blueprint.addCommand( "raw", { "sql": "CREATE SEQUENCE ""#sequenceName#""" } );
+        var qualifiedSequenceName = schema == "" ? sequenceName : "#schema#.#sequenceName#";
+        var qualifiedTriggerName = schema == "" ? triggerName : "#schema#.#triggerName#";
+        blueprint.addCommand( "raw", { "sql": "CREATE SEQUENCE #wrapTable( qualifiedSequenceName )#" } );
         blueprint.addCommand(
             "raw",
             {
-                "sql": "CREATE OR REPLACE TRIGGER ""#triggerName#"" BEFORE INSERT ON ""#table#"" FOR EACH ROW WHEN (NEW.""#columnName#"" IS NULL) BEGIN SELECT ""#sequenceName#"".NEXTVAL INTO ::NEW.""#columnName#"" FROM dual; END"
+                "sql": "CREATE OR REPLACE TRIGGER #wrapTable( qualifiedTriggerName )# BEFORE INSERT ON #wrapTable( qualifiedTable )# FOR EACH ROW WHEN (NEW.#wrapColumn( { "type": "simple", "value": columnName } )# IS NULL) BEGIN SELECT #wrapTable( qualifiedSequenceName )#.NEXTVAL INTO ::NEW.#wrapColumn( { "type": "simple", "value": columnName } )# FROM dual; END"
             }
         );
         return "";
@@ -837,14 +845,20 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             var statements = [ "DROP TABLE #wrapTable( arguments.blueprint.getTable() )#" ];
 
-            var sequenceName = "SEQ_#uCase( arguments.blueprint.getTable() )#";
+            var table = uCase( listLast( arguments.blueprint.getTable(), "." ) );
+            var schema = listLen( arguments.blueprint.getTable(), "." ) > 1 ? listDeleteAt(
+                arguments.blueprint.getTable(),
+                listLen( arguments.blueprint.getTable(), "." ),
+                "."
+            ) : "";
+            var sequenceName = "SEQ_#table#";
             if ( hasSequence( arguments.blueprint, sequenceName ) ) {
-                statements.append( "DROP SEQUENCE #wrapTable( sequenceName )#" );
+                statements.append( "DROP SEQUENCE #wrapTable( schema == "" ? sequenceName : "#schema#.#sequenceName#" )#" );
             }
 
-            var triggerName = "TRG_#uCase( arguments.blueprint.getTable() )#";
+            var triggerName = "TRG_#table#";
             if ( hasTrigger( arguments.blueprint, triggerName ) ) {
-                statements.append( "DROP TRIGGER #wrapTable( triggerName )#" );
+                statements.append( "DROP TRIGGER #wrapTable( schema == "" ? triggerName : "#schema#.#triggerName#" )#" );
             }
 
             return statements;

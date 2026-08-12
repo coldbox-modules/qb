@@ -4,6 +4,78 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         super.run();
 
         describe( "Oracle Grammar-specific tests", function() {
+            it( "prefixes schema builder tables with the default schema", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                var statements = schema
+                    .create(
+                        "users",
+                        ( table ) => {
+                            table.string( "username" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSql();
+
+                expect( statements ).toBe( [ "CREATE TABLE ""APP"".""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL)" ] );
+            } );
+
+            it( "preserves explicitly qualified table names", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                var statements = schema
+                    .create(
+                        "audit.users",
+                        ( table ) => {
+                            table.string( "username" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSql();
+
+                expect( statements ).toBe( [ "CREATE TABLE ""AUDIT"".""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL)" ] );
+            } );
+
+            it( "prefixes generated sequences and triggers without including the schema in their names", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                var statements = schema
+                    .create(
+                        "users",
+                        ( table ) => {
+                            table.increments( "id" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSql();
+
+                expect( statements ).toBe( [
+                    "CREATE TABLE ""APP"".""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
+                    "CREATE SEQUENCE ""APP"".""SEQ_USERS""",
+                    "CREATE OR REPLACE TRIGGER ""APP"".""TRG_USERS"" BEFORE INSERT ON ""APP"".""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""APP"".""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
+                ] );
+            } );
+
+            it( "drops generated sequences and triggers from the default schema", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                variables.mockGrammar.$( "hasSequence", true );
+                variables.mockGrammar.$( "hasTrigger", true );
+
+                expect( schema.drop( "users", {}, false ).toSql() ).toBe( [
+                    "DROP TABLE ""APP"".""USERS""",
+                    "DROP SEQUENCE ""APP"".""SEQ_USERS""",
+                    "DROP TRIGGER ""APP"".""TRG_USERS"""
+                ] );
+            } );
+
+            it( "uses an explicit table schema for existence checks", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                variables.mockGrammar.$( "runQuery", queryNew( "" ) );
+                schema.hasTable( "audit.users" );
+
+                expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ] ).toBe( [ "users", "audit" ] );
+            } );
+
             it( "attempts to drop sequences and triggers when dropping a table", () => {
                 try {
                     var schema = getBuilder();

@@ -1,19 +1,19 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     public string function compileJsonScalar( required struct jsonPath ) {
-        return "json_unquote(json_extract(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
+        return "JSON_UNQUOTE(JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
     }
 
     public string function compileJsonContains( required struct jsonPath ) {
-        return "json_contains(#wrapJsonColumn( arguments.jsonPath )#, ?, '#buildJsonPath( arguments.jsonPath.path )#')";
+        return "JSON_CONTAINS(#wrapJsonColumn( arguments.jsonPath )#, ?, '#buildJsonPath( arguments.jsonPath.path )#')";
     }
 
     public string function compileJsonExists( required struct jsonPath ) {
-        return "ifnull(json_contains_path(#wrapJsonColumn( arguments.jsonPath )#, 'one', '#buildJsonPath( arguments.jsonPath.path )#'), 0)";
+        return "IFNULL(JSON_CONTAINS_PATH(#wrapJsonColumn( arguments.jsonPath )#, 'one', '#buildJsonPath( arguments.jsonPath.path )#'), 0)";
     }
 
     public string function compileJsonLength( required struct jsonPath ) {
-        return "json_length(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+        return "JSON_LENGTH(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }
 
     public any function prepareJsonContainsBinding( required any value ) {

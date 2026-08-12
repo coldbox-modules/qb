@@ -1,20 +1,20 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     public string function compileJsonScalar( required struct jsonPath ) {
-        return "json_extract(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+        return "JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }
 
     public string function compileJsonContains( required struct jsonPath ) {
         var path = buildJsonPath( arguments.jsonPath.path );
-        return "EXISTS (SELECT 1 FROM json_each(#wrapJsonColumn( arguments.jsonPath )#, '#path#') WHERE ""json_each"".""value"" IS ?)";
+        return "EXISTS (SELECT 1 FROM JSON_EACH(#wrapJsonColumn( arguments.jsonPath )#, '#path#') WHERE ""json_each"".""value"" IS ?)";
     }
 
     public string function compileJsonExists( required struct jsonPath ) {
-        return "json_type(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#') IS NOT NULL";
+        return "JSON_TYPE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#') IS NOT NULL";
     }
 
     public string function compileJsonLength( required struct jsonPath ) {
-        return "json_array_length(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+        return "JSON_ARRAY_LENGTH(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }
 
     /**

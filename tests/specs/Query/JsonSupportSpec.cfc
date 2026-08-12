@@ -6,11 +6,11 @@ component extends="testbox.system.BaseSpec" {
                 {
                     name: "MySQL",
                     component: "qb.models.Grammars.MySQLGrammar",
-                    selectSql: "SELECT json_unquote(json_extract(`profile`, '$.""contacts""[0].""email""')) AS `explicitName`, json_unquote(json_extract(`profile`, '$.""contacts""[0].""email""')) AS `shortcutName` FROM `users`",
-                    whereSql: "SELECT * FROM `users` WHERE json_unquote(json_extract(`profile`, '$.""age""')) >= ? AND json_unquote(json_extract(`profile`, '$.""age""')) < ?",
-                    containsSql: "SELECT * FROM `users` WHERE json_contains(`profile`, ?, '$.""languages""') AND json_contains(`profile`, ?, '$.""languages""')",
-                    existsSql: "SELECT * FROM `users` WHERE ifnull(json_contains_path(`profile`, 'one', '$.""name""'), 0) AND ifnull(json_contains_path(`profile`, 'one', '$.""name""'), 0)",
-                    lengthSql: "SELECT * FROM `users` WHERE json_length(`profile`, '$.""languages""') > ? AND json_length(`profile`, '$.""languages""') > ? ORDER BY json_unquote(json_extract(`profile`, '$.""name""')) ASC, json_unquote(json_extract(`profile`, '$.""name""')) DESC",
+                    selectSql: "SELECT JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""contacts""[0].""email""')) AS `explicitName`, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""contacts""[0].""email""')) AS `shortcutName` FROM `users`",
+                    whereSql: "SELECT * FROM `users` WHERE JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""age""')) >= ? AND JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""age""')) < ?",
+                    containsSql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+                    existsSql: "SELECT * FROM `users` WHERE IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0) AND IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0)",
+                    lengthSql: "SELECT * FROM `users` WHERE JSON_LENGTH(`profile`, '$.""languages""') > ? AND JSON_LENGTH(`profile`, '$.""languages""') > ? ORDER BY JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""name""')) ASC, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""name""')) DESC",
                     containsBindings: [ """en""", """en""" ]
                 },
                 {
@@ -20,37 +20,37 @@ component extends="testbox.system.BaseSpec" {
                     whereSql: "SELECT * FROM ""users"" WHERE ""profile""->>'age' >= ? AND ""profile""->>'age' < ?",
                     containsSql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
                     existsSql: "SELECT * FROM ""users"" WHERE ""profile""->'name' IS NOT NULL AND ""profile""->'name' IS NOT NULL",
-                    lengthSql: "SELECT * FROM ""users"" WHERE jsonb_array_length((""profile""->'languages')::jsonb) > ? AND jsonb_array_length((""profile""->'languages')::jsonb) > ? ORDER BY ""profile""->>'name' ASC, ""profile""->>'name' DESC",
+                    lengthSql: "SELECT * FROM ""users"" WHERE JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ? AND JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ? ORDER BY ""profile""->>'name' ASC, ""profile""->>'name' DESC",
                     containsBindings: [ """en""", """en""" ]
                 },
                 {
                     name: "SQL Server",
                     component: "qb.models.Grammars.SqlServerGrammar",
-                    selectSql: "SELECT json_value([profile], '$.""contacts""[0].""email""') AS [explicitName], json_value([profile], '$.""contacts""[0].""email""') AS [shortcutName] FROM [users]",
-                    whereSql: "SELECT * FROM [users] WHERE json_value([profile], '$.""age""') >= ? AND json_value([profile], '$.""age""') < ?",
-                    containsSql: "SELECT * FROM [users] WHERE ? IN (SELECT [value] FROM openjson([profile], '$.""languages""')) AND ? IN (SELECT [value] FROM openjson([profile], '$.""languages""'))",
-                    existsSql: "SELECT * FROM [users] WHERE 'name' IN (SELECT [key] FROM openjson([profile])) AND 'name' IN (SELECT [key] FROM openjson([profile]))",
-                    lengthSql: "SELECT * FROM [users] WHERE (SELECT count(*) FROM openjson([profile], '$.""languages""')) > ? AND (SELECT count(*) FROM openjson([profile], '$.""languages""')) > ? ORDER BY json_value([profile], '$.""name""') ASC, json_value([profile], '$.""name""') DESC",
+                    selectSql: "SELECT JSON_VALUE([profile], '$.""contacts""[0].""email""') AS [explicitName], JSON_VALUE([profile], '$.""contacts""[0].""email""') AS [shortcutName] FROM [users]",
+                    whereSql: "SELECT * FROM [users] WHERE JSON_VALUE([profile], '$.""age""') >= ? AND JSON_VALUE([profile], '$.""age""') < ?",
+                    containsSql: "SELECT * FROM [users] WHERE ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""')) AND ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))",
+                    existsSql: "SELECT * FROM [users] WHERE 'name' IN (SELECT [key] FROM OPENJSON([profile])) AND 'name' IN (SELECT [key] FROM OPENJSON([profile]))",
+                    lengthSql: "SELECT * FROM [users] WHERE (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ? AND (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ? ORDER BY JSON_VALUE([profile], '$.""name""') ASC, JSON_VALUE([profile], '$.""name""') DESC",
                     containsBindings: [ "en", "en" ]
                 },
                 {
                     name: "SQLite",
                     component: "qb.models.Grammars.SQLiteGrammar",
-                    selectSql: "SELECT json_extract(""profile"", '$.""contacts""[0].""email""') AS ""explicitName"", json_extract(""profile"", '$.""contacts""[0].""email""') AS ""shortcutName"" FROM ""users""",
-                    whereSql: "SELECT * FROM ""users"" WHERE json_extract(""profile"", '$.""age""') >= ? AND json_extract(""profile"", '$.""age""') < ?",
-                    containsSql: "SELECT * FROM ""users"" WHERE EXISTS (SELECT 1 FROM json_each(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND EXISTS (SELECT 1 FROM json_each(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)",
-                    existsSql: "SELECT * FROM ""users"" WHERE json_type(""profile"", '$.""name""') IS NOT NULL AND json_type(""profile"", '$.""name""') IS NOT NULL",
-                    lengthSql: "SELECT * FROM ""users"" WHERE json_array_length(""profile"", '$.""languages""') > ? AND json_array_length(""profile"", '$.""languages""') > ? ORDER BY json_extract(""profile"", '$.""name""') ASC, json_extract(""profile"", '$.""name""') DESC",
+                    selectSql: "SELECT JSON_EXTRACT(""profile"", '$.""contacts""[0].""email""') AS ""explicitName"", JSON_EXTRACT(""profile"", '$.""contacts""[0].""email""') AS ""shortcutName"" FROM ""users""",
+                    whereSql: "SELECT * FROM ""users"" WHERE JSON_EXTRACT(""profile"", '$.""age""') >= ? AND JSON_EXTRACT(""profile"", '$.""age""') < ?",
+                    containsSql: "SELECT * FROM ""users"" WHERE EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)",
+                    existsSql: "SELECT * FROM ""users"" WHERE JSON_TYPE(""profile"", '$.""name""') IS NOT NULL AND JSON_TYPE(""profile"", '$.""name""') IS NOT NULL",
+                    lengthSql: "SELECT * FROM ""users"" WHERE JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ? AND JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ? ORDER BY JSON_EXTRACT(""profile"", '$.""name""') ASC, JSON_EXTRACT(""profile"", '$.""name""') DESC",
                     containsBindings: [ "en", "en" ]
                 },
                 {
                     name: "Oracle",
                     component: "qb.models.Grammars.OracleGrammar",
-                    selectSql: "SELECT json_value(""PROFILE"", '$.""contacts""[0].""email""') AS ""EXPLICITNAME"", json_value(""PROFILE"", '$.""contacts""[0].""email""') AS ""SHORTCUTNAME"" FROM ""USERS""",
-                    whereSql: "SELECT * FROM ""USERS"" WHERE json_value(""PROFILE"", '$.""age""') >= ? AND json_value(""PROFILE"", '$.""age""') < ?",
-                    containsSql: "SELECT * FROM ""USERS"" WHERE json_exists(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND json_exists(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")",
-                    existsSql: "SELECT * FROM ""USERS"" WHERE json_exists(""PROFILE"", '$.""name""') AND json_exists(""PROFILE"", '$.""name""')",
-                    lengthSql: "SELECT * FROM ""USERS"" WHERE json_value(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? AND json_value(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? ORDER BY json_value(""PROFILE"", '$.""name""') ASC, json_value(""PROFILE"", '$.""name""') DESC",
+                    selectSql: "SELECT JSON_VALUE(""PROFILE"", '$.""contacts""[0].""email""') AS ""EXPLICITNAME"", JSON_VALUE(""PROFILE"", '$.""contacts""[0].""email""') AS ""SHORTCUTNAME"" FROM ""USERS""",
+                    whereSql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""age""') >= ? AND JSON_VALUE(""PROFILE"", '$.""age""') < ?",
+                    containsSql: "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")",
+                    existsSql: "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""name""') AND JSON_EXISTS(""PROFILE"", '$.""name""')",
+                    lengthSql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? AND JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? ORDER BY JSON_VALUE(""PROFILE"", '$.""name""') ASC, JSON_VALUE(""PROFILE"", '$.""name""') DESC",
                     containsBindings: [ "en", "en" ]
                 }
             ];
@@ -152,7 +152,7 @@ component extends="testbox.system.BaseSpec" {
                     );
                 assertQuery(
                     builder,
-                    "SELECT * FROM `users` WHERE NOT (json_contains(`profile`, ?, '$.""languages""')) OR NOT (json_contains(`profile`, ?, '$.""languages""')) OR json_contains(`profile`, ?, '$.""languages""') AND NOT (ifnull(json_contains_path(`profile`, 'one', '$.""nickname""'), 0)) OR ifnull(json_contains_path(`profile`, 'one', '$.""name""'), 0) OR NOT (ifnull(json_contains_path(`profile`, 'one', '$.""timezone""'), 0)) OR json_length(`profile`, '$.""languages""') > ?",
+                    "SELECT * FROM `users` WHERE NOT (JSON_CONTAINS(`profile`, ?, '$.""languages""')) OR NOT (JSON_CONTAINS(`profile`, ?, '$.""languages""')) OR JSON_CONTAINS(`profile`, ?, '$.""languages""') AND NOT (IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""nickname""'), 0)) OR IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0) OR NOT (IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""timezone""'), 0)) OR JSON_LENGTH(`profile`, '$.""languages""') > ?",
                     [ """en""", """fr""", """de""", 1 ]
                 );
             } );

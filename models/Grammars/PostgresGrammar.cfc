@@ -13,7 +13,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     public string function compileJsonLength( required struct jsonPath ) {
-        return "jsonb_array_length((#compilePostgresJsonTraversal( arguments.jsonPath, false )#)::jsonb)";
+        return "JSONB_ARRAY_LENGTH((#compilePostgresJsonTraversal( arguments.jsonPath, false )#)::jsonb)";
     }
 
     public any function prepareJsonContainsBinding( required any value ) {

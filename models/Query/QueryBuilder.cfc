@@ -351,7 +351,7 @@ component displayname="QueryBuilder" accessors="true" {
         sqlCommenter = new qb.models.SQLCommenter.NullSQLCommenter(),
         shouldMaxRowsOverrideToAll,
         boolean collectQueryLog = true,
-        validateDuplicateSelectColumns = false
+        boolean validateDuplicateSelectColumns = false
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;

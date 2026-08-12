@@ -3674,6 +3674,61 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Inserts a large set of rows using parameter-aware batches.
+     * Grammars may provide a more efficient bulk strategy in the future without
+     * changing this public API.
+     *
+     * @values An array of structs to insert in to the table.
+     * @chunkSize The preferred number of rows per batch. A value of zero uses the largest safe batch for the grammar. Default: 0.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     * @toSql If true, returns the raw SQL strings instead of running the queries. Useful for debugging. Default: false.
+     *
+     * @return array
+     */
+    public array function insertBulk(
+        required array values,
+        numeric chunkSize = 0,
+        struct options = {},
+        boolean toSql = false
+    ) {
+        if ( arguments.values.isEmpty() ) {
+            return [];
+        }
+
+        if ( arguments.chunkSize < 0 ) {
+            throw( type = "InvalidChunkSize", message = "The insertBulk chunkSize must be zero or greater." );
+        }
+
+        var columnCount = arguments.values[ 1 ].count();
+        if ( columnCount == 0 ) {
+            throw( type = "InvalidSQLType", message = "Please pass structs with at least one column to insertBulk." );
+        }
+
+        var safeChunkSize = arguments.values.len();
+        if ( getGrammar().parameterLimit > 0 ) {
+            safeChunkSize = max( 1, floor( getGrammar().parameterLimit / columnCount ) );
+        }
+        if ( arguments.chunkSize > 0 ) {
+            safeChunkSize = min( safeChunkSize, arguments.chunkSize );
+        }
+
+        var results = [];
+        for ( var offset = 1; offset <= arguments.values.len(); offset += safeChunkSize ) {
+            var batchSize = min( safeChunkSize, arguments.values.len() - offset + 1 );
+            var batchQuery = clone();
+            results.append(
+                batchQuery.insert(
+                    values = arguments.values.slice( offset, batchSize ),
+                    options = arguments.options,
+                    toSql = arguments.toSql
+                )
+            );
+        }
+
+        return results;
+    }
+
+    /**
      * Inserts data into a table based off of a query.
      * This call must come after setting the query's table using `from` or `table`.
      *

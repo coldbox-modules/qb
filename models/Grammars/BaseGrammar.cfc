@@ -7,6 +7,12 @@
 component displayname="Grammar" accessors="true" singleton {
 
     /**
+     * The maximum number of parameters supported in a single statement.
+     * A value of zero indicates no grammar-specific limit.
+     */
+    this.parameterLimit = 0;
+
+    /**
      * ColdBox Interceptor Service to announce pre- and post- interception points
      */
     property name="interceptorService" inject="box:interceptorService";

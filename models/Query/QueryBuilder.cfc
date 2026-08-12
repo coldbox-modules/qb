@@ -3679,7 +3679,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @values An array of structs to insert in to the table.
      * @sqlTypes SQL types keyed by column name. Types are inferred for columns not provided.
-     * @chunkSize The preferred number of rows per batch. A non-positive value uses all rows, subject to grammar parameter limits. Default: -1.
+     * @chunkSize The preferred number of rows per batch. A non-positive value uses all rows, subject to grammar parameter limits. Default: 0.
      * @options Any options to pass to `queryExecute`. Default: {}.
      * @toSql If true, returns the raw SQL strings instead of running the queries. Useful for debugging. Default: false.
      *
@@ -3688,7 +3688,7 @@ component displayname="QueryBuilder" accessors="true" {
     public array function insertBulk(
         required array values,
         struct sqlTypes = {},
-        numeric chunkSize = -1,
+        numeric chunkSize = 0,
         struct options = {},
         boolean toSql = false
     ) {

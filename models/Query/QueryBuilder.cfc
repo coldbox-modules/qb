@@ -2391,15 +2391,9 @@ component displayname="QueryBuilder" accessors="true" {
         } );
 
         if ( arguments.sqlType == "__QB_INFER_SQL_TYPE__" ) {
-            var inferredSqlType = extractedBindings.isEmpty() ? "VARCHAR" : extractedBindings[ 1 ].cfsqltype;
-            if (
-                extractedBindings.some( function( binding ) {
-                    return compareNoCase( arguments.binding.cfsqltype, inferredSqlType ) != 0;
-                } )
-            ) {
-                inferredSqlType = "VARCHAR";
-            }
-            arguments.sqlType = variables.grammar.resolveWhereInBulkSqlType( inferredSqlType );
+            arguments.sqlType = variables.grammar.resolveWhereInBulkSqlType(
+                getUtils().inferSqlType( arguments.values, variables.grammar )
+            );
         }
 
         arguments.sqlType = trim( arguments.sqlType );

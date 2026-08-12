@@ -3674,6 +3674,68 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Inserts a large set of rows using a grammar's native bulk strategy when available,
+     * falling back to parameter-aware batches otherwise.
+     *
+     * @values An array of structs to insert in to the table.
+     * @sqlTypes SQL types keyed by column name. Types are inferred for columns not provided.
+     * @chunkSize The preferred number of rows per batch. A non-positive value uses all rows, subject to grammar parameter limits. Default: 0.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     * @toSql If true, returns the raw SQL strings instead of running the queries. Useful for debugging. Default: false.
+     *
+     * @return array
+     */
+    public array function insertBulk(
+        required array values,
+        struct sqlTypes = {},
+        numeric chunkSize = 0,
+        struct options = {},
+        boolean toSql = false
+    ) {
+        if ( arguments.values.isEmpty() ) {
+            return [];
+        }
+
+        var columnCount = arguments.values[ 1 ].count();
+        if ( columnCount == 0 ) {
+            throw( type = "InvalidSQLType", message = "Please pass structs with at least one column to insertBulk." );
+        }
+
+        var safeChunkSize = arguments.values.len();
+        if ( !getGrammar().supportsBulkInsert() && getGrammar().parameterLimit > 0 ) {
+            safeChunkSize = max( 1, floor( getGrammar().parameterLimit / columnCount ) );
+        }
+        if ( arguments.chunkSize > 0 ) {
+            safeChunkSize = min( safeChunkSize, arguments.chunkSize );
+        }
+
+        var results = [];
+        for ( var offset = 1; offset <= arguments.values.len(); offset += safeChunkSize ) {
+            var batchSize = min( safeChunkSize, arguments.values.len() - offset + 1 );
+            var batch = arguments.values.slice( offset, batchSize );
+
+            if ( getGrammar().supportsBulkInsert() ) {
+                var bulkInsert = getGrammar().prepareBulkInsert( this, batch, arguments.sqlTypes );
+                addBindings( [ bulkInsert.binding ], "insert" );
+                var sql = getGrammar().compileBulkInsert( this, bulkInsert.columns );
+                if ( arguments.toSql ) {
+                    results.append( sql );
+                } else {
+                    results.append( runQuery( sql, arguments.options, "result" ) );
+                    clearBindings( only = [ "insert" ] );
+                }
+            } else {
+                var batchQuery = clone();
+                results.append(
+                    batchQuery.insert( values = batch, options = arguments.options, toSql = arguments.toSql )
+                );
+            }
+        }
+
+        return results;
+    }
+
+    /**
      * Inserts data into a table based off of a query.
      * This call must come after setting the query's table using `from` or `table`.
      *

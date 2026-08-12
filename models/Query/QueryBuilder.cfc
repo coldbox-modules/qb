@@ -3715,7 +3715,7 @@ component displayname="QueryBuilder" accessors="true" {
             var batch = arguments.values.slice( offset, batchSize );
 
             if ( getGrammar().supportsBulkInsert() ) {
-                var bulkInsert = prepareBulkInsert( batch, arguments.sqlTypes );
+                var bulkInsert = getGrammar().prepareBulkInsert( this, batch, arguments.sqlTypes );
                 addBindings( [ bulkInsert.binding ], "insert" );
                 var sql = getGrammar().compileBulkInsert( this, bulkInsert.columns );
                 if ( arguments.toSql ) {
@@ -3733,65 +3733,6 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         return results;
-    }
-
-    /**
-     * Prepares a batch for a grammar's native bulk insert compiler.
-     */
-    private struct function prepareBulkInsert( required array values, required struct sqlTypes ) {
-        var columns = arguments.values[ 1 ]
-            .keyArray()
-            .map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
-                return { "original": column, "formatted": mapToColumnType( formatted ) };
-            } );
-        columns.sort( ( a, b ) => compareNoCase( a.formatted.value, b.formatted.value ) );
-
-        var serializedValues = arguments.values.map( function( row ) {
-            var serializedRow = {};
-            columns.each( function( column ) {
-                if ( !row.keyExists( column.original ) || isNull( row[ column.original ] ) ) {
-                    serializedRow[ column.original ] = javacast( "null", "" );
-                    return;
-                }
-                if ( getUtils().isExpression( row[ column.original ] ) ) {
-                    throw( type = "InvalidBulkValue", message = "Bulk insert values cannot contain SQL expressions." );
-                }
-                var binding = getUtils().extractBinding( row[ column.original ], variables.grammar );
-                serializedRow[ column.original ] = binding.null ? javacast( "null", "" ) : binding.value;
-            } );
-            return serializedRow;
-        } );
-
-        var bulkValues = arguments.values;
-        var explicitSqlTypes = arguments.sqlTypes;
-        columns.each( function( column ) {
-            var columnValues = bulkValues.map( function( row ) {
-                return row.keyExists( column.original ) ? row[ column.original ] : javacast( "null", "" );
-            } );
-            var sqlType = explicitSqlTypes.keyExists( column.original )
-             ? explicitSqlTypes[ column.original ]
-             : getGrammar().resolveWhereInBulkSqlType( getUtils().inferSqlType( columnValues, variables.grammar ) );
-            sqlType = trim( sqlType );
-            if (
-                sqlType == "" ||
-                !reFindNoCase(
-                    "^[a-z][a-z0-9_]*(?:\s+[a-z][a-z0-9_]*)*(?:\s*\(\s*(?:max|\d+)(?:\s*,\s*\d+)?\s*\))?$",
-                    sqlType
-                )
-            ) {
-                throw( type = "InvalidSQLType", message = "Invalid SQL type [#sqlType#] for a bulk insert." );
-            }
-            column.bulkSqlType = sqlType;
-        } );
-
-        return {
-            "columns": columns,
-            "binding": getUtils().extractBinding(
-                { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
-                variables.grammar
-            )
-        };
     }
 
     /**

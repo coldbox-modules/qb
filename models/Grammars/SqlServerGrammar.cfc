@@ -4,6 +4,57 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return true;
     }
 
+    public struct function prepareBulkInsertValues(
+        required array values,
+        required array columns,
+        required struct sqlTypes
+    ) {
+        var grammar = this;
+        var normalizedColumns = arguments.columns;
+        var serializedValues = arguments.values.map( function( row ) {
+            var serializedRow = {};
+            normalizedColumns.each( function( column ) {
+                if ( !row.keyExists( column.original ) || isNull( row[ column.original ] ) ) {
+                    serializedRow[ column.original ] = javacast( "null", "" );
+                    return;
+                }
+                var binding = getUtils().extractBinding( row[ column.original ], grammar );
+                serializedRow[ column.original ] = binding.null ? javacast( "null", "" ) : binding.value;
+            } );
+            return serializedRow;
+        } );
+
+        var bulkValues = arguments.values;
+        var explicitSqlTypes = arguments.sqlTypes;
+        normalizedColumns.each( function( column ) {
+            var columnValues = bulkValues.map( function( row ) {
+                return row.keyExists( column.original ) ? row[ column.original ] : javacast( "null", "" );
+            } );
+            var sqlType = explicitSqlTypes.keyExists( column.original )
+             ? explicitSqlTypes[ column.original ]
+             : resolveWhereInBulkSqlType( getUtils().inferSqlType( columnValues, grammar ) );
+            sqlType = trim( sqlType );
+            if (
+                sqlType == "" ||
+                !reFindNoCase(
+                    "^[a-z][a-z0-9_]*(?:\s+[a-z][a-z0-9_]*)*(?:\s*\(\s*(?:max|\d+)(?:\s*,\s*\d+)?\s*\))?$",
+                    sqlType
+                )
+            ) {
+                throw( type = "InvalidSQLType", message = "Invalid SQL type [#sqlType#] for a bulk insert." );
+            }
+            column.bulkSqlType = sqlType;
+        } );
+
+        return {
+            "columns": normalizedColumns,
+            "binding": getUtils().extractBinding(
+                { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
+                grammar
+            )
+        };
+    }
+
     public string function compileBulkInsert( required any query, required array columns ) {
         try {
             var originalShouldWrapValues = getShouldWrapValues();

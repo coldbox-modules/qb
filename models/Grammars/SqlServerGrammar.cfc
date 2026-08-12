@@ -1,5 +1,30 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT [value] FROM OPENJSON(?) WITH ([value] #arguments.sqlType# '$')";
+    }
+
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+                return "NVARCHAR(MAX)";
+            case "TIMESTAMP":
+                return "DATETIME2";
+            case "BOOLEAN":
+                return "BIT";
+            default:
+                return normalizedType;
+        }
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return "JSON_VALUE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }

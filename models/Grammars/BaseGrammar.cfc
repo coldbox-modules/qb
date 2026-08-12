@@ -446,6 +446,20 @@ component displayname="Grammar" accessors="true" singleton {
         return trim( "#wrapColumn( where.column )# #uCase( where.operator )# #placeholder#" );
     }
 
+    private string function whereJsonContains( required QueryBuilder query, required struct where ) {
+        var predicate = compileJsonContains( where.path.value );
+        return where.negate ? "NOT (#predicate#)" : predicate;
+    }
+
+    private string function whereJsonExists( required QueryBuilder query, required struct where ) {
+        var predicate = compileJsonExists( where.path.value );
+        return where.negate ? "NOT (#predicate#)" : predicate;
+    }
+
+    private string function whereJsonLength( required QueryBuilder query, required struct where ) {
+        return "#compileJsonLength( where.path.value )# #uCase( where.operator )# ?";
+    }
+
     /**
      * Compiles a raw where statement.
      *
@@ -1173,6 +1187,13 @@ component displayname="Grammar" accessors="true" singleton {
             return trim( wrapTable( "(#arguments.column.value.toSQL()#) AS #arguments.column.alias#" ) );
         }
 
+        if ( arguments.column.type == "jsonPath" ) {
+            var jsonSql = compileJsonScalar( arguments.column.value );
+            return arguments.column.keyExists( "alias" )
+             ? jsonSql & " AS " & wrapValue( arguments.column.alias )
+             : jsonSql;
+        }
+
         arguments.column = trim( arguments.column.value );
         var alias = "";
         if ( arguments.column.findNoCase( " as " ) > 0 ) {
@@ -1201,6 +1222,75 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Compiles scalar extraction for a JSON path.
+     */
+    public string function compileJsonScalar( required struct jsonPath ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support JSON paths" );
+    }
+
+    /**
+     * Compiles a JSON containment predicate.
+     */
+    public string function compileJsonContains( required struct jsonPath ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support JSON containment" );
+    }
+
+    /**
+     * Compiles a JSON path existence predicate.
+     */
+    public string function compileJsonExists( required struct jsonPath ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support JSON path existence" );
+    }
+
+    /**
+     * Compiles JSON array length extraction.
+     */
+    public string function compileJsonLength( required struct jsonPath ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support JSON array lengths" );
+    }
+
+    /**
+     * Allows grammars to serialize containment bindings where required.
+     */
+    public any function prepareJsonContainsBinding( required any value ) {
+        if ( !isSimpleValue( arguments.value ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar only supports scalar JSON containment values"
+            );
+        }
+        return arguments.value;
+    }
+
+    /**
+     * Wraps the relational column portion of a JSON expression.
+     */
+    public string function wrapJsonColumn( required struct jsonPath ) {
+        return wrapColumn( { type: "simple", value: arguments.jsonPath.column } );
+    }
+
+    /**
+     * Builds a portable SQL/JSON path literal.
+     */
+    public string function buildJsonPath( required array path ) {
+        var compiledPath = "$";
+        for ( var segment in arguments.path ) {
+            if ( isNumeric( segment ) ) {
+                compiledPath &= "[#segment#]";
+            } else {
+                var escapedSegment = replace(
+                    segment,
+                    """",
+                    chr( 92 ) & """",
+                    "all"
+                );
+                compiledPath &= ".""#escapedSegment#""";
+            }
+        }
+        return replace( compiledPath, "'", "''", "all" );
+    }
+
+    /**
      * Extracts the alias from a column. Returns the column if no alias is found.
      *
      * @column The column to extract the alias
@@ -1210,6 +1300,13 @@ component displayname="Grammar" accessors="true" singleton {
     public string function extractAlias( required any column ) {
         if ( arguments.column.type == "raw" ) {
             arguments.column = trim( arguments.column.value.getSQL() );
+        } else if ( arguments.column.type == "jsonPath" ) {
+            if ( arguments.column.keyExists( "alias" ) ) {
+                return arguments.column.alias;
+            }
+            return arguments.column.value.path.isEmpty()
+             ? listLast( arguments.column.value.column, "." )
+             : arguments.column.value.path.last();
         } else {
             arguments.column = trim( arguments.column.value );
         }

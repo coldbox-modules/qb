@@ -2105,6 +2105,8 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * Explicit: `whereJsonLength( "profile", [ "languages" ], ">", 1 )`
      * Shortcut: `whereJsonLength( "profile->languages", ">", 1 )`
+     * Explicit equality shortcut: `whereJsonLength( "profile", [ "languages" ], 1 )`
+     * Arrow equality shortcut: `whereJsonLength( "profile->languages", 1 )`
      */
     public QueryBuilder function whereJsonLength(
         required string column,
@@ -2116,10 +2118,20 @@ component displayname="QueryBuilder" accessors="true" {
         if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
-        if ( isNull( arguments.value ) ) {
+        if ( isNull( arguments.operator ) ) {
+            if ( isNull( arguments.value ) ) {
+                arguments.value = arguments.path;
+                arguments.path = [];
+            }
+            arguments.operator = "=";
+        } else if ( isNull( arguments.value ) ) {
             arguments.value = arguments.operator;
-            arguments.operator = arguments.path;
-            arguments.path = [];
+            if ( isArray( arguments.path ) ) {
+                arguments.operator = "=";
+            } else {
+                arguments.operator = arguments.path;
+                arguments.path = [];
+            }
         }
         if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( arguments.operator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal operator" );

@@ -11,6 +11,7 @@ component extends="testbox.system.BaseSpec" {
                     containsSql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
                     existsSql: "SELECT * FROM `users` WHERE IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0) AND IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0)",
                     lengthSql: "SELECT * FROM `users` WHERE JSON_LENGTH(`profile`, '$.""languages""') > ? AND JSON_LENGTH(`profile`, '$.""languages""') > ? ORDER BY JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""name""')) ASC, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""name""')) DESC",
+                    lengthEqualitySql: "SELECT * FROM `users` WHERE JSON_LENGTH(`profile`, '$.""languages""') = ? AND JSON_LENGTH(`profile`, '$.""languages""') = ? OR JSON_LENGTH(`profile`, '$.""languages""') = ? OR JSON_LENGTH(`profile`, '$.""languages""') = ?",
                     containsBindings: [ """en""", """en""" ]
                 },
                 {
@@ -21,6 +22,7 @@ component extends="testbox.system.BaseSpec" {
                     containsSql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
                     existsSql: "SELECT * FROM ""users"" WHERE ""profile""->'name' IS NOT NULL AND ""profile""->'name' IS NOT NULL",
                     lengthSql: "SELECT * FROM ""users"" WHERE JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ? AND JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ? ORDER BY ""profile""->>'name' ASC, ""profile""->>'name' DESC",
+                    lengthEqualitySql: "SELECT * FROM ""users"" WHERE JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? AND JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ?",
                     containsBindings: [ """en""", """en""" ]
                 },
                 {
@@ -31,6 +33,7 @@ component extends="testbox.system.BaseSpec" {
                     containsSql: "SELECT * FROM [users] WHERE ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""')) AND ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))",
                     existsSql: "SELECT * FROM [users] WHERE 'name' IN (SELECT [key] FROM OPENJSON([profile])) AND 'name' IN (SELECT [key] FROM OPENJSON([profile]))",
                     lengthSql: "SELECT * FROM [users] WHERE (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ? AND (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ? ORDER BY JSON_VALUE([profile], '$.""name""') ASC, JSON_VALUE([profile], '$.""name""') DESC",
+                    lengthEqualitySql: "SELECT * FROM [users] WHERE (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? AND (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ?",
                     containsBindings: [ "en", "en" ]
                 },
                 {
@@ -41,6 +44,7 @@ component extends="testbox.system.BaseSpec" {
                     containsSql: "SELECT * FROM ""users"" WHERE EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)",
                     existsSql: "SELECT * FROM ""users"" WHERE JSON_TYPE(""profile"", '$.""name""') IS NOT NULL AND JSON_TYPE(""profile"", '$.""name""') IS NOT NULL",
                     lengthSql: "SELECT * FROM ""users"" WHERE JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ? AND JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ? ORDER BY JSON_EXTRACT(""profile"", '$.""name""') ASC, JSON_EXTRACT(""profile"", '$.""name""') DESC",
+                    lengthEqualitySql: "SELECT * FROM ""users"" WHERE JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? AND JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ?",
                     containsBindings: [ "en", "en" ]
                 },
                 {
@@ -51,6 +55,7 @@ component extends="testbox.system.BaseSpec" {
                     containsSql: "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")",
                     existsSql: "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""name""') AND JSON_EXISTS(""PROFILE"", '$.""name""')",
                     lengthSql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? AND JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? ORDER BY JSON_VALUE(""PROFILE"", '$.""name""') ASC, JSON_VALUE(""PROFILE"", '$.""name""') DESC",
+                    lengthEqualitySql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? AND JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ?",
                     containsBindings: [ "en", "en" ]
                 }
             ];
@@ -113,6 +118,17 @@ component extends="testbox.system.BaseSpec" {
                             .orderBy( builder.jsonPath( "profile", [ "name" ] ) )
                             .orderByDesc( "profile->name" );
                         assertQuery( builder, grammarCase.lengthSql, [ 1, 1 ] );
+                    } );
+
+                    it( "defaults JSON length comparisons to equality with both syntaxes", function() {
+                        var builder = getBuilder( grammarCase.component );
+                        builder
+                            .from( "users" )
+                            .whereJsonLength( column = "profile", path = [ "languages" ], value = 1 )
+                            .whereJsonLength( "profile->languages", 1 )
+                            .orWhereJsonLength( column = "profile", path = [ "languages" ], value = 2 )
+                            .orWhereJsonLength( "profile->languages", 2 );
+                        assertQuery( builder, grammarCase.lengthEqualitySql, [ 1, 1, 2, 2 ] );
                     } );
                 } );
             } );

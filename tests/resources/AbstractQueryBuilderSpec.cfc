@@ -1016,6 +1016,12 @@ component extends="testbox.system.BaseSpec" {
                                 }, whereInBulkExplicitType() );
                             } );
 
+                            it( "infers the SQL type when explicitly passed null", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereInBulk( "id", [ 1, 2, 3 ], javacast( "null", "" ) );
+                                }, whereInBulk() );
+                            } );
+
                             it( "maps inferred timestamp types for the active grammar", function() {
                                 expect( getBuilder().getGrammar().resolveWhereInBulkSqlType( "TIMESTAMP" ) ).toBe(
                                     bulkTimestampSqlType()

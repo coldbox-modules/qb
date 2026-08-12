@@ -2376,7 +2376,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereInBulk(
         required column,
         required values,
-        string sqlType = "__QB_INFER_SQL_TYPE__",
+        any sqlType = javacast( "null", "" ),
         string combinator = "and",
         boolean negate = false
     ) {
@@ -2390,7 +2390,7 @@ component displayname="QueryBuilder" accessors="true" {
             return getUtils().extractBinding( arguments.value, variables.grammar );
         } );
 
-        if ( arguments.sqlType == "__QB_INFER_SQL_TYPE__" ) {
+        if ( isNull( arguments.sqlType ) ) {
             arguments.sqlType = variables.grammar.resolveWhereInBulkSqlType(
                 getUtils().inferSqlType( arguments.values, variables.grammar )
             );
@@ -2451,7 +2451,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereNotInBulk(
         required column,
         required values,
-        string sqlType = "__QB_INFER_SQL_TYPE__",
+        any sqlType = javacast( "null", "" ),
         string combinator = "and"
     ) {
         arguments.negate = true;

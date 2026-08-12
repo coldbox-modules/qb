@@ -3715,7 +3715,9 @@ component displayname="QueryBuilder" accessors="true" {
             var batch = arguments.values.slice( offset, batchSize );
 
             if ( getGrammar().supportsBulkInsert() ) {
-                var sql = compileNativeBulkInsert( batch, arguments.sqlTypes );
+                var bulkInsert = prepareBulkInsert( batch, arguments.sqlTypes );
+                addBindings( [ bulkInsert.binding ], "insert" );
+                var sql = getGrammar().compileBulkInsert( this, bulkInsert.columns );
                 if ( arguments.toSql ) {
                     results.append( sql );
                 } else {
@@ -3736,7 +3738,7 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Prepares a batch for a grammar's native bulk insert compiler.
      */
-    private string function compileNativeBulkInsert( required array values, required struct sqlTypes ) {
+    private struct function prepareBulkInsert( required array values, required struct sqlTypes ) {
         var columns = arguments.values[ 1 ]
             .keyArray()
             .map( function( column ) {
@@ -3783,17 +3785,13 @@ component displayname="QueryBuilder" accessors="true" {
             column.bulkSqlType = sqlType;
         } );
 
-        addBindings(
-            [
-                getUtils().extractBinding(
-                    { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
-                    variables.grammar
-                )
-            ],
-            "insert"
-        );
-
-        return getGrammar().compileBulkInsert( this, columns );
+        return {
+            "columns": columns,
+            "binding": getUtils().extractBinding(
+                { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
+                variables.grammar
+            )
+        };
     }
 
     /**

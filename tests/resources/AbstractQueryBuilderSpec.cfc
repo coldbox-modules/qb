@@ -1060,6 +1060,12 @@ component extends="testbox.system.BaseSpec" {
                                     getBuilder().whereInBulk( "id", [ 1, 2, 3 ], "INTEGER); DROP TABLE users; --" );
                                 } ).toThrow( type = "InvalidSQLType" );
                             } );
+
+                            it( "rejects an explicitly empty SQL type", function() {
+                                expect( function() {
+                                    getBuilder().whereInBulk( "id", [ 1, 2, 3 ], "" );
+                                } ).toThrow( type = "InvalidSQLType" );
+                            } );
                         } );
                     } );
 

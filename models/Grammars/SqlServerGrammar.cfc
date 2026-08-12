@@ -641,7 +641,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         required any updates,
         required array target,
         QueryBuilder source,
-        any deleteUnmatched = false
+        any deleteUnmatched = false,
+        boolean matchNulls = false
     ) {
         try {
             var originalShouldWrapValues = getShouldWrapValues();
@@ -676,11 +677,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 sourceString = "(VALUES #placeholderString#) AS [qb_src] (#columnsString#)";
             }
 
-            var constraintString = arguments.target
-                .map( function( column ) {
-                    return "#wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
-                } )
-                .toList( " AND " );
+            var constraintString = compileUpsertTargetConstraint( arguments.target, arguments.matchNulls );
 
             var updateList = "";
             if ( isArray( arguments.updates ) ) {

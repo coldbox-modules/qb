@@ -1148,6 +1148,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return {
+            sql: "MERGE [records] AS [qb_target] USING (VALUES (?, ?, ?), (?, ?, ?)) AS [qb_src] ([a], [b], [c]) ON ([qb_target].[a] = [qb_src].[a] OR ([qb_target].[a] IS NULL AND [qb_src].[a] IS NULL)) AND ([qb_target].[b] = [qb_src].[b] OR ([qb_target].[b] IS NULL AND [qb_src].[b] IS NULL)) WHEN MATCHED THEN UPDATE SET [c] = [qb_src].[c] WHEN NOT MATCHED BY TARGET THEN INSERT ([a], [b], [c]) VALUES ([a], [b], [c]);",
+            bindings: [
+                1,
+                "NULL",
+                "first",
+                2,
+                "value",
+                "second"
+            ]
+        };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers] WHERE [active] = ?) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]);",

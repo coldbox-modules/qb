@@ -17,9 +17,29 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                         );
                     },
                     [
-                        "DECLARE @constraintName NVARCHAR(128); SELECT @constraintName = [dc].[name] FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = OBJECT_ID(N'[mars_in_wash_sales]') AND [c].[name] = N'shares'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE [mars_in_wash_sales] DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
+                        "DECLARE @objectId INT = OBJECT_ID(N'[mars_in_wash_sales]'), @constraintName SYSNAME, @schemaName SYSNAME, @tableName SYSNAME; SELECT @constraintName = [dc].[name], @schemaName = OBJECT_SCHEMA_NAME([dc].[parent_object_id]), @tableName = OBJECT_NAME([dc].[parent_object_id]) FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = @objectId AND [c].[name] = N'shares'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE ' + QUOTENAME(@schemaName) + N'.' + QUOTENAME(@tableName) + N' DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
                         "ALTER TABLE [mars_in_wash_sales] ALTER COLUMN [shares] SMALLINT NOT NULL",
                         "ALTER TABLE [mars_in_wash_sales] ADD CONSTRAINT [df_mars_in_wash_sales_shares] DEFAULT -999 FOR [shares]"
+                    ]
+                );
+            } );
+
+            it( "does not interpolate caller-provided identifiers into dynamic SQL", function() {
+                testCase(
+                    function( schema ) {
+                        return schema.alter(
+                            "odd]name'",
+                            function( table ) {
+                                table.modifyColumn( "sha]res'", table.smallinteger( "sha]res'" ).default( -999 ) );
+                            },
+                            {},
+                            false
+                        );
+                    },
+                    [
+                        "DECLARE @objectId INT = OBJECT_ID(N'[odd]]name'']'), @constraintName SYSNAME, @schemaName SYSNAME, @tableName SYSNAME; SELECT @constraintName = [dc].[name], @schemaName = OBJECT_SCHEMA_NAME([dc].[parent_object_id]), @tableName = OBJECT_NAME([dc].[parent_object_id]) FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = @objectId AND [c].[name] = N'sha]res'''; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE ' + QUOTENAME(@schemaName) + N'.' + QUOTENAME(@tableName) + N' DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
+                        "ALTER TABLE [odd]]name'] ALTER COLUMN [sha]]res'] SMALLINT NOT NULL",
+                        "ALTER TABLE [odd]]name'] ADD CONSTRAINT [df_odd]]name'_sha]]res'] DEFAULT -999 FOR [sha]]res']"
                     ]
                 );
             } );

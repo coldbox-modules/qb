@@ -337,6 +337,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         }
 
         arguments.value = reReplace( arguments.value, """", "", "all" );
+        arguments.value = replace( arguments.value, "]", "]]", "all" );
 
         return "[#value#]";
     }
@@ -784,7 +785,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
             commandParameters.to.setDefaultValue( "" );
 
-            var wrappedTable = wrapTable( blueprint.getTable() );
+            var wrappedTable = wrapTable( blueprint.getTable(), false );
             var wrappedColumn = wrapValue( commandParameters.to.getName() );
             var escapedTable = replace( wrappedTable, "'", "''", "all" );
             var escapedColumn = replace(
@@ -803,7 +804,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             commandParameters.to.setDefaultValue( originalDefaultValue );
 
             return [
-                "DECLARE @constraintName NVARCHAR(128); SELECT @constraintName = [dc].[name] FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = OBJECT_ID(N'#escapedTable#') AND [c].[name] = N'#escapedColumn#'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE #escapedTable# DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
+                "DECLARE @objectId INT = OBJECT_ID(N'#escapedTable#'), @constraintName SYSNAME, @schemaName SYSNAME, @tableName SYSNAME; SELECT @constraintName = [dc].[name], @schemaName = OBJECT_SCHEMA_NAME([dc].[parent_object_id]), @tableName = OBJECT_NAME([dc].[parent_object_id]) FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = @objectId AND [c].[name] = N'#escapedColumn#'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE ' + QUOTENAME(@schemaName) + N'.' + QUOTENAME(@tableName) + N' DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
                 alterColumnSql,
                 concatenate( [
                     "ALTER TABLE",

@@ -12,6 +12,7 @@ component {
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
             "validateOperatorsAndCombinators": true,
+            "validateQueryExecuteReturnType": false,
             "collectQueryLog": true,
             "convertEmptyStringsToNull": true,
             "validateQueryParamStructKeys": true,
@@ -29,7 +30,8 @@ component {
             },
             "shouldMaxRowsOverrideToAll": function( maxRows ) {
                 return maxRows <= 0;
-            }
+            },
+            "returnFormatters": {}
         };
 
         interceptorSettings = { "customInterceptionPoints": "preQBExecute,postQBExecute" };
@@ -56,12 +58,20 @@ component {
             .initArg( name = "decimalSQLType", value = settings.decimalSQLType );
 
         binder
+            .map( alias = "ReturnFormatterRegistry@qb", force = true )
+            .to( "qb.models.Query.ReturnFormatterRegistry" )
+            .initArg( name = "utils", ref = "QueryUtils@qb" )
+            .initArg( name = "returnFormatters", value = settings.returnFormatters );
+
+        binder
             .map( alias = "QueryBuilder@qb", force = true )
             .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", ref = settings.defaultGrammar )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
+            .initArg( name = "returnFormatterRegistry", ref = "ReturnFormatterRegistry@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "validateOperatorsAndCombinators", value = settings.validateOperatorsAndCombinators )
+            .initArg( name = "validateQueryExecuteReturnType", value = settings.validateQueryExecuteReturnType )
             .initArg( name = "collectQueryLog", value = settings.collectQueryLog )
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
             .initArg( name = "defaultOptions", value = settings.defaultOptions )

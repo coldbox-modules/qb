@@ -43,6 +43,34 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 ] );
             } );
         } );
+
+        describe( "SQL Server ordered unions", function() {
+            it( "can limit independently ordered union branches", function() {
+                var sql = getBuilder()
+                    .select( "*" )
+                    .fromSub( "t", function( q ) {
+                        q.select( "id, name, modifiedDate" )
+                            .selectRaw( "'Page' AS typeName" )
+                            .from( "page" )
+                            .orderBy( "modifiedDate", "DESC" )
+                            .limit( 5 )
+                            .unionAll( function( q ) {
+                                q.select( "id, name, modifiedDate" )
+                                    .selectRaw( "'Document' AS typeName" )
+                                    .from( "document" )
+                                    .orderBy( "modifiedDate", "DESC" )
+                                    .limit( 5 );
+                            } );
+                    } )
+                    .limit( 5 )
+                    .orderBy( "modifiedDate", "DESC" )
+                    .toSql();
+
+                expect( sql ).toBe(
+                    "SELECT TOP (5) * FROM (SELECT * FROM (SELECT TOP (5) [id], [name], [modifiedDate], 'Page' AS typeName FROM [page] ORDER BY [modifiedDate] DESC) AS [qb_union_0] UNION ALL SELECT * FROM (SELECT TOP (5) [id], [name], [modifiedDate], 'Document' AS typeName FROM [document] ORDER BY [modifiedDate] DESC) AS [qb_union_1]) AS [t] ORDER BY [modifiedDate] DESC"
+                );
+            } );
+        } );
     }
 
     function selectAllColumns() {

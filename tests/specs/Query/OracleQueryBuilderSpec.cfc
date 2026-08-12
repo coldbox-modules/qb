@@ -1075,6 +1075,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return {
+            sql: "MERGE INTO ""RECORDS"" ""QB_TARGET"" USING (SELECT ?, ?, ? FROM dual UNION ALL SELECT ?, ?, ? FROM dual) ""QB_SRC"" ON (""QB_TARGET"".""A"" = ""QB_SRC"".""A"" OR (""QB_TARGET"".""A"" IS NULL AND ""QB_SRC"".""A"" IS NULL)) AND (""QB_TARGET"".""B"" = ""QB_SRC"".""B"" OR (""QB_TARGET"".""B"" IS NULL AND ""QB_SRC"".""B"" IS NULL)) WHEN MATCHED THEN UPDATE SET ""C"" = ""QB_SRC"".""C"" WHEN NOT MATCHED THEN INSERT (""A"", ""B"", ""C"") VALUES (""QB_SRC"".""A"", ""QB_SRC"".""B"", ""QB_SRC"".""C"")",
+            bindings: [
+                1,
+                "NULL",
+                "first",
+                2,
+                "value",
+                "second"
+            ]
+        };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"" FROM ""ACTIVEDIRECTORYUSERS"" WHERE ""ACTIVE"" = ?) ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"") VALUES (""QB_SRC"".""USERNAME"", ""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"")",

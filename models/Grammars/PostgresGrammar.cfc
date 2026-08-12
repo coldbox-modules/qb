@@ -262,8 +262,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required any updates,
         required array target,
         QueryBuilder source,
-        any deleteUnmatched = false
+        any deleteUnmatched = false,
+        boolean matchNulls = false
     ) {
+        if ( arguments.matchNulls ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support matching NULL target values during an upsert"
+            );
+        }
         if ( !isBoolean( arguments.deleteUnmatched ) || arguments.deleteUnmatched ) {
             throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
         }

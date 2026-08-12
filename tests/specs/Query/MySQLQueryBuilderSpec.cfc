@@ -1056,6 +1056,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "INSERT INTO `users` (`username`, `active`, `createdDate`, `modifiedDate`) SELECT `username`, `active`, `createdDate`, `modifiedDate` FROM `activeDirectoryUsers` WHERE `active` = ? ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `modifiedDate` = VALUES(`modifiedDate`)",

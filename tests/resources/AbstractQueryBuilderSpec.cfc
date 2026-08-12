@@ -3081,6 +3081,23 @@ component extends="testbox.system.BaseSpec" {
                     }, upsertSingleTarget() );
                 } );
 
+                it( "can opt in to matching null target values", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .table( "records" )
+                            .upsert(
+                                values = [
+                                    { "a": 1, "b": javacast( "null", "" ), "c": "first" },
+                                    { "a": 2, "b": "value", "c": "second" }
+                                ],
+                                target = [ "a", "b" ],
+                                update = [ "c" ],
+                                matchNulls = true,
+                                toSql = true
+                            );
+                    }, upsertMatchNulls() );
+                } );
+
                 it( "can perform an upsert with a closure as the source", function() {
                     testCase( function( builder ) {
                         return builder

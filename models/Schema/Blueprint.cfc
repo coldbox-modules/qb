@@ -283,8 +283,14 @@ component accessors="true" {
     }
 
     public Blueprint function timestamps() {
-        appendColumn( name = "createdDate", type = "timestamp" ).withCurrent();
-        appendColumn( name = "modifiedDate", type = "timestamp" ).withCurrent();
+        var createdDate = appendColumn( name = "createdDate", type = "timestamp" ).withCurrent();
+        var modifiedDate = appendColumn( name = "modifiedDate", type = "timestamp" ).withCurrent();
+
+        if ( !getCreating() ) {
+            addColumn( createdDate );
+            addColumn( modifiedDate );
+        }
+
         return this;
     }
 

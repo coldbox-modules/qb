@@ -1647,6 +1647,19 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "adding columns", function() {
+                it( "can add timestamp columns", function() {
+                    testCase( function( schema ) {
+                        return schema.alter(
+                            "users",
+                            function( table ) {
+                                table.timestamps();
+                            },
+                            {},
+                            false
+                        );
+                    }, addTimestamps() );
+                } );
+
                 it( "can add a new column", function() {
                     testCase( function( schema ) {
                         return schema.alter(

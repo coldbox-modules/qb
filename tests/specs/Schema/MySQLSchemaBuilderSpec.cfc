@@ -541,6 +541,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL" ];
     }
 
+    function addTimestamps() {
+        return [
+            "ALTER TABLE `users` ADD `createdDate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE `users` ADD `modifiedDate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        ];
+    }
+
     function addMultiple() {
         return [
             "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL",

@@ -379,6 +379,32 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     /**
+     * Converts a query object to a struct of structs keyed by the provided column.
+     *
+     * @q The query to convert.
+     * @columnKey The query column to use as the key for the returned struct.
+     *
+     * @return struct
+     */
+    public struct function queryToStructOfStructs( required any q, required string columnKey ) {
+        var rows = queryToArrayOfStructs( arguments.q );
+        var results = {};
+
+        for ( var row in rows ) {
+            if ( !row.keyExists( arguments.columnKey ) ) {
+                throw(
+                    type = "MissingColumnKey",
+                    message = "The columnKey [#arguments.columnKey#] was not found in the query results."
+                );
+            }
+
+            results[ row[ arguments.columnKey ] ] = row;
+        }
+
+        return results;
+    }
+
+    /**
      * Remove a list of columns from a specified query.
      *
      * @q The query from which to remove the column.

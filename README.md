@@ -71,6 +71,40 @@ q = queryExecute(
 
 qb enables you to explore new ways of organizing your code by letting you pass around a query builder object that will compile down to the right SQL without you having to keep track of the order, whitespace, or other SQL gotchas!
 
+## Return Formatters
+
+qb includes named return formatters for `array`, `query`, `none`, and `struct`. The `struct` formatter returns a struct of rows keyed by a selected column:
+
+```cfc
+usersByUsername = query
+    .setReturnFormat( "struct", { "columnKey": "username" } )
+    .from( "users" )
+    .get();
+```
+
+Applications can register reusable custom formatter factories in their qb module settings:
+
+```cfc
+moduleSettings = {
+    "qb": {
+        "returnFormatters": {
+            "ids": function( options ) {
+                return function( q ) {
+                    return queryColumnData( q, options.column );
+                };
+            }
+        }
+    }
+};
+
+ids = query
+    .setReturnFormat( "ids", { "column": "id" } )
+    .from( "users" )
+    .get();
+```
+
+Formatter factories can also be WireBox mapping names or components with a `toFormatter( options )` method.
+
 Here's a gist with an example of the powerful models you can create with this!
 https://gist.github.com/elpete/80d641b98025f16059f6476561d88202
 
@@ -118,4 +152,3 @@ For both Lucee and ACF you need to set the JDBC Driver class to `org.sqlite.JDBC
 ## Full Docs
 
 You can browse the full documentation at https://qb.ortusbooks.com
-

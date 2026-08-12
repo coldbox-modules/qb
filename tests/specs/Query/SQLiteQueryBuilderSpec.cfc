@@ -390,6 +390,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM ""users"" WHERE ""id"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
     }
 
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""status"" IN (SELECT CAST(""value"" AS TEXT) FROM JSON_EACH(?))",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""externalId"" IN (SELECT CAST(""value"" AS TEXT) FROM JSON_EACH(?))",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""active"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ "[true,false]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS BIGINT) FROM JSON_EACH(?))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function bulkTimestampSqlType() {
+        return "TEXT";
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""active"" = ? OR ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" NOT IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 1 = 1";
+    }
+
     function orWhereIn() {
         return {
             sql: "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" IN (?, ?, ?)",

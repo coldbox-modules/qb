@@ -172,6 +172,37 @@ component extends="testbox.system.BaseSpec" {
                     expect( utils.inferSqlType( [ 1, 2 ], variables.mockGrammar ) ).toBe( "INTEGER" );
                 } );
 
+                it( "uses matching cfsqltypes from query parameter structs", function() {
+                    expect(
+                        utils.inferSqlType(
+                            [ { value: 1, cfsqltype: "BIGINT" }, { value: 2, cfsqltype: "BIGINT" } ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "BIGINT" );
+                } );
+
+                it( "uses matching sqltypes from query parameter structs", function() {
+                    expect(
+                        utils.inferSqlType(
+                            [ { value: 1, sqltype: "BIGINT" }, { value: 2, sqltype: "BIGINT" } ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "BIGINT" );
+                } );
+
+                it( "infers values from untyped query parameter structs", function() {
+                    expect( utils.inferSqlType( [ { value: 1 }, { value: 2 } ], variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
+                it( "defaults to VARCHAR when query parameter struct types differ", function() {
+                    expect(
+                        utils.inferSqlType(
+                            [ { value: 1, cfsqltype: "INTEGER" }, { value: 2, cfsqltype: "BIGINT" } ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "VARCHAR" );
+                } );
+
                 it( "but defaults to VARCHAR if they are different", function() {
                     expect(
                         utils.inferSqlType(

@@ -489,7 +489,6 @@ component displayname="QueryBuilder" accessors="true" {
         if ( newColumns.isEmpty() ) {
             newColumns = [ { "type": "simple", "value": "*" } ];
         }
-        validateUniqueSelectColumns( newColumns );
         variables.columns = newColumns;
         return this;
     }
@@ -572,6 +571,10 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( arguments.column.type == "simple" && find( "*", arguments.column.value ) ) {
+            return;
+        }
+
+        if ( arguments.column.type == "jsonPath" && !arguments.column.keyExists( "alias" ) ) {
             return;
         }
 
@@ -678,10 +681,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.query = newQuery();
             callback( arguments.query );
         }
-        var newColumns = variables.columns.isEmpty() ? [] : arraySlice( variables.columns, 1 );
-        newColumns.append( { "type": "builder", "value": arguments.query, "alias": arguments.alias } );
-        validateUniqueSelectColumns( newColumns );
-        variables.columns = newColumns;
+        variables.columns.append( { "type": "builder", "value": arguments.query, "alias": arguments.alias } );
         addBindings( arguments.query.getBindings(), "select" );
         return this;
     }
@@ -715,7 +715,6 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         arrayAppend( selectedColumns, newColumns, true );
-        validateUniqueSelectColumns( selectedColumns );
         variables.columns = selectedColumns;
         return this;
     }
@@ -4866,6 +4865,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return string
      */
     public string function toSQL( any showBindings = false ) {
+        if ( getAggregate().isEmpty() ) {
+            validateUniqueSelectColumns( getColumns() );
+        }
         var sql = grammar.compileSelect( this );
 
         if ( isBoolean( arguments.showBindings ) && arguments.showBindings == false ) {

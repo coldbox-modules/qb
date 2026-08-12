@@ -83,7 +83,7 @@ moduleSettings = {
 };
 ```
 
-The validation checks simple columns, explicit aliases, subselect aliases, and typed columns. Wildcards and raw expressions without explicit aliases are skipped because their output names cannot be known until the query executes.
+The validation checks the final selection when the query is compiled, including simple columns, explicit aliases, subselect aliases, and explicitly aliased typed columns. Wildcards and expressions without explicit aliases are skipped because their output names cannot be known until the query executes.
 
 ## Return Formatters
 

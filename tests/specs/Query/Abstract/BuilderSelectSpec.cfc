@@ -3,7 +3,7 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "select methods", function() {
             beforeEach( function() {
-                variables.mockGrammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" );
+                variables.mockGrammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init();
                 variables.query = new qb.models.Query.QueryBuilder( variables.mockGrammar );
             } );
 
@@ -42,7 +42,10 @@ component extends="testbox.system.BaseSpec" {
                 describe( "duplicate output name validation", function() {
                     it( "is disabled by default", function() {
                         expect( function() {
-                            query.select( [ "equipment.id", "racks.id" ] );
+                            query
+                                .select( [ "equipment.id", "racks.id" ] )
+                                .from( "equipment" )
+                                .toSQL();
                         } ).notToThrow();
                     } );
 
@@ -52,8 +55,10 @@ component extends="testbox.system.BaseSpec" {
                             validateDuplicateSelectColumns = true
                         );
 
+                        validatingQuery.select( [ "equipment.id", "racks.id" ] ).from( "equipment" );
+
                         expect( function() {
-                            validatingQuery.select( [ "equipment.id", "racks.id" ] );
+                            validatingQuery.toSQL();
                         } ).toThrow( type = "DuplicateSelectColumn", regex = "output name \[id\]" );
                     } );
 
@@ -63,8 +68,12 @@ component extends="testbox.system.BaseSpec" {
                             validateDuplicateSelectColumns = true
                         );
 
+                        validatingQuery
+                            .select( [ "equipment.id AS equipmentId", "racks.id AS EquipmentID" ] )
+                            .from( "equipment" );
+
                         expect( function() {
-                            validatingQuery.select( [ "equipment.id AS equipmentId", "racks.id AS EquipmentID" ] );
+                            validatingQuery.toSQL();
                         } ).toThrow( type = "DuplicateSelectColumn" );
                     } );
 
@@ -74,8 +83,12 @@ component extends="testbox.system.BaseSpec" {
                             validateDuplicateSelectColumns = true
                         );
 
+                        validatingQuery
+                            .select( [ "equipment.id AS `equipmentId`", "racks.id AS equipmentId" ] )
+                            .from( "equipment" );
+
                         expect( function() {
-                            validatingQuery.select( [ "equipment.id AS `equipmentId`", "racks.id AS equipmentId" ] );
+                            validatingQuery.toSQL();
                         } ).toThrow( type = "DuplicateSelectColumn" );
                     } );
 
@@ -86,7 +99,10 @@ component extends="testbox.system.BaseSpec" {
                         );
 
                         expect( function() {
-                            validatingQuery.select( [ "equipment.id AS equipmentId", "racks.id AS rackId" ] );
+                            validatingQuery
+                                .select( [ "equipment.id AS equipmentId", "racks.id AS rackId" ] )
+                                .from( "equipment" )
+                                .toSQL();
                         } ).notToThrow();
                     } );
 
@@ -97,7 +113,10 @@ component extends="testbox.system.BaseSpec" {
                         );
 
                         expect( function() {
-                            validatingQuery.select( [ "equipment.*", "racks.*" ] );
+                            validatingQuery
+                                .select( [ "equipment.*", "racks.*" ] )
+                                .from( "equipment" )
+                                .toSQL();
                         } ).notToThrow();
                     } );
 
@@ -107,8 +126,10 @@ component extends="testbox.system.BaseSpec" {
                             validateDuplicateSelectColumns = true
                         );
 
+                        validatingQuery.selectRaw( [ "COUNT(*) AS total", "SUM(amount) AS total" ] ).from( "equipment" );
+
                         expect( function() {
-                            validatingQuery.selectRaw( [ "COUNT(*) AS total", "SUM(amount) AS total" ] );
+                            validatingQuery.toSQL();
                         } ).toThrow( type = "DuplicateSelectColumn" );
                     } );
 
@@ -119,7 +140,10 @@ component extends="testbox.system.BaseSpec" {
                         );
 
                         expect( function() {
-                            validatingQuery.selectRaw( [ "CAST(id AS VARCHAR)", "CAST(name AS VARCHAR)" ] );
+                            validatingQuery
+                                .selectRaw( [ "CAST(id AS VARCHAR)", "CAST(name AS VARCHAR)" ] )
+                                .from( "equipment" )
+                                .toSQL();
                         } ).notToThrow();
                     } );
 
@@ -129,9 +153,30 @@ component extends="testbox.system.BaseSpec" {
                             validateDuplicateSelectColumns = true
                         );
 
+                        validatingQuery
+                            .select( [ validatingQuery.jsonPath( "profile", [ "name" ], "name" ), "users.name" ] )
+                            .from( "users" );
+
                         expect( function() {
-                            validatingQuery.select( [ validatingQuery.jsonPath( "profile", [ "name" ], "name" ), "users.name" ] );
+                            validatingQuery.toSQL();
                         } ).toThrow( type = "DuplicateSelectColumn" );
+                    } );
+
+                    it( "does not infer output names for unaliased typed expressions", function() {
+                        var validatingQuery = new qb.models.Query.QueryBuilder(
+                            grammar = new qb.models.Grammars.MySQLGrammar( new qb.models.Query.QueryUtils() ),
+                            validateDuplicateSelectColumns = true
+                        );
+
+                        expect( function() {
+                            validatingQuery
+                                .select( [
+                                    validatingQuery.jsonPath( "profile", [ "name" ] ),
+                                    validatingQuery.jsonPath( "metadata", [ "name" ] )
+                                ] )
+                                .from( "users" )
+                                .toSQL();
+                        } ).notToThrow();
                     } );
 
                     it( "propagates validation to new queries", function() {
@@ -140,9 +185,41 @@ component extends="testbox.system.BaseSpec" {
                             validateDuplicateSelectColumns = true
                         );
 
+                        var childQuery = validatingQuery
+                            .newQuery()
+                            .select( [ "equipment.id", "racks.id" ] )
+                            .from( "equipment" );
+
                         expect( function() {
-                            validatingQuery.newQuery().select( [ "equipment.id", "racks.id" ] );
+                            childQuery.toSQL();
                         } ).toThrow( type = "DuplicateSelectColumn" );
+                    } );
+
+                    it( "validates the final selection after a reselect", function() {
+                        var validatingQuery = new qb.models.Query.QueryBuilder(
+                            grammar = variables.mockGrammar,
+                            validateDuplicateSelectColumns = true
+                        );
+
+                        expect( function() {
+                            validatingQuery
+                                .select( [ "equipment.id", "racks.id" ] )
+                                .reselect( [ "equipment.id AS equipmentId", "racks.id AS rackId" ] )
+                                .from( "equipment" )
+                                .toSQL();
+                        } ).notToThrow();
+                    } );
+
+                    it( "does not validate columns excluded from aggregate output", function() {
+                        var validatingQuery = new qb.models.Query.QueryBuilder(
+                            grammar = variables.mockGrammar,
+                            validateDuplicateSelectColumns = true
+                        );
+                        validatingQuery.select( [ "equipment.id", "racks.id" ] ).from( "equipment" );
+
+                        expect( function() {
+                            validatingQuery.count( toSQL = true );
+                        } ).notToThrow();
                     } );
                 } );
             } );
@@ -176,9 +253,10 @@ component extends="testbox.system.BaseSpec" {
                         validateDuplicateSelectColumns = true
                     );
                     validatingQuery.select( "equipment.id" );
+                    validatingQuery.addSelect( "racks.id" ).from( "equipment" );
 
                     expect( function() {
-                        validatingQuery.addSelect( "racks.id" );
+                        validatingQuery.toSQL();
                     } ).toThrow( type = "DuplicateSelectColumn" );
                 } );
 
@@ -188,11 +266,14 @@ component extends="testbox.system.BaseSpec" {
                         validateDuplicateSelectColumns = true
                     );
                     validatingQuery.select( "users.id" );
+                    validatingQuery
+                        .subSelect( "id", function( subquery ) {
+                            subquery.from( "contacts" ).select( "contacts.id" );
+                        } )
+                        .from( "users" );
 
                     expect( function() {
-                        validatingQuery.subSelect( "id", function( subquery ) {
-                            subquery.from( "contacts" ).select( "contacts.id" );
-                        } );
+                        validatingQuery.toSQL();
                     } ).toThrow( type = "DuplicateSelectColumn" );
                 } );
             } );

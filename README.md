@@ -71,6 +71,20 @@ q = queryExecute(
 
 qb enables you to explore new ways of organizing your code by letting you pass around a query builder object that will compile down to the right SQL without you having to keep track of the order, whitespace, or other SQL gotchas!
 
+## Development Validation
+
+qb can detect statically identifiable duplicate select output names before they are silently collapsed by CFML query results. Enable this validation in development and leave it disabled in production:
+
+```cfc
+moduleSettings = {
+    "qb": {
+        "validateDuplicateSelectColumns": true
+    }
+};
+```
+
+The validation checks simple columns, explicit aliases, subselect aliases, and typed columns. Wildcards and raw expressions without explicit aliases are skipped because their output names cannot be known until the query executes.
+
 ## Return Formatters
 
 qb includes named return formatters for `array`, `query`, `none`, and `struct`. The `struct` formatter returns a struct of rows keyed by a selected column:

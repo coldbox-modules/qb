@@ -10,10 +10,7 @@ component accessors="true" {
     }
 
     public function toFormatter( struct options = {} ) {
-        return new qb.models.Query.Formatters.StructFormatter(
-            utils = variables.utils,
-            options = arguments.options
-        );
+        return new qb.models.Query.Formatters.StructFormatter( utils = variables.utils, options = arguments.options );
     }
 
     public struct function format( required any q ) {

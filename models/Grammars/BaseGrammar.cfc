@@ -33,6 +33,12 @@ component displayname="Grammar" accessors="true" singleton {
     property name="tableAliasOperator" type="string" default=" AS ";
 
     /**
+     * The maximum number of parameters supported in a single statement.
+     * A value of zero indicates no grammar-specific limit.
+     */
+    this.parameterLimit = 0;
+
+    /**
      * The different components of a select statement in the order of compilation.
      */
     variables.selectComponents = [
@@ -925,6 +931,70 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    /**
+     * Whether this grammar provides a native bulk insert strategy.
+     */
+    public boolean function supportsBulkInsert() {
+        return false;
+    }
+
+    /**
+     * Prepare values and column metadata for a grammar's native bulk insert compiler.
+     *
+     * @query The Builder instance.
+     * @values The rows to insert.
+     * @sqlTypes Explicit SQL types keyed by column name.
+     */
+    public struct function prepareBulkInsert( required any query, required array values, required struct sqlTypes ) {
+        var builder = arguments.query;
+        var columns = arguments.values[ 1 ]
+            .keyArray()
+            .map( function( column ) {
+                var formatted = listLast( builder.applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": { "type": "simple", "value": formatted } };
+            } );
+        columns.sort( ( a, b ) => compareNoCase( a.formatted.value, b.formatted.value ) );
+
+        arguments.values.each( function( row ) {
+            columns.each( function( column ) {
+                if (
+                    row.keyExists( column.original ) &&
+                    !isNull( row[ column.original ] ) &&
+                    getUtils().isExpression( row[ column.original ] )
+                ) {
+                    throw( type = "InvalidBulkValue", message = "Bulk insert values cannot contain SQL expressions." );
+                }
+            } );
+        } );
+
+        return prepareBulkInsertValues( arguments.values, columns, arguments.sqlTypes );
+    }
+
+    /**
+     * Prepare database-specific values and metadata for a native bulk insert.
+     *
+     * @values The rows to insert.
+     * @columns The normalized columns to insert.
+     * @sqlTypes Explicit SQL types keyed by column name.
+     */
+    public struct function prepareBulkInsertValues(
+        required array values,
+        required array columns,
+        required struct sqlTypes
+    ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support native bulk inserts." );
+    }
+
+    /**
+     * Compile a native bulk insert statement.
+     *
+     * @query The Builder instance.
+     * @columns The columns and resolved SQL types to insert.
+     */
+    public string function compileBulkInsert( required any query, required array columns ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support native bulk inserts." );
     }
 
     /**

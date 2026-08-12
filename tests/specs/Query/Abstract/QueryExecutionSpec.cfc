@@ -1536,6 +1536,62 @@ component extends="testbox.system.BaseSpec" {
                 expect( sql ).toBe( sqlAgain );
             } );
         } );
+
+        describe( "bulk inserts", function() {
+            it( "inserts values in explicit batches", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .insertBulk(
+                        values = [
+                            { "email": "one@example.com" },
+                            { "email": "two@example.com" },
+                            { "email": "three@example.com" }
+                        ],
+                        chunkSize = 2,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [ "INSERT INTO ""users"" (""email"") VALUES (?), (?)", "INSERT INTO ""users"" (""email"") VALUES (?)" ] );
+            } );
+
+            it( "caps batches using the grammar parameter limit", function() {
+                var builder = getBuilder();
+                builder.getGrammar().parameterLimit = 4;
+
+                var sql = builder
+                    .from( "users" )
+                    .insertBulk(
+                        values = [
+                            { "email": "one@example.com", "name": "One" },
+                            { "email": "two@example.com", "name": "Two" },
+                            { "email": "three@example.com", "name": "Three" }
+                        ],
+                        chunkSize = 100,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO ""users"" (""email"", ""name"") VALUES (?, ?), (?, ?)",
+                    "INSERT INTO ""users"" (""email"", ""name"") VALUES (?, ?)"
+                ] );
+            } );
+
+            it( "returns an empty array for no values", function() {
+                expect( getBuilder().from( "users" ).insertBulk( values = [], toSql = true ) ).toBe( [] );
+            } );
+
+            it( "uses a non-positive chunk size to insert all rows", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .insertBulk(
+                        values = [ { "email": "one@example.com" }, { "email": "two@example.com" } ],
+                        chunkSize = -1,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [ "INSERT INTO ""users"" (""email"") VALUES (?), (?)" ] );
+            } );
+        } );
     }
 
     private function getBuilder() {

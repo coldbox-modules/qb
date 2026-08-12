@@ -1188,6 +1188,53 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function jsonScalarSelect() {
+        return "SELECT JSON_VALUE(""PROFILE"", '$.""contacts""[0].""email""') AS ""EXPLICITNAME"", JSON_VALUE(""PROFILE"", '$.""contacts""[0].""email""') AS ""SHORTCUTNAME"" FROM ""USERS""";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""age""') >= ? AND JSON_VALUE(""PROFILE"", '$.""age""') < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")",
+            bindings: [ "en", "en" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""name""') AND JSON_EXISTS(""PROFILE"", '$.""name""')";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? AND JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? ORDER BY JSON_VALUE(""PROFILE"", '$.""name""') ASC, JSON_VALUE(""PROFILE"", '$.""name""') DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? AND JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE NOT (JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")) OR NOT (JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")) OR JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND NOT (JSON_EXISTS(""PROFILE"", '$.""nickname""')) OR JSON_EXISTS(""PROFILE"", '$.""name""') OR NOT (JSON_EXISTS(""PROFILE"", '$.""timezone""')) OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ?",
+            bindings: [ "en", "fr", "de", 1 ]
+        };
+    }
+
     function aggregateExists() {
         return {
             "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (SELECT * FROM ""USERS"" WHERE ""ID"" = ?) results ) WHERE ""QB_RN"" <= 1) THEN 1 ELSE 0 END AS aggregate FROM DUAL",

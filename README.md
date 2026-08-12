@@ -78,11 +78,22 @@ For large value collections, `whereInBulk` serializes the values into one bound 
 ```cfc
 query
     .from( "users" )
+    .whereInBulk( "id", userIds )
+    .get();
+```
+
+qb infers a common type from the values and translates it to the active database grammar. Matching `cfsqltype` values in query parameter structs are preserved. Mixed values fall back to the grammar's string type.
+
+You can pass an explicit `sqlType` as the third argument when the column needs a more specific database type, such as `BIGINT`, `UUID`, or a particular decimal precision:
+
+```cfc
+query
+    .from( "users" )
     .whereInBulk( "id", userIds, "BIGINT" )
     .get();
 ```
 
-The `sqlType` should match the constrained column so the database can avoid implicit conversions. `whereNotInBulk`, `andWhereInBulk`, `orWhereInBulk`, `andWhereNotInBulk`, and `orWhereNotInBulk` are also available.
+The explicit `sqlType` should match the constrained column so the database can avoid implicit conversions. `whereNotInBulk`, `andWhereInBulk`, `orWhereInBulk`, `andWhereNotInBulk`, and `orWhereNotInBulk` are also available.
 
 Bulk value expansion is supported by these grammars and database features:
 

@@ -353,6 +353,41 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""STATUS"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" VARCHAR2(4000) PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""EXTERNALID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" VARCHAR2(4000) PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ACTIVE"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,0]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER(19, 0) PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER(19, 0) PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
     function orWhereInBulk() {
         return {
             sql: "SELECT * FROM ""USERS"" WHERE ""ACTIVE"" = ? OR ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
@@ -367,8 +402,8 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
-    function bulkSqlType() {
-        return "NUMBER";
+    function bulkExplicitSqlType() {
+        return "NUMBER(19, 0)";
     }
 
     function whereInBulkEmpty() {

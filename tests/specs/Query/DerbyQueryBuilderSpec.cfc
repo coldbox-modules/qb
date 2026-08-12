@@ -344,6 +344,26 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function whereInBulkStrings() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkMixed() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkBooleans() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkBigInt() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkExplicitType() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function orWhereInBulk() {
         return { exception: "UnsupportedOperation" };
     }

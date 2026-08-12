@@ -4,6 +4,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` #arguments.sqlType# PATH '$')) AS `qb_bulk_values`";
     }
 
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+                return "VARCHAR(4000)";
+            case "TIMESTAMP":
+                return "DATETIME(6)";
+            case "BOOLEAN":
+                return "TINYINT";
+            default:
+                return normalizedType;
+        }
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return "JSON_UNQUOTE(JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
     }

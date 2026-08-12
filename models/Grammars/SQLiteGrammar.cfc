@@ -4,6 +4,40 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "SELECT CAST(""value"" AS #arguments.sqlType#) FROM JSON_EACH(?)";
     }
 
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+            case "DATE":
+            case "TIME":
+            case "TIMESTAMP":
+                return "TEXT";
+            case "BIT":
+            case "BOOLEAN":
+            case "TINYINT":
+            case "SMALLINT":
+            case "INTEGER":
+            case "BIGINT":
+            case "OTHER":
+                return "INTEGER";
+            case "DECIMAL":
+            case "NUMERIC":
+            case "REAL":
+            case "FLOAT":
+            case "DOUBLE":
+                return "REAL";
+            default:
+                return normalizedType;
+        }
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return "JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }

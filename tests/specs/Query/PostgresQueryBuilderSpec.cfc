@@ -347,6 +347,41 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""status"" IN (SELECT CAST(""value"" AS TEXT) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""externalId"" IN (SELECT CAST(""value"" AS TEXT) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""active"" IN (SELECT CAST(""value"" AS BOOLEAN) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[true,false]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS BIGINT) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS BIGINT) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
     function orWhereInBulk() {
         return {
             sql: "SELECT * FROM ""users"" WHERE ""active"" = ? OR ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",

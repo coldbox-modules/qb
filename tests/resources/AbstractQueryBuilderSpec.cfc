@@ -954,14 +954,12 @@ component extends="testbox.system.BaseSpec" {
                         describe( "bulk values", function() {
                             it( "binds an array as a single parameter", function() {
                                 testCase( function( builder ) {
-                                    builder.from( "users" ).whereInBulk( "id", [ 1, 2, 3 ], bulkSqlType() );
+                                    builder.from( "users" ).whereInBulk( "id", [ 1, 2, 3 ] );
                                 }, whereInBulk() );
                             } );
 
                             it( "uses a large text binding for the serialized values", function() {
-                                var builder = getBuilder()
-                                    .from( "users" )
-                                    .whereInBulk( "id", [ 1, 2, 3 ], bulkSqlType() );
+                                var builder = getBuilder().from( "users" ).whereInBulk( "id", [ 1, 2, 3 ] );
                                 var bindings = builder.getBindings();
                                 expect( bindings ).toHaveLength( 1 );
                                 expect( bindings[ 1 ].value ).toBe( "[1,2,3]" );
@@ -978,10 +976,50 @@ component extends="testbox.system.BaseSpec" {
                                                 { value: 1, cfsqltype: "INTEGER" },
                                                 { value: 2, cfsqltype: "INTEGER" },
                                                 { value: 3, cfsqltype: "INTEGER" }
-                                            ],
-                                            bulkSqlType()
+                                            ]
                                         );
                                 }, whereInBulk() );
+                            } );
+
+                            it( "infers string values using the grammar-specific string type", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereInBulk( "status", [ "active", "pending" ] );
+                                }, whereInBulkStrings() );
+                            } );
+
+                            it( "falls back to the grammar-specific string type for mixed values", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereInBulk( "externalId", [ 1, "two" ] );
+                                }, whereInBulkMixed() );
+                            } );
+
+                            it( "infers boolean values using the grammar-specific boolean type", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereInBulk( "active", [ true, false ] );
+                                }, whereInBulkBooleans() );
+                            } );
+
+                            it( "uses matching query parameter types as the inferred type", function() {
+                                testCase( function( builder ) {
+                                    builder
+                                        .from( "users" )
+                                        .whereInBulk(
+                                            "id",
+                                            [ { value: 1, cfsqltype: "BIGINT" }, { value: 2, cfsqltype: "BIGINT" } ]
+                                        );
+                                }, whereInBulkBigInt() );
+                            } );
+
+                            it( "allows an explicit SQL type to override inference", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereInBulk( "id", [ 1, 2, 3 ], bulkExplicitSqlType() );
+                                }, whereInBulkExplicitType() );
+                            } );
+
+                            it( "maps inferred timestamp types for the active grammar", function() {
+                                expect( getBuilder().getGrammar().resolveWhereInBulkSqlType( "TIMESTAMP" ) ).toBe(
+                                    bulkTimestampSqlType()
+                                );
                             } );
 
                             it( "supports dynamic or where shortcuts", function() {
@@ -989,31 +1027,31 @@ component extends="testbox.system.BaseSpec" {
                                     builder
                                         .from( "users" )
                                         .where( "active", 1 )
-                                        .orWhereInBulk( "id", [ 1, 2, 3 ], bulkSqlType() );
+                                        .orWhereInBulk( "id", [ 1, 2, 3 ] );
                                 }, orWhereInBulk() );
                             } );
 
                             it( "supports negated bulk values", function() {
                                 testCase( function( builder ) {
-                                    builder.from( "users" ).whereNotInBulk( "id", [ 1, 2, 3 ], bulkSqlType() );
+                                    builder.from( "users" ).whereNotInBulk( "id", [ 1, 2, 3 ] );
                                 }, whereNotInBulk() );
                             } );
 
                             it( "handles empty bulk values without a binding", function() {
                                 testCase( function( builder ) {
-                                    builder.from( "users" ).whereInBulk( "id", [], bulkSqlType() );
+                                    builder.from( "users" ).whereInBulk( "id", [] );
                                 }, whereInBulkEmpty() );
                             } );
 
                             it( "handles empty negated bulk values without a binding", function() {
                                 testCase( function( builder ) {
-                                    builder.from( "users" ).whereNotInBulk( "id", [], bulkSqlType() );
+                                    builder.from( "users" ).whereNotInBulk( "id", [] );
                                 }, whereNotInBulkEmpty() );
                             } );
 
                             it( "rejects SQL expressions in bulk values", function() {
                                 expect( function() {
-                                    getBuilder().whereInBulk( "id", [ getBuilder().raw( "SELECT 1" ) ], bulkSqlType() );
+                                    getBuilder().whereInBulk( "id", [ getBuilder().raw( "SELECT 1" ) ] );
                                 } ).toThrow( type = "InvalidBulkValue" );
                             } );
 
@@ -3294,8 +3332,12 @@ component extends="testbox.system.BaseSpec" {
         throw( "Must be implemented in a subclass" );
     }
 
-    string function bulkSqlType() {
-        return "INTEGER";
+    string function bulkTimestampSqlType() {
+        return "TIMESTAMP";
+    }
+
+    string function bulkExplicitSqlType() {
+        return "BIGINT";
     }
 
     private array function getTestBindings( required QueryBuilder builder, boolean withFullBindings = false ) {

@@ -4,6 +4,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "SELECT CAST(""value"" AS #arguments.sqlType#) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value"")";
     }
 
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+                return "TEXT";
+            case "OTHER":
+            case "BIT":
+            case "TINYINT":
+                return "BOOLEAN";
+            default:
+                return normalizedType;
+        }
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return compilePostgresJsonTraversal( arguments.jsonPath, true );
     }

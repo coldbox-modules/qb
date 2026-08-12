@@ -2367,7 +2367,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @column The name of the column with which to constrain the query.
      * @values The values to serialize into the single bound parameter.
-     * @sqlType The database SQL type to use for each expanded value.
+     * @sqlType The database SQL type to use for each expanded value. Inferred from the values when omitted.
      * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
      * @negate False for IN, True for NOT IN. Default: false.
      *
@@ -2376,11 +2376,32 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereInBulk(
         required column,
         required values,
-        required string sqlType,
+        string sqlType,
         string combinator = "and",
         boolean negate = false
     ) {
         arguments.values = normalizeToArray( arguments.values );
+
+        if ( arguments.values.some( getUtils().isExpression ) ) {
+            throw( type = "InvalidBulkValue", message = "Bulk IN values cannot contain SQL expressions." );
+        }
+
+        var extractedBindings = arguments.values.map( function( value ) {
+            return getUtils().extractBinding( arguments.value, variables.grammar );
+        } );
+
+        if ( !structKeyExists( arguments, "sqlType" ) ) {
+            var inferredSqlType = extractedBindings.isEmpty() ? "VARCHAR" : extractedBindings[ 1 ].cfsqltype;
+            if (
+                extractedBindings.some( function( binding ) {
+                    return compareNoCase( arguments.binding.cfsqltype, inferredSqlType ) != 0;
+                } )
+            ) {
+                inferredSqlType = "VARCHAR";
+            }
+            arguments.sqlType = variables.grammar.resolveWhereInBulkSqlType( inferredSqlType );
+        }
+
         arguments.sqlType = trim( arguments.sqlType );
 
         if (
@@ -2396,10 +2417,6 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
-        if ( arguments.values.some( getUtils().isExpression ) ) {
-            throw( type = "InvalidBulkValue", message = "Bulk IN values cannot contain SQL expressions." );
-        }
-
         variables.wheres.append( {
             type: "inBulk",
             column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
@@ -2410,8 +2427,7 @@ component displayname="QueryBuilder" accessors="true" {
         } );
 
         if ( !arguments.values.isEmpty() ) {
-            var serializedValues = arguments.values.map( function( value ) {
-                var binding = getUtils().extractBinding( arguments.value, variables.grammar );
+            var serializedValues = extractedBindings.map( function( binding ) {
                 return binding.null ? javacast( "null", "" ) : binding.value;
             } );
             addBindings(
@@ -2433,7 +2449,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @column The name of the column with which to constrain the query.
      * @values The values to serialize into the single bound parameter.
-     * @sqlType The database SQL type to use for each expanded value.
+     * @sqlType The database SQL type to use for each expanded value. Inferred from the values when omitted.
      * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
      *
      * @return qb.models.Query.QueryBuilder
@@ -2441,7 +2457,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function whereNotInBulk(
         required column,
         required values,
-        required string sqlType,
+        string sqlType,
         string combinator = "and"
     ) {
         arguments.negate = true;

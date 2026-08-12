@@ -681,6 +681,17 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Maps an inferred CF SQL type to a database-native type for a bulk IN statement.
+     *
+     * @sqlType The inferred CF SQL type.
+     *
+     * @return string
+     */
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        return reReplaceNoCase( trim( arguments.sqlType ), "^CF_SQL_", "" ).uCase();
+    }
+
+    /**
      * Compiles a in subselect where statement.
      *
      * @query The Builder instance.

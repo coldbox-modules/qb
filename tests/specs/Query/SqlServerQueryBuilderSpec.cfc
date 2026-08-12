@@ -1,5 +1,50 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "SQL Server bulk inserts", function() {
+            it( "inserts all rows from one JSON parameter", function() {
+                var builder = getBuilder();
+                var sql = builder
+                    .from( "users" )
+                    .insertBulk( values = [ { "id": 1, "name": "One" }, { "id": 2, "name": "Two" } ], toSql = true );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [users] ([id], [name]) SELECT [id], [name] FROM OPENJSON(?) WITH ([id] INTEGER '$.""id""', [name] NVARCHAR(MAX) '$.""name""')"
+                ] );
+                expect( builder.getBindings() ).toHaveLength( 1 );
+                expect( deserializeJSON( builder.getBindings()[ 1 ].value ) ).toBe( [ { "id": 1, "name": "One" }, { "id": 2, "name": "Two" } ] );
+            } );
+
+            it( "supports explicit SQL types", function() {
+                var builder = getBuilder();
+                var sql = builder
+                    .from( "measurements" )
+                    .insertBulk(
+                        values = [ { "reading": 1.5 } ],
+                        sqlTypes = { "reading": "DECIMAL(10, 2)" },
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [measurements] ([reading]) SELECT [reading] FROM OPENJSON(?) WITH ([reading] DECIMAL(10, 2) '$.""reading""')"
+                ] );
+            } );
+
+            it( "applies returning columns to bulk inserts", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .returning( "id" )
+                    .insertBulk( values = [ { "name": "One" } ], toSql = true );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [users] ([name]) OUTPUT INSERTED.[id] SELECT [name] FROM OPENJSON(?) WITH ([name] NVARCHAR(MAX) '$.""name""')"
+                ] );
+            } );
+        } );
+    }
+
     function selectAllColumns() {
         return "SELECT * FROM [users]";
     }

@@ -2362,6 +2362,103 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Adds a WHERE IN clause that serializes all values into one bound parameter.
+     * The active grammar determines how the parameter is expanded into rows.
+     *
+     * @column The name of the column with which to constrain the query.
+     * @values The values to serialize into the single bound parameter.
+     * @sqlType The database SQL type to use for each expanded value. Inferred from the values when omitted.
+     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+     * @negate False for IN, True for NOT IN. Default: false.
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function whereInBulk(
+        required column,
+        required values,
+        any sqlType = javacast( "null", "" ),
+        string combinator = "and",
+        boolean negate = false
+    ) {
+        arguments.values = normalizeToArray( arguments.values );
+
+        if ( arguments.values.some( getUtils().isExpression ) ) {
+            throw( type = "InvalidBulkValue", message = "Bulk IN values cannot contain SQL expressions." );
+        }
+
+        var extractedBindings = arguments.values.map( function( value ) {
+            return getUtils().extractBinding( arguments.value, variables.grammar );
+        } );
+
+        if ( isNull( arguments.sqlType ) ) {
+            arguments.sqlType = variables.grammar.resolveWhereInBulkSqlType(
+                getUtils().inferSqlType( arguments.values, variables.grammar )
+            );
+        }
+
+        arguments.sqlType = trim( arguments.sqlType );
+
+        if (
+            arguments.sqlType == "" ||
+            !reFindNoCase(
+                "^[a-z][a-z0-9_]*(?:\s+[a-z][a-z0-9_]*)*(?:\s*\(\s*(?:max|\d+)(?:\s*,\s*\d+)?\s*\))?$",
+                arguments.sqlType
+            )
+        ) {
+            throw(
+                type = "InvalidSQLType",
+                message = "Invalid SQL type [#arguments.sqlType#] for a bulk IN statement."
+            );
+        }
+
+        variables.wheres.append( {
+            type: "inBulk",
+            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+            sqlType: arguments.sqlType,
+            isEmpty: arguments.values.isEmpty(),
+            negate: arguments.negate,
+            combinator: arguments.combinator
+        } );
+
+        if ( !arguments.values.isEmpty() ) {
+            var serializedValues = extractedBindings.map( function( binding ) {
+                return binding.null ? javacast( "null", "" ) : binding.value;
+            } );
+            addBindings(
+                [
+                    getUtils().extractBinding(
+                        { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
+                        variables.grammar
+                    )
+                ],
+                "where"
+            );
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds a WHERE NOT IN clause that serializes all values into one bound parameter.
+     *
+     * @column The name of the column with which to constrain the query.
+     * @values The values to serialize into the single bound parameter.
+     * @sqlType The database SQL type to use for each expanded value. Inferred from the values when omitted.
+     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function whereNotInBulk(
+        required column,
+        required values,
+        any sqlType = javacast( "null", "" ),
+        string combinator = "and"
+    ) {
+        arguments.negate = true;
+        return whereInBulk( argumentCollection = arguments );
+    }
+
+    /**
      * Adds a WHERE IN clause to the query using a subselect.  To call this using the public api, pass a closure to `whereIn` as the second argument (`values`).
      *
      * @column The name of the column with which to constrain the query.

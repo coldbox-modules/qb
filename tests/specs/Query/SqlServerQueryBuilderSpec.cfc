@@ -334,6 +334,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM [users] WHERE [id] IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
     }
 
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [id] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] INTEGER '$'))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [status] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] NVARCHAR(MAX) '$'))",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [externalId] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] NVARCHAR(MAX) '$'))",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [active] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] BIT '$'))",
+            bindings: [ "[1,0]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [id] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] BIGINT '$'))",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [id] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] BIGINT '$'))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function bulkTimestampSqlType() {
+        return "DATETIME2";
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [active] = ? OR [id] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] INTEGER '$'))",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [id] NOT IN (SELECT [value] FROM OPENJSON(?) WITH ([value] INTEGER '$'))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM [users] WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM [users] WHERE 1 = 1";
+    }
+
     function orWhereIn() {
         return { sql: "SELECT * FROM [users] WHERE [email] = ? OR [id] IN (?, ?, ?)", bindings: [ "foo", 1, 2, 3 ] };
     }

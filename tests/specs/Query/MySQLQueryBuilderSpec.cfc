@@ -334,6 +334,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM `users` WHERE `id` IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
     }
 
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `id` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` INTEGER PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `status` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` VARCHAR(4000) PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `externalId` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` VARCHAR(4000) PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `active` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` TINYINT PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,0]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `id` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` BIGINT PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `id` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` BIGINT PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function bulkTimestampSqlType() {
+        return "DATETIME(6)";
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `active` = ? OR `id` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` INTEGER PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `id` NOT IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` INTEGER PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM `users` WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM `users` WHERE 1 = 1";
+    }
+
     function orWhereIn() {
         return { sql: "SELECT * FROM `users` WHERE `email` = ? OR `id` IN (?, ?, ?)", bindings: [ "foo", 1, 2, 3 ] };
     }

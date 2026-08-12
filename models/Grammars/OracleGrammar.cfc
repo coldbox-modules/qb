@@ -253,7 +253,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required any updates,
         required array target,
         QueryBuilder source,
-        any deleteUnmatched = false
+        any deleteUnmatched = false,
+        boolean matchNulls = false
     ) {
         if ( !isBoolean( arguments.deleteUnmatched ) || arguments.deleteUnmatched ) {
             throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
@@ -297,11 +298,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                     .toList( " UNION ALL " );
             }
 
-            var constraintString = arguments.target
-                .map( function( column ) {
-                    return "#wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
-                } )
-                .toList( " AND " );
+            var constraintString = compileUpsertTargetConstraint( arguments.target, arguments.matchNulls );
 
             var updateList = "";
             if ( isArray( arguments.updates ) ) {

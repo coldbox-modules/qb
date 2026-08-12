@@ -1024,6 +1024,29 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Compiles the target-column comparisons for a MERGE-style upsert.
+     *
+     * @target The columns used to match source and target rows.
+     * @matchNulls Whether two NULL target values should be considered a match.
+     *
+     * @return The compiled match predicate.
+     */
+    public string function compileUpsertTargetConstraint( required array target, boolean matchNulls = false ) {
+        var shouldMatchNulls = arguments.matchNulls;
+        return arguments.target
+            .map( function( column ) {
+                var targetColumn = wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } );
+                var sourceColumn = wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } );
+                var equality = "#targetColumn# = #sourceColumn#";
+                if ( !shouldMatchNulls ) {
+                    return equality;
+                }
+                return "(#equality# OR (#targetColumn# IS NULL AND #sourceColumn# IS NULL))";
+            } )
+            .toList( " AND " );
+    }
+
+    /**
      * Compile a Builder's query into an insert using string.
      *
      * @query The Builder instance.

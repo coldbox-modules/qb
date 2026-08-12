@@ -12,6 +12,7 @@ component {
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
             "validateOperatorsAndCombinators": true,
+            "validateDuplicateSelectColumns": false,
             "validateQueryExecuteReturnType": false,
             "collectQueryLog": true,
             "convertEmptyStringsToNull": true,
@@ -71,6 +72,7 @@ component {
             .initArg( name = "returnFormatterRegistry", ref = "ReturnFormatterRegistry@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "validateOperatorsAndCombinators", value = settings.validateOperatorsAndCombinators )
+            .initArg( name = "validateDuplicateSelectColumns", value = settings.validateDuplicateSelectColumns )
             .initArg( name = "validateQueryExecuteReturnType", value = settings.validateQueryExecuteReturnType )
             .initArg( name = "collectQueryLog", value = settings.collectQueryLog )
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat )

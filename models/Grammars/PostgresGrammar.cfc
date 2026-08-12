@@ -1,5 +1,9 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT CAST(""value"" AS #arguments.sqlType#) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value"")";
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return compilePostgresJsonTraversal( arguments.jsonPath, true );
     }

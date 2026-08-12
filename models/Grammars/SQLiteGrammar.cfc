@@ -1,5 +1,9 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT CAST(""value"" AS #arguments.sqlType#) FROM JSON_EACH(?)";
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return "JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }

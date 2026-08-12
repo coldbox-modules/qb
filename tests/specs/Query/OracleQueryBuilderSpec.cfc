@@ -346,6 +346,39 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
     }
 
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ACTIVE"" = ? OR ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" NOT IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function bulkSqlType() {
+        return "NUMBER";
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM ""USERS"" WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM ""USERS"" WHERE 1 = 1";
+    }
+
     function orWhereIn() {
         return {
             sql: "SELECT * FROM ""USERS"" WHERE ""EMAIL"" = ? OR ""ID"" IN (?, ?, ?)",

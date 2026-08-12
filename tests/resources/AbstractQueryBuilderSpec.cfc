@@ -950,6 +950,79 @@ component extends="testbox.system.BaseSpec" {
                                     );
                             }, whereInBuilderInstance() );
                         } );
+
+                        describe( "bulk values", function() {
+                            it( "binds an array as a single parameter", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereInBulk( "id", [ 1, 2, 3 ], bulkSqlType() );
+                                }, whereInBulk() );
+                            } );
+
+                            it( "uses a large text binding for the serialized values", function() {
+                                var builder = getBuilder()
+                                    .from( "users" )
+                                    .whereInBulk( "id", [ 1, 2, 3 ], bulkSqlType() );
+                                var bindings = builder.getBindings();
+                                expect( bindings ).toHaveLength( 1 );
+                                expect( bindings[ 1 ].value ).toBe( "[1,2,3]" );
+                                expect( bindings[ 1 ].cfsqltype ).toBe( "LONGVARCHAR" );
+                            } );
+
+                            it( "serializes values from query parameter structs", function() {
+                                testCase( function( builder ) {
+                                    builder
+                                        .from( "users" )
+                                        .whereInBulk(
+                                            "id",
+                                            [
+                                                { value: 1, cfsqltype: "INTEGER" },
+                                                { value: 2, cfsqltype: "INTEGER" },
+                                                { value: 3, cfsqltype: "INTEGER" }
+                                            ],
+                                            bulkSqlType()
+                                        );
+                                }, whereInBulk() );
+                            } );
+
+                            it( "supports dynamic or where shortcuts", function() {
+                                testCase( function( builder ) {
+                                    builder
+                                        .from( "users" )
+                                        .where( "active", 1 )
+                                        .orWhereInBulk( "id", [ 1, 2, 3 ], bulkSqlType() );
+                                }, orWhereInBulk() );
+                            } );
+
+                            it( "supports negated bulk values", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereNotInBulk( "id", [ 1, 2, 3 ], bulkSqlType() );
+                                }, whereNotInBulk() );
+                            } );
+
+                            it( "handles empty bulk values without a binding", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereInBulk( "id", [], bulkSqlType() );
+                                }, whereInBulkEmpty() );
+                            } );
+
+                            it( "handles empty negated bulk values without a binding", function() {
+                                testCase( function( builder ) {
+                                    builder.from( "users" ).whereNotInBulk( "id", [], bulkSqlType() );
+                                }, whereNotInBulkEmpty() );
+                            } );
+
+                            it( "rejects SQL expressions in bulk values", function() {
+                                expect( function() {
+                                    getBuilder().whereInBulk( "id", [ getBuilder().raw( "SELECT 1" ) ], bulkSqlType() );
+                                } ).toThrow( type = "InvalidBulkValue" );
+                            } );
+
+                            it( "rejects unsafe SQL types", function() {
+                                expect( function() {
+                                    getBuilder().whereInBulk( "id", [ 1, 2, 3 ], "INTEGER); DROP TABLE users; --" );
+                                } ).toThrow( type = "InvalidSQLType" );
+                            } );
+                        } );
                     } );
 
                     describe( "where like shortcuts", function() {
@@ -3219,6 +3292,10 @@ component extends="testbox.system.BaseSpec" {
 
     private function getBuilder() {
         throw( "Must be implemented in a subclass" );
+    }
+
+    string function bulkSqlType() {
+        return "INTEGER";
     }
 
     private array function getTestBindings( required QueryBuilder builder, boolean withFullBindings = false ) {

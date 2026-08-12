@@ -1,5 +1,9 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT [value] FROM OPENJSON(?) WITH ([value] #arguments.sqlType# '$')";
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return "JSON_VALUE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }

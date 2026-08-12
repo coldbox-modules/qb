@@ -1,5 +1,9 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` #arguments.sqlType# PATH '$')) AS `qb_bulk_values`";
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return "JSON_UNQUOTE(JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
     }

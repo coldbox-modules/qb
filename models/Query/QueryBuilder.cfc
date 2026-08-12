@@ -43,6 +43,13 @@ component displayname="QueryBuilder" accessors="true" {
     property name="validateOperatorsAndCombinators";
 
     /**
+     * If true, QB validates that selected columns have unique output names.
+     * This validation is recommended in development and should be disabled in production.
+     * @default false
+     */
+    property name="validateDuplicateSelectColumns";
+
+    /**
      * If true, QB throws when queryExecute returntype options are passed.
      * If false, QB strips those options so return formatters always receive a query.
      * @default false
@@ -306,6 +313,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @validateOperatorsAndCombinators
      *                              Whether QB validates operators/combinators before storing clauses.
      *                              Default: true
+     * @validateDuplicateSelectColumns
+     *                              Whether QB validates selected columns have unique output names.
+     *                              Recommended in development and disabled in production. Default: false
      * @validateQueryExecuteReturnType
      *                              Whether QB throws when queryExecute returntype options are passed.
      *                              Default: false
@@ -340,13 +350,15 @@ component displayname="QueryBuilder" accessors="true" {
         defaultOptions = {},
         sqlCommenter = new qb.models.SQLCommenter.NullSQLCommenter(),
         shouldMaxRowsOverrideToAll,
-        boolean collectQueryLog = true
+        boolean collectQueryLog = true,
+        boolean validateDuplicateSelectColumns = false
     ) {
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
         setPreventDuplicateJoins( arguments.preventDuplicateJoins );
         setValidateOperatorsAndCombinators( arguments.validateOperatorsAndCombinators );
+        setValidateDuplicateSelectColumns( arguments.validateDuplicateSelectColumns );
         setValidateQueryExecuteReturnType( arguments.validateQueryExecuteReturnType );
         if ( isNull( arguments.returnFormatterRegistry ) ) {
             arguments.returnFormatterRegistry = new qb.models.Query.ReturnFormatterRegistry( arguments.utils );
@@ -470,13 +482,14 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function select( any columns = "*" ) {
-        variables.columns = normalizeToArray( arguments.columns )
+        var newColumns = normalizeToArray( arguments.columns )
             .map( ( column ) => applyColumnFormatter( column ) )
             .map( ( column ) => mapToColumnType( column ) );
 
-        if ( variables.columns.isEmpty() ) {
-            variables.columns = [ { "type": "simple", "value": "*" } ];
+        if ( newColumns.isEmpty() ) {
+            newColumns = [ { "type": "simple", "value": "*" } ];
         }
+        variables.columns = newColumns;
         return this;
     }
 
@@ -504,6 +517,88 @@ component displayname="QueryBuilder" accessors="true" {
                 extendedinfo = serializeJSON( arguments.column )
             );
         }
+    }
+
+    /**
+     * Validates that all statically identifiable select output names are unique.
+     * Wildcards and raw expressions without explicit aliases are skipped because
+     * their output names cannot be determined without executing the query.
+     */
+    private void function validateUniqueSelectColumns( required array columns ) {
+        if ( !getValidateDuplicateSelectColumns() ) {
+            return;
+        }
+
+        var outputNames = {};
+        for ( var column in arguments.columns ) {
+            var outputName = getSelectOutputName( column );
+            if ( isNull( outputName ) ) {
+                continue;
+            }
+
+            var normalizedName = normalizeSelectOutputName( outputName );
+            if ( structKeyExists( outputNames, normalizedName ) ) {
+                throw(
+                    type = "DuplicateSelectColumn",
+                    message = "Multiple selected columns produce the output name [#outputName#].",
+                    detail = "Alias one of the columns to produce unique result keys."
+                );
+            }
+            outputNames[ normalizedName ] = true;
+        }
+    }
+
+    /**
+     * Returns a statically identifiable output name for a selected column.
+     */
+    private any function getSelectOutputName( required struct column ) {
+        if ( arguments.column.type == "builder" ) {
+            return arguments.column.alias;
+        }
+
+        if ( arguments.column.type == "raw" ) {
+            var rawSql = trim( arguments.column.value.getSQL() );
+            var aliasMatch = reFindNoCase(
+                "\s+AS\s+((?:`[^`]+`)|(?:\[[^\]]+\])|(?:""[^""]+"")|(?:[A-Za-z_][A-Za-z0-9_$]*))\s*$",
+                rawSql,
+                1,
+                true
+            );
+            if ( aliasMatch.pos.len() < 2 || aliasMatch.pos[ 1 ] == 0 ) {
+                return;
+            }
+            return mid( rawSql, aliasMatch.pos[ 2 ], aliasMatch.len[ 2 ] );
+        }
+
+        if ( arguments.column.type == "simple" && find( "*", arguments.column.value ) ) {
+            return;
+        }
+
+        if ( arguments.column.type == "jsonPath" && !arguments.column.keyExists( "alias" ) ) {
+            return;
+        }
+
+        if ( listFindNoCase( "simple,jsonPath", arguments.column.type ) ) {
+            return getGrammar().extractAlias( arguments.column );
+        }
+    }
+
+    /**
+     * Normalizes an output name for the case-insensitive keys used by CFML structs.
+     */
+    private string function normalizeSelectOutputName( required string outputName ) {
+        var normalizedName = trim( arguments.outputName );
+        if (
+            len( normalizedName ) >= 2 &&
+            (
+                ( left( normalizedName, 1 ) == "[" && right( normalizedName, 1 ) == "]" ) ||
+                ( left( normalizedName, 1 ) == "`" && right( normalizedName, 1 ) == "`" ) ||
+                ( left( normalizedName, 1 ) == """" && right( normalizedName, 1 ) == """" )
+            )
+        ) {
+            normalizedName = mid( normalizedName, 2, len( normalizedName ) - 2 );
+        }
+        return lCase( normalizedName );
     }
 
     /**
@@ -605,19 +700,22 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addSelect( required any columns ) {
+        var newColumns = normalizeToArray( arguments.columns )
+            .map( ( column ) => applyColumnFormatter( column ) )
+            .map( ( column ) => mapToColumnType( column ) );
+        var selectedColumns = variables.columns.isEmpty() ? [] : arraySlice( variables.columns, 1 );
+
         if (
             variables.columns.isEmpty() ||
             (
                 variables.columns.len() == 1 && isSimpleValue( variables.columns[ 1 ].value ) && variables.columns[ 1 ].value == "*"
             )
         ) {
-            variables.columns = [];
+            selectedColumns = [];
         }
-        var newColumns = normalizeToArray( arguments.columns )
-            .map( ( column ) => applyColumnFormatter( column ) )
-            .map( ( column ) => mapToColumnType( column ) );
 
-        arrayAppend( variables.columns, newColumns, true );
+        arrayAppend( selectedColumns, newColumns, true );
+        variables.columns = selectedColumns;
         return this;
     }
 
@@ -4697,6 +4795,7 @@ component displayname="QueryBuilder" accessors="true" {
             columnFormatter = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
             parentQuery = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery(),
             defaultOptions = getDefaultOptions(),
+            validateDuplicateSelectColumns = getValidateDuplicateSelectColumns(),
             validateQueryExecuteReturnType = getValidateQueryExecuteReturnType(),
             collectQueryLog = getCollectQueryLog()
         );
@@ -4766,6 +4865,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return string
      */
     public string function toSQL( any showBindings = false ) {
+        if ( getAggregate().isEmpty() ) {
+            validateUniqueSelectColumns( getColumns() );
+        }
         var sql = grammar.compileSelect( this );
 
         if ( isBoolean( arguments.showBindings ) && arguments.showBindings == false ) {

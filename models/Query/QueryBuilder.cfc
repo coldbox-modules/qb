@@ -15,13 +15,17 @@ component displayname="QueryBuilder" accessors="true" {
     property name="utils";
 
     /**
-     * returnFormat callback
-     * If provided, the result of the callback is returned as the result of builder.
-     * Can optionally pass either "array" or "query"
-     * and the correct callback will be generated
+     * Resolved return formatter.
+     * If provided as a callback, its result is returned as the result of the builder.
+     * Named formatters are resolved through the return formatter registry.
      * @default "array"
      */
     property name="returnFormat";
+
+    /**
+     * Registry used to resolve named return formats.
+     */
+    property name="returnFormatterRegistry";
 
     /**
      * preventDuplicateJoins
@@ -37,6 +41,13 @@ component displayname="QueryBuilder" accessors="true" {
      * @default true
      */
     property name="validateOperatorsAndCombinators";
+
+    /**
+     * If true, QB throws when queryExecute returntype options are passed.
+     * If false, QB strips those options so return formatters always receive a query.
+     * @default false
+     */
+    property name="validateQueryExecuteReturnType";
 
     /**
      * paginationCollector
@@ -289,11 +300,15 @@ component displayname="QueryBuilder" accessors="true" {
      *                              Default: qb.models.Query.QueryUtils
      * @returnFormat                The closure (or string format shortcut) that modifies the query
      *                              and is eventually returned to the caller. Default: 'array'
+     * @returnFormatterRegistry     Registry used to resolve named return formatters.
      * @preventDuplicateJoins       Whether QB should ignore a .join() statement that matches an existing join
      *                              Default: false
      * @validateOperatorsAndCombinators
      *                              Whether QB validates operators/combinators before storing clauses.
      *                              Default: true
+     * @validateQueryExecuteReturnType
+     *                              Whether QB throws when queryExecute returntype options are passed.
+     *                              Default: false
      * @paginationCollector         The closure that processes the pagination result.
      *                              Default: cbpaginator.models.Pagination
      * @columnFormatter             The closure that modifies each column before being
@@ -315,8 +330,10 @@ component displayname="QueryBuilder" accessors="true" {
         grammar = new qb.models.Grammars.BaseGrammar(),
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
+        returnFormatterRegistry,
         preventDuplicateJoins = false,
         validateOperatorsAndCombinators = true,
+        validateQueryExecuteReturnType = false,
         paginationCollector = new cbpaginator.models.Pagination(),
         columnFormatter,
         parentQuery,
@@ -330,6 +347,11 @@ component displayname="QueryBuilder" accessors="true" {
 
         setPreventDuplicateJoins( arguments.preventDuplicateJoins );
         setValidateOperatorsAndCombinators( arguments.validateOperatorsAndCombinators );
+        setValidateQueryExecuteReturnType( arguments.validateQueryExecuteReturnType );
+        if ( isNull( arguments.returnFormatterRegistry ) ) {
+            arguments.returnFormatterRegistry = new qb.models.Query.ReturnFormatterRegistry( arguments.utils );
+        }
+        setReturnFormatterRegistry( arguments.returnFormatterRegistry );
         if ( isNull( arguments.columnFormatter ) ) {
             arguments.columnFormatter = function( column ) {
                 return column;
@@ -4311,18 +4333,35 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( isQuery( q ) ) {
-            return returnFormat( q );
+            return applyReturnFormat( q );
         }
 
         if ( isArray( q ) ) {
-            return returnFormat( q );
+            return applyReturnFormat( q );
         }
 
         if ( !q.keyExists( "result" ) || !q.keyExists( "query" ) ) {
-            return returnFormat( q );
+            return applyReturnFormat( q );
         }
 
-        return { result: q.result, query: returnFormat( q.query ) };
+        return { result: q.result, query: applyReturnFormat( q.query ) };
+    }
+
+    private any function applyReturnFormat( required any q ) {
+        var formatter = getReturnFormat();
+
+        if ( isClosure( formatter ) || isCustomFunction( formatter ) ) {
+            return formatter( arguments.q );
+        }
+
+        if ( structKeyExists( formatter, "format" ) ) {
+            return formatter.format( arguments.q );
+        }
+
+        throw(
+            type = "InvalidFormat",
+            message = "The configured return formatter must be a closure or a component with a format method."
+        );
     }
 
     /**
@@ -4337,6 +4376,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
         structAppend( arguments.options, getDefaultOptions(), false );
+        guardAgainstReturnTypeOption( arguments.options );
         var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] );
 
         var result = grammar.runQuery(
@@ -4389,10 +4429,13 @@ component displayname="QueryBuilder" accessors="true" {
             grammar = getGrammar(),
             utils = getUtils(),
             returnFormat = getReturnFormat(),
+            returnFormatterRegistry = getReturnFormatterRegistry(),
             paginationCollector = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
             columnFormatter = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
             parentQuery = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery(),
-            defaultOptions = getDefaultOptions()
+            defaultOptions = getDefaultOptions(),
+            validateQueryExecuteReturnType = getValidateQueryExecuteReturnType(),
+            collectQueryLog = getCollectQueryLog()
         );
     }
 
@@ -4508,31 +4551,23 @@ component displayname="QueryBuilder" accessors="true" {
 
     /**
      * Sets the return format for the query.
-     * The return format can be a simple string like "query" to return queries or "array" to return an array of structs.
-     * Alternative, the return format can be a closure.  The closure is passed the query as the only argument.  The result of the closure is returned as the result of the query.
+     * The format can be a registered formatter name such as "array", "query", "none", or "struct".
+     * Alternatively, the format can be a closure. The closure receives the query as its only argument,
+     * and its result is returned as the result of the builder.
      *
-     * @format "query", "array", or a closure.
+     * @format A registered formatter name or closure.
+     * @options Options passed to named return formatter factories.
      *
      * @return qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function setReturnFormat( required any format ) {
-        structDelete( variables.defaultOptions, "returntype" );
+    public QueryBuilder function setReturnFormat( required any format, struct options = {} ) {
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
-        } else if ( arguments.format == "array" ) {
-            variables.returnFormat = function( q ) {
-                return getUtils().queryToArrayOfStructs( q );
-            };
-        } else if ( arguments.format == "query" ) {
-            variables.returnFormat = function( q ) {
-                return q;
-            };
-        } else if ( arguments.format == "none" ) {
-            variables.returnFormat = function( q ) {
-                return q;
-            };
         } else {
-            throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );
+            variables.returnFormat = getReturnFormatterRegistry().getReturnFormatter(
+                arguments.format,
+                arguments.options
+            );
         }
 
         return this;
@@ -4556,17 +4591,35 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Runs the code inside the callback with the return format specified and then sets the return format back to its original value.
      *
-     * @returnFormat "query", "array", or a closure.
+     * @returnFormat A registered formatter name or closure.
      * @callback The code to execute with the given return format.
+     * @options Options passed to named return formatter factories.
      *
      * @return any
      */
-    public any function withReturnFormat( required any returnFormat, required any callback ) {
+    public any function withReturnFormat( required any returnFormat, required any callback, struct options = {} ) {
         var originalReturnFormat = getReturnFormat();
-        setReturnFormat( arguments.returnFormat );
+        setReturnFormat( arguments.returnFormat, arguments.options );
         var result = callback();
         setReturnFormat( originalReturnFormat );
         return result;
+    }
+
+    private void function guardAgainstReturnTypeOption( required struct options ) {
+        if ( !arguments.options.keyExists( "returntype" ) ) {
+            return;
+        }
+
+        if ( getValidateQueryExecuteReturnType() ) {
+            throw(
+                type = "InvalidQueryExecuteOption",
+                message = "The queryExecute returntype option cannot be used with qb return formatters."
+            );
+        }
+
+        structDelete( arguments.options, "returntype" );
+        structDelete( arguments.options, "columnkey" );
+        structDelete( arguments.options, "columnKey" );
     }
 
     /**

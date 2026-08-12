@@ -23,8 +23,6 @@ jobs:
         experimental: [ false ]
         fullNull: ["true", "false"]
         include:
-          - cfengine: "lucee@be"
-            experimental: true
           - cfengine: "adobe@be"
             experimental: true
           - cfengine: "boxlang@be"

@@ -1,5 +1,25 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return "JSON_UNQUOTE(JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        return "JSON_CONTAINS(#wrapJsonColumn( arguments.jsonPath )#, ?, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        return "IFNULL(JSON_CONTAINS_PATH(#wrapJsonColumn( arguments.jsonPath )#, 'one', '#buildJsonPath( arguments.jsonPath.path )#'), 0)";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "JSON_LENGTH(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public any function prepareJsonContainsBinding( required any value ) {
+        return serializeJSON( arguments.value );
+    }
+
     private string function orderByRandom() {
         return "RAND()";
     }

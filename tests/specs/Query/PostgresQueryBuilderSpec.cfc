@@ -1209,6 +1209,56 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function jsonScalarSelect() {
+        return "SELECT ""profile""->'contacts'->0->>'email' AS ""explicitName"", ""profile""->'contacts'->0->>'email' AS ""shortcutName"" FROM ""users""";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""profile""->>'age' >= ? AND ""profile""->>'age' < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
+            bindings: [ """en""", """en""" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM ""users"" WHERE ""profile""->'name' IS NOT NULL AND ""profile""->'name' IS NOT NULL";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ? AND JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ? ORDER BY ""profile""->>'name' ASC, ""profile""->>'name' DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? AND JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
+            bindings: [ serializeJSON( [ "en", "de" ] ), serializeJSON( [ "en", "de" ] ) ]
+        };
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE NOT ((""profile""->'languages')::jsonb @> ?::jsonb) OR NOT ((""profile""->'languages')::jsonb @> ?::jsonb) OR (""profile""->'languages')::jsonb @> ?::jsonb AND NOT (""profile""->'nickname' IS NOT NULL) OR ""profile""->'name' IS NOT NULL OR NOT (""profile""->'timezone' IS NOT NULL) OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ?",
+            bindings: [ """en""", """fr""", """de""", 1 ]
+        };
+    }
+
     function aggregateExists() {
         return {
             "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate",

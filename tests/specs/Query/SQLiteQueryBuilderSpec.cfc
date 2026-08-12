@@ -1209,6 +1209,53 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function jsonScalarSelect() {
+        return "SELECT JSON_EXTRACT(""profile"", '$.""contacts""[0].""email""') AS ""explicitName"", JSON_EXTRACT(""profile"", '$.""contacts""[0].""email""') AS ""shortcutName"" FROM ""users""";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSON_EXTRACT(""profile"", '$.""age""') >= ? AND JSON_EXTRACT(""profile"", '$.""age""') < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)",
+            bindings: [ "en", "en" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM ""users"" WHERE JSON_TYPE(""profile"", '$.""name""') IS NOT NULL AND JSON_TYPE(""profile"", '$.""name""') IS NOT NULL";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ? AND JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ? ORDER BY JSON_EXTRACT(""profile"", '$.""name""') ASC, JSON_EXTRACT(""profile"", '$.""name""') DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? AND JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE NOT (EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)) OR NOT (EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)) OR EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND NOT (JSON_TYPE(""profile"", '$.""nickname""') IS NOT NULL) OR JSON_TYPE(""profile"", '$.""name""') IS NOT NULL OR NOT (JSON_TYPE(""profile"", '$.""timezone""') IS NOT NULL) OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ?",
+            bindings: [ "en", "fr", "de", 1 ]
+        };
+    }
+
     function aggregateExists() {
         return {
             "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate",

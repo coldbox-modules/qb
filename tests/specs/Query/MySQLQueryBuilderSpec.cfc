@@ -1172,6 +1172,56 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function jsonScalarSelect() {
+        return "SELECT JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""contacts""[0].""email""')) AS `explicitName`, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""contacts""[0].""email""')) AS `shortcutName` FROM `users`";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""age""')) >= ? AND JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""age""')) < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+            bindings: [ """en""", """en""" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM `users` WHERE IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0) AND IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0)";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_LENGTH(`profile`, '$.""languages""') > ? AND JSON_LENGTH(`profile`, '$.""languages""') > ? ORDER BY JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""name""')) ASC, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""name""')) DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_LENGTH(`profile`, '$.""languages""') = ? AND JSON_LENGTH(`profile`, '$.""languages""') = ? OR JSON_LENGTH(`profile`, '$.""languages""') = ? OR JSON_LENGTH(`profile`, '$.""languages""') = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+            bindings: [ serializeJSON( [ "en", "de" ] ), serializeJSON( [ "en", "de" ] ) ]
+        };
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM `users` WHERE NOT (JSON_CONTAINS(`profile`, ?, '$.""languages""')) OR NOT (JSON_CONTAINS(`profile`, ?, '$.""languages""')) OR JSON_CONTAINS(`profile`, ?, '$.""languages""') AND NOT (IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""nickname""'), 0)) OR IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0) OR NOT (IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""timezone""'), 0)) OR JSON_LENGTH(`profile`, '$.""languages""') > ?",
+            bindings: [ """en""", """fr""", """de""", 1 ]
+        };
+    }
+
     function aggregateExists() {
         return {
             "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM `users` WHERE `id` = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate",

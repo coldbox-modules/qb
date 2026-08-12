@@ -1222,6 +1222,53 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return builder;
     }
 
+    function jsonScalarSelect() {
+        return "SELECT JSON_VALUE([profile], '$.""contacts""[0].""email""') AS [explicitName], JSON_VALUE([profile], '$.""contacts""[0].""email""') AS [shortcutName] FROM [users]";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM [users] WHERE JSON_VALUE([profile], '$.""age""') >= ? AND JSON_VALUE([profile], '$.""age""') < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM [users] WHERE ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""')) AND ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))",
+            bindings: [ "en", "en" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM [users] WHERE 'name' IN (SELECT [key] FROM OPENJSON([profile])) AND 'name' IN (SELECT [key] FROM OPENJSON([profile]))";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM [users] WHERE (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ? AND (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ? ORDER BY JSON_VALUE([profile], '$.""name""') ASC, JSON_VALUE([profile], '$.""name""') DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM [users] WHERE (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? AND (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM [users] WHERE NOT (? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))) OR NOT (? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))) OR ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""')) AND NOT ('nickname' IN (SELECT [key] FROM OPENJSON([profile]))) OR 'name' IN (SELECT [key] FROM OPENJSON([profile])) OR NOT ('timezone' IN (SELECT [key] FROM OPENJSON([profile]))) OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ?",
+            bindings: [ "en", "fr", "de", 1 ]
+        };
+    }
+
     function aggregateExists() {
         return {
             "sql": "SELECT CASE WHEN EXISTS (SELECT TOP (1) * FROM [users] WHERE [id] = ?) THEN 1 ELSE 0 END AS aggregate",

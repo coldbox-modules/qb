@@ -1,5 +1,22 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return "JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        var path = buildJsonPath( arguments.jsonPath.path );
+        return "EXISTS (SELECT 1 FROM JSON_EACH(#wrapJsonColumn( arguments.jsonPath )#, '#path#') WHERE ""json_each"".""value"" IS ?)";
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        return "JSON_TYPE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#') IS NOT NULL";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "JSON_ARRAY_LENGTH(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
     /**
      * Creates a new SQLite Query Grammar.
      *

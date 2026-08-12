@@ -146,6 +146,71 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     /**
+     * Compile independently ordered and limited UNION branches as derived queries.
+     * SQL Server requires this shape for ORDER BY to determine each branch's TOP rows.
+     */
+    public string function compileSelect( required QueryBuilder query ) {
+        if ( !shouldCompileOrderedUnionBranches( arguments.query ) ) {
+            return super.compileSelect( arguments.query );
+        }
+
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.query.getShouldWrapValues() );
+            }
+
+            var commonTables = arguments.query.getCommonTables();
+            var rootQuery = arguments.query.clone();
+            var unions = rootQuery.getUnions();
+            rootQuery.setUnions( [] );
+            rootQuery.setCommonTables( [] );
+
+            var sql = [
+                commonTables.isEmpty() ? "" : compileCommonTables( arguments.query, commonTables ),
+                "SELECT * FROM (#super.compileSelect( rootQuery )#) AS #wrapValue( "qb_union_0" )#"
+            ];
+
+            unions.each( function( union, index ) {
+                if ( union.query.getOrders().len() && !isLimitedQuery( union.query ) ) {
+                    throw(
+                        type = "OrderByNotAllowed",
+                        message = "The ORDER BY clause is not allowed in an unlimited UNION branch.",
+                        detail = "SQL Server only allows an ORDER BY clause in a UNION branch when TOP, OFFSET, or FETCH limits that branch."
+                    );
+                }
+
+                var unionOperator = union.all ? "UNION ALL" : "UNION";
+                sql.append(
+                    "#unionOperator# SELECT * FROM (#compileSelect( union.query )#) AS #wrapValue( "qb_union_#index#" )#"
+                );
+            } );
+
+            return trim( concatenate( sql ) );
+        } finally {
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
+    private boolean function shouldCompileOrderedUnionBranches( required QueryBuilder query ) {
+        if ( arguments.query.getUnions().isEmpty() || !isOrderedLimitedQuery( arguments.query ) ) {
+            return false;
+        }
+
+        return arguments.query.getUnions().some( ( union ) => isOrderedLimitedQuery( union.query ) );
+    }
+
+    private boolean function isOrderedLimitedQuery( required QueryBuilder query ) {
+        return arguments.query.getOrders().len() && isLimitedQuery( arguments.query );
+    }
+
+    private boolean function isLimitedQuery( required QueryBuilder query ) {
+        return !isNull( arguments.query.getLimitValue() ) || !isNull( arguments.query.getOffsetValue() );
+    }
+
+    /**
      * The parameter limit for SQL Server grammar.
      */
     this.parameterLimit = 2000;

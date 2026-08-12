@@ -768,17 +768,56 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     function compileModifyColumn( blueprint, commandParameters ) {
         try {
             var originalShouldWrapValues = getShouldWrapValues();
+            var originalDefaultValue = commandParameters.to.getDefaultValue();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return concatenate( [
+            if ( originalDefaultValue == "" ) {
+                return concatenate( [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "ALTER COLUMN",
+                    compileCreateColumn( commandParameters.to, blueprint )
+                ] );
+            }
+
+            commandParameters.to.setDefaultValue( "" );
+
+            var wrappedTable = wrapTable( blueprint.getTable() );
+            var wrappedColumn = wrapValue( commandParameters.to.getName() );
+            var escapedTable = replace( wrappedTable, "'", "''", "all" );
+            var escapedColumn = replace(
+                commandParameters.to.getName(),
+                "'",
+                "''",
+                "all"
+            );
+            var alterColumnSql = concatenate( [
                 "ALTER TABLE",
-                wrapTable( blueprint.getTable() ),
+                wrappedTable,
                 "ALTER COLUMN",
                 compileCreateColumn( commandParameters.to, blueprint )
             ] );
+
+            commandParameters.to.setDefaultValue( originalDefaultValue );
+
+            return [
+                "DECLARE @constraintName NVARCHAR(128); SELECT @constraintName = [dc].[name] FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = OBJECT_ID(N'#escapedTable#') AND [c].[name] = N'#escapedColumn#'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE #escapedTable# DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
+                alterColumnSql,
+                concatenate( [
+                    "ALTER TABLE",
+                    wrappedTable,
+                    "ADD CONSTRAINT",
+                    wrapValue( "df_#blueprint.getTable()#_#commandParameters.to.getName()#" ),
+                    "DEFAULT",
+                    wrapDefaultType( commandParameters.to ),
+                    "FOR",
+                    wrappedColumn
+                ] )
+            ];
         } finally {
+            commandParameters.to.setDefaultValue( originalDefaultValue );
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }

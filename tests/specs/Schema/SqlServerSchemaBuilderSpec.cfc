@@ -1,5 +1,31 @@
 component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "SQL Server column modifications", function() {
+            it( "replaces a default constraint when modifying a column", function() {
+                testCase(
+                    function( schema ) {
+                        return schema.alter(
+                            "mars_in_wash_sales",
+                            function( table ) {
+                                table.modifyColumn( "shares", table.smallinteger( "shares" ).default( -999 ) );
+                            },
+                            {},
+                            false
+                        );
+                    },
+                    [
+                        "DECLARE @constraintName NVARCHAR(128); SELECT @constraintName = [dc].[name] FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = OBJECT_ID(N'[mars_in_wash_sales]') AND [c].[name] = N'shares'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE [mars_in_wash_sales] DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
+                        "ALTER TABLE [mars_in_wash_sales] ALTER COLUMN [shares] SMALLINT NOT NULL",
+                        "ALTER TABLE [mars_in_wash_sales] ADD CONSTRAINT [df_mars_in_wash_sales_shares] DEFAULT -999 FOR [shares]"
+                    ]
+                );
+            } );
+        } );
+    }
+
     function emptyTable() {
         return [ "CREATE TABLE [users] ()" ];
     }

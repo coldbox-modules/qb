@@ -558,6 +558,15 @@ component displayname="QueryBuilder" accessors="true" {
         return definition;
     }
 
+    /**
+     * Normalizes a JSON path segment for grammar compilation.
+     * Numeric segments are converted to numbers so grammars can distinguish
+     * JSON array indexes from object keys.
+     *
+     * @segment The JSON object key or array index to normalize.
+     *
+     * @return The trimmed object key or numeric array index.
+     */
     private any function normalizeJsonPathSegment( required any segment ) {
         var normalized = trim( arguments.segment );
         return reFind( "^\d+$", normalized ) ? val( normalized ) : normalized;

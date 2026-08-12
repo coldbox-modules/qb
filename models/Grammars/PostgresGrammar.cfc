@@ -1,5 +1,37 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return compilePostgresJsonTraversal( arguments.jsonPath, true );
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        return "(#compilePostgresJsonTraversal( arguments.jsonPath, false )#)::jsonb @> ?::jsonb";
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        return "#compilePostgresJsonTraversal( arguments.jsonPath, false )# IS NOT NULL";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "JSONB_ARRAY_LENGTH((#compilePostgresJsonTraversal( arguments.jsonPath, false )#)::jsonb)";
+    }
+
+    public any function prepareJsonContainsBinding( required any value ) {
+        return serializeJSON( arguments.value );
+    }
+
+    private string function compilePostgresJsonTraversal( required struct jsonPath, boolean scalar = false ) {
+        var sql = wrapJsonColumn( arguments.jsonPath );
+        var scalarExtraction = arguments.scalar;
+        var pathLength = arguments.jsonPath.path.len();
+        arguments.jsonPath.path.each( function( segment, index ) {
+            var operator = scalarExtraction && index == pathLength ? "->>" : "->";
+            var pathSegment = isNumeric( segment ) ? segment : "'" & replace( segment, "'", "''", "all" ) & "'";
+            sql &= operator & pathSegment;
+        } );
+        return sql;
+    }
+
     /**
      * Creates a new Postgres Query Grammar.
      *

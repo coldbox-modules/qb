@@ -1,5 +1,21 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return "JSON_VALUE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        return "JSON_EXISTS(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#[*]?(@ == $value)' PASSING ? AS ""value"")";
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        return "JSON_EXISTS(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "JSON_VALUE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#.size()' RETURNING NUMBER)";
+    }
+
     /**
      * Creates a new Oracle Query Grammar.
      *

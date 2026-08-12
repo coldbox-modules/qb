@@ -1170,6 +1170,38 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function jsonScalarSelect() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonScalarWhere() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonExists() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonLengthAndOrder() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonConveniencePredicates() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function aggregateExists() {
         return {
             "sql": "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""id"" = ? OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY) THEN 1 ELSE 0 END AS aggregate",

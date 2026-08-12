@@ -85,7 +85,7 @@ component accessors="true" {
         );
         blueprint.addCommand( "create" );
         blueprint.setCreating( true );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         arguments.callback( blueprint );
         if ( arguments.execute ) {
             blueprint
@@ -124,7 +124,7 @@ component accessors="true" {
         );
         blueprint.addCommand( "createView", { query: query } );
         blueprint.setCreating( true );
-        blueprint.setTable( arguments.view );
+        blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
             blueprint
@@ -164,7 +164,7 @@ component accessors="true" {
         );
         blueprint.addCommand( "createAs", { query: query } );
         blueprint.setCreating( true );
-        blueprint.setTable( arguments.newTableName );
+        blueprint.setTable( qualifyTable( arguments.newTableName ) );
 
         if ( arguments.execute ) {
             blueprint
@@ -204,7 +204,7 @@ component accessors="true" {
         );
         blueprint.addCommand( "alterView", { query: query } );
         blueprint.setCreating( true );
-        blueprint.setTable( arguments.view );
+        blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
             blueprint
@@ -235,7 +235,7 @@ component accessors="true" {
             getDefaultSchema()
         );
         blueprint.addCommand( "dropView" );
-        blueprint.setTable( arguments.view );
+        blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
             blueprint
@@ -275,7 +275,7 @@ component accessors="true" {
             getDefaultSchema()
         );
         blueprint.addCommand( "drop" );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         if ( arguments.execute ) {
             blueprint
                 .toSql()
@@ -313,7 +313,7 @@ component accessors="true" {
             getDefaultSchema()
         );
         blueprint.addCommand( "truncate" );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         if ( arguments.execute ) {
             blueprint
                 .toSql()
@@ -351,7 +351,7 @@ component accessors="true" {
             getDefaultSchema()
         );
         blueprint.addCommand( "drop" );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         blueprint.setIfExists( true );
         if ( arguments.execute ) {
             blueprint
@@ -396,7 +396,7 @@ component accessors="true" {
             arguments.options,
             getDefaultSchema()
         );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         arguments.callback( blueprint );
         if ( arguments.execute ) {
             blueprint
@@ -440,7 +440,7 @@ component accessors="true" {
             arguments.options,
             getDefaultSchema()
         );
-        blueprint.setTable( arguments.from );
+        blueprint.setTable( qualifyTable( arguments.from ) );
         blueprint.addCommand( "renameTable", { to: arguments.to } );
         if ( arguments.execute ) {
             blueprint
@@ -499,6 +499,9 @@ component accessors="true" {
         boolean execute = true
     ) {
         structAppend( arguments.options, variables.defaultOptions, false );
+        if ( listLen( arguments.name, "." ) > 1 ) {
+            arguments.schema = listDeleteAt( arguments.name, listLen( arguments.name, "." ), "." );
+        }
         var args = [ listLast( arguments.name, "." ) ];
         if ( arguments.schema != "" ) {
             arrayAppend( args, arguments.schema );
@@ -536,6 +539,9 @@ component accessors="true" {
         boolean execute = true
     ) {
         structAppend( arguments.options, variables.defaultOptions, false );
+        if ( listLen( arguments.table, "." ) > 1 ) {
+            arguments.schema = listDeleteAt( arguments.table, listLen( arguments.table, "." ), "." );
+        }
         var args = [ listLast( arguments.table, "." ), arguments.column ];
         if ( arguments.schema != "" ) {
             arrayAppend( args, arguments.schema );
@@ -656,6 +662,21 @@ component accessors="true" {
             return javacast( "null", "" );
         }
         return variables.shouldWrapValues;
+    }
+
+    /**
+     * Prefixes an unqualified schema object with the configured default schema.
+     * Explicitly qualified object names are returned unchanged.
+     *
+     * @table The table or view name to qualify.
+     *
+     * @return The qualified table or view name.
+     */
+    private string function qualifyTable( required string table ) {
+        if ( variables.defaultSchema == "" || listLen( arguments.table, "." ) > 1 ) {
+            return arguments.table;
+        }
+        return "#variables.defaultSchema#.#arguments.table#";
     }
 
 }

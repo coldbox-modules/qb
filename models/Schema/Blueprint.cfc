@@ -42,7 +42,7 @@ component accessors="true" {
 
     public Column function bigIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedBigInteger( argumentCollection = arguments );
     }
@@ -113,7 +113,7 @@ component accessors="true" {
 
     public Column function increments( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedInteger( argumentCollection = arguments );
     }
@@ -145,7 +145,7 @@ component accessors="true" {
 
     public Column function mediumIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedMediumInteger( argumentCollection = arguments );
     }
@@ -230,7 +230,7 @@ component accessors="true" {
 
     public Column function smallIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedSmallInteger( argumentCollection = arguments );
     }
@@ -312,7 +312,7 @@ component accessors="true" {
 
     public Column function tinyIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedTinyInteger( argumentCollection = arguments );
     }
@@ -371,7 +371,7 @@ component accessors="true" {
      */
     public TableIndex function foreignKey( required any columns, string name ) {
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "fk_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "fk_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         return appendIndex( type = "foreign", foreignKey = arguments.columns, name = arguments.name );
     }
 
@@ -386,7 +386,7 @@ component accessors="true" {
      */
     public TableIndex function index( required any columns, string name ) {
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "idx_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "idx_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         return appendIndex( type = "basic", columns = arguments.columns, name = arguments.name );
     }
 
@@ -401,7 +401,7 @@ component accessors="true" {
      */
     public TableIndex function primaryKey( required any columns, string name ) {
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "pk_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "pk_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         return appendIndex( type = "primary", columns = arguments.columns, name = arguments.name );
     }
 
@@ -416,7 +416,7 @@ component accessors="true" {
      */
     public TableIndex function unique( required any columns, string name ) {
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "unq_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "unq_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         return appendIndex( type = "unique", columns = arguments.columns, name = arguments.name );
     }
 
@@ -430,7 +430,7 @@ component accessors="true" {
      * @returns The created TableIndex instance.
      */
     public TableIndex function default( required string column, string name ) {
-        param arguments.name = "df_#getTable()#_#column#";
+        param arguments.name = "df_#getUnqualifiedTableName()#_#column#";
         return createIndex( type = "default", columns = arguments.column, name = arguments.name );
     }
 
@@ -479,7 +479,7 @@ component accessors="true" {
         }
 
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "idx_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "idx_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         addCommand(
             "addIndex",
             {
@@ -575,6 +575,10 @@ component accessors="true" {
 
     private array function arrayWrap( required any value ) {
         return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+    }
+
+    private string function getUnqualifiedTableName() {
+        return listLast( getTable(), "." );
     }
 
     private numeric function clamp( required numeric lowerLimit, required numeric result, required numeric upperLimit ) {

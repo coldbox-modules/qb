@@ -482,6 +482,9 @@ component displayname="QueryBuilder" accessors="true" {
 
     private struct function mapToColumnType( required any column ) {
         if ( isSimpleValue( arguments.column ) ) {
+            if ( find( "->", arguments.column ) ) {
+                return jsonPath( column = arguments.column );
+            }
             return { "type": "simple", "value": arguments.column };
         } else if ( getUtils().isExpression( arguments.column ) ) {
             return { "type": "raw", "value": arguments.column };
@@ -501,6 +504,63 @@ component displayname="QueryBuilder" accessors="true" {
                 extendedinfo = serializeJSON( arguments.column )
             );
         }
+    }
+
+    /**
+     * Creates a grammar-aware JSON scalar path expression.
+     *
+     * The explicit form accepts a column and an array of path segments.  Arrow
+     * syntax is accepted as a shortcut and is normalized to the same shape.
+     * Numeric path segments address JSON array indexes.
+     *
+     * @column The JSON column, or an arrow path such as `profile->name`.
+     * @path The JSON object keys and array indexes to traverse.
+     * @alias An optional select alias.
+     *
+     * @return A typed column definition understood by each grammar.
+     */
+    public struct function jsonPath( required string column, array path = [], string alias ) {
+        var parsedColumn = trim( arguments.column );
+        var parsedAlias = structKeyExists( arguments, "alias" ) ? arguments.alias : "";
+
+        var aliasMatch = reFindNoCase(
+            "(.*)(?:\sAS\s)(.*)",
+            parsedColumn,
+            1,
+            true
+        );
+        if ( aliasMatch.pos.len() >= 3 && aliasMatch.pos[ 1 ] > 0 ) {
+            parsedAlias = trim( mid( parsedColumn, aliasMatch.pos[ 3 ], aliasMatch.len[ 3 ] ) );
+            parsedColumn = trim( mid( parsedColumn, aliasMatch.pos[ 2 ], aliasMatch.len[ 2 ] ) );
+        }
+
+        var arrowParts = listToArray( parsedColumn, "->", false, true );
+        if ( arrowParts.len() > 1 ) {
+            if ( !arguments.path.isEmpty() ) {
+                throw(
+                    type = "QBInvalidJsonPath",
+                    message = "JSON paths cannot combine arrow syntax with an explicit path array."
+                );
+            }
+            parsedColumn = trim( arrowParts.shift() );
+            arguments.path = arrowParts.map( ( segment ) => normalizeJsonPathSegment( segment ) );
+        } else {
+            arguments.path = arguments.path.map( ( segment ) => normalizeJsonPathSegment( segment ) );
+        }
+
+        var definition = {
+            type: "jsonPath",
+            value: { column: variables.columnFormatter( parsedColumn ), path: arguments.path }
+        };
+        if ( len( parsedAlias ) ) {
+            definition.alias = parsedAlias;
+        }
+        return definition;
+    }
+
+    private any function normalizeJsonPathSegment( required any segment ) {
+        var normalized = trim( arguments.segment );
+        return reFind( "^\d+$", normalized ) ? val( normalized ) : normalized;
     }
 
     /**
@@ -702,6 +762,12 @@ component displayname="QueryBuilder" accessors="true" {
                     "type": "simple",
                     "value": swapAlias( column.value, arguments.oldAlias, arguments.newAlias )
                 };
+            } else if ( column.type == "jsonPath" ) {
+                variables.columns[ i ].value.column = swapAlias(
+                    column.value.column,
+                    arguments.oldAlias,
+                    arguments.newAlias
+                );
             } else if ( column.type == "builder" ) {
                 column.value.renameAliases( arguments.oldAlias, arguments.newAlias );
             }
@@ -726,6 +792,12 @@ component displayname="QueryBuilder" accessors="true" {
             var column = variables.groups[ i ];
             if ( column.type == "simple" ) {
                 variables.groups[ i ].value = swapAlias( column.value, arguments.oldAlias, arguments.newAlias );
+            } else if ( column.type == "jsonPath" ) {
+                variables.groups[ i ].value.column = swapAlias(
+                    column.value.column,
+                    arguments.oldAlias,
+                    arguments.newAlias
+                );
             }
         }
     }
@@ -735,6 +807,12 @@ component displayname="QueryBuilder" accessors="true" {
             if ( structKeyExists( having, "column" ) ) {
                 if ( having.column.type == "simple" ) {
                     having.column.value = swapAlias( having.column.value, arguments.oldAlias, arguments.newAlias );
+                } else if ( having.column.type == "jsonPath" ) {
+                    having.column.value.column = swapAlias(
+                        having.column.value.column,
+                        arguments.oldAlias,
+                        arguments.newAlias
+                    );
                 }
             }
         }
@@ -745,6 +823,12 @@ component displayname="QueryBuilder" accessors="true" {
             if ( order.direction != "raw" ) {
                 if ( order.column.type == "simple" ) {
                     order.column.value = swapAlias( order.column.value, arguments.oldAlias, arguments.newAlias );
+                } else if ( order.column.type == "jsonPath" ) {
+                    order.column.value.column = swapAlias(
+                        order.column.value.column,
+                        arguments.oldAlias,
+                        arguments.newAlias
+                    );
                 }
             }
         }
@@ -761,7 +845,41 @@ component displayname="QueryBuilder" accessors="true" {
                 arguments.oldAlias,
                 arguments.newAlias
             );
+        } else if ( arguments.where.column.type == "jsonPath" ) {
+            arguments.where.column.value.column = swapAlias(
+                arguments.where.column.value.column,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
         }
+    }
+
+    private void function renameAliasInWhereJsonContains(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        arguments.where.path.value.column = swapAlias(
+            arguments.where.path.value.column,
+            arguments.oldAlias,
+            arguments.newAlias
+        );
+    }
+
+    private void function renameAliasInWhereJsonExists(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        renameAliasInWhereJsonContains( argumentCollection = arguments );
+    }
+
+    private void function renameAliasInWhereJsonLength(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        renameAliasInWhereJsonContains( argumentCollection = arguments );
     }
 
     private void function renameAliasInWhereColumn(
@@ -1890,6 +2008,130 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         return this;
+    }
+
+    /**
+     * Adds a JSON containment predicate.
+     *
+     * Explicit: `whereJsonContains( "profile", [ "languages" ], "en" )`
+     * Shortcut: `whereJsonContains( "profile->languages", "en" )`
+     */
+    public QueryBuilder function whereJsonContains(
+        required string column,
+        any path = [],
+        any value,
+        string combinator = "and",
+        boolean negate = false
+    ) {
+        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
+            throw( type = "InvalidSQLType", message = "Illegal combinator" );
+        }
+        if ( isNull( arguments.value ) ) {
+            arguments.value = arguments.path;
+            arguments.path = [];
+        }
+        variables.wheres.append( {
+            type: "jsonContains",
+            path: jsonPath( column = arguments.column, path = arguments.path ),
+            combinator: arguments.combinator,
+            negate: arguments.negate
+        } );
+        addBindings(
+            utils.extractBinding( variables.grammar.prepareJsonContainsBinding( arguments.value ), variables.grammar ),
+            "where"
+        );
+        return this;
+    }
+
+    public QueryBuilder function orWhereJsonContains( required string column, any path = [], any value ) {
+        return whereJsonContains( argumentCollection = arguments, combinator = "or" );
+    }
+
+    public QueryBuilder function whereJsonDoesntContain( required string column, any path = [], any value ) {
+        return whereJsonContains( argumentCollection = arguments, negate = true );
+    }
+
+    public QueryBuilder function orWhereJsonDoesntContain( required string column, any path = [], any value ) {
+        return whereJsonContains( argumentCollection = arguments, combinator = "or", negate = true );
+    }
+
+    /**
+     * Adds a JSON path existence predicate.
+     *
+     * Explicit: `whereJsonExists( "profile", [ "name" ] )`
+     * Shortcut: `whereJsonExists( "profile->name" )`
+     */
+    public QueryBuilder function whereJsonExists(
+        required string column,
+        array path = [],
+        string combinator = "and",
+        boolean negate = false
+    ) {
+        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
+            throw( type = "InvalidSQLType", message = "Illegal combinator" );
+        }
+        variables.wheres.append( {
+            type: "jsonExists",
+            path: jsonPath( column = arguments.column, path = arguments.path ),
+            combinator: arguments.combinator,
+            negate: arguments.negate
+        } );
+        return this;
+    }
+
+    public QueryBuilder function orWhereJsonExists( required string column, array path = [] ) {
+        return whereJsonExists( argumentCollection = arguments, combinator = "or" );
+    }
+
+    public QueryBuilder function whereJsonDoesntExist( required string column, array path = [] ) {
+        return whereJsonExists( argumentCollection = arguments, negate = true );
+    }
+
+    public QueryBuilder function orWhereJsonDoesntExist( required string column, array path = [] ) {
+        return whereJsonExists( argumentCollection = arguments, combinator = "or", negate = true );
+    }
+
+    /**
+     * Adds a JSON array length predicate.
+     *
+     * Explicit: `whereJsonLength( "profile", [ "languages" ], ">", 1 )`
+     * Shortcut: `whereJsonLength( "profile->languages", ">", 1 )`
+     */
+    public QueryBuilder function whereJsonLength(
+        required string column,
+        any path = [],
+        any operator,
+        any value,
+        string combinator = "and"
+    ) {
+        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
+            throw( type = "InvalidSQLType", message = "Illegal combinator" );
+        }
+        if ( isNull( arguments.value ) ) {
+            arguments.value = arguments.operator;
+            arguments.operator = arguments.path;
+            arguments.path = [];
+        }
+        if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( arguments.operator ) ) {
+            throw( type = "InvalidSQLType", message = "Illegal operator" );
+        }
+        variables.wheres.append( {
+            type: "jsonLength",
+            path: jsonPath( column = arguments.column, path = arguments.path ),
+            operator: arguments.operator,
+            combinator: arguments.combinator
+        } );
+        addBindings( utils.extractBinding( arguments.value, variables.grammar ), "where" );
+        return this;
+    }
+
+    public QueryBuilder function orWhereJsonLength(
+        required string column,
+        any path = [],
+        any operator,
+        any value
+    ) {
+        return whereJsonLength( argumentCollection = arguments, combinator = "or" );
     }
 
     /**
@@ -4681,7 +4923,7 @@ component displayname="QueryBuilder" accessors="true" {
                 return trim( item );
             } );
         } catch ( any e ) {
-            return arguments.listOrArray;
+            return [ arguments.listOrArray ];
         }
     }
 
@@ -4869,7 +5111,11 @@ component displayname="QueryBuilder" accessors="true" {
      * @returns  The formatted column.
      */
     function applyColumnFormatter( column ) {
-        return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
+        if ( !isSimpleValue( arguments.column ) ) {
+            return arguments.column;
+        }
+        // Arrow paths are normalized later so only the relational column is formatted.
+        return find( "->", arguments.column ) ? arguments.column : variables.columnFormatter( arguments.column );
     }
 
     public QueryBuilder function setGrammar( required grammar ) {

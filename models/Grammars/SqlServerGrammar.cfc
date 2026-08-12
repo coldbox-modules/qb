@@ -1,5 +1,29 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return "json_value(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        return "? IN (SELECT [value] FROM openjson(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        if ( arguments.jsonPath.path.isEmpty() ) {
+            return "#wrapJsonColumn( arguments.jsonPath )# IS NOT NULL";
+        }
+        var path = duplicate( arguments.jsonPath.path );
+        var key = path.pop();
+        var openJson = path.isEmpty()
+         ? "openjson(#wrapJsonColumn( arguments.jsonPath )#)"
+         : "openjson(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( path )#')";
+        return "'#replace( key, "'", "''", "all" )#' IN (SELECT [key] FROM #openJson#)";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "(SELECT count(*) FROM openjson(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
+    }
+
     /**
      * The parameter limit for SQL Server grammar.
      */

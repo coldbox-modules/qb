@@ -340,6 +340,46 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { sql: "SELECT * FROM ""users"" WHERE ""id"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
     }
 
+    function whereInBulk() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkStrings() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkMixed() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkBooleans() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkBigInt() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkExplicitType() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function orWhereInBulk() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereNotInBulk() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 1 = 1";
+    }
+
     function orWhereIn() {
         return {
             sql: "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" IN (?, ?, ?)",

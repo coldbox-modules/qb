@@ -71,6 +71,40 @@ q = queryExecute(
 
 qb enables you to explore new ways of organizing your code by letting you pass around a query builder object that will compile down to the right SQL without you having to keep track of the order, whitespace, or other SQL gotchas!
 
+## Bulk WHERE IN
+
+For large value collections, `whereInBulk` serializes the values into one bound parameter and lets the active grammar expand them into rows. This avoids database parameter limits without changing the behavior or performance of regular `whereIn` calls.
+
+```cfc
+query
+    .from( "users" )
+    .whereInBulk( "id", userIds )
+    .get();
+```
+
+qb infers a common type from the values and translates it to the active database grammar. Matching `cfsqltype` values in query parameter structs are preserved. Mixed values fall back to the grammar's string type.
+
+You can pass an explicit `sqlType` as the third argument when the column needs a more specific database type, such as `BIGINT`, `UUID`, or a particular decimal precision:
+
+```cfc
+query
+    .from( "users" )
+    .whereInBulk( "id", userIds, "BIGINT" )
+    .get();
+```
+
+The explicit `sqlType` should match the constrained column so the database can avoid implicit conversions. `whereNotInBulk`, `andWhereInBulk`, `orWhereInBulk`, `andWhereNotInBulk`, and `orWhereNotInBulk` are also available.
+
+Bulk value expansion is supported by these grammars and database features:
+
++ SQL Server 2016+ using `OPENJSON`; database compatibility level 130+ is required
++ PostgreSQL 9.4+ using `JSONB_ARRAY_ELEMENTS_TEXT`
++ MySQL 8.0.4+ and MariaDB 10.6+ using `JSON_TABLE`
++ Oracle Database 12c Release 1 (12.1.0.2)+ using `JSON_TABLE`
++ SQLite with JSON functions enabled; they are built in by default as of SQLite 3.38.0
+
+Derby does not support bulk value expansion and throws an `UnsupportedOperation` exception for non-empty collections.
+
 ## Development Validation
 
 qb can detect statically identifiable duplicate select output names before they are silently collapsed by CFML query results. Enable this validation in development and leave it disabled in production:

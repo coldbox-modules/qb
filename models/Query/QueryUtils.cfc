@@ -199,6 +199,18 @@ component singleton displayname="QueryUtils" accessors="true" {
             );
         }
 
+        if ( isStruct( value ) ) {
+            if ( structKeyExists( value, "cfsqltype" ) ) {
+                return value.cfsqltype;
+            }
+
+            if ( structKeyExists( value, "sqltype" ) ) {
+                return value.sqltype;
+            }
+
+            return structKeyExists( value, "value" ) ? inferSqlType( value.value, grammar ) : "VARCHAR";
+        }
+
         if ( checkIsActuallyNumeric( value ) ) {
             return deriveNumericSqlType( value );
         }

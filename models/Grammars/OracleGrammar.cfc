@@ -1,5 +1,37 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" #arguments.sqlType# PATH '$')) ""QB_BULK_VALUES""";
+    }
+
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+                return "VARCHAR2(4000)";
+            case "TINYINT":
+            case "SMALLINT":
+            case "INTEGER":
+                return "NUMBER";
+            case "BIGINT":
+                return "NUMBER(19, 0)";
+            case "DECIMAL":
+            case "NUMERIC":
+            case "BIT":
+            case "BOOLEAN":
+                return "NUMBER";
+            default:
+                return normalizedType;
+        }
+    }
+
     public string function compileJsonScalar( required struct jsonPath ) {
         return "JSON_VALUE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }

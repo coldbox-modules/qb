@@ -652,6 +652,46 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Compiles a bulk IN or NOT IN statement using one serialized binding.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereInBulk( required QueryBuilder query, required struct where ) {
+        if ( arguments.where.isEmpty ) {
+            return arguments.where.negate ? "1 = 1" : "0 = 1";
+        }
+
+        var operator = arguments.where.negate ? "NOT IN" : "IN";
+        return "#wrapColumn( arguments.where.column )# #operator# (#compileWhereInBulkValues( arguments.where.sqlType )#)";
+    }
+
+    /**
+     * Compiles the row-producing subquery for a bulk IN statement.
+     * Grammars with a native single-parameter strategy should override this method.
+     *
+     * @sqlType The database SQL type to use for each value.
+     *
+     * @return string
+     */
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support bulk IN statements." );
+    }
+
+    /**
+     * Maps an inferred CF SQL type to a database-native type for a bulk IN statement.
+     *
+     * @sqlType The inferred CF SQL type.
+     *
+     * @return string
+     */
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        return reReplaceNoCase( trim( arguments.sqlType ), "^CF_SQL_", "" ).uCase();
+    }
+
+    /**
      * Compiles a in subselect where statement.
      *
      * @query The Builder instance.

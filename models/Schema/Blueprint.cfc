@@ -178,32 +178,46 @@ component accessors="true" {
     public Blueprint function morphs( required string name ) {
         var morphIdColumnName = arguments.name & "_id";
         var morphTypeColumnName = arguments.name & "_type";
-        unsignedInteger( morphIdColumnName );
-        string( morphTypeColumnName );
-        appendIndex(
+        var morphIdColumn = unsignedInteger( morphIdColumnName );
+        var morphTypeColumn = string( morphTypeColumnName );
+        var morphIndex = appendIndex(
             type = "basic",
             name = "#arguments.name#_index",
             columns = [ morphIdColumnName, morphTypeColumnName ]
         );
+        if ( !getCreating() ) {
+            addColumn( morphIdColumn );
+            addColumn( morphTypeColumn );
+            addIndex( morphIndex );
+        }
         return this;
     }
 
     public Blueprint function nullableMorphs( required string name ) {
         var morphIdColumnName = arguments.name & "_id";
         var morphTypeColumnName = arguments.name & "_type";
-        unsignedInteger( morphIdColumnName ).nullable();
-        string( morphTypeColumnName ).nullable();
-        appendIndex(
+        var morphIdColumn = unsignedInteger( morphIdColumnName ).nullable();
+        var morphTypeColumn = string( morphTypeColumnName ).nullable();
+        var morphIndex = appendIndex(
             type = "basic",
             name = "#arguments.name#_index",
             columns = [ morphIdColumnName, morphTypeColumnName ]
         );
+        if ( !getCreating() ) {
+            addColumn( morphIdColumn );
+            addColumn( morphTypeColumn );
+            addIndex( morphIndex );
+        }
         return this;
     }
 
     public Blueprint function nullableTimestamps() {
-        appendColumn( name = "createdDate", type = "timestamp", isNullable = true );
-        appendColumn( name = "modifiedDate", type = "timestamp", isNullable = true );
+        var createdDate = appendColumn( name = "createdDate", type = "timestamp", isNullable = true );
+        var modifiedDate = appendColumn( name = "modifiedDate", type = "timestamp", isNullable = true );
+        if ( !getCreating() ) {
+            addColumn( createdDate );
+            addColumn( modifiedDate );
+        }
         return this;
     }
 
@@ -236,12 +250,18 @@ component accessors="true" {
     }
 
     public Blueprint function softDeletes() {
-        appendColumn( name = "deletedDate", type = "timestamp", isNullable = true );
+        var deletedDate = appendColumn( name = "deletedDate", type = "timestamp", isNullable = true );
+        if ( !getCreating() ) {
+            addColumn( deletedDate );
+        }
         return this;
     }
 
     public Blueprint function softDeletesTz() {
-        appendColumn( name = "deletedDate", type = "timestampTz", isNullable = true );
+        var deletedDate = appendColumn( name = "deletedDate", type = "timestampTz", isNullable = true );
+        if ( !getCreating() ) {
+            addColumn( deletedDate );
+        }
         return this;
     }
 
@@ -300,8 +320,12 @@ component accessors="true" {
     }
 
     public Blueprint function timestampsTz() {
-        appendColumn( name = "createdDate", type = "timestampTz" ).withCurrent();
-        appendColumn( name = "modifiedDate", type = "timestampTz" ).withCurrent();
+        var createdDate = appendColumn( name = "createdDate", type = "timestampTz" ).withCurrent();
+        var modifiedDate = appendColumn( name = "modifiedDate", type = "timestampTz" ).withCurrent();
+        if ( !getCreating() ) {
+            addColumn( createdDate );
+            addColumn( modifiedDate );
+        }
         return this;
     }
 
@@ -505,10 +529,10 @@ component accessors="true" {
 
     public Blueprint function renameConstraint( required any oldName, required any newName ) {
         if ( !isSimpleValue( arguments.oldName ) ) {
-            arguments.oldName = dropConstraint( arguments.oldName.getName() );
+            arguments.oldName = arguments.oldName.getName();
         }
         if ( !isSimpleValue( arguments.newName ) ) {
-            arguments.newName = dropConstraint( arguments.newName.getName() );
+            arguments.newName = arguments.newName.getName();
         }
         addCommand( "renameConstraint", { from: arguments.oldName, to: arguments.newName } );
         return this;

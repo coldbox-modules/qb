@@ -1576,6 +1576,25 @@ component extends="testbox.system.BaseSpec" {
                 ] );
             } );
 
+            it( "treats a zero grammar parameter limit as unlimited", function() {
+                var builder = getBuilder();
+                builder.getGrammar().parameterLimit = 0;
+
+                var sql = builder
+                    .from( "users" )
+                    .insertBulk(
+                        values = [
+                            { "email": "one@example.com" },
+                            { "email": "two@example.com" },
+                            { "email": "three@example.com" }
+                        ],
+                        chunkSize = 100,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [ "INSERT INTO ""users"" (""email"") VALUES (?), (?), (?)" ] );
+            } );
+
             it( "returns an empty array for no values", function() {
                 expect( getBuilder().from( "users" ).insertBulk( values = [], toSql = true ) ).toBe( [] );
             } );

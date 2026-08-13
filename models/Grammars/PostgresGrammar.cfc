@@ -70,7 +70,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var pathLength = arguments.jsonPath.path.len();
         arguments.jsonPath.path.each( function( segment, index ) {
             var operator = scalarExtraction && index == pathLength ? "->>" : "->";
-            var pathSegment = isNumeric( segment ) ? segment : "'" & replace( segment, "'", "''", "all" ) & "'";
+            var pathSegment = getUtils().isActuallyNumeric( segment ) ? segment : "'" & replace(
+                segment,
+                "'",
+                "''",
+                "all"
+            ) & "'";
             sql &= operator & pathSegment;
         } );
         return sql;

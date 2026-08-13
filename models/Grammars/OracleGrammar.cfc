@@ -40,6 +40,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "JSON_EXISTS(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#[*]?(@ == $value)' PASSING ? AS ""value"")";
     }
 
+    public any function prepareJsonContainsBinding( required any value ) {
+        if ( isNull( arguments.value ) ) {
+            return {
+                "value": "",
+                "null": true,
+                "cfsqltype": "NUMERIC",
+                "sqltype": "NUMERIC"
+            };
+        }
+        return super.prepareJsonContainsBinding( arguments.value );
+    }
+
     public string function compileJsonExists( required struct jsonPath ) {
         return "JSON_EXISTS(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }

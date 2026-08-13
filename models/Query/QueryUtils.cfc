@@ -513,6 +513,17 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     /**
+     * Detects if a value is backed by a numeric type instead of a numeric string.
+     *
+     * @value The value to inspect.
+     *
+     * @return True when the value is backed by a numeric type.
+     */
+    public boolean function isActuallyNumeric( any value ) {
+        return checkIsActuallyNumeric( arguments.value );
+    }
+
+    /**
      * Detects if value is numeric based on className
      *
      * @value The value

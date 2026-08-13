@@ -640,7 +640,7 @@ component displayname="QueryBuilder" accessors="true" {
             parsedColumn = trim( arrowParts.shift() );
             arguments.path = arrowParts.map( ( segment ) => normalizeJsonPathSegment( segment ) );
         } else {
-            arguments.path = arguments.path.map( ( segment ) => normalizeJsonPathSegment( segment ) );
+            arguments.path = arguments.path.map( ( segment ) => segment );
         }
 
         var definition = {
@@ -654,11 +654,12 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Normalizes a JSON path segment for grammar compilation.
-     * Numeric segments are converted to numbers so grammars can distinguish
-     * JSON array indexes from object keys.
+     * Normalizes an arrow-syntax JSON path segment for grammar compilation.
+     * Numeric shortcut segments are converted to numbers so grammars can
+     * distinguish JSON array indexes from object keys. Explicit path segments
+     * preserve their CFML types and do not pass through this function.
      *
-     * @segment The JSON object key or array index to normalize.
+     * @segment The shortcut JSON object key or array index to normalize.
      *
      * @return The trimmed object key or numeric array index.
      */
@@ -2133,13 +2134,15 @@ component displayname="QueryBuilder" accessors="true" {
         if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
-        if ( isNull( arguments.value ) ) {
+        if ( !arguments.keyExists( "value" ) ) {
             arguments.value = arguments.path;
             arguments.path = [];
         }
+        var containsPath = jsonPath( column = arguments.column, path = arguments.path );
+        containsPath.value.nullValue = isNull( arguments.value );
         variables.wheres.append( {
             type: "jsonContains",
-            path: jsonPath( column = arguments.column, path = arguments.path ),
+            path: containsPath,
             combinator: arguments.combinator,
             negate: arguments.negate
         } );
@@ -4583,8 +4586,12 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !isNull( arguments.columns ) ) {
             select( arguments.columns );
         }
-        var result = run( sql = this.toSql(), options = arguments.options );
-        select( originalColumns );
+        var result = javacast( "null", "" );
+        try {
+            result = run( sql = this.toSql(), options = arguments.options );
+        } finally {
+            select( originalColumns );
+        }
         return isNull( result ) ? javacast( "null", "" ) : result;
     }
 
@@ -4966,11 +4973,14 @@ component displayname="QueryBuilder" accessors="true" {
             utils = getUtils(),
             returnFormat = getReturnFormat(),
             returnFormatterRegistry = getReturnFormatterRegistry(),
+            preventDuplicateJoins = getPreventDuplicateJoins(),
             validateOperatorsAndCombinators = getValidateOperatorsAndCombinators(),
             paginationCollector = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
             columnFormatter = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
             parentQuery = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery(),
             defaultOptions = getDefaultOptions(),
+            sqlCommenter = getSqlCommenter(),
+            shouldMaxRowsOverrideToAll = getShouldMaxRowsOverrideToAll(),
             validateDuplicateSelectColumns = getValidateDuplicateSelectColumns(),
             validateQueryExecuteReturnType = getValidateQueryExecuteReturnType(),
             collectQueryLog = getCollectQueryLog()
@@ -5112,7 +5122,10 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function setReturnFormat( required any format, struct options = {} ) {
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
-        } else if ( isObject( arguments.format ) && structKeyExists( arguments.format, "format" ) ) {
+        } else if (
+            ( isStruct( arguments.format ) || isObject( arguments.format ) ) &&
+            structKeyExists( arguments.format, "format" )
+        ) {
             variables.returnFormat = arguments.format;
         } else {
             variables.returnFormat = getReturnFormatterRegistry().getReturnFormatter(
@@ -5187,13 +5200,18 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private any function withColumns( required any columns, required any callback ) {
         var originalColumns = [ { "type": "simple", "value": "*" } ];
-        if ( getUnions().isEmpty() ) {
+        var shouldRestoreColumns = getUnions().isEmpty();
+        if ( shouldRestoreColumns ) {
             originalColumns = getColumns();
             select( arguments.columns );
         }
-        var result = callback();
-        if ( getUnions().isEmpty() ) {
-            select( originalColumns );
+        var result = javacast( "null", "" );
+        try {
+            result = callback();
+        } finally {
+            if ( shouldRestoreColumns ) {
+                select( originalColumns );
+            }
         }
         return result;
     }
@@ -5211,9 +5229,13 @@ component displayname="QueryBuilder" accessors="true" {
         var originalOrders = getOrders();
         setAggregate( arguments.aggregate );
         setOrders( [] );
-        var result = callback();
-        setAggregate( originalAggregate );
-        setOrders( originalOrders );
+        var result = javacast( "null", "" );
+        try {
+            result = callback();
+        } finally {
+            setAggregate( originalAggregate );
+            setOrders( originalOrders );
+        }
         return result;
     }
 

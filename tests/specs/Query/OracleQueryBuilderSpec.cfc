@@ -1310,6 +1310,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")",
+            bindings: [ "NULL", "NULL" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT JSON_VALUE(""PROFILE"", '$.""0""') AS ""EXPLICITKEY"", JSON_VALUE(""PROFILE"", '$[0]') AS ""SHORTCUTINDEX"" FROM ""USERS""";
+    }
+
     function jsonConveniencePredicates() {
         return {
             sql: "SELECT * FROM ""USERS"" WHERE NOT (JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")) OR NOT (JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")) OR JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND NOT (JSON_EXISTS(""PROFILE"", '$.""nickname""')) OR JSON_EXISTS(""PROFILE"", '$.""name""') OR NOT (JSON_EXISTS(""PROFILE"", '$.""timezone""')) OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ?",

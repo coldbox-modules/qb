@@ -1321,6 +1321,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)",
+            bindings: [ "NULL", "NULL" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT JSON_EXTRACT(""profile"", '$.""0""') AS ""explicitKey"", JSON_EXTRACT(""profile"", '$[0]') AS ""shortcutIndex"" FROM ""users""";
+    }
+
     function jsonConveniencePredicates() {
         return {
             sql: "SELECT * FROM ""users"" WHERE NOT (EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)) OR NOT (EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)) OR EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND NOT (JSON_TYPE(""profile"", '$.""nickname""') IS NOT NULL) OR JSON_TYPE(""profile"", '$.""name""') IS NOT NULL OR NOT (JSON_TYPE(""profile"", '$.""timezone""') IS NOT NULL) OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ?",

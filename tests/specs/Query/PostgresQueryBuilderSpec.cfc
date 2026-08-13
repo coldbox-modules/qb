@@ -1320,6 +1320,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
+            bindings: [ "null", "null" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT ""profile""->>'0' AS ""explicitKey"", ""profile""->>0 AS ""shortcutIndex"" FROM ""users""";
+    }
+
     function jsonConveniencePredicates() {
         return {
             sql: "SELECT * FROM ""users"" WHERE NOT ((""profile""->'languages')::jsonb @> ?::jsonb) OR NOT ((""profile""->'languages')::jsonb @> ?::jsonb) OR (""profile""->'languages')::jsonb @> ?::jsonb AND NOT (""profile""->'nickname' IS NOT NULL) OR ""profile""->'name' IS NOT NULL OR NOT (""profile""->'timezone' IS NOT NULL) OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ?",

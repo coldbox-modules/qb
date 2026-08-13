@@ -1252,6 +1252,14 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function jsonNullContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonNumericObjectKey() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function jsonConveniencePredicates() {
         return { exception: "UnsupportedOperation" };
     }

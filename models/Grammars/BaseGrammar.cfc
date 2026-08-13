@@ -1401,7 +1401,7 @@ component displayname="Grammar" accessors="true" singleton {
      * Allows grammars to serialize containment bindings where required.
      */
     public any function prepareJsonContainsBinding( required any value ) {
-        if ( !isSimpleValue( arguments.value ) ) {
+        if ( !isNull( arguments.value ) && !isSimpleValue( arguments.value ) ) {
             throw(
                 type = "UnsupportedOperation",
                 message = "This grammar only supports scalar JSON containment values"
@@ -1423,7 +1423,7 @@ component displayname="Grammar" accessors="true" singleton {
     public string function buildJsonPath( required array path ) {
         var compiledPath = "$";
         for ( var segment in arguments.path ) {
-            if ( isNumeric( segment ) ) {
+            if ( getUtils().isActuallyNumeric( segment ) ) {
                 compiledPath &= "[#segment#]";
             } else {
                 var escapedSegment = replace(

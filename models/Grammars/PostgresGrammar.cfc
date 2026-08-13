@@ -166,7 +166,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array target,
         required array values
     ) {
-        return compileInsert( arguments.qb, arguments.columns, arguments.values ) & " ON CONFLICT DO NOTHING";
+        var returningColumns = arguments.qb
+            .getReturning()
+            .map( wrapColumn )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+        return super.compileInsert( arguments.qb, arguments.columns, arguments.values ) & " ON CONFLICT DO NOTHING" & returningClause;
     }
 
     /**
@@ -305,7 +310,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.qb.getShouldWrapValues() );
             }
 
-            var insertString = isNull( arguments.source ) ? this.compileInsert(
+            var insertString = isNull( arguments.source ) ? super.compileInsert(
                 arguments.qb,
                 arguments.insertColumns,
                 arguments.values

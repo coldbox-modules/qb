@@ -168,6 +168,21 @@ component extends="testbox.system.BaseSpec" {
                         }, selectRawArray() );
                     } );
 
+                    it( "preserves bindings carried by expressions across select clauses", function() {
+                        var builder = getBuilder();
+                        builder
+                            .select( builder.raw( "? AS selectedValue", [ 1 ] ) )
+                            .from( builder.raw( "(SELECT ? AS id) source", [ 2 ] ) )
+                            .where( "id", ">", builder.raw( "?", [ 3 ] ) )
+                            .whereIn( "id", [ 4, builder.raw( "?", [ 5 ] ) ] )
+                            .groupBy( builder.raw( "?", [ 6 ] ) )
+                            .having( "id", ">", builder.raw( "?", [ 7 ] ) )
+                            .orderBy( { column: builder.raw( "?", [ 8 ] ) } );
+
+                        expect( reMatch( "\?", builder.toSQL() ) ).toHaveLength( 8 );
+                        expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3, 4, 5, 6, 7, 8 ] );
+                    } );
+
                     it( "provides a grammar-specific helper for concat", function() {
                         testCase( function( builder ) {
                             builder.select( builder.concat( "my_alias", "a,b,c,d" ) ).from( "users" );
@@ -767,6 +782,20 @@ component extends="testbox.system.BaseSpec" {
                                     );
                             }, whereNullSubquery() );
                         } );
+
+                        it( "preserves bindings from where null subqueries", function() {
+                            var builder = getBuilder()
+                                .from( "users" )
+                                .whereNull( function( query ) {
+                                    query
+                                        .select( "deletedAt" )
+                                        .from( "accounts" )
+                                        .where( "status", "closed" );
+                                } );
+
+                            expect( reMatch( "\?", builder.toSQL() ) ).toHaveLength( 1 );
+                            expect( getTestBindings( builder ) ).toBe( [ "closed" ] );
+                        } );
                     } );
 
                     describe( "where between", function() {
@@ -812,6 +841,42 @@ component extends="testbox.system.BaseSpec" {
                                     .from( "users" )
                                     .whereNotBetween( "id", 1, 2 );
                             }, whereNotBetween() );
+                        } );
+
+                        it( "can add where not between statements with expression boundaries", function() {
+                            var builder = getBuilder()
+                                .from( "users" )
+                                .whereNotBetween(
+                                    "score",
+                                    getBuilder().raw( "COALESCE(?, 0)", [ 10 ] ),
+                                    getBuilder().raw( "COALESCE(?, 100)", [ 90 ] )
+                                );
+
+                            expect( builder.toSQL() ).toInclude( "NOT BETWEEN COALESCE(?, 0) AND COALESCE(?, 100)" );
+                            expect( getTestBindings( builder ) ).toBe( [ 10, 90 ] );
+                        } );
+
+                        it( "can add where not between statements with subquery boundaries", function() {
+                            var builder = getBuilder()
+                                .from( "users" )
+                                .whereNotBetween(
+                                    "id",
+                                    function( query ) {
+                                        query
+                                            .selectRaw( "MIN(id)" )
+                                            .from( "users" )
+                                            .where( "type", "minimum" );
+                                    },
+                                    function( query ) {
+                                        query
+                                            .selectRaw( "MAX(id)" )
+                                            .from( "users" )
+                                            .where( "type", "maximum" );
+                                    }
+                                );
+
+                            expect( builder.toSQL() ).toInclude( "NOT BETWEEN (SELECT" );
+                            expect( getTestBindings( builder ) ).toBe( [ "minimum", "maximum" ] );
                         } );
 
                         it( "can add where between statements using closures", function() {
@@ -2749,6 +2814,23 @@ component extends="testbox.system.BaseSpec" {
                     }, insertWithRaw() );
                 } );
 
+                it( "preserves bindings carried by insert expressions", function() {
+                    var builder = getBuilder();
+                    var sql = builder
+                        .from( "users" )
+                        .insert(
+                            values = {
+                                "first": builder.raw( "COALESCE(?, 0)", [ 10 ] ),
+                                "second": 20,
+                                "third": builder.raw( "COALESCE(?, ?)", [ 30, 40 ] )
+                            },
+                            toSql = true
+                        );
+
+                    expect( reMatch( "\?", sql ) ).toHaveLength( 4 );
+                    expect( getTestBindings( builder ) ).toBe( [ 10, 20, 30, 40 ] );
+                } );
+
                 it( "can insert with null values", function() {
                     testCase( function( builder ) {
                         return builder
@@ -2861,6 +2943,16 @@ component extends="testbox.system.BaseSpec" {
                             .where( "page", "someUrl" )
                             .update( values = { "count": builder.raw( "count + 1" ) }, toSql = true );
                     }, updateWithRaw() );
+                } );
+
+                it( "preserves bindings carried by update expressions", function() {
+                    var builder = getBuilder();
+                    var sql = builder
+                        .from( "hits" )
+                        .update( values = { "count": builder.raw( "COALESCE(?, 0) + ?", [ 10, 1 ] ) }, toSql = true );
+
+                    expect( reMatch( "\?", sql ) ).toHaveLength( 2 );
+                    expect( getTestBindings( builder ) ).toBe( [ 10, 1 ] );
                 } );
 
                 it( "can use an expression in an update table or from clause", function() {
@@ -3283,6 +3375,21 @@ component extends="testbox.system.BaseSpec" {
                         },
                         expected = upsertUpdateWithExplicitValue()
                     );
+                } );
+
+                it( "preserves bindings carried by upsert expressions", function() {
+                    var builder = getBuilder();
+                    var sql = builder
+                        .table( "scores" )
+                        .upsert(
+                            values = { "id": 1, "score": builder.raw( "COALESCE(?, 0)", [ 2 ] ) },
+                            target = [ "id" ],
+                            update = { "score": builder.raw( "? + 1", [ 3 ] ) },
+                            toSql = true
+                        );
+
+                    expect( reMatch( "\?", sql ) ).toHaveLength( 3 );
+                    expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3 ] );
                 } );
             } );
 

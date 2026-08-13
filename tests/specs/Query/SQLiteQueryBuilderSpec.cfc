@@ -1,5 +1,26 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "SQLite conflict returning clauses", function() {
+            it( "places returning after an upsert conflict clause exactly once", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .returning( "id" )
+                    .upsert(
+                        values = { "id": 1, "name": "Jane" },
+                        target = [ "id" ],
+                        update = [ "name" ],
+                        toSql = true
+                    );
+
+                expect( reMatchNoCase( "RETURNING", sql ) ).toHaveLength( 1 );
+                expect( findNoCase( "RETURNING", sql ) ).toBeGT( findNoCase( "ON CONFLICT", sql ) );
+            } );
+        } );
+    }
+
     private function getBuilder() {
         variables.utils = getMockBox().createMock( "qb.models.Query.QueryUtils" ).init();
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.SQLiteGrammar" ).init( variables.utils );

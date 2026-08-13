@@ -108,6 +108,19 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( builder.getColumns().map( ( column ) => column.value ) ).toBe( [ "id" ] );
                 } );
+
+                it( "does not execute temporary get columns with stale select bindings", function() {
+                    var builder = new qb.models.Query.QueryBuilder()
+                        .pretend()
+                        .selectRaw( "CASE WHEN id = ? THEN name END AS selectedName", [ 10 ] )
+                        .from( "users" );
+
+                    builder.get( columns = "name" );
+
+                    expect( builder.getQueryLog()[ 1 ].sql ).toBe( "SELECT ""name"" FROM ""users""" );
+                    expect( builder.getQueryLog()[ 1 ].bindings ).toBeEmpty();
+                    expect( getTestBindings( builder ) ).toBe( [ 10 ] );
+                } );
             } );
 
             describe( "first", function() {
@@ -494,6 +507,17 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "chunk", function() {
+                it( "rejects non-positive chunk sizes", function() {
+                    for ( var max in [ 0, -1 ] ) {
+                        expect( function() {
+                            getBuilder()
+                                .from( "users" )
+                                .chunk( max, function() {
+                                } );
+                        } ).toThrow( type = "InvalidChunkSize" );
+                    }
+                } );
+
                 it( "can chunk a query into smaller sections", function() {
                     var builder = getBuilder();
                     var expectedQuery100 = queryNew( "name", "varchar" );
@@ -718,6 +742,31 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options: {} } );
+                } );
+
+                it( "does not execute aggregates with bindings from removed orders", function() {
+                    var executions = [];
+                    var grammar = new qb.models.Grammars.BaseGrammar();
+                    grammar.setInterceptorService( {
+                        processState: function( state, data ) {
+                            if ( arguments.state == "preQBExecute" ) {
+                                executions.append( arguments.data );
+                            }
+                        }
+                    } );
+                    var builder = new qb.models.Query.QueryBuilder( grammar = grammar )
+                        .pretend()
+                        .from( "users" )
+                        .orderByRaw( "CASE WHEN id = ? THEN 0 ELSE 1 END", [ 10 ] );
+
+                    try {
+                        builder.count();
+                    } catch ( any ignored ) {
+                    }
+
+                    expect( executions ).toHaveLength( 1 );
+                    expect( executions[ 1 ].sql ).toBe( "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""" );
+                    expect( executions[ 1 ].bindings ).toBeEmpty();
                 } );
 
                 it( "can count a specific column", function() {

@@ -296,7 +296,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.qb.getShouldWrapValues() );
             }
 
-            var insertString = isNull( arguments.source ) ? this.compileInsert(
+            var insertString = isNull( arguments.source ) ? super.compileInsert(
                 arguments.qb,
                 arguments.insertColumns,
                 arguments.values

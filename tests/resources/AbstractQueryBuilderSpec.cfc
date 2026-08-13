@@ -2609,6 +2609,34 @@ component extends="testbox.system.BaseSpec" {
                     }, jsonCompoundContains() );
                 } );
 
+                it(
+                    title = "preserves explicit paths when checking containment for JSON null",
+                    body = function() {
+                        testCase( function( builder ) {
+                            return builder
+                                .from( "users" )
+                                .whereJsonContains(
+                                    column = "profile",
+                                    path = [ "languages" ],
+                                    value = javacast( "null", "" )
+                                )
+                                .whereJsonContains( "profile->languages", javacast( "null", "" ) );
+                        }, jsonNullContains() );
+                    },
+                    skip = function() {
+                        var fullNull = createObject( "java", "java.lang.System" ).getEnv( "FULL_NULL" );
+                        return isNull( fullNull ) || !fullNull;
+                    }
+                );
+
+                it( "distinguishes explicit numeric object keys from shortcut array indexes", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .select( [ builder.jsonPath( "profile", [ "0" ], "explicitKey" ), "profile->0 AS shortcutIndex" ] )
+                            .from( "users" );
+                    }, jsonNumericObjectKey() );
+                } );
+
                 it( "supports JSON boolean and negative convenience methods", function() {
                     testCase( function( builder ) {
                         return builder

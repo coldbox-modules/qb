@@ -1464,6 +1464,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM [users] WHERE EXISTS (SELECT 1 FROM OPENJSON([profile], '$.""languages""') WHERE [type] = 0 AND ? IS NULL) AND EXISTS (SELECT 1 FROM OPENJSON([profile], '$.""languages""') WHERE [type] = 0 AND ? IS NULL)",
+            bindings: [ "NULL", "NULL" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT JSON_VALUE([profile], '$.""0""') AS [explicitKey], JSON_VALUE([profile], '$[0]') AS [shortcutIndex] FROM [users]";
+    }
+
     function jsonConveniencePredicates() {
         return {
             sql: "SELECT * FROM [users] WHERE NOT (? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))) OR NOT (? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))) OR ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""')) AND NOT ('nickname' IN (SELECT [key] FROM OPENJSON([profile]))) OR 'name' IN (SELECT [key] FROM OPENJSON([profile])) OR NOT ('timezone' IN (SELECT [key] FROM OPENJSON([profile]))) OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ?",

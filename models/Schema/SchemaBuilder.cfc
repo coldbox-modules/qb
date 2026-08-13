@@ -243,7 +243,7 @@ component accessors="true" {
                 .each( function( statement ) {
                     getGrammar().runQuery(
                         statement,
-                        query.getBindings(),
+                        [],
                         options,
                         "result",
                         variables.pretending,

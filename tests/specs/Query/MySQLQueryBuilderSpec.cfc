@@ -1287,6 +1287,17 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+            bindings: [ "null", "null" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""0""')) AS `explicitKey`, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$[0]')) AS `shortcutIndex` FROM `users`";
+    }
+
     function jsonConveniencePredicates() {
         return {
             sql: "SELECT * FROM `users` WHERE NOT (JSON_CONTAINS(`profile`, ?, '$.""languages""')) OR NOT (JSON_CONTAINS(`profile`, ?, '$.""languages""')) OR JSON_CONTAINS(`profile`, ?, '$.""languages""') AND NOT (IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""nickname""'), 0)) OR IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0) OR NOT (IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""timezone""'), 0)) OR JSON_LENGTH(`profile`, '$.""languages""') > ?",

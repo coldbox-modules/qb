@@ -1813,6 +1813,18 @@ component extends="testbox.system.BaseSpec" {
                         return schema.dropView( "active_users", {}, false );
                     }, dropView() );
                 } );
+
+                it( "can execute a drop view statement", function() {
+                    var schema = getBuilder();
+                    schema.getGrammar().$( "runQuery", {} );
+
+                    schema.dropView( "active_users" );
+
+                    var runQueryLog = schema.getGrammar().$callLog().runQuery;
+                    expect( runQueryLog ).toHaveLength( 1 );
+                    expect( runQueryLog[ 1 ][ 1 ] ).toBeWithCase( dropView()[ 1 ] );
+                    expect( runQueryLog[ 1 ][ 2 ] ).toBe( [] );
+                } );
             } );
 
             describe( "create table as and select into", function() {

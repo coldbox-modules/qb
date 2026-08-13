@@ -88,11 +88,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
+            var destinationTable = arguments.commandParameters.to;
+            if ( listLen( destinationTable, "." ) == 1 && listLen( blueprint.getTable(), "." ) > 1 ) {
+                destinationTable = listDeleteAt( blueprint.getTable(), listLen( blueprint.getTable(), "." ), "." ) & "." & destinationTable;
+            }
+
             return concatenate( [
                 "RENAME TABLE",
                 wrapTable( blueprint.getTable() ),
                 "TO",
-                wrapTable( commandParameters.to )
+                wrapTable( destinationTable )
             ] );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {

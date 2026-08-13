@@ -1,5 +1,23 @@
 component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "MySQL Grammar-specific tests", function() {
+            it( "keeps renamed tables in the configured default schema", function() {
+                var schema = getBuilder().setDefaultSchema( "app" );
+
+                expect( schema.rename( "users", "accounts", {}, false ).toSql() ).toBe( [ "RENAME TABLE `app`.`users` TO `app`.`accounts`" ] );
+            } );
+
+            it( "keeps renamed tables in an explicitly configured schema", function() {
+                var schema = getBuilder().setDefaultSchema( "app" );
+
+                expect( schema.rename( "audit.users", "accounts", {}, false ).toSql() ).toBe( [ "RENAME TABLE `audit`.`users` TO `audit`.`accounts`" ] );
+            } );
+        } );
+    }
+
     function emptyTable() {
         return [ "CREATE TABLE `users` ()" ];
     }

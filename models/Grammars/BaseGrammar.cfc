@@ -449,7 +449,14 @@ component displayname="Grammar" accessors="true" singleton {
             placeholder = where.value.getSql();
         }
 
-        return trim( "#wrapColumn( where.column )# #uCase( where.operator )# #placeholder#" );
+        var column = where.column.type == "jsonPath"
+         ? compileJsonScalarComparison(
+            where.column.value,
+            isNull( where.value ) ? javacast( "null", "" ) : where.value
+        )
+         : wrapColumn( where.column );
+
+        return trim( "#column# #uCase( where.operator )# #placeholder#" );
     }
 
     private string function whereJsonContains( required QueryBuilder query, required struct where ) {
@@ -1359,6 +1366,14 @@ component displayname="Grammar" accessors="true" singleton {
      */
     public string function compileJsonScalar( required struct jsonPath ) {
         throw( type = "UnsupportedOperation", message = "This grammar does not support JSON paths" );
+    }
+
+    /**
+     * Compiles a JSON scalar used in a comparison. Grammars may cast the scalar
+     * based on the comparison value when their JSON extraction is text-only.
+     */
+    public string function compileJsonScalarComparison( required struct jsonPath, any value ) {
+        return compileJsonScalar( arguments.jsonPath );
     }
 
     /**

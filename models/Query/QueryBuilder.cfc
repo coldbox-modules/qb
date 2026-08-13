@@ -4961,11 +4961,12 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function newQuery() {
-        return new qb.models.Query.QueryBuilder(
+        var query = new qb.models.Query.QueryBuilder(
             grammar = getGrammar(),
             utils = getUtils(),
             returnFormat = getReturnFormat(),
             returnFormatterRegistry = getReturnFormatterRegistry(),
+            validateOperatorsAndCombinators = getValidateOperatorsAndCombinators(),
             paginationCollector = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
             columnFormatter = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
             parentQuery = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery(),
@@ -4974,6 +4975,14 @@ component displayname="QueryBuilder" accessors="true" {
             validateQueryExecuteReturnType = getValidateQueryExecuteReturnType(),
             collectQueryLog = getCollectQueryLog()
         );
+        if ( !isNull( getShouldWrapValues() ) ) {
+            if ( getShouldWrapValues() ) {
+                query.withWrappingValues();
+            } else {
+                query.withoutWrappingValues();
+            }
+        }
+        return query;
     }
 
     /**
@@ -5103,6 +5112,8 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function setReturnFormat( required any format, struct options = {} ) {
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
+        } else if ( isObject( arguments.format ) && structKeyExists( arguments.format, "format" ) ) {
+            variables.returnFormat = arguments.format;
         } else {
             variables.returnFormat = getReturnFormatterRegistry().getReturnFormatter(
                 arguments.format,
@@ -5140,8 +5151,12 @@ component displayname="QueryBuilder" accessors="true" {
     public any function withReturnFormat( required any returnFormat, required any callback, struct options = {} ) {
         var originalReturnFormat = getReturnFormat();
         setReturnFormat( arguments.returnFormat, arguments.options );
-        var result = callback();
-        setReturnFormat( originalReturnFormat );
+        var result = javacast( "null", "" );
+        try {
+            result = callback();
+        } finally {
+            variables.returnFormat = originalReturnFormat;
+        }
         return result;
     }
 

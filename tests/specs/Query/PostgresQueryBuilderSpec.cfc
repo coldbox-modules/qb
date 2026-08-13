@@ -1283,7 +1283,7 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function jsonScalarWhere() {
         return {
-            sql: "SELECT * FROM ""users"" WHERE ""profile""->>'age' >= ? AND ""profile""->>'age' < ?",
+            sql: "SELECT * FROM ""users"" WHERE CAST(""profile""->>'age' AS NUMERIC) >= ? AND CAST(""profile""->>'age' AS NUMERIC) < ?",
             bindings: [ 21, 65 ]
         };
     }

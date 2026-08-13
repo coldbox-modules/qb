@@ -186,6 +186,17 @@ component extends="testbox.system.BaseSpec" {
                             }
                         ] );
                     } );
+
+                    it( "preserves disabled operator validation in nested queries", function() {
+                        var relaxedQB = new qb.models.Query.QueryBuilder( validateOperatorsAndCombinators = false );
+
+                        expect( relaxedQB.newQuery().getValidateOperatorsAndCombinators() ).toBeFalse();
+                        expect( function() {
+                            relaxedQB.whereExists( function( query ) {
+                                query.from( "users" ).where( "name", "CUSTOM_OPERATOR", "value" );
+                            } );
+                        } ).notToThrow();
+                    } );
                 } );
             } );
         } );

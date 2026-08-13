@@ -631,7 +631,13 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereNotBetween( required QueryBuilder query, required struct where ) {
-        return "#wrapColumn( where.column )# NOT BETWEEN ? AND ?";
+        var start = variables.utils.isExpression( where.start ) ? where.start.getSql() : (
+            isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)"
+        );
+        var end = variables.utils.isExpression( where.end ) ? where.end.getSql() : (
+            isSimpleValue( where.end ) ? "?" : "(#compileSelect( where.end )#)"
+        );
+        return "#wrapColumn( where.column )# NOT BETWEEN #start# AND #end#";
     }
 
     /**

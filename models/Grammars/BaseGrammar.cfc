@@ -1700,21 +1700,19 @@ component displayname="Grammar" accessors="true" singleton {
     ========================================*/
 
     function compileAddColumn( blueprint, commandParameters ) {
+        var existingIndexes = blueprint.getIndexes();
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            var existingIndexes = blueprint.getIndexes();
             blueprint.setIndexes( [] );
 
             var body = concatenate(
                 [ compileCreateColumn( commandParameters.column, blueprint ), compileCreateIndexes( blueprint ) ],
                 ", "
             );
-
-            blueprint.setIndexes( existingIndexes );
 
             return concatenate( [
                 "ALTER TABLE",
@@ -1723,6 +1721,7 @@ component displayname="Grammar" accessors="true" singleton {
                 body
             ] );
         } finally {
+            blueprint.setIndexes( existingIndexes );
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }

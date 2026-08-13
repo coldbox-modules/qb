@@ -453,13 +453,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileAddColumn( blueprint, commandParameters ) {
+        var originalIndexes = blueprint.getIndexes();
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            var originalIndexes = blueprint.getIndexes();
             blueprint.setIndexes( [] );
 
             var body = concatenate( [ compileCreateColumn( commandParameters.column, blueprint ) ], ", " );
@@ -468,8 +468,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 blueprint.addConstraint( index );
             }
 
-            blueprint.setIndexes( originalIndexes );
-
             return concatenate( [
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
@@ -477,6 +475,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 body
             ] );
         } finally {
+            blueprint.setIndexes( originalIndexes );
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }

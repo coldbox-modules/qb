@@ -811,6 +811,8 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
+        clearBindings( only = [ "from" ] );
+        variables.alias = "";
         if ( isSimpleValue( arguments.from ) ) {
             parseIntoTableAndAlias( arguments.from );
         } else {
@@ -1179,6 +1181,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function table( required any table ) {
+        clearBindings( only = [ "from" ] );
+        variables.alias = "";
         variables.tableName = arguments.table;
         return this;
     }
@@ -1193,6 +1197,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function tableRaw( required string table, array bindings = [] ) {
+        this.table( raw( arguments.table ) );
+
         // add the bindings required by the table
         if ( !arrayIsEmpty( arguments.bindings ) ) {
             addBindings(
@@ -1203,7 +1209,7 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
-        return this.table( raw( arguments.table ) );
+        return this;
     }
 
     /**
@@ -1215,6 +1221,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function fromRaw( required string from, array bindings = [] ) {
+        this.from( raw( arguments.from ) );
+
         // add the bindings required by the table
         if ( !arrayIsEmpty( arguments.bindings ) ) {
             addBindings(
@@ -1225,7 +1233,7 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
-        return this.from( raw( arguments.from ) );
+        return this;
     }
 
     /**
@@ -1245,10 +1253,10 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.input = subquery;
         }
 
-        addBindings( arguments.input.getBindings(), "from" );
-
         // generate the derived table SQL
-        return this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
+        this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
+        addBindings( arguments.input.getBindings(), "from" );
+        return this;
     }
 
     /*******************************************************************************\
@@ -1756,7 +1764,8 @@ component displayname="QueryBuilder" accessors="true" {
             joiningQuery = this,
             type = type,
             table = arguments.name,
-            lateralRawExpression = arguments.tableLikeSource.toSQL()
+            lateralRawExpression = arguments.tableLikeSource.toSQL(),
+            lateralBindings = arguments.tableLikeSource.getBindings()
         );
 
         if ( this.getPreventDuplicateJoins() ) {
@@ -2007,6 +2016,8 @@ component displayname="QueryBuilder" accessors="true" {
             }
         } else {
             memento[ "type" ] = variables.type;
+            memento[ "lateralRawExpression" ] = getLateralRawExpression();
+            memento[ "lateralBindings" ] = getLateralBindings();
             if ( !isCustomFunction( getTable() ) ) {
                 if ( getUtils().isExpression( getTable() ) ) {
                     memento[ "table" ] = getTable().getSQL();
@@ -4260,6 +4271,7 @@ component displayname="QueryBuilder" accessors="true" {
                 "select",
                 "join",
                 "where",
+                "having",
                 "orderBy",
                 "union"
             ];
@@ -5045,7 +5057,8 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.joiningQuery,
             arguments.join.getType(),
             cloneQueryStateValue( arguments.join.getTable() ),
-            arguments.join.getLateralRawExpression()
+            arguments.join.getLateralRawExpression(),
+            cloneQueryStateValue( arguments.join.getLateralBindings() )
         );
         copyQueryState( arguments.join, clonedJoin );
         return clonedJoin;

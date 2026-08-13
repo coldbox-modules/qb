@@ -1764,16 +1764,16 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         // create the table reference
-        arguments.table = getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" );
-
-        // merge bindings
-        addBindings( arguments.input.getBindings(), "join" );
+        arguments.table = raw(
+            getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
+            arguments.input.getBindings()
+        );
 
         // remove the non-standard arguments
         structDelete( arguments, "input" );
         structDelete( arguments, "alias" );
 
-        return joinRaw( argumentCollection = arguments );
+        return join( argumentCollection = arguments );
     }
 
     private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
@@ -1912,14 +1912,12 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         // create the table reference
-        var table = raw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
+        var table = raw(
+            getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
+            arguments.input.getBindings()
+        );
 
-        // merge bindings
-        mergeBindings( arguments.input );
-
-        arrayAppend( variables.joins, new qb.models.Query.JoinClause( this, "cross", table ) );
-
-        return this;
+        return crossJoin( table );
     }
 
     /**
@@ -3971,7 +3969,7 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     public QueryBuilder function returningRaw( required any columns ) {
-        variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
+        variables.returning = isArray( arguments.columns ) ? arguments.columns : [ arguments.columns ];
         variables.returning = variables.returning.map( function( column ) {
             return mapToColumnType( new Expression( column ) );
         } );

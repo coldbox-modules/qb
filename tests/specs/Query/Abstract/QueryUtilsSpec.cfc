@@ -32,6 +32,10 @@ component extends="testbox.system.BaseSpec" {
                     expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "INTEGER" );
                 } );
 
+                it( "negative integers", function() {
+                    expect( utils.inferSqlType( -100, variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
                 it( "decimals", function() {
                     expect( utils.inferSqlType( 4.50, variables.mockGrammar ) ).toBe( "DECIMAL" );
                 } );
@@ -172,6 +176,29 @@ component extends="testbox.system.BaseSpec" {
                     expect( utils.inferSqlType( [ 1, 2 ], variables.mockGrammar ) ).toBe( "INTEGER" );
                 } );
 
+                it( "infers matching negative and positive integers as integers", function() {
+                    expect( utils.inferSqlType( [ -1, 2 ], variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
+                it( "ignores null members when inferring an array type", function() {
+                    expect( utils.inferSqlType( [ 1, javacast( "null", "" ) ], variables.mockGrammar ) ).toBe( "INTEGER" );
+                    expect(
+                        utils.inferSqlType(
+                            [
+                                utils.extractBinding( 1, variables.mockGrammar ),
+                                utils.extractBinding( javacast( "null", "" ), variables.mockGrammar )
+                            ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "INTEGER" );
+                } );
+
+                it( "defaults all-null arrays to VARCHAR", function() {
+                    expect(
+                        utils.inferSqlType( [ javacast( "null", "" ), javacast( "null", "" ) ], variables.mockGrammar )
+                    ).toBe( "VARCHAR" );
+                } );
+
                 it( "uses matching cfsqltypes from query parameter structs", function() {
                     expect(
                         utils.inferSqlType(
@@ -216,6 +243,31 @@ component extends="testbox.system.BaseSpec" {
                         )
                     ).toBe( "VARCHAR" );
                 } );
+            } );
+        } );
+
+        describe( "replaceBindings()", function() {
+            it( "only replaces parameter placeholders in executable SQL", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+                var sql = "SELECT '?' AS single_quoted, ""why?"" AS double_quoted, #chr( 96 )#why?#chr( 96 )# AS backticked, $$?$$ AS dollar_quoted -- ?#chr( 10 )#FROM users WHERE id = ? /* ? */";
+
+                expect( utils.replaceBindings( sql, [ binding ], true ) ).toBe(
+                    "SELECT '?' AS single_quoted, ""why?"" AS double_quoted, #chr( 96 )#why?#chr( 96 )# AS backticked, $$?$$ AS dollar_quoted -- ?#chr( 10 )#FROM users WHERE id = 42 /* ? */"
+                );
+            } );
+
+            it( "replaces placeholders inside PostgreSQL array constructors", function() {
+                var binding = utils.extractBinding( "name", variables.mockGrammar );
+
+                expect( utils.replaceBindings( "SELECT ARRAY[?]", [ binding ], true ) ).toBe( "SELECT ARRAY['name']" );
+            } );
+
+            it( "preserves question marks in escaped string literals", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings( "SELECT 'isn''t ?' AS marker FROM users WHERE id = ?", [ binding ], true )
+                ).toBe( "SELECT 'isn''t ?' AS marker FROM users WHERE id = 42" );
             } );
         } );
 

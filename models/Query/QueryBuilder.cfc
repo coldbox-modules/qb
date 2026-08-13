@@ -285,6 +285,7 @@ component displayname="QueryBuilder" accessors="true" {
         "from": [],
         "join": [],
         "where": [],
+        "groupBy": [],
         "having": [],
         "orderBy": [],
         "union": [],
@@ -423,6 +424,7 @@ component displayname="QueryBuilder" accessors="true" {
             "from": [],
             "join": [],
             "where": [],
+            "groupBy": [],
             "having": [],
             "orderBy": [],
             "union": [],
@@ -490,8 +492,23 @@ component displayname="QueryBuilder" accessors="true" {
         if ( newColumns.isEmpty() ) {
             newColumns = [ { "type": "simple", "value": "*" } ];
         }
+        clearBindings( only = [ "select" ] );
         variables.columns = newColumns;
+        addColumnBindings( newColumns, "select" );
         return this;
+    }
+
+    /**
+     * Adds bindings carried by typed raw-expression and builder columns.
+     */
+    private void function addColumnBindings( required array columns, required string type ) {
+        for ( var column in arguments.columns ) {
+            if ( column.type == "raw" ) {
+                addExpressionBindings( column.value, arguments.type );
+            } else if ( column.type == "builder" ) {
+                addBindings( column.value.getBindings(), arguments.type );
+            }
+        }
     }
 
     private struct function mapToColumnType( required any column ) {
@@ -718,6 +735,7 @@ component displayname="QueryBuilder" accessors="true" {
 
         arrayAppend( selectedColumns, newColumns, true );
         variables.columns = selectedColumns;
+        addColumnBindings( newColumns, "select" );
         return this;
     }
 
@@ -736,10 +754,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public QueryBuilder function selectRaw( required any expression, array bindings = [] ) {
         for ( var sql in arrayWrap( arguments.expression ) ) {
-            addSelect( raw( sql ) );
-            if ( !arrayIsEmpty( arguments.bindings ) ) {
-                addBindings( arguments.bindings, "select" );
-            }
+            addSelect( raw( sql, arguments.bindings ) );
         }
         return this;
     }
@@ -817,6 +832,9 @@ component displayname="QueryBuilder" accessors="true" {
             parseIntoTableAndAlias( arguments.from );
         } else {
             variables.tableName = arguments.from;
+            if ( getUtils().isExpression( arguments.from ) ) {
+                addExpressionBindings( arguments.from, "from" );
+            }
         }
 
         return this;
@@ -1184,6 +1202,9 @@ component displayname="QueryBuilder" accessors="true" {
         clearBindings( only = [ "from" ] );
         variables.alias = "";
         variables.tableName = arguments.table;
+        if ( getUtils().isExpression( arguments.table ) ) {
+            addExpressionBindings( arguments.table, "from" );
+        }
         return this;
     }
 
@@ -2117,7 +2138,13 @@ component displayname="QueryBuilder" accessors="true" {
             }
         );
 
-        if ( isNull( arguments.value ) || getUtils().isNotExpression( arguments.value ) ) {
+        if ( getUtils().isExpression( arguments.column ) ) {
+            addExpressionBindings( arguments.column, "where" );
+        }
+
+        if ( !isNull( arguments.value ) && getUtils().isExpression( arguments.value ) ) {
+            addExpressionBindings( arguments.value, "where" );
+        } else {
             addBindings(
                 utils.extractBinding(
                     isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
@@ -2365,11 +2392,14 @@ component displayname="QueryBuilder" accessors="true" {
             combinator: arguments.combinator
         } );
 
-        var bindings = values
-            .filter( utils.isNotExpression )
-            .map( function( value ) {
-                return utils.extractBinding( value, variables.grammar );
-            } );
+        var bindings = [];
+        for ( var value in arguments.values ) {
+            if ( getUtils().isExpression( value ) ) {
+                bindings.append( extractExpressionBindings( value ), true );
+            } else {
+                bindings.append( utils.extractBinding( value, variables.grammar ) );
+            }
+        }
 
         addBindings( bindings, "where" );
 
@@ -2723,6 +2753,7 @@ component displayname="QueryBuilder" accessors="true" {
 
         var type = arguments.negate ? "notNullSub" : "nullSub";
         variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
+        addBindings( arguments.query.getBindings(), "where" );
 
         return this;
     }
@@ -2772,20 +2803,16 @@ component displayname="QueryBuilder" accessors="true" {
             callback( arguments.end );
         }
 
-        addBindings(
-            utils.isExpression( arguments.start ) ? arguments.start.getBindings() : utils.extractBinding(
-                arguments.start,
-                variables.grammar
-            ),
-            "where"
-        );
-        addBindings(
-            utils.isExpression( arguments.end ) ? arguments.end.getBindings() : utils.extractBinding(
-                arguments.end,
-                variables.grammar
-            ),
-            "where"
-        );
+        if ( utils.isExpression( arguments.start ) ) {
+            addExpressionBindings( arguments.start, "where" );
+        } else {
+            addBindings( utils.extractBinding( arguments.start, variables.grammar ), "where" );
+        }
+        if ( utils.isExpression( arguments.end ) ) {
+            addExpressionBindings( arguments.end, "where" );
+        } else {
+            addBindings( utils.extractBinding( arguments.end, variables.grammar ), "where" );
+        }
 
         if (
             isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && structKeyExists(
@@ -2877,7 +2904,9 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function groupBy( required groups ) {
         var groupBys = normalizeToArray( arguments.groups );
         for ( var groupBy in groupBys ) {
-            variables.groups.append( mapToColumnType( applyColumnFormatter( groupBy ) ) );
+            var typedGroupBy = mapToColumnType( applyColumnFormatter( groupBy ) );
+            variables.groups.append( typedGroupBy );
+            addColumnBindings( [ typedGroupBy ], "groupBy" );
         }
         return this;
     }
@@ -2951,7 +2980,9 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
-        if ( getUtils().isNotExpression( arguments.value ) ) {
+        if ( getUtils().isExpression( arguments.value ) ) {
+            addExpressionBindings( arguments.value, "having" );
+        } else {
             addBindings( utils.extractBinding( arguments.value, variables.grammar ), "having" );
         }
 
@@ -3114,6 +3145,7 @@ component displayname="QueryBuilder" accessors="true" {
             // as long as the struct provided contains the column keyName then we can append it. If the direction column is omitted we will assume direction argument's value
             if ( getUtils().isExpression( column.column ) ) {
                 variables.orders.append( { direction: "raw", column: column.column } );
+                addExpressionBindings( column.column, "orderBy" );
             } else {
                 var dir = (
                     structKeyExists( column, "direction" ) && arrayFindNoCase( variables.directions, column.direction )
@@ -3665,7 +3697,7 @@ component displayname="QueryBuilder" accessors="true" {
                 if ( getUtils().isNotExpression( binding ) ) {
                     addBindings( binding, "insert" );
                 } else {
-                    addBindings( binding, "insertRaw" );
+                    addExpressionBindings( binding, "insert" );
                 }
             } );
         } );
@@ -3852,7 +3884,7 @@ component displayname="QueryBuilder" accessors="true" {
                 if ( getUtils().isNotExpression( binding ) ) {
                     addBindings( binding, "insert" );
                 } else {
-                    addBindings( binding, "insertRaw" );
+                    addExpressionBindings( binding, "insert" );
                 }
             } );
         } );
@@ -3940,7 +3972,9 @@ component displayname="QueryBuilder" accessors="true" {
             } else if ( getUtils().isBuilder( value ) ) {
                 arguments.values[ column.original ] = value;
                 addBindings( value.getBindings(), "update" );
-            } else if ( !getUtils().isExpression( value ) ) {
+            } else if ( getUtils().isExpression( value ) ) {
+                addExpressionBindings( value, "update" );
+            } else {
                 addBindings( getUtils().extractBinding( value, variables.grammar ), "update" );
             }
         }
@@ -4107,7 +4141,7 @@ component displayname="QueryBuilder" accessors="true" {
                 if ( getUtils().isNotExpression( binding ) ) {
                     addBindings( binding, "insert" );
                 } else {
-                    addBindings( binding, "insertRaw" );
+                    addExpressionBindings( binding, "insert" );
                 }
             } );
         } );
@@ -4126,6 +4160,8 @@ component displayname="QueryBuilder" accessors="true" {
                         ),
                         "where"
                     );
+                } else {
+                    addExpressionBindings( updates[ column.original ], "where" );
                 }
             } );
         }
@@ -4227,6 +4263,7 @@ component displayname="QueryBuilder" accessors="true" {
                 "from",
                 "join",
                 "where",
+                "groupBy",
                 "having",
                 "orderBy",
                 "union"
@@ -4271,6 +4308,7 @@ component displayname="QueryBuilder" accessors="true" {
                 "select",
                 "join",
                 "where",
+                "groupBy",
                 "having",
                 "orderBy",
                 "union"
@@ -4301,6 +4339,25 @@ component displayname="QueryBuilder" accessors="true" {
 
         variables.bindings[ type ].append( newBindings, true );
 
+        return this;
+    }
+
+    /**
+     * Normalizes the bindings carried by an Expression for query execution.
+     */
+    private array function extractExpressionBindings( required any expression ) {
+        return arguments.expression
+            .getBindings()
+            .map( function( binding ) {
+                return utils.extractBinding( binding, variables.grammar );
+            } );
+    }
+
+    /**
+     * Adds normalized bindings carried by an Expression to a binding group.
+     */
+    private QueryBuilder function addExpressionBindings( required any expression, required string type ) {
+        addBindings( extractExpressionBindings( arguments.expression ), arguments.type );
         return this;
     }
 
@@ -4825,6 +4882,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return   qb.models.Query.QueryBuilder
      */
     public QueryBuilder function chunk( required numeric max, required callback, struct options = {} ) {
+        if ( arguments.max <= 0 ) {
+            throw( type = "InvalidChunkSize", message = "Chunk size must be greater than zero." );
+        }
         var count = getCountForPagination( options = options );
         for ( var i = 1; i <= count; i += max ) {
             var shouldContinue = callback(
@@ -4928,7 +4988,7 @@ component displayname="QueryBuilder" accessors="true" {
     private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
         structAppend( arguments.options, getDefaultOptions(), false );
         guardAgainstReturnTypeOption( arguments.options );
-        var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] );
+        var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select", "orderBy" ] );
 
         var result = grammar.runQuery(
             sql = variables.sqlCommenter.appendSqlComments(

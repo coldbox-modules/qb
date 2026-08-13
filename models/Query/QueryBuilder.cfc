@@ -281,6 +281,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     variables.bindings = {
         "commonTables": [],
+        "aggregate": [],
         "select": [],
         "from": [],
         "join": [],
@@ -420,6 +421,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.updates = {};
         variables.bindings = {
             "commonTables": [],
+            "aggregate": [],
             "select": [],
             "from": [],
             "join": [],
@@ -1394,7 +1396,7 @@ component displayname="QueryBuilder" accessors="true" {
                 }
             }
             variables.joins.append( arguments.table );
-            addBindings( arguments.table.getBindings(), "join" );
+            addBindings( getJoinBindings( arguments.table ), "join" );
             return this;
         }
 
@@ -1412,7 +1414,7 @@ component displayname="QueryBuilder" accessors="true" {
                 }
             }
             variables.joins.append( join );
-            addBindings( join.getBindings(), "join" );
+            addBindings( getJoinBindings( join ), "join" );
             return this;
         }
 
@@ -1430,9 +1432,24 @@ component displayname="QueryBuilder" accessors="true" {
             }
         }
         variables.joins.append( join );
-        addBindings( join.getBindings(), "join" );
+        addBindings( getJoinBindings( join ), "join" );
 
         return this;
+    }
+
+    /**
+     * Returns bindings in the order they appear within a compiled join.
+     */
+    private array function getJoinBindings( required any join ) {
+        var bindings = [];
+        if (
+            arguments.join.isJoin() &&
+            getUtils().isExpression( arguments.join.getTable() )
+        ) {
+            bindings.append( extractExpressionBindings( arguments.join.getTable() ), true );
+        }
+        bindings.append( arguments.join.getBindings(), true );
+        return bindings;
     }
 
     /**
@@ -1603,7 +1620,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoin( required any table ) {
-        variables.joins.append( new qb.models.Query.JoinClause( this, "cross", arguments.table ) );
+        var join = new qb.models.Query.JoinClause( this, "cross", arguments.table );
+        variables.joins.append( join );
+        addBindings( getJoinBindings( join ), "join" );
 
         return this;
     }
@@ -2127,10 +2146,11 @@ component displayname="QueryBuilder" accessors="true" {
         any value,
         string combinator = "and"
     ) {
+        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
         arrayAppend(
             variables.wheres,
             {
-                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+                column: typedColumn,
                 operator: arguments.operator,
                 value: isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
                 combinator: arguments.combinator,
@@ -2138,9 +2158,7 @@ component displayname="QueryBuilder" accessors="true" {
             }
         );
 
-        if ( getUtils().isExpression( arguments.column ) ) {
-            addExpressionBindings( arguments.column, "where" );
-        }
+        addColumnBindings( [ typedColumn ], "where" );
 
         if ( !isNull( arguments.value ) && getUtils().isExpression( arguments.value ) ) {
             addExpressionBindings( arguments.value, "where" );
@@ -2332,13 +2350,15 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.query = newQuery();
             callback( arguments.query );
         }
+        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
         variables.wheres.append( {
             type: "sub",
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+            column: typedColumn,
             operator: arguments.operator,
             query: arguments.query,
             combinator: arguments.combinator
         } );
+        addColumnBindings( [ typedColumn ], "where" );
         addBindings( query.getBindings(), "where" );
         return this;
     }
@@ -2385,14 +2405,16 @@ component displayname="QueryBuilder" accessors="true" {
         arguments.values = normalizeToArray( arguments.values );
 
         var type = negate ? "notIn" : "in";
+        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
         variables.wheres.append( {
             type: type,
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+            column: typedColumn,
             values: arguments.values,
             combinator: arguments.combinator
         } );
 
         var bindings = [];
+        addColumnBindings( [ typedColumn ], "where" );
         for ( var value in arguments.values ) {
             if ( getUtils().isExpression( value ) ) {
                 bindings.append( extractExpressionBindings( value ), true );
@@ -2456,15 +2478,17 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
+        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
         variables.wheres.append( {
             type: "inBulk",
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+            column: typedColumn,
             sqlType: arguments.sqlType,
             isEmpty: arguments.values.isEmpty(),
             negate: arguments.negate,
             combinator: arguments.combinator
         } );
 
+        addColumnBindings( [ typedColumn ], "where" );
         if ( !arguments.values.isEmpty() ) {
             var serializedValues = extractedBindings.map( function( binding ) {
                 return binding.null ? javacast( "null", "" ) : binding.value;
@@ -2526,12 +2550,14 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         var type = negate ? "notInSub" : "inSub";
+        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
         variables.wheres.append( {
             type: type,
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+            column: typedColumn,
             query: arguments.query,
             combinator: arguments.combinator
         } );
+        addColumnBindings( [ typedColumn ], "where" );
         addBindings( arguments.query.getBindings(), "where" );
 
         return this;
@@ -2609,13 +2635,16 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
+        var firstColumn = mapToColumnType( applyColumnFormatter( arguments.first ) );
+        var secondColumn = mapToColumnType( applyColumnFormatter( arguments.second ) );
         variables.wheres.append( {
             type: "column",
-            first: mapToColumnType( applyColumnFormatter( arguments.first ) ),
+            first: firstColumn,
             operator: arguments.operator,
-            second: mapToColumnType( applyColumnFormatter( arguments.second ) ),
+            second: secondColumn,
             combinator: arguments.combinator
         } );
+        addColumnBindings( [ firstColumn, secondColumn ], "where" );
 
         return this;
     }
@@ -2727,11 +2756,9 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         var type = negate ? "notNull" : "null";
-        variables.wheres.append( {
-            type: type,
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-            combinator: arguments.combinator
-        } );
+        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
+        variables.wheres.append( { type: type, column: typedColumn, combinator: arguments.combinator } );
+        addColumnBindings( [ typedColumn ], "where" );
         return this;
     }
 
@@ -2790,6 +2817,7 @@ component displayname="QueryBuilder" accessors="true" {
         negate = false
     ) {
         var type = negate ? "notBetween" : "between";
+        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
 
         if ( isClosure( arguments.start ) || isCustomFunction( arguments.start ) ) {
             var callback = arguments.start;
@@ -2803,6 +2831,7 @@ component displayname="QueryBuilder" accessors="true" {
             callback( arguments.end );
         }
 
+        addColumnBindings( [ typedColumn ], "where" );
         if ( utils.isExpression( arguments.start ) ) {
             addExpressionBindings( arguments.start, "where" );
         } else {
@@ -2834,7 +2863,7 @@ component displayname="QueryBuilder" accessors="true" {
 
         variables.wheres.append( {
             type: type,
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+            column: typedColumn,
             start: arguments.start,
             end: arguments.end,
             combinator: arguments.combinator
@@ -3511,12 +3540,28 @@ component displayname="QueryBuilder" accessors="true" {
      * @return  PaginationCollector
      */
     public any function simplePaginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
-        var results = forPage( page, maxRows ).limit( maxRows + 1 ).get( options = options );
-        return getPaginationCollector().generateSimpleWithResults(
+        var shouldReturnAllRows = shouldMaxRowsOverrideToAll( arguments.maxRows );
+        var paginationQuery = forPage( arguments.page, arguments.maxRows );
+        if ( !shouldReturnAllRows ) {
+            paginationQuery.limit( arguments.maxRows + 1 );
+        }
+        var results = paginationQuery.get( options = arguments.options );
+        var collectedResults = getPaginationCollector().generateSimpleWithResults(
             results = results,
             page = arguments.page,
-            maxRows = arguments.maxRows
+            maxRows = shouldReturnAllRows ? max( 1, results.len() ) : arguments.maxRows
         );
+        if (
+            shouldReturnAllRows &&
+            isStruct( collectedResults ) &&
+            collectedResults.keyExists( "pagination" ) &&
+            isStruct( collectedResults.pagination )
+        ) {
+            collectedResults.pagination.maxRows = 0;
+            collectedResults.pagination.offset = 0;
+            collectedResults.pagination.hasMore = false;
+        }
+        return collectedResults;
     }
 
     /**
@@ -3529,7 +3574,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private numeric function getCountForPagination( struct options = {} ) {
         if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
-            var countSource = clone().setOrders( [] );
+            var countSource = clone().clearOrders();
             return newQuery().fromSub( "aggregate_table", countSource ).count( options = arguments.options );
         }
         return count( options = arguments.options );
@@ -4259,6 +4304,7 @@ component displayname="QueryBuilder" accessors="true" {
                 "commonTables",
                 "update",
                 "insert",
+                "aggregate",
                 "select",
                 "from",
                 "join",
@@ -4305,6 +4351,7 @@ component displayname="QueryBuilder" accessors="true" {
                 "commonTables",
                 "update",
                 "insert",
+                "aggregate",
                 "select",
                 "join",
                 "where",
@@ -5201,7 +5248,8 @@ component displayname="QueryBuilder" accessors="true" {
             return sql;
         }
 
-        return getUtils().replaceBindings( sql, getBindings(), arguments.showBindings == "inline" );
+        var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select", "orderBy" ] );
+        return getUtils().replaceBindings( sql, bindings, arguments.showBindings == "inline" );
     }
 
     /**
@@ -5360,14 +5408,18 @@ component displayname="QueryBuilder" accessors="true" {
     private any function withAggregate( required struct aggregate, required any callback ) {
         var originalAggregate = getAggregate();
         var originalOrders = getOrders();
+        var originalAggregateBindings = variables.bindings.aggregate;
         setAggregate( arguments.aggregate );
         setOrders( [] );
+        variables.bindings.aggregate = [];
+        addColumnBindings( [ arguments.aggregate.column ], "aggregate" );
         var result = javacast( "null", "" );
         try {
             result = callback();
         } finally {
             setAggregate( originalAggregate );
             setOrders( originalOrders );
+            variables.bindings.aggregate = originalAggregateBindings;
         }
         return result;
     }

@@ -32,6 +32,16 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 ] );
             } );
 
+            it( "escapes apostrophes in bulk insert JSON paths", function() {
+                var sql = getBuilder()
+                    .from( "records" )
+                    .insertBulk( values = [ { "author's_note": "value" } ], toSql = true );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [records] ([author's_note]) SELECT [author's_note] FROM OPENJSON(?) WITH ([author's_note] NVARCHAR(MAX) '$.""author''s_note""')"
+                ] );
+            } );
+
             it( "applies returning columns to bulk inserts", function() {
                 var sql = getBuilder()
                     .from( "users" )

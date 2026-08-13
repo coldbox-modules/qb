@@ -1141,6 +1141,23 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );
+
+                it( "passes bindings carried by aggregate expressions to the grammar", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: 42 } ] );
+                    builder.getGrammar().$( "runQuery", expectedQuery );
+
+                    var result = builder
+                        .from( "users" )
+                        .sum( builder.raw( "CASE WHEN active = ? THEN amount ELSE 0 END", [ 1 ] ) );
+
+                    expect( result ).toBe( 42 );
+                    expect(
+                        builder.getGrammar().$callLog().runQuery[ 1 ].bindings.map( function( binding ) {
+                            return binding.value;
+                        } )
+                    ).toBe( [ 1 ] );
+                } );
             } );
 
             describe( "exists", function() {

@@ -186,11 +186,21 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
+            var queryToCompile = arguments.query;
+            if ( !queryToCompile.getAggregate().isEmpty() && !queryToCompile.getUnions().isEmpty() ) {
+                var aggregate = queryToCompile.getAggregate();
+                var unionQuery = queryToCompile.clone().setAggregate( {} );
+                queryToCompile = queryToCompile
+                    .newQuery()
+                    .setAggregate( aggregate )
+                    .fromSub( "qb_aggregate_source", unionQuery );
+            }
+
             var sql = [];
 
             for ( var component in selectComponents ) {
                 var func = variables[ "compile#component#" ];
-                var args = { "query": query, "#component#": invoke( query, "get" & component ) };
+                var args = { "query": queryToCompile, "#component#": invoke( queryToCompile, "get" & component ) };
                 arrayAppend( sql, func( argumentCollection = args ) );
             }
 
@@ -1199,13 +1209,6 @@ component displayname="Grammar" accessors="true" singleton {
             var aggString = "#uCase( aggregate.type )#(#shouldIncludeDistinct ? "DISTINCT " : ""##wrapColumn( aggregate.column )#)";
             if ( aggregate.keyExists( "defaultValue" ) && !isNull( aggregate.defaultValue ) ) {
                 aggString = "COALESCE(#aggString#, #aggregate.defaultValue#)";
-            }
-
-            if ( !query.getUnions().isEmpty() ) {
-                var clonedQuery = query.clone().setAggregate( {} );
-                query.reset();
-                query.setAggregate( arguments.aggregate );
-                query.fromSub( "qb_aggregate_source", clonedQuery );
             }
 
             return "SELECT #aggString# AS ""aggregate""";

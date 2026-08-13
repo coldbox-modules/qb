@@ -336,7 +336,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      */
     private string function compileOffsetValue( required query, offsetValue ) {
         if ( !isNull( arguments.query.getLimitValue() ) && isNull( arguments.offsetValue ) ) {
-            param arguments.offsetValue = 0;
+            return "OFFSET 0 ROWS";
         } else if ( isNull( arguments.offsetValue ) ) {
             return "";
         }

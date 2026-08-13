@@ -92,6 +92,22 @@ component extends="testbox.system.BaseSpec" {
                     builder.get( "name" );
                     expect( builder.getColumns().map( ( c ) => c.value ) ).toBe( [ "id" ] );
                 } );
+
+                it( "preserves original columns when executing a get with columns throws", function() {
+                    var builder = getMockBox()
+                        .createMock( "qb.models.Query.QueryBuilder" )
+                        .init(
+                            grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                            validateQueryExecuteReturnType = true
+                        );
+                    builder.select( "id" ).from( "users" );
+
+                    expect( function() {
+                        builder.get( columns = "name", options = { "returntype": "array" } );
+                    } ).toThrow( type = "InvalidQueryExecuteOption" );
+
+                    expect( builder.getColumns().map( ( column ) => column.value ) ).toBe( [ "id" ] );
+                } );
             } );
 
             describe( "first", function() {
@@ -789,6 +805,27 @@ component extends="testbox.system.BaseSpec" {
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );
 
+                it( "restores aggregate query state when execution throws", function() {
+                    var builder = getMockBox()
+                        .createMock( "qb.models.Query.QueryBuilder" )
+                        .init(
+                            grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                            validateQueryExecuteReturnType = true
+                        );
+                    builder
+                        .select( "id" )
+                        .from( "users" )
+                        .orderBy( "name" );
+
+                    expect( function() {
+                        builder.count( options = { "returntype": "array" } );
+                    } ).toThrow( type = "InvalidQueryExecuteOption" );
+
+                    expect( builder.getAggregate() ).toBeEmpty();
+                    expect( builder.getColumns().map( ( column ) => column.value ) ).toBe( [ "id" ] );
+                    expect( builder.getOrders() ).toBe( [ { "column": { "type": "simple", "value": "name" }, "direction": "asc" } ] );
+                } );
+
                 it( "correctly orders a distinct count", function() {
                     var builder = getBuilder();
                     var expectedCount = 1;
@@ -1434,6 +1471,53 @@ component extends="testbox.system.BaseSpec" {
                 expect( clonedBuilder.getValidateQueryExecuteReturnType() ).toBeTrue();
                 expect( clonedBuilder.getCollectQueryLog() ).toBeFalse();
                 clonedBuilder.setReturnFormat( "firstId" );
+            } );
+
+            it( "carries behavioral settings to new queries and clones", function() {
+                var sqlCommenter = {
+                    "appendSqlComments": function( sql ) {
+                        return sql;
+                    }
+                };
+                var shouldMaxRowsOverrideToAll = function( maxRows ) {
+                    return maxRows == 99;
+                };
+                var builder = getMockBox()
+                    .createMock( "qb.models.Query.QueryBuilder" )
+                    .init(
+                        grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                        preventDuplicateJoins = true,
+                        sqlCommenter = sqlCommenter,
+                        shouldMaxRowsOverrideToAll = shouldMaxRowsOverrideToAll
+                    );
+
+                [ builder.newQuery(), builder.clone() ].each( function( derivedBuilder ) {
+                    expect( derivedBuilder.getPreventDuplicateJoins() ).toBeTrue();
+                    $assert.isSameInstance( sqlCommenter, derivedBuilder.getSqlCommenter() );
+                    $assert.isSameInstance( shouldMaxRowsOverrideToAll, derivedBuilder.getShouldMaxRowsOverrideToAll() );
+                } );
+            } );
+
+            it( "carries a resolved struct return formatter to new queries and clones", function() {
+                var registry = new qb.models.Query.ReturnFormatterRegistry();
+                registry.registerReturnFormatter( "structFormatter", function() {
+                    return {
+                        "format": function( q ) {
+                            return q;
+                        }
+                    };
+                } );
+                var builder = getMockBox()
+                    .createMock( "qb.models.Query.QueryBuilder" )
+                    .init(
+                        grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                        returnFormatterRegistry = registry
+                    )
+                    .setReturnFormat( "structFormatter" );
+
+                var returnFormat = builder.getReturnFormat();
+                $assert.isSameInstance( returnFormat, builder.newQuery().getReturnFormat() );
+                $assert.isSameInstance( returnFormat, builder.clone().getReturnFormat() );
             } );
 
             it( "carries a resolved component return formatter to new queries and clones", function() {

@@ -126,6 +126,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     public string function compileJsonContains( required struct jsonPath ) {
+        if ( arguments.jsonPath.keyExists( "nullValue" ) && arguments.jsonPath.nullValue ) {
+            return "EXISTS (SELECT 1 FROM OPENJSON(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#') WHERE [type] = 0 AND ? IS NULL)";
+        }
         return "? IN (SELECT [value] FROM OPENJSON(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
     }
 

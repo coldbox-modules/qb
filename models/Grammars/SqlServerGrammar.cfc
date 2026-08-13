@@ -84,6 +84,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                         "\""",
                         "all"
                     );
+                    escapedPath = replace( escapedPath, "'", "''", "all" );
                     return "#wrapColumn( column.formatted )# #column.bulkSqlType# '$.""#escapedPath#""'";
                 } )
                 .toList( ", " );

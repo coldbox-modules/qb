@@ -83,8 +83,29 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
          : arguments.lateralRawExpression;
         variables.lateralBindings = arguments.lateralBindings;
 
-        super.init( joiningQuery.getGrammar(), joiningQuery.getUtils() );
-
+        super.init(
+            grammar = joiningQuery.getGrammar(),
+            utils = joiningQuery.getUtils(),
+            returnFormat = joiningQuery.getReturnFormat(),
+            returnFormatterRegistry = joiningQuery.getReturnFormatterRegistry(),
+            preventDuplicateJoins = joiningQuery.getPreventDuplicateJoins(),
+            validateOperatorsAndCombinators = joiningQuery.getValidateOperatorsAndCombinators(),
+            validateQueryExecuteReturnType = joiningQuery.getValidateQueryExecuteReturnType(),
+            paginationCollector = isNull( joiningQuery.getPaginationCollector() ) ? javacast( "null", "" ) : joiningQuery.getPaginationCollector(),
+            columnFormatter = isNull( joiningQuery.getColumnFormatter() ) ? javacast( "null", "" ) : joiningQuery.getColumnFormatter(),
+            defaultOptions = joiningQuery.getDefaultOptions(),
+            sqlCommenter = joiningQuery.getSqlCommenter(),
+            shouldMaxRowsOverrideToAll = joiningQuery.getShouldMaxRowsOverrideToAll(),
+            collectQueryLog = joiningQuery.getCollectQueryLog(),
+            validateDuplicateSelectColumns = joiningQuery.getValidateDuplicateSelectColumns()
+        );
+        if ( !isNull( joiningQuery.getShouldWrapValues() ) ) {
+            if ( joiningQuery.getShouldWrapValues() ) {
+                withWrappingValues();
+            } else {
+                withoutWrappingValues();
+            }
+        }
         return this;
     }
 

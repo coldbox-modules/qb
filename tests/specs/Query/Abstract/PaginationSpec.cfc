@@ -70,6 +70,21 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getOrders() ).toHaveLength( 1 );
             } );
 
+            it( "removes order bindings from grouped pagination count subqueries", function() {
+                var builder = getBuilder();
+                builder.getGrammar().$( "runQuery", queryNew( "aggregate", "integer", [ { aggregate: 1 } ] ) );
+
+                builder
+                    .from( "users" )
+                    .groupBy( "status" )
+                    .orderBy( builder.raw( "CASE WHEN ? = 1 THEN id END", [ 99 ] ) )
+                    .paginate();
+
+                var countCall = builder.getGrammar().$callLog().runQuery[ 1 ];
+                expect( countCall.sql ).notToInclude( "CASE WHEN" );
+                expect( countCall.bindings ).toBeEmpty();
+            } );
+
             it( "can get results for subsequent pages", function() {
                 var builder = getBuilder();
                 var expectedResults = [];
@@ -113,6 +128,25 @@ component extends="testbox.system.BaseSpec" {
                         "page": 1,
                         "totalPages": 5,
                         "totalRecords": 45
+                    },
+                    "results": expectedResults
+                } );
+            } );
+
+            it( "returns all rows when maxRows passes the override check", function() {
+                var builder = getBuilder();
+                var expectedResults = [ { "id": 1 }, { "id": 2 }, { "id": 3 } ];
+                builder.$( "runQuery", queryNew( "id", "integer", expectedResults ) );
+
+                var results = builder.from( "users" ).simplePaginate( page = 1, maxRows = -1 );
+
+                expect( builder.$callLog().runQuery[ 1 ].sql ).notToInclude( "LIMIT" );
+                expect( results ).toBe( {
+                    "pagination": {
+                        "maxRows": 0,
+                        "offset": 0,
+                        "page": 1,
+                        "hasMore": false
                     },
                     "results": expectedResults
                 } );

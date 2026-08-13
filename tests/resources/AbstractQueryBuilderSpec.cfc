@@ -183,6 +183,77 @@ component extends="testbox.system.BaseSpec" {
                         expect( getTestBindings( builder ) ).toBe( [ 1, 2, 3, 4, 5, 6, 7, 8 ] );
                     } );
 
+                    it( "preserves bindings carried by expression columns across predicates", function() {
+                        var builder = getBuilder();
+                        builder
+                            .from( "users" )
+                            .whereIn( builder.raw( "COALESCE(?, id)", [ 1 ] ), [ 2 ] )
+                            .whereNull( builder.raw( "NULLIF(?, id)", [ 3 ] ) )
+                            .whereBetween( builder.raw( "COALESCE(?, id)", [ 4 ] ), 5, 6 )
+                            .whereColumn(
+                                builder.raw( "COALESCE(?, id)", [ 7 ] ),
+                                "=",
+                                builder.raw( "COALESCE(?, other_id)", [ 8 ] )
+                            )
+                            .where(
+                                builder.raw( "COALESCE(?, id)", [ 9 ] ),
+                                "=",
+                                function( query ) {
+                                    query
+                                        .select( "id" )
+                                        .from( "accounts" )
+                                        .where( "active", 10 );
+                                }
+                            )
+                            .whereIn( builder.raw( "COALESCE(?, id)", [ 11 ] ), function( query ) {
+                                query
+                                    .select( "id" )
+                                    .from( "accounts" )
+                                    .where( "active", 12 );
+                            } );
+
+                        expect( reMatch( "\?", builder.toSQL() ) ).toHaveLength( 12 );
+                        expect( getTestBindings( builder ) ).toBe( [
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12
+                        ] );
+                    } );
+
+                    it( "preserves bindings carried by expression columns in bulk predicates", function() {
+                        var builder = getBuilder();
+                        builder.from( "users" ).whereInBulk( builder.raw( "COALESCE(?, id)", [ 1 ] ), [ 2, 3 ] );
+
+                        expect( getTestBindings( builder )[ 1 ] ).toBe( 1 );
+                        expect( deserializeJSON( getTestBindings( builder )[ 2 ] ) ).toBe( [ 2, 3 ] );
+                    } );
+
+                    it( "preserves bindings carried by expression join tables", function() {
+                        var builder = getBuilder();
+                        builder
+                            .from( "users" )
+                            .join(
+                                builder.raw( "(SELECT ? AS id) joined", [ 1 ] ),
+                                "joined.id",
+                                "=",
+                                "users.id"
+                            )
+                            .crossJoin( builder.raw( "(SELECT ? AS id) crossed", [ 2 ] ) );
+
+                        expect( reMatch( "\?", builder.toSQL() ) ).toHaveLength( 2 );
+                        expect( getTestBindings( builder ) ).toBe( [ 1, 2 ] );
+                        expect( getTestBindings( builder.clone() ) ).toBe( [ 1, 2 ] );
+                    } );
+
                     it( "provides a grammar-specific helper for concat", function() {
                         testCase( function( builder ) {
                             builder.select( builder.concat( "my_alias", "a,b,c,d" ) ).from( "users" );

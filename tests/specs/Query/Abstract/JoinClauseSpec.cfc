@@ -32,6 +32,27 @@ component extends="testbox.system.BaseSpec" {
                         new qb.models.Query.JoinClause( query, "left outer", "sometable" );
                     } ).notToThrow();
                 } );
+
+                it( "inherits column formatting from the joining query", function() {
+                    query.setColumnFormatter( function( column ) {
+                        return listLen( column, "." ) == 1 ? "qualified.#column#" : column;
+                    } );
+
+                    var join = new qb.models.Query.JoinClause( query, "inner", "posts" );
+                    join.on( "id", "=", "user_id" );
+
+                    expect( join.getWheres()[ 1 ].first.value ).toBe( "qualified.id" );
+                    expect( join.getWheres()[ 1 ].second.value ).toBe( "qualified.user_id" );
+                } );
+
+                it( "inherits operator validation from the joining query", function() {
+                    query.setValidateOperatorsAndCombinators( false );
+                    var join = new qb.models.Query.JoinClause( query, "inner", "posts" );
+
+                    expect( function() {
+                        join.on( "posts.user_id", "IS NOT DISTINCT FROM", "users.id" );
+                    } ).notToThrow();
+                } );
             } );
 
             describe( "adding join conditions", function() {

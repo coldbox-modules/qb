@@ -513,7 +513,10 @@ component accessors="true" {
                 args,
                 arguments.options,
                 "query",
-                variables.pretending
+                variables.pretending,
+                function( data ) {
+                    variables.queryLog.append( data );
+                }
             );
             return isDefined( "q.RecordCount" ) ? q.RecordCount > 0 : false;
         }

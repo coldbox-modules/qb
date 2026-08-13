@@ -1848,6 +1848,30 @@ component extends="testbox.system.BaseSpec" {
                 }, hasTable() );
             } );
 
+            it( "logs has table executions", function() {
+                var schema = getBuilder();
+                schema
+                    .getGrammar()
+                    .$( "runQuery" )
+                    .$callback( function(
+                        sql,
+                        bindings,
+                        options,
+                        returnObject,
+                        pretend,
+                        postProcessHook
+                    ) {
+                        if ( !isNull( arguments.postProcessHook ) ) {
+                            arguments.postProcessHook( { sql: arguments.sql, bindings: arguments.bindings, options: arguments.options } );
+                        }
+                        return queryNew( "exists", "integer", [ { exists: 1 } ] );
+                    } );
+
+                schema.hasTable( "users" );
+
+                expect( schema.getQueryLog() ).toHaveLength( 1 );
+            } );
+
             it( "has table in a schema", function() {
                 testCase( function( schema ) {
                     return schema.hasTable(

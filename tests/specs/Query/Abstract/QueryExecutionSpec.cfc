@@ -1342,6 +1342,19 @@ component extends="testbox.system.BaseSpec" {
                 expect( results ).toBe( { "jane": data[ 1 ], "john": data[ 2 ] } );
             } );
 
+            it( "restores the return formatter when withReturnFormat throws", function() {
+                var builder = getBuilder();
+                var originalReturnFormat = builder.getReturnFormat();
+
+                expect( function() {
+                    builder.withReturnFormat( "query", function() {
+                        throw( type = "ExpectedReturnFormatException" );
+                    } );
+                } ).toThrow( type = "ExpectedReturnFormatException" );
+
+                expect( builder.getReturnFormat() ).toBe( originalReturnFormat );
+            } );
+
             it( "uses the last row when struct return format keys are duplicated", function() {
                 var builder = getBuilder();
                 builder.setReturnFormat( "struct", { "columnKey": "name" } );
@@ -1421,6 +1434,13 @@ component extends="testbox.system.BaseSpec" {
                 expect( clonedBuilder.getValidateQueryExecuteReturnType() ).toBeTrue();
                 expect( clonedBuilder.getCollectQueryLog() ).toBeFalse();
                 clonedBuilder.setReturnFormat( "firstId" );
+            } );
+
+            it( "carries a resolved component return formatter to new queries and clones", function() {
+                var builder = getBuilder().setReturnFormat( "struct", { "columnKey": "id" } );
+
+                expect( builder.newQuery().getReturnFormat() ).toBe( builder.getReturnFormat() );
+                expect( builder.clone().getReturnFormat() ).toBe( builder.getReturnFormat() );
             } );
 
             it( "creates a default return formatter registry when none is passed", function() {

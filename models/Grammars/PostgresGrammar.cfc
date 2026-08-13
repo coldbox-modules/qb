@@ -29,6 +29,25 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return compilePostgresJsonTraversal( arguments.jsonPath, true );
     }
 
+    public string function compileJsonScalarComparison( required struct jsonPath, any value ) {
+        var scalar = compileJsonScalar( arguments.jsonPath );
+        if ( isNull( arguments.value ) ) {
+            return scalar;
+        }
+
+        var sqlType = getUtils().inferSqlType( arguments.value, this );
+        if ( listFindNoCase( "TINYINT,SMALLINT,INTEGER,BIGINT,DECIMAL,NUMERIC,REAL,FLOAT,DOUBLE", sqlType ) ) {
+            return "CAST(#scalar# AS NUMERIC)";
+        }
+        if ( listFindNoCase( "BIT,BOOLEAN,OTHER", sqlType ) ) {
+            return "CAST(#scalar# AS BOOLEAN)";
+        }
+        if ( listFindNoCase( "DATE,TIME,TIMESTAMP", sqlType ) ) {
+            return "CAST(#scalar# AS #sqlType#)";
+        }
+        return scalar;
+    }
+
     public string function compileJsonContains( required struct jsonPath ) {
         return "(#compilePostgresJsonTraversal( arguments.jsonPath, false )#)::jsonb @> ?::jsonb";
     }

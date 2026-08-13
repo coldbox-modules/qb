@@ -42,6 +42,36 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                     "INSERT INTO [users] ([name]) OUTPUT INSERTED.[id] SELECT [name] FROM OPENJSON(?) WITH ([name] NVARCHAR(MAX) '$.""name""')"
                 ] );
             } );
+
+            it( "applies raw returning expressions to bulk inserts", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .returningRaw( "INSERTED.id AS insertedId" )
+                    .insertBulk( values = [ { "name": "One" } ], toSql = true );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [users] ([name]) OUTPUT INSERTED.id AS insertedId SELECT [name] FROM OPENJSON(?) WITH ([name] NVARCHAR(MAX) '$.""name""')"
+                ] );
+            } );
+
+            it( "applies raw returning expressions to regular inserts and upserts", function() {
+                var insertSql = getBuilder()
+                    .from( "users" )
+                    .returningRaw( "INSERTED.id AS insertedId" )
+                    .insert( values = { "name": "One" }, toSql = true );
+                var upsertSql = getBuilder()
+                    .from( "users" )
+                    .returningRaw( "INSERTED.id AS insertedId" )
+                    .upsert(
+                        values = [ { "id": 1, "name": "One" } ],
+                        target = [ "id" ],
+                        update = [ "name" ],
+                        toSql = true
+                    );
+
+                expect( insertSql ).toInclude( "OUTPUT INSERTED.id AS insertedId" );
+                expect( upsertSql ).toInclude( "OUTPUT INSERTED.id AS insertedId" );
+            } );
         } );
 
         describe( "SQL Server ordered unions", function() {
@@ -68,6 +98,23 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
                 expect( sql ).toBe(
                     "SELECT TOP (5) * FROM (SELECT * FROM (SELECT TOP (5) [id], [name], [modifiedDate], 'Page' AS typeName FROM [page] ORDER BY [modifiedDate] DESC) AS [qb_union_0] UNION ALL SELECT * FROM (SELECT TOP (5) [id], [name], [modifiedDate], 'Document' AS typeName FROM [document] ORDER BY [modifiedDate] DESC) AS [qb_union_1]) AS [t] ORDER BY [modifiedDate] DESC"
+                );
+            } );
+
+            it( "can limit an ordered union branch without ordering the root branch", function() {
+                var sql = getBuilder()
+                    .select( "id" )
+                    .from( "users" )
+                    .unionAll( function( q ) {
+                        q.select( "id" )
+                            .from( "archivedUsers" )
+                            .orderByDesc( "id" )
+                            .limit( 5 );
+                    } )
+                    .toSQL();
+
+                expect( sql ).toBe(
+                    "SELECT * FROM (SELECT [id] FROM [users]) AS [qb_union_0] UNION ALL SELECT * FROM (SELECT TOP (5) [id] FROM [archivedUsers] ORDER BY [id] DESC) AS [qb_union_1]"
                 );
             } );
         } );

@@ -67,7 +67,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .getReturning()
                 .map( function( column ) {
                     if ( column.type == "raw" ) {
-                        return trim( column.getSQL() );
+                        return trim( column.value.getSQL() );
                     }
                     if ( listLen( column.value, "." ) > 1 ) {
                         return column.value;
@@ -175,7 +175,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 if ( union.query.getOrders().len() && !isLimitedQuery( union.query ) ) {
                     throw(
                         type = "OrderByNotAllowed",
-                        message = "The ORDER BY clause is not allowed in an unlimited UNION branch.",
+                        message = "The ORDER BY clause is not allowed in a UNION statement.",
                         detail = "SQL Server only allows an ORDER BY clause in a UNION branch when TOP, OFFSET, or FETCH limits that branch."
                     );
                 }
@@ -195,11 +195,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     private boolean function shouldCompileOrderedUnionBranches( required QueryBuilder query ) {
-        if ( arguments.query.getUnions().isEmpty() || !isOrderedLimitedQuery( arguments.query ) ) {
+        if ( arguments.query.getUnions().isEmpty() ) {
             return false;
         }
 
-        return arguments.query.getUnions().some( ( union ) => isOrderedLimitedQuery( union.query ) );
+        return arguments.query.getUnions().some( ( union ) => union.query.getOrders().len() );
     }
 
     private boolean function isOrderedLimitedQuery( required QueryBuilder query ) {
@@ -285,7 +285,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .getReturning()
                 .map( function( column ) {
                     if ( column.type == "raw" ) {
-                        return trim( column.getSQL() );
+                        return trim( column.value.getSQL() );
                     }
                     if ( listLen( column.value, "." ) > 1 ) {
                         return column.value;
@@ -722,7 +722,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .getReturning()
                 .map( function( column ) {
                     if ( column.type == "raw" ) {
-                        return trim( column.getSQL() );
+                        return trim( column.value.getSQL() );
                     }
                     if ( listLen( column.value, "." ) > 1 ) {
                         return column.value;

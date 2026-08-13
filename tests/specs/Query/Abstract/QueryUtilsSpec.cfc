@@ -411,6 +411,80 @@ component extends="testbox.system.BaseSpec" {
                 var queryTwo = queryOne.clone();
                 expect( queryTwo.toSql( showBindings = "inline" ) ).toBe( queryOne.toSql( showBindings = "inline" ) );
             } );
+
+            it( "does not share mutable query clauses with the original", function() {
+                var original = new qb.models.Query.QueryBuilder()
+                    .from( "users AS u" )
+                    .select( "u.id" )
+                    .where( "u.active", 1 )
+                    .where( function( q ) {
+                        q.where( "u.status", "active" );
+                    } )
+                    .join( "profiles AS p", "p.userId", "u.id" )
+                    .groupBy( "u.id" )
+                    .orderBy( "u.name" );
+                var originalSql = original.toSQL();
+
+                original.clone().withAlias( "member" );
+
+                expect( original.toSQL() ).toBe( originalSql );
+            } );
+
+            it( "preserves all query state in a clone", function() {
+                var original = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.SqlServerGrammar() )
+                    .from( "users" )
+                    .forRaw( "JSON PATH" )
+                    .noLock()
+                    .addUpdate( { "active": 1 } );
+                var cloned = original.clone();
+
+                expect( cloned.toSQL() ).toBe( original.toSQL() );
+                expect( cloned.getUpdates() ).toBe( original.getUpdates() );
+            } );
+        } );
+
+        describe( "reset()", function() {
+            it( "clears a SQL Server FOR clause", function() {
+                var builder = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.SqlServerGrammar() )
+                    .from( "users" )
+                    .forRaw( "JSON PATH" )
+                    .reset()
+                    .from( "accounts" );
+
+                expect( builder.toSQL() ).toBe( "SELECT * FROM [accounts]" );
+            } );
+        } );
+
+        describe( "isEqualTo()", function() {
+            it( "compares equivalent common table expressions", function() {
+                var first = new qb.models.Query.QueryBuilder().with( "active_users", function( q ) {
+                    q.from( "users" ).where( "active", 1 );
+                } );
+                var second = new qb.models.Query.QueryBuilder().with( "active_users", function( q ) {
+                    q.from( "users" ).where( "active", 1 );
+                } );
+
+                expect( first.isEqualTo( second ) ).toBeTrue();
+            } );
+        } );
+
+        describe( "aggregate state", function() {
+            it( "does not mutate a union query while compiling an aggregate", function() {
+                var builder = new qb.models.Query.QueryBuilder()
+                    .select( "name" )
+                    .from( "users" )
+                    .where( "id", 1 )
+                    .union( function( q ) {
+                        q.select( "name" )
+                            .from( "users" )
+                            .where( "id", 2 );
+                    } );
+                var originalSql = builder.toSQL();
+
+                builder.count( toSQL = true );
+
+                expect( builder.toSQL() ).toBe( originalSql );
+            } );
         } );
     }
 

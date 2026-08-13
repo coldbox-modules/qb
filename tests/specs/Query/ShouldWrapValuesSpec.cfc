@@ -85,6 +85,17 @@ component extends="testbox.system.BaseSpec" {
 
                 expect( sql ).toBe( "SELECT name FROM users" );
             } );
+
+            it( "preserves per-query wrapping overrides in new queries and clones", function() {
+                var grammar = new qb.models.Grammars.PostgresGrammar();
+                var builder = new qb.models.Query.QueryBuilder( grammar )
+                    .withoutWrappingValues()
+                    .select( "id" )
+                    .from( "users" );
+
+                expect( builder.newQuery().getShouldWrapValues() ).toBeFalse();
+                expect( builder.clone().toSQL() ).toBe( "SELECT id FROM users" );
+            } );
         } );
     }
 

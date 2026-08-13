@@ -143,38 +143,162 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return   string
      */
     public string function replaceBindings( required string sql, required array bindings, boolean inline = false ) {
+        var output = [];
         var index = 1;
-        return replace(
-            arguments.sql,
-            "?",
-            function( pattern, position, originalString ) {
-                var thisBinding = bindings[ index ];
+        var position = 1;
+        var state = "sql";
+        var dollarQuoteDelimiter = "";
+        var sqlLength = len( arguments.sql );
 
-                index++;
+        while ( position <= sqlLength ) {
+            var character = mid( arguments.sql, position, 1 );
+            var nextCharacter = position < sqlLength ? mid( arguments.sql, position + 1, 1 ) : "";
 
-                if ( !isStruct( thisBinding ) ) {
-                    return castAsSqlType( value = thisBinding, sqltype = "varchar" );
+            if ( state == "lineComment" ) {
+                output.append( character );
+                if ( character == chr( 10 ) || character == chr( 13 ) ) {
+                    state = "sql";
+                }
+                position++;
+                continue;
+            }
+
+            if ( state == "blockComment" ) {
+                output.append( character );
+                if ( character == "*" && nextCharacter == "/" ) {
+                    output.append( nextCharacter );
+                    position += 2;
+                    state = "sql";
+                } else {
+                    position++;
+                }
+                continue;
+            }
+
+            if ( state == "dollarQuote" ) {
+                if (
+                    mid( arguments.sql, position, len( dollarQuoteDelimiter ) ) ==
+                    dollarQuoteDelimiter
+                ) {
+                    output.append( dollarQuoteDelimiter );
+                    position += len( dollarQuoteDelimiter );
+                    state = "sql";
+                } else {
+                    output.append( character );
+                    position++;
+                }
+                continue;
+            }
+
+            if ( state != "sql" ) {
+                output.append( character );
+                if (
+                    ( state == "singleQuote" || state == "doubleQuote" || state == "backtickQuote" ) &&
+                    character == chr( 92 ) &&
+                    nextCharacter != ""
+                ) {
+                    output.append( nextCharacter );
+                    position += 2;
+                    continue;
                 }
 
-                if ( inline ) {
-                    return castAsSqlType(
-                        value = thisBinding.null ? javacast( "null", "" ) : thisBinding.value,
-                        sqltype = thisBinding.cfsqltype
+                var closingCharacter = state == "singleQuote" ? "'" : ( state == "doubleQuote" ? """" : chr( 96 ) );
+                if ( character == closingCharacter ) {
+                    if ( nextCharacter == closingCharacter ) {
+                        output.append( nextCharacter );
+                        position += 2;
+                    } else {
+                        position++;
+                        state = "sql";
+                    }
+                } else {
+                    position++;
+                }
+                continue;
+            }
+
+            if ( character == "-" && nextCharacter == "-" ) {
+                output.append( character );
+                output.append( nextCharacter );
+                position += 2;
+                state = "lineComment";
+                continue;
+            }
+
+            if ( character == "/" && nextCharacter == "*" ) {
+                output.append( character );
+                output.append( nextCharacter );
+                position += 2;
+                state = "blockComment";
+                continue;
+            }
+
+            if ( character == "$" ) {
+                var dollarQuoteMatch = reFind(
+                    "^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$",
+                    mid( arguments.sql, position ),
+                    1,
+                    true
+                );
+                if ( dollarQuoteMatch.len[ 1 ] > 0 ) {
+                    dollarQuoteDelimiter = mid( arguments.sql, position, dollarQuoteMatch.len[ 1 ] );
+                    output.append( dollarQuoteDelimiter );
+                    position += len( dollarQuoteDelimiter );
+                    state = "dollarQuote";
+                    continue;
+                }
+            }
+
+            if ( character == "'" || character == """" || character == chr( 96 ) ) {
+                output.append( character );
+                state = character == "'" ? "singleQuote" : ( character == """" ? "doubleQuote" : "backtickQuote" );
+                position++;
+                continue;
+            }
+
+            if ( character == "?" ) {
+                if ( index > arguments.bindings.len() ) {
+                    throw(
+                        type = "BindingMismatch",
+                        message = "The SQL contains more parameter placeholders than supplied bindings."
                     );
                 }
+                output.append( formatBindingForDisplay( arguments.bindings[ index ], arguments.inline ) );
+                index++;
+                position++;
+                continue;
+            }
 
-                var orderedBinding = structNew( "ordered" );
-                for ( var type in [ "value", "cfsqltype", "null" ] ) {
-                    orderedBinding[ type ] = thisBinding[ type ];
-                }
-                if ( isBinary( orderedBinding.value ) ) {
-                    orderedBinding.value = toBase64( orderedBinding.value );
-                }
-                var stringifiedBinding = serializeJSON( orderedBinding );
-                return stringifiedBinding;
-            },
-            "all"
-        );
+            output.append( character );
+            position++;
+        }
+
+        return output.toList( "" );
+    }
+
+    /**
+     * Formats a single binding for diagnostic SQL output.
+     */
+    private string function formatBindingForDisplay( required any binding, boolean inline = false ) {
+        if ( !isStruct( arguments.binding ) ) {
+            return castAsSqlType( value = arguments.binding, sqltype = "varchar" );
+        }
+
+        if ( arguments.inline ) {
+            return castAsSqlType(
+                value = arguments.binding.null ? javacast( "null", "" ) : arguments.binding.value,
+                sqltype = arguments.binding.cfsqltype
+            );
+        }
+
+        var orderedBinding = structNew( "ordered" );
+        for ( var type in [ "value", "cfsqltype", "null" ] ) {
+            orderedBinding[ type ] = arguments.binding[ type ];
+        }
+        if ( isBinary( orderedBinding.value ) ) {
+            orderedBinding.value = toBase64( orderedBinding.value );
+        }
+        return serializeJSON( orderedBinding );
     }
 
     /**
@@ -190,13 +314,18 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         if ( isArray( value ) ) {
-            return arraySame(
-                value,
-                function( val ) {
-                    return inferSqlType( val, grammar );
-                },
-                "VARCHAR"
-            );
+            var inferredTypes = [];
+            for ( var i = 1; i <= arguments.value.len(); i++ ) {
+                if ( isNull( arguments.value[ i ] ) ) {
+                    continue;
+                }
+                var item = arguments.value[ i ];
+                if ( isStruct( item ) && item.keyExists( "null" ) && item.null ) {
+                    continue;
+                }
+                inferredTypes.append( inferSqlType( item, arguments.grammar ) );
+            }
+            return arraySame( inferredTypes, ( sqlType ) => sqlType, "VARCHAR" );
         }
 
         if ( isStruct( value ) ) {
@@ -501,10 +630,16 @@ component singleton displayname="QueryUtils" accessors="true" {
             return arguments.defaultValue;
         }
 
+        if ( isNull( arguments.args[ 1 ] ) ) {
+            return arguments.defaultValue;
+        }
         var initial = closure( arguments.args[ 1 ] );
 
-        for ( var arg in arguments.args ) {
-            if ( closure( arg ) != initial ) {
+        for ( var i = 1; i <= arguments.args.len(); i++ ) {
+            if (
+                isNull( arguments.args[ i ] ) ||
+                closure( arguments.args[ i ] ) != initial
+            ) {
                 return defaultValue;
             }
         }
@@ -559,7 +694,7 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     private string function deriveNumericSqlType( required numeric value ) {
-        var isInteger = reFind( "^\d+$", arguments.value ) > 0;
+        var isInteger = reFind( "^-?\d+$", arguments.value ) > 0;
         return isInteger ? variables.integerSqlType : variables.decimalSqlType;
     }
 

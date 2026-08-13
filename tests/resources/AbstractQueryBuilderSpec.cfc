@@ -1709,6 +1709,44 @@ component extends="testbox.system.BaseSpec" {
                         }, crossJoinSub() );
                     } );
 
+                    it( "correctly positions bindings using crossJoinSub", function() {
+                        var builder = getBuilder();
+                        builder
+                            .from( "A" )
+                            .where( "A.A", "=", "A" )
+                            .crossJoinSub( "B", function( query ) {
+                                query.from( "B" ).where( "B.B", "=", "B" );
+                            } )
+                            .where( "A.C", "=", "C" );
+
+                        expect( getTestBindings( builder ) ).toBe( [ "B", "A", "C" ] );
+                    } );
+
+                    it( "does not retain bindings from prevented duplicate joinSub clauses", function() {
+                        var builder = getBuilder().setPreventDuplicateJoins( true );
+                        var derivedTable = getBuilder().from( "contacts" ).where( "contacts.kind", "personal" );
+
+                        builder
+                            .from( "users AS u" )
+                            .joinSub(
+                                "c",
+                                derivedTable,
+                                "u.id",
+                                "=",
+                                "c.user_id"
+                            )
+                            .joinSub(
+                                "c",
+                                derivedTable,
+                                "u.id",
+                                "=",
+                                "c.user_id"
+                            );
+
+                        expect( builder.getJoins() ).toHaveLength( 1 );
+                        expect( getTestBindings( builder ) ).toBe( [ "personal" ] );
+                    } );
+
                     it( "correctly positions bindings using joinSub", function() {
                         testCase( function( builder ) {
                             builder
@@ -2851,6 +2889,13 @@ component extends="testbox.system.BaseSpec" {
                             .returning( "id" )
                             .insert( values = { "email": "foo", "name": "bar" }, toSql = true );
                     }, returning() );
+                } );
+
+                it( "preserves commas inside returningRaw expressions", function() {
+                    var builder = getBuilder().returningRaw( "'last,first' AS label" );
+
+                    expect( builder.getReturning() ).toHaveLength( 1 );
+                    expect( builder.getReturning()[ 1 ].value.getSQL() ).toBe( "'last,first' AS label" );
                 } );
 
                 it( "can return all from an insert", function() {

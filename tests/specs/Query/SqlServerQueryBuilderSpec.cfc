@@ -32,6 +32,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 ] );
             } );
 
+            it( "infers bulk SQL types from negative and nullable values", function() {
+                var insertSql = getBuilder()
+                    .from( "measurements" )
+                    .insertBulk( values = [ { "reading": -1 }, { "reading": javacast( "null", "" ) } ], toSql = true );
+                var whereSql = getBuilder()
+                    .from( "measurements" )
+                    .whereInBulk( "reading", [ -1, javacast( "null", "" ), 2 ] )
+                    .toSQL();
+
+                expect( insertSql[ 1 ] ).toInclude( "[reading] INTEGER" );
+                expect( whereSql ).toInclude( "WITH ([value] INTEGER '$')" );
+            } );
+
             it( "escapes apostrophes in bulk insert JSON paths", function() {
                 var sql = getBuilder()
                     .from( "records" )

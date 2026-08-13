@@ -38,6 +38,8 @@ jobs:
           box install
 
       - name: Start server
+        env:
+          FULL_NULL: ${{matrix.fullNull}}
         run: |
           box server start serverConfigFile="server-${{ matrix.cfengine }}.json" --noSaveSettings --debug
           curl http://127.0.0.1:60298

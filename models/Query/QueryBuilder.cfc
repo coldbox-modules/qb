@@ -402,6 +402,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.aggregate = {};
         variables.columns = [ { "type": "simple", "value": "*" } ];
         variables.tableName = "";
+        variables.forClause = javacast( "null", "" );
         variables.alias = "";
         variables.lockType = "none";
         variables.lockValue = "";
@@ -1961,8 +1962,8 @@ component displayname="QueryBuilder" accessors="true" {
             if (
                 variables.commonTables.some( function( cT, index ) {
                     return (
-                        !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ "index" ][ "COLUMNS" ] ) ||
-                        cT[ "NAME" ] != otherQB.getCommonTables()[ "index" ][ "NAME" ] ||
+                        !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ index ][ "COLUMNS" ] ) ||
+                        !getUtils().structCompare( cT[ "NAME" ], otherQB.getCommonTables()[ index ][ "NAME" ] ) ||
                         !cT[ "QUERY" ].isEqualTo( otherQB.getCommonTables()[ index ][ "QUERY" ] )
                     );
                 } )
@@ -3485,11 +3486,8 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private numeric function getCountForPagination( struct options = {} ) {
         if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
-            var originalOrders = this.getOrders();
-            this.setOrders( [] );
-            var count = newQuery().fromSub( "aggregate_table", this ).count( options = arguments.options );
-            this.setOrders( originalOrders );
-            return count;
+            var countSource = clone().setOrders( [] );
+            return newQuery().fromSub( "aggregate_table", countSource ).count( options = arguments.options );
         }
         return count( options = arguments.options );
     }
@@ -4516,15 +4514,13 @@ component displayname="QueryBuilder" accessors="true" {
      * @return      boolean
      */
     public any function exists( struct options = {}, boolean toSQL = false ) {
-        var originalLimit = this.getLimitValue();
-        this.setLimitValue( 1 );
+        var existsSource = clone().setLimitValue( 1 );
         var existsQuery = newQuery()
             .clearFrom()
             .selectRaw(
-                "CASE WHEN EXISTS (#getGrammar().compileSelect( this )#) THEN 1 ELSE 0 END AS aggregate",
-                this.getBindings()
+                "CASE WHEN EXISTS (#getGrammar().compileSelect( existsSource )#) THEN 1 ELSE 0 END AS aggregate",
+                existsSource.getBindings()
             );
-        this.setLimitValue( isNull( originalLimit ) ? javacast( "null", "" ) : originalLimit );
         return arguments.toSQL ? existsQuery.toSQL() : existsQuery
             .setReturnFormat( "query" )
             .get( options = arguments.options )
@@ -5002,27 +4998,91 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public QueryBuilder function clone() {
         var clonedQuery = newQuery();
-        clonedQuery.setDistinct( this.getDistinct() );
-        var newAggregate = {};
-        for ( var key in this.getAggregate() ) {
-            newAggregate[ key ] = this.getAggregate()[ key ];
-        }
-        clonedQuery.setAggregate( newAggregate );
-        clonedQuery.setColumns( this.getColumns().isEmpty() ? [] : arraySlice( this.getColumns(), 1 ) );
-        clonedQuery.setTableName( this.getTableName() );
-        clonedQuery.setAlias( this.getAlias() );
-        clonedQuery.setJoins( this.getJoins().isEmpty() ? [] : arraySlice( this.getJoins(), 1 ) );
-        clonedQuery.setWheres( this.getWheres().isEmpty() ? [] : arraySlice( this.getWheres(), 1 ) );
-        clonedQuery.setGroups( this.getGroups().isEmpty() ? [] : arraySlice( this.getGroups(), 1 ) );
-        clonedQuery.setHavings( this.getHavings().isEmpty() ? [] : arraySlice( this.getHavings(), 1 ) );
-        clonedQuery.setUnions( this.getUnions().isEmpty() ? [] : arraySlice( this.getUnions(), 1 ) );
-        clonedQuery.setOrders( this.getOrders().isEmpty() ? [] : arraySlice( this.getOrders(), 1 ) );
-        clonedQuery.setCommonTables( this.getCommonTables().isEmpty() ? [] : arraySlice( this.getCommonTables(), 1 ) );
-        clonedQuery.setLimitValue( this.getLimitValue() );
-        clonedQuery.setOffsetValue( this.getOffsetValue() );
-        clonedQuery.setReturning( this.getReturning().isEmpty() ? [] : arraySlice( this.getReturning(), 1 ) );
-        clonedQuery.mergeBindings( this );
+        copyQueryState( this, clonedQuery );
         return clonedQuery;
+    }
+
+    private void function copyQueryState( required QueryBuilder source, required QueryBuilder target ) {
+        var targetQuery = arguments.target;
+        arguments.target.setDistinct( arguments.source.getDistinct() );
+        arguments.target.setAggregate( cloneQueryStateValue( arguments.source.getAggregate() ) );
+        arguments.target.setColumns( cloneQueryStateValue( arguments.source.getColumns() ) );
+        arguments.target.setTableName( cloneQueryStateValue( arguments.source.getTableName() ) );
+        if ( !isNull( arguments.source.getForClause() ) ) {
+            arguments.target.setForClause( cloneQueryStateValue( arguments.source.getForClause() ) );
+        }
+        arguments.target.setAlias( arguments.source.getAlias() );
+        arguments.target.setLockType( arguments.source.getLockType() );
+        arguments.target.setLockValue( arguments.source.getLockValue() );
+        var clonedJoins = [];
+        for ( var join in arguments.source.getJoins() ) {
+            clonedJoins.append( cloneJoinClause( join, targetQuery ) );
+        }
+        arguments.target.setJoins( clonedJoins );
+        arguments.target.setWheres( cloneQueryStateValue( arguments.source.getWheres() ) );
+        arguments.target.setGroups( cloneQueryStateValue( arguments.source.getGroups() ) );
+        arguments.target.setHavings( cloneQueryStateValue( arguments.source.getHavings() ) );
+        arguments.target.setUnions( cloneQueryStateValue( arguments.source.getUnions() ) );
+        arguments.target.setOrders( cloneQueryStateValue( arguments.source.getOrders() ) );
+        arguments.target.setCommonTables( cloneQueryStateValue( arguments.source.getCommonTables() ) );
+        if ( !isNull( arguments.source.getLimitValue() ) ) {
+            arguments.target.setLimitValue( arguments.source.getLimitValue() );
+        }
+        if ( !isNull( arguments.source.getOffsetValue() ) ) {
+            arguments.target.setOffsetValue( arguments.source.getOffsetValue() );
+        }
+        arguments.target.setReturning( cloneQueryStateValue( arguments.source.getReturning() ) );
+        arguments.target.setUpdates( cloneQueryStateValue( arguments.source.getUpdates() ) );
+
+        var sourceBindings = arguments.source.getRawBindings();
+        for ( var bindingType in sourceBindings ) {
+            arguments.target.addBindings( cloneQueryStateValue( sourceBindings[ bindingType ] ), bindingType );
+        }
+    }
+
+    private JoinClause function cloneJoinClause( required JoinClause join, required QueryBuilder joiningQuery ) {
+        var clonedJoin = new qb.models.Query.JoinClause(
+            arguments.joiningQuery,
+            arguments.join.getType(),
+            cloneQueryStateValue( arguments.join.getTable() ),
+            arguments.join.getLateralRawExpression()
+        );
+        copyQueryState( arguments.join, clonedJoin );
+        return clonedJoin;
+    }
+
+    private any function cloneQueryStateValue( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return javacast( "null", "" );
+        }
+        if ( getUtils().isBuilder( arguments.value ) ) {
+            return arguments.value.clone();
+        }
+        if ( getUtils().isExpression( arguments.value ) || isObject( arguments.value ) ) {
+            return arguments.value;
+        }
+        if ( isArray( arguments.value ) ) {
+            var clonedArray = [];
+            arrayResize( clonedArray, arguments.value.len() );
+            for ( var i = 1; i <= arguments.value.len(); i++ ) {
+                if ( !isNull( arguments.value[ i ] ) ) {
+                    clonedArray[ i ] = cloneQueryStateValue( arguments.value[ i ] );
+                }
+            }
+            return clonedArray;
+        }
+        if ( isStruct( arguments.value ) ) {
+            var clonedStruct = {};
+            for ( var key in arguments.value ) {
+                if ( isNull( arguments.value[ key ] ) ) {
+                    clonedStruct[ key ] = javacast( "null", "" );
+                } else {
+                    clonedStruct[ key ] = cloneQueryStateValue( arguments.value[ key ] );
+                }
+            }
+            return clonedStruct;
+        }
+        return arguments.value;
     }
 
     /**

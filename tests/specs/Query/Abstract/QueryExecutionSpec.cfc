@@ -1126,6 +1126,18 @@ component extends="testbox.system.BaseSpec" {
                         .exists( toSQL = true );
                     expect( sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""active"" = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate" );
                 } );
+
+                it( "restores the original limit when exists compilation fails", function() {
+                    var builder = getBuilder()
+                        .from( "users" )
+                        .limit( 5 )
+                        .whereJsonExists( "profile->name" );
+
+                    expect( function() {
+                        builder.exists( toSQL = true );
+                    } ).toThrow( type = "UnsupportedOperation" );
+                    expect( builder.getLimitValue() ).toBe( 5 );
+                } );
             } );
 
             describe( "existsOrFail", function() {

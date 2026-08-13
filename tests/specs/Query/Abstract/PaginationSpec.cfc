@@ -56,6 +56,20 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            it( "restores orders when the pagination count fails", function() {
+                var builder = new qb.models.Query.QueryBuilder(
+                    grammar = new qb.models.Grammars.BaseGrammar(),
+                    validateQueryExecuteReturnType = true
+                ).from( "users" )
+                    .distinct()
+                    .orderBy( "name" );
+
+                expect( function() {
+                    builder.paginate( options = { "returntype": "array" } );
+                } ).toThrow( type = "InvalidQueryExecuteOption" );
+                expect( builder.getOrders() ).toHaveLength( 1 );
+            } );
+
             it( "can get results for subsequent pages", function() {
                 var builder = getBuilder();
                 var expectedResults = [];

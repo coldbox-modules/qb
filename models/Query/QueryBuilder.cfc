@@ -702,6 +702,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.query = newQuery();
             callback( arguments.query );
         }
+        arguments.query = snapshotBuilder( arguments.query );
         variables.columns.append( { "type": "builder", "value": arguments.query, "alias": arguments.alias } );
         addBindings( arguments.query.getBindings(), "select" );
         return this;
@@ -1386,6 +1387,7 @@ component displayname="QueryBuilder" accessors="true" {
         boolean preventDuplicateJoins = this.getPreventDuplicateJoins()
     ) {
         if ( getUtils().isBuilder( arguments.table ) ) {
+            arguments.table = cloneJoinClause( arguments.table, this );
             if ( arguments.preventDuplicateJoins ) {
                 var hasThisJoin = variables.joins.find( function( existingJoin ) {
                     return existingJoin.isEqualTo( table );
@@ -2046,6 +2048,7 @@ component displayname="QueryBuilder" accessors="true" {
             if ( !isCustomFunction( variables.tableName ) ) {
                 if ( getUtils().isExpression( getTableName() ) ) {
                     memento[ "from" ] = getTableName().getSQL();
+                    memento[ "fromBindings" ] = getTableName().getBindings();
                 } else if ( getUtils().isBuilder( getTableName() ) ) {
                     memento[ "from" ] = getTableName().toSQL();
                 } else {
@@ -2059,6 +2062,7 @@ component displayname="QueryBuilder" accessors="true" {
             if ( !isCustomFunction( getTable() ) ) {
                 if ( getUtils().isExpression( getTable() ) ) {
                     memento[ "table" ] = getTable().getSQL();
+                    memento[ "tableBindings" ] = getTable().getBindings();
                 } else if ( getUtils().isBuilder( getTable() ) ) {
                     memento[ "table" ] = getTable().toSQL();
                 } else {
@@ -2348,6 +2352,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.query = newQuery();
             callback( arguments.query );
         }
+        arguments.query = snapshotBuilder( arguments.query );
         var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
         variables.wheres.append( {
             type: "sub",
@@ -2546,6 +2551,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.query = newQuery();
             callback( arguments.query );
         }
+        arguments.query = snapshotBuilder( arguments.query );
 
         var type = negate ? "notInSub" : "inSub";
         var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
@@ -2675,6 +2681,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     private QueryBuilder function addWhereExistsQuery( query, combinator = "and", negate = false ) {
+        arguments.query = snapshotBuilder( arguments.query );
         var type = negate ? "notExists" : "exists";
         variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
         addBindings( query.getBindings(), "where" );
@@ -2719,6 +2726,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public QueryBuilder function addNestedWhereQuery( required QueryBuilder query, string combinator = "and" ) {
         if ( !query.getWheres().isEmpty() ) {
+            arguments.query = snapshotBuilder( arguments.query );
             variables.wheres.append( { type: "nested", query: arguments.query, combinator: arguments.combinator } );
             addBindings( query.getBindings(), "where" );
         }
@@ -2775,6 +2783,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.query = newQuery();
             callback( arguments.query );
         }
+        arguments.query = snapshotBuilder( arguments.query );
 
         var type = arguments.negate ? "notNullSub" : "nullSub";
         variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
@@ -2827,6 +2836,13 @@ component displayname="QueryBuilder" accessors="true" {
             var callback = arguments.end;
             arguments.end = newQuery();
             callback( arguments.end );
+        }
+
+        if ( getUtils().isBuilder( arguments.start ) ) {
+            arguments.start = snapshotBuilder( arguments.start );
+        }
+        if ( getUtils().isBuilder( arguments.end ) ) {
+            arguments.end = snapshotBuilder( arguments.end );
         }
 
         addColumnBindings( [ typedColumn ], "where" );
@@ -3302,6 +3318,8 @@ component displayname="QueryBuilder" accessors="true" {
             callback( arguments.query );
         }
 
+        arguments.query = snapshotBuilder( arguments.query );
+
         variables.orders.append( { direction: arguments.direction, query: arguments.query } );
         addBindings( arguments.query.getBindings(), "orderBy" );
         return this;
@@ -3368,6 +3386,7 @@ component displayname="QueryBuilder" accessors="true" {
             // replace the original query builder with the results of the sub-query
             arguments.input = subquery;
         }
+        arguments.input = snapshotBuilder( arguments.input );
 
         // track the union statement
         variables.unions.append( { query: arguments.input, all: arguments.all } );
@@ -3416,6 +3435,7 @@ component displayname="QueryBuilder" accessors="true" {
             // replace the original query builder with the results of the sub-query
             arguments.input = subquery;
         }
+        arguments.input = snapshotBuilder( arguments.input );
 
         // track the union statement
         arrayAppend(
@@ -3788,6 +3808,8 @@ component displayname="QueryBuilder" accessors="true" {
             throw( type = "InvalidSQLType", message = "Please pass structs with at least one column to insertBulk." );
         }
 
+        clearBindings();
+
         var safeChunkSize = arguments.values.len();
         if ( !getGrammar().supportsBulkInsert() && getGrammar().parameterLimit > 0 ) {
             safeChunkSize = max( 1, floor( getGrammar().parameterLimit / columnCount ) );
@@ -3844,6 +3866,8 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.source = newQuery();
             callback( arguments.source );
         }
+
+        clearBindings( except = [ "commonTables" ] );
 
         if ( isNull( arguments.columns ) ) {
             arguments.columns = arguments.source
@@ -4013,8 +4037,8 @@ component displayname="QueryBuilder" accessors="true" {
                 arguments.values[ column.original ] = subselect;
                 addBindings( subselect.getBindings(), "update" );
             } else if ( getUtils().isBuilder( value ) ) {
-                arguments.values[ column.original ] = value;
-                addBindings( value.getBindings(), "update" );
+                arguments.values[ column.original ] = snapshotBuilder( value );
+                addBindings( arguments.values[ column.original ].getBindings(), "update" );
             } else if ( getUtils().isExpression( value ) ) {
                 addExpressionBindings( value, "update" );
             } else {
@@ -4094,6 +4118,8 @@ component displayname="QueryBuilder" accessors="true" {
         if ( arguments.values.isEmpty() ) {
             return;
         }
+
+        clearBindings( except = [ "commonTables" ] );
 
         if ( !isNull( arguments.source ) && ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) ) {
             var callback = arguments.source;
@@ -4345,19 +4371,7 @@ component displayname="QueryBuilder" accessors="true" {
         arguments.only = isArray( arguments.only ) ? arguments.only : [ arguments.only ];
         arguments.except = isArray( arguments.except ) ? arguments.except : [ arguments.except ];
         if ( arguments.only.isEmpty() ) {
-            arguments.only = [
-                "commonTables",
-                "update",
-                "insert",
-                "aggregate",
-                "select",
-                "join",
-                "where",
-                "groupBy",
-                "having",
-                "orderBy",
-                "union"
-            ];
+            arguments.only = variables.bindings.keyArray();
         }
 
         for ( var bindingType in arguments.only ) {
@@ -4404,6 +4418,13 @@ component displayname="QueryBuilder" accessors="true" {
     private QueryBuilder function addExpressionBindings( required any expression, required string type ) {
         addBindings( extractExpressionBindings( arguments.expression ), arguments.type );
         return this;
+    }
+
+    /**
+     * Clones a child builder when it is attached so its SQL and copied bindings cannot diverge later.
+     */
+    private QueryBuilder function snapshotBuilder( required QueryBuilder builder ) {
+        return arguments.builder.clone();
     }
 
     /**
@@ -5247,7 +5268,12 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select", "orderBy" ] );
-        return getUtils().replaceBindings( sql, bindings, arguments.showBindings == "inline" );
+        return getUtils().replaceBindings(
+            sql,
+            bindings,
+            arguments.showBindings == "inline",
+            getGrammar()
+        );
     }
 
     /**

@@ -373,6 +373,16 @@ component extends="testbox.system.BaseSpec" {
                                 } );
                         }, subSelectWithBindings() );
                     } );
+
+                    it( "snapshots a builder passed to a sub-select", function() {
+                        var child = getBuilder().from( "posts" ).selectRaw( "MAX(updated_date)" );
+                        var builder = getBuilder().from( "users" ).subSelect( "latestUpdatedDate", child );
+
+                        child.where( "posts.user_id", 1 );
+
+                        expect( builder.toSQL() ).notToInclude( "user_id" );
+                        expect( getTestBindings( builder ) ).toBe( [] );
+                    } );
                 } );
 
                 describe( "from", function() {
@@ -1747,6 +1757,32 @@ component extends="testbox.system.BaseSpec" {
                         expect( getTestBindings( builder ) ).toBe( [ "personal" ] );
                     } );
 
+                    it( "distinguishes joinSub clauses with the same SQL and different bindings", function() {
+                        var builder = getBuilder().setPreventDuplicateJoins( true );
+                        var personalContacts = getBuilder().from( "contacts" ).where( "contacts.kind", "personal" );
+                        var businessContacts = getBuilder().from( "contacts" ).where( "contacts.kind", "business" );
+
+                        builder
+                            .from( "users AS u" )
+                            .joinSub(
+                                "c",
+                                personalContacts,
+                                "u.id",
+                                "=",
+                                "c.user_id"
+                            )
+                            .joinSub(
+                                "c",
+                                businessContacts,
+                                "u.id",
+                                "=",
+                                "c.user_id"
+                            );
+
+                        expect( builder.getJoins() ).toHaveLength( 2 );
+                        expect( getTestBindings( builder ) ).toBe( [ "personal", "business" ] );
+                    } );
+
                     it( "correctly positions bindings using joinSub", function() {
                         testCase( function( builder ) {
                             builder
@@ -2465,6 +2501,19 @@ component extends="testbox.system.BaseSpec" {
                         }, unionAll() );
                     } );
 
+                    it( "snapshots a builder passed to a union", function() {
+                        var unionQuery = getBuilder().select( "name" ).from( "archived_users" );
+                        var builder = getBuilder()
+                            .select( "name" )
+                            .from( "users" )
+                            .unionAll( unionQuery );
+
+                        unionQuery.where( "active", 1 );
+
+                        expect( builder.toSQL() ).notToInclude( "active" );
+                        expect( getTestBindings( builder ) ).toBe( [] );
+                    } );
+
                     it( "can run an aggregate query like count on a union query", function() {
                         testCase( function( builder ) {
                             return builder
@@ -2524,6 +2573,16 @@ component extends="testbox.system.BaseSpec" {
                                 .whereNotIn( "user.id", [ 1, 2 ] )
                             ;
                         }, commonTableExpression() );
+                    } );
+
+                    it( "snapshots a builder passed to a common table expression", function() {
+                        var cte = getBuilder().select( "id" ).from( "users" );
+                        var builder = getBuilder().with( "UsersCTE", cte ).from( "UsersCTE" );
+
+                        cte.where( "active", 1 );
+
+                        expect( builder.toSQL() ).notToInclude( "active" );
+                        expect( getTestBindings( builder ) ).toBe( [] );
                     } );
 
                     it( "can correctly bind parameters regardless of order", function() {
@@ -2990,6 +3049,20 @@ component extends="testbox.system.BaseSpec" {
                     }, insertUsingSelectBuilder() );
                 } );
 
+                it( "does not include unrelated parent bindings in insert using statements", function() {
+                    var builder = getBuilder().from( "users" ).where( "tenant_id", 42 );
+                    var source = builder
+                        .newQuery()
+                        .from( "activeDirectoryUsers" )
+                        .select( "email" )
+                        .where( "active", 1 );
+
+                    var sql = builder.insertUsing( columns = [ "email" ], source = source, toSql = true );
+
+                    expect( reMatch( "\?", sql ) ).toHaveLength( 1 );
+                    expect( getTestBindings( builder ) ).toBe( [ 1 ] );
+                } );
+
                 it( "can derive the columns to insert from the source query", function() {
                     testCase( function( builder ) {
                         return builder
@@ -3230,6 +3303,20 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "upsert statements", function() {
+                it( "does not include unrelated parent bindings in upserts", function() {
+                    var builder = getBuilder().from( "users" ).where( "tenant_id", 42 );
+
+                    var sql = builder.upsert(
+                        values = { "email": "eric@example.com" },
+                        target = [ "email" ],
+                        update = [ "email" ],
+                        toSql = true
+                    );
+
+                    expect( getTestBindings( builder ) ).toBe( [ "eric@example.com" ] );
+                    expect( reMatch( "\?", sql ) ).toHaveLength( 1 );
+                } );
+
                 it( "can perform an upsert", function() {
                     testCase( function( builder ) {
                         return builder

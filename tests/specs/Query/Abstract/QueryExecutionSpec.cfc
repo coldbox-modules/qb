@@ -1720,6 +1720,19 @@ component extends="testbox.system.BaseSpec" {
         } );
 
         describe( "bulk inserts", function() {
+            it( "does not include unrelated builder bindings in native bulk inserts", function() {
+                var grammar = getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init();
+                grammar.$( "runQuery", {} );
+                var builder = new qb.models.Query.QueryBuilder( grammar )
+                    .fromRaw( "users", [ "unused-from" ] )
+                    .where( "active", 1 );
+
+                builder.insertBulk( [ { "email": "one@example.com" } ] );
+
+                expect( grammar.$callLog().runQuery[ 1 ].bindings ).toHaveLength( 1 );
+                expect( deserializeJSON( grammar.$callLog().runQuery[ 1 ].bindings[ 1 ].value ) ).toBe( [ { "email": "one@example.com" } ] );
+            } );
+
             it( "inserts values in explicit batches", function() {
                 var sql = getBuilder()
                     .from( "users" )

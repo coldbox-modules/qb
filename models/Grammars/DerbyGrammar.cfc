@@ -372,13 +372,17 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
         if (
             len( arguments.value ) == 0 ||
-            arguments.value == "*" ||
-            left( arguments.value, 1 ) == """"
+            arguments.value == "*"
         ) {
             return arguments.value;
         }
 
-        return """#arguments.value#""";
+        var value = toString( arguments.value );
+        if ( len( value ) >= 2 && left( value, 1 ) == """" && right( value, 1 ) == """" ) {
+            value = mid( value, 2, len( value ) - 2 );
+        }
+        value = replace( value, """", """""", "all" );
+        return """#value#""";
     }
 
     function compileCreateAs( blueprint, commandParameters ) {
@@ -570,12 +574,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? "TRUE" : "FALSE";
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }
@@ -748,7 +752,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.sb.getShouldWrapValues() );
             }
 
-            var tables = getAllTableNames( options );
+            var tables = getAllTableNames( options, schema );
             return arrayMap( tables, function( table ) {
                 return "DROP TABLE #wrapTable( table )#";
             } );
@@ -757,6 +761,26 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    function getAllTableNames( options, schema = "" ) {
+        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "t.tablename" } )# AS #wrapValue( "table_name" )#, #wrapColumn( { "type": "simple", "value": "s.schemaname" } )# AS #wrapValue( "table_schema" )# FROM #wrapTable( "sys.systables t" )# JOIN #wrapTable( "sys.sysschemas s" )# ON #wrapColumn( { "type": "simple", "value": "t.schemaid" } )# = #wrapColumn( { "type": "simple", "value": "s.schemaid" } )# WHERE #wrapColumn( { "type": "simple", "value": "t.tabletype" } )# = 'T'";
+        var args = [];
+        if ( arguments.schema != "" ) {
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemaname" } )# = ?";
+            args.append( arguments.schema );
+        }
+        var tablesQuery = runQuery(
+            sql,
+            args,
+            arguments.options,
+            "query"
+        );
+        var tables = [];
+        for ( var table in tablesQuery ) {
+            tables.append( "#table[ "table_schema" ]#.#table[ "table_name" ]#" );
+        }
+        return tables;
     }
 
 }

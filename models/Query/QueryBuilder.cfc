@@ -2193,7 +2193,10 @@ component displayname="QueryBuilder" accessors="true" {
         if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
-        if ( !arguments.keyExists( "value" ) ) {
+        if (
+            !arguments.keyExists( "value" ) ||
+            ( isNull( arguments.value ) && arguments.column.find( "->" ) > 0 )
+        ) {
             arguments.value = arguments.path;
             arguments.path = [];
         }
@@ -2396,6 +2399,7 @@ component displayname="QueryBuilder" accessors="true" {
         combinator = "and",
         negate = false
     ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         if (
             isClosure( values ) ||
             isCustomFunction( values ) ||
@@ -2450,6 +2454,7 @@ component displayname="QueryBuilder" accessors="true" {
         string combinator = "and",
         boolean negate = false
     ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         arguments.values = normalizeToArray( arguments.values );
 
         if ( arguments.values.some( getUtils().isExpression ) ) {
@@ -2591,6 +2596,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         addBindings(
             whereBindings.map( function( binding ) {
                 return utils.extractBinding( binding, variables.grammar );
@@ -2617,6 +2623,7 @@ component displayname="QueryBuilder" accessors="true" {
         second,
         string combinator = "and"
     ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         if ( isNull( arguments.second ) ) {
             arguments.second = arguments.operator;
             arguments.operator = "=";
@@ -2663,6 +2670,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereExists( query, combinator = "and", negate = false ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
@@ -2711,6 +2719,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNested( required callback, combinator = "and" ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         var query = forNestedWhere();
         callback( query );
         return addNestedWhereQuery( query, combinator );
@@ -2725,6 +2734,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addNestedWhereQuery( required QueryBuilder query, string combinator = "and" ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         if ( !query.getWheres().isEmpty() ) {
             arguments.query = snapshotBuilder( arguments.query );
             variables.wheres.append( { type: "nested", query: arguments.query, combinator: arguments.combinator } );
@@ -2753,6 +2763,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNull( column, combinator = "and", negate = false ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         if (
             isClosure( arguments.column ) ||
             isCustomFunction( arguments.column ) ||
@@ -2778,6 +2789,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNullSub( query, combinator = "and", negate = false ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
@@ -2823,6 +2835,7 @@ component displayname="QueryBuilder" accessors="true" {
         combinator = "and",
         negate = false
     ) {
+        guardAgainstInvalidCombinator( arguments.combinator );
         var type = negate ? "notBetween" : "between";
         var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
 
@@ -3105,6 +3118,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBy( required any column, string direction = "asc" ) {
+        guardAgainstInvalidOrderDirection( arguments.direction );
+        arguments.direction = lCase( trim( arguments.direction ) );
         // We are trying to determine if a positional array of [ column, direction ]
         // was passed in.  This is the craziness that does that.
         if (
@@ -3312,6 +3327,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBySub( required any query, string direction = "asc" ) {
+        guardAgainstInvalidOrderDirection( arguments.direction );
+        arguments.direction = lCase( trim( arguments.direction ) );
         if ( !getUtils().isBuilder( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
@@ -5521,6 +5538,24 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private boolean function isInvalidCombinator( required string combinator ) {
         return !arrayContains( variables.combinators, uCase( arguments.combinator ) );
+    }
+
+    /**
+     * Throws when combinator validation is enabled and the value is unsupported.
+     */
+    private void function guardAgainstInvalidCombinator( required string combinator ) {
+        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
+            throw( type = "InvalidSQLType", message = "Illegal combinator" );
+        }
+    }
+
+    /**
+     * Throws when an ORDER BY direction is unsupported.
+     */
+    private void function guardAgainstInvalidOrderDirection( required string direction ) {
+        if ( !arrayFindNoCase( variables.directions, trim( arguments.direction ) ) ) {
+            throw( type = "InvalidSQLType", message = "Illegal order direction" );
+        }
     }
 
     /**

@@ -50,6 +50,11 @@ component accessors="true" {
     property name="defaultValue" default="";
 
     /**
+     * Whether a default value was explicitly assigned.
+     */
+    property name="hasDefaultValue" default="false";
+
+    /**
      * A comment for the column.
      */
     property name="commentValue" default="";
@@ -87,6 +92,7 @@ component accessors="true" {
         variables.values = [];
         variables.computedType = "none";
         variables.computedDefinition = "";
+        variables.hasDefaultValue = false;
         return this;
     }
 
@@ -123,6 +129,20 @@ component accessors="true" {
      */
     public Column function default( required string value ) {
         setDefaultValue( arguments.value );
+        return this;
+    }
+
+    /**
+     * Assigns a default value and records that the value was explicitly set.
+     * This distinguishes an empty-string default from a column with no default.
+     *
+     * @defaultValue The default value.
+     *
+     * @returns The Column instance.
+     */
+    public Column function setDefaultValue( required string defaultValue ) {
+        variables.defaultValue = arguments.defaultValue;
+        variables.hasDefaultValue = true;
         return this;
     }
 

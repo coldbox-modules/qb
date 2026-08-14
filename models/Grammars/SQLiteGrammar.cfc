@@ -355,12 +355,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     ===================================*/
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? 1 : 0;
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }
@@ -491,7 +491,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             var values = column
                 .getValues()
                 .map( function( value ) {
-                    return "'#value#'";
+                    return quoteStringLiteral( value );
                 } )
                 .toList( ", " );
             return "CHECK (#wrapColumn( { "type": "simple", "value": column.getName() } )# IN (#values#))";
@@ -502,7 +502,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function generateDefault( column ) {
         if (
-            column.getDefaultValue() == "" &&
+            !column.getHasDefaultValue() &&
             column.getType().findNoCase( "TIMESTAMP" ) > 0
         ) {
             if ( column.getIsNullable() ) {
@@ -562,6 +562,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             var index = commandParameters.index;
+            if ( index.getType() != "unique" ) {
+                throw(
+                    type = "UnsupportedOperation",
+                    message = "SQLite only supports adding unique constraints to existing tables."
+                );
+            }
             var constraint = invoke(
                 this,
                 "index#index.getType()#",
@@ -589,7 +595,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "DROP INDEX #wrapValue( commandParameters.name )#";
+            var indexName = qualifyObjectNameForTable( blueprint.getTable(), commandParameters.name );
+            return "DROP INDEX #wrapTable( indexName )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -604,7 +611,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "DROP INDEX #wrapValue( commandParameters.name )#";
+            var indexName = qualifyObjectNameForTable( blueprint.getTable(), commandParameters.name );
+            return "DROP INDEX #wrapTable( indexName )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

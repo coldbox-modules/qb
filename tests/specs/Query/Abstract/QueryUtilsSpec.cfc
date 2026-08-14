@@ -262,6 +262,45 @@ component extends="testbox.system.BaseSpec" {
                 expect( utils.replaceBindings( "SELECT ARRAY[?]", [ binding ], true ) ).toBe( "SELECT ARRAY['name']" );
             } );
 
+            it( "preserves PostgreSQL question mark operators", function() {
+                var binding = utils.extractBinding( "name", variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT * FROM records WHERE payload ? ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.PostgresGrammar()
+                    )
+                ).toBe( "SELECT * FROM records WHERE payload ? 'name'" );
+            } );
+
+            it( "preserves question marks in MySQL hash comments", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT * FROM records WHERE id = ? ## why?#chr( 10 )#",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.MySQLGrammar()
+                    )
+                ).toBe( "SELECT * FROM records WHERE id = 42 ## why?#chr( 10 )#" );
+            } );
+
+            it( "preserves question marks in SQL Server bracketed identifiers", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT [why?] FROM records WHERE id = ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.SqlServerGrammar()
+                    )
+                ).toBe( "SELECT [why?] FROM records WHERE id = 42" );
+            } );
+
             it( "preserves question marks in escaped string literals", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
 

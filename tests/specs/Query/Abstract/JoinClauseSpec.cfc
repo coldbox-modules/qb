@@ -285,6 +285,15 @@ component extends="testbox.system.BaseSpec" {
                         variables.qb.join( variables.joinOther );
                         expect( variables.qb.getJoins().len() ).toBe( 2 );
                     } );
+
+                    it( "snapshots a join clause when it is attached", function() {
+                        variables.qb.join( variables.join );
+
+                        variables.join.where( "second.kind", "personal" );
+
+                        expect( variables.qb.getJoins()[ 1 ].getWheres() ).toBeEmpty();
+                        expect( variables.qb.getBindings() ).toBeEmpty();
+                    } );
                 } );
             } );
         } );

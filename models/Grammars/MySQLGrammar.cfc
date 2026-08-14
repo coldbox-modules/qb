@@ -65,9 +65,19 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return value;
         }
 
-        arguments.value = reReplace( arguments.value, """", "", "all" );
+        var value = reReplace(
+            toString( arguments.value ),
+            """",
+            "",
+            "all"
+        );
+        var quote = chr( 96 );
+        if ( len( value ) >= 2 && left( value, 1 ) == quote && right( value, 1 ) == quote ) {
+            value = mid( value, 2, len( value ) - 2 );
+        }
+        value = replace( value, quote, quote & quote, "all" );
 
-        return "`#value#`";
+        return "#quote##value##quote#";
     }
 
     /**
@@ -78,7 +88,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     public string function wrapAlias( required any value ) {
-        return "`#value#`";
+        return wrapValue( arguments.value );
     }
 
     function compileRenameTable( blueprint, commandParameters ) {
@@ -128,7 +138,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.sb.getShouldWrapValues() );
             }
 
-            var tables = getAllTableNames( options );
+            var tables = getAllTableNames( options, schema );
             var tableList = arrayToList(
                 arrayMap( tables, function( table ) {
                     return wrapTable( table );
@@ -153,9 +163,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
     }
 
-    function getAllTableNames( options ) {
+    function getAllTableNames( options, schema = "" ) {
+        var schemaClause = arguments.schema == "" ? "" : " FROM #wrapValue( arguments.schema )#";
         var tablesQuery = runQuery(
-            "SHOW FULL TABLES WHERE table_type = 'BASE TABLE'",
+            "SHOW FULL TABLES#schemaClause# WHERE table_type = 'BASE TABLE'",
             {},
             options,
             "query"
@@ -167,7 +178,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         );
         var tables = [];
         for ( var table in tablesQuery ) {
-            arrayAppend( tables, table[ columnName ] );
+            arrayAppend(
+                tables,
+                arguments.schema == "" ? table[ columnName ] : "#arguments.schema#.#table[ columnName ]#"
+            );
         }
         return tables;
     }
@@ -368,7 +382,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function generateDefault( column ) {
         if (
-            column.getDefaultValue() == "" &&
+            !column.getHasDefaultValue() &&
             column.getType().findNoCase( "TIMESTAMP" ) > 0
         ) {
             if ( column.getIsNullable() ) {
@@ -381,12 +395,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? 1 : 0;
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }

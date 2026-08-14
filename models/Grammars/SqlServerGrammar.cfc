@@ -773,16 +773,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function generateDefault( column, blueprint ) {
-        return column.getDefaultValue() != "" ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
+        return column.getHasDefaultValue() ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
     }
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? 1 : 0;
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }
@@ -839,7 +839,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                         " "
                     )
                 ];
-                if ( commandParameters.name.getDefaultValue() != "" ) {
+                if ( commandParameters.name.getHasDefaultValue() ) {
                     statements.prepend(
                         "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#commandParameters.name.getName()#" )#"
                     );
@@ -936,11 +936,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             var originalDefaultValue = commandParameters.to.getDefaultValue();
+            var originalHasDefaultValue = commandParameters.to.getHasDefaultValue();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            if ( originalDefaultValue == "" ) {
+            if ( !originalHasDefaultValue ) {
                 return concatenate( [
                     "ALTER TABLE",
                     wrapTable( blueprint.getTable() ),
@@ -950,6 +951,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             commandParameters.to.setDefaultValue( "" );
+            commandParameters.to.setHasDefaultValue( false );
 
             var wrappedTable = wrapTable( blueprint.getTable(), false );
             var wrappedColumn = wrapValue( commandParameters.to.getName() );
@@ -968,6 +970,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             ] );
 
             commandParameters.to.setDefaultValue( originalDefaultValue );
+            commandParameters.to.setHasDefaultValue( originalHasDefaultValue );
 
             return [
                 "DECLARE @objectId INT = OBJECT_ID(N'#escapedTable#'), @constraintName SYSNAME, @schemaName SYSNAME, @tableName SYSNAME; SELECT @constraintName = [dc].[name], @schemaName = OBJECT_SCHEMA_NAME([dc].[parent_object_id]), @tableName = OBJECT_NAME([dc].[parent_object_id]) FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = @objectId AND [c].[name] = N'#escapedColumn#'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE ' + QUOTENAME(@schemaName) + N'.' + QUOTENAME(@tableName) + N' DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
@@ -985,6 +988,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             ];
         } finally {
             commandParameters.to.setDefaultValue( originalDefaultValue );
+            commandParameters.to.setHasDefaultValue( originalHasDefaultValue );
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
@@ -992,16 +996,17 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function getAllTableNames( options, schema = "" ) {
-        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )# FROM #wrapTable( "information_schema.tables" )#";
+        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )#, #wrapColumn( { "type": "simple", "value": "table_schema" } )# FROM #wrapTable( "information_schema.tables" )#";
         var args = [];
         if ( schema != "" ) {
             sql &= " WHERE #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
             args.append( schema );
         }
+        sql &= "#arguments.schema == "" ? " WHERE" : " AND"# #wrapColumn( { "type": "simple", "value": "table_type" } )# = 'BASE TABLE'";
         var tablesQuery = runQuery( sql, args, options, "query" );
         var tables = [];
         for ( var table in tablesQuery ) {
-            arrayAppend( tables, table[ "table_name" ] );
+            arrayAppend( tables, "#table[ "table_schema" ]#.#table[ "table_name" ]#" );
         }
         return tables;
     }
@@ -1020,12 +1025,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 } ),
                 ", "
             );
+            var foreignKeySchemaFilter = arguments.schema == "" ? "" : " WHERE OBJECT_SCHEMA_NAME(parent_object_id) = #quoteUnicodeStringLiteral( arguments.schema )#";
             return arrayFilter(
                 [
                     "DECLARE @sql NVARCHAR(MAX) = N'';
-                SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_NAME(parent_object_id))
+                SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id))
                     + ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
-                FROM sys.foreign_keys;
+                FROM sys.foreign_keys#foreignKeySchemaFilter#;
 
                 EXEC sp_executesql @sql;",
                     arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#"

@@ -3,6 +3,14 @@
  */
 component accessors="true" {
 
+    variables.validReferentialActions = [
+        "RESTRICT",
+        "CASCADE",
+        "SET NULL",
+        "NO ACTION",
+        "SET DEFAULT"
+    ];
+
     /**
      * The constraint type.
      */
@@ -118,6 +126,16 @@ component accessors="true" {
         return this;
     }
 
+    public TableIndex function setOnUpdateAction( required string onUpdateAction ) {
+        variables.onUpdateAction = normalizeReferentialAction( arguments.onUpdateAction );
+        return this;
+    }
+
+    public TableIndex function setOnDeleteAction( required string onDeleteAction ) {
+        variables.onDeleteAction = normalizeReferentialAction( arguments.onDeleteAction );
+        return this;
+    }
+
     /**
      * Set the column or columns that make up the constraint.
      *
@@ -132,6 +150,14 @@ component accessors="true" {
 
     private array function arrayWrap( required any value ) {
         return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+    }
+
+    private string function normalizeReferentialAction( required string action ) {
+        var normalizedAction = uCase( trim( arguments.action ) );
+        if ( !variables.validReferentialActions.contains( normalizedAction ) ) {
+            throw( type = "InvalidReferentialAction", message = "Invalid foreign-key action [#arguments.action#]." );
+        }
+        return normalizedAction;
     }
 
 }

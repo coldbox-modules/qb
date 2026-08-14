@@ -139,16 +139,34 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @sql      The sql string to replace the bindings in.
      * @bindings The bindings to replace the question marks with.
      * @inline   Whether or not to inline the bindings.
+     * @grammar  The active grammar, used to distinguish dialect operators, comments, and identifiers.
      *
      * @return   string
      */
-    public string function replaceBindings( required string sql, required array bindings, boolean inline = false ) {
+    public string function replaceBindings(
+        required string sql,
+        required array bindings,
+        boolean inline = false,
+        any grammar
+    ) {
         var output = [];
         var index = 1;
         var position = 1;
         var state = "sql";
         var dollarQuoteDelimiter = "";
         var sqlLength = len( arguments.sql );
+        var isMySQL = !isNull( arguments.grammar ) && isInstanceOf(
+            arguments.grammar,
+            "qb.models.Grammars.MySQLGrammar"
+        );
+        var isPostgres = !isNull( arguments.grammar ) && isInstanceOf(
+            arguments.grammar,
+            "qb.models.Grammars.PostgresGrammar"
+        );
+        var isSqlServer = !isNull( arguments.grammar ) && isInstanceOf(
+            arguments.grammar,
+            "qb.models.Grammars.SqlServerGrammar"
+        );
 
         while ( position <= sqlLength ) {
             var character = mid( arguments.sql, position, 1 );
@@ -193,7 +211,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             if ( state != "sql" ) {
                 output.append( character );
                 if (
-                    ( state == "singleQuote" || state == "doubleQuote" || state == "backtickQuote" ) &&
+                    state != "bracketQuote" &&
                     character == chr( 92 ) &&
                     nextCharacter != ""
                 ) {
@@ -202,7 +220,9 @@ component singleton displayname="QueryUtils" accessors="true" {
                     continue;
                 }
 
-                var closingCharacter = state == "singleQuote" ? "'" : ( state == "doubleQuote" ? """" : chr( 96 ) );
+                var closingCharacter = state == "singleQuote" ? "'" : (
+                    state == "doubleQuote" ? """" : ( state == "backtickQuote" ? chr( 96 ) : "]" )
+                );
                 if ( character == closingCharacter ) {
                     if ( nextCharacter == closingCharacter ) {
                         output.append( nextCharacter );
@@ -221,6 +241,13 @@ component singleton displayname="QueryUtils" accessors="true" {
                 output.append( character );
                 output.append( nextCharacter );
                 position += 2;
+                state = "lineComment";
+                continue;
+            }
+
+            if ( isMySQL && character == "##" ) {
+                output.append( character );
+                position++;
                 state = "lineComment";
                 continue;
             }
@@ -249,14 +276,21 @@ component singleton displayname="QueryUtils" accessors="true" {
                 }
             }
 
-            if ( character == "'" || character == """" || character == chr( 96 ) ) {
+            if ( character == "'" || character == """" || character == chr( 96 ) || ( isSqlServer && character == "[" ) ) {
                 output.append( character );
-                state = character == "'" ? "singleQuote" : ( character == """" ? "doubleQuote" : "backtickQuote" );
+                state = character == "'" ? "singleQuote" : (
+                    character == """" ? "doubleQuote" : ( character == chr( 96 ) ? "backtickQuote" : "bracketQuote" )
+                );
                 position++;
                 continue;
             }
 
             if ( character == "?" ) {
+                if ( isPostgres && isPostgresQuestionMarkOperator( arguments.sql, position ) ) {
+                    output.append( character );
+                    position++;
+                    continue;
+                }
                 if ( index > arguments.bindings.len() ) {
                     throw(
                         type = "BindingMismatch",
@@ -274,6 +308,49 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         return output.toList( "" );
+    }
+
+    /**
+     * Determines whether a PostgreSQL question mark is a JSON existence operator instead of a parameter placeholder.
+     */
+    private boolean function isPostgresQuestionMarkOperator( required string sql, required numeric position ) {
+        var sqlLength = len( arguments.sql );
+        var immediateNext = arguments.position < sqlLength ? mid( arguments.sql, arguments.position + 1, 1 ) : "";
+        if ( immediateNext == "|" || immediateNext == "&" ) {
+            return true;
+        }
+
+        var previousPosition = arguments.position - 1;
+        while ( previousPosition > 0 && reFind( "\s", mid( arguments.sql, previousPosition, 1 ) ) ) {
+            previousPosition--;
+        }
+        var nextPosition = arguments.position + 1;
+        while ( nextPosition <= sqlLength && reFind( "\s", mid( arguments.sql, nextPosition, 1 ) ) ) {
+            nextPosition++;
+        }
+        if ( previousPosition == 0 || nextPosition > sqlLength ) {
+            return false;
+        }
+
+        var previousCharacter = mid( arguments.sql, previousPosition, 1 );
+        var nextCharacter = mid( arguments.sql, nextPosition, 1 );
+        if (
+            !reFind( "[A-Za-z0-9_)\]""'#chr( 96 )#]", previousCharacter ) ||
+            !reFind( "[A-Za-z0-9_(\[""'$?#chr( 96 )#]", nextCharacter )
+        ) {
+            return false;
+        }
+
+        var previousSql = left( arguments.sql, previousPosition );
+        var previousWord = reReplace( previousSql, "(?s)^.*?([A-Za-z_][A-Za-z0-9_]*)$", "\1" );
+        if ( previousWord == previousSql && !reFind( "^[A-Za-z_][A-Za-z0-9_]*$", previousSql ) ) {
+            previousWord = "";
+        }
+
+        return !listFindNoCase(
+            "SELECT,WHERE,AND,OR,WHEN,THEN,ELSE,CASE,ON,HAVING,BY,VALUES,VALUE,SET,RETURNING,AS,DISTINCT,LIMIT,OFFSET,FETCH,FIRST,NEXT,ROWS,ROW,IN,NOT,LIKE,ILIKE,IS,AT,FROM,JOIN,USING,INTO,UPDATE,INSERT,DELETE,OVER,PARTITION,ESCAPE,UNION,ALL",
+            previousWord
+        );
     }
 
     /**

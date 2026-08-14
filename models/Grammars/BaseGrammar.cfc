@@ -66,7 +66,9 @@ component displayname="Grammar" accessors="true" singleton {
      * @return qb.models.Grammars.BaseGrammar
      */
     public BaseGrammar function init( qb.models.Query.QueryUtils utils ) {
-        param arguments.utils = new qb.models.Query.QueryUtils();
+        if ( isNull( arguments.utils ) ) {
+            arguments.utils = new qb.models.Query.QueryUtils();
+        }
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
         variables.tableAliasOperator = " AS ";
@@ -1437,6 +1439,12 @@ component displayname="Grammar" accessors="true" singleton {
             } else {
                 var escapedSegment = replace(
                     segment,
+                    chr( 92 ),
+                    chr( 92 ) & chr( 92 ),
+                    "all"
+                );
+                escapedSegment = replace(
+                    escapedSegment,
                     """",
                     chr( 92 ) & """",
                     "all"
@@ -1506,7 +1514,11 @@ component displayname="Grammar" accessors="true" singleton {
             return arguments.value;
         }
 
-        arguments.value = reReplace( arguments.value, """", "", "all" );
+        var value = toString( arguments.value );
+        if ( len( value ) >= 2 && left( value, 1 ) == """" && right( value, 1 ) == """" ) {
+            value = mid( value, 2, len( value ) - 2 );
+        }
+        value = replace( value, """", """""", "all" );
 
         return """#value#""";
     }
@@ -1616,14 +1628,24 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function generateDefault( column ) {
-        if ( column.getDefaultValue() == "" ) {
+        if ( !column.getHasDefaultValue() ) {
             return "";
         }
         return "DEFAULT #wrapDefaultType( column )#";
     }
 
+    /**
+     * Determines whether a column's default is a textual SQL literal.
+     */
+    function shouldQuoteDefaultValue( required column ) {
+        return listFindNoCase(
+            "char,string,unicodeString,text,unicodeText,mediumText,unicodeMediumText,longText,unicodeLongText,GUID,UUID,enum",
+            arguments.column.getType()
+        ) > 0;
+    }
+
     function generateComment( column ) {
-        return column.getCommentValue() != "" ? "COMMENT '#column.getCommentValue()#'" : "";
+        return column.getCommentValue() != "" ? "COMMENT #quoteStringLiteral( column.getCommentValue() )#" : "";
     }
 
     function compileAddComment( blueprint, commandParameters ) {
@@ -1631,8 +1653,30 @@ component displayname="Grammar" accessors="true" singleton {
             "COMMENT ON COLUMN",
             wrapColumn( { "type": "simple", "value": commandParameters.table & "." & commandParameters.column.getName() } ),
             "IS",
-            "'" & commandParameters.column.getCommentValue() & "'"
+            quoteStringLiteral( commandParameters.column.getCommentValue() )
         ] );
+    }
+
+    /**
+     * Quotes a value for use as a SQL string literal in generated DDL.
+     */
+    public string function quoteStringLiteral( required any value ) {
+        return "'" & replace(
+            toString( arguments.value ),
+            "'",
+            "''",
+            "all"
+        ) & "'";
+    }
+
+    /**
+     * Places a standalone schema object in the same schema as its table.
+     */
+    public string function qualifyObjectNameForTable( required string table, required string objectName ) {
+        if ( listLen( arguments.table, "." ) == 1 ) {
+            return arguments.objectName;
+        }
+        return listDeleteAt( arguments.table, listLen( arguments.table, "." ), "." ) & "." & arguments.objectName;
     }
 
     /*=====  End of Blueprint: Create  ======*/
@@ -1977,7 +2021,7 @@ component displayname="Grammar" accessors="true" singleton {
         var values = column
             .getValues()
             .map( function( value ) {
-                return "'#value#'";
+                return quoteStringLiteral( value );
             } )
             .toList( ", " );
         return "ENUM(#values#)";
@@ -2272,7 +2316,7 @@ component displayname="Grammar" accessors="true" singleton {
         var values = column
             .getValues()
             .map( function( val ) {
-                return "'#val#'";
+                return quoteStringLiteral( val );
             } )
             .toList( ", " );
         return concatenate( [

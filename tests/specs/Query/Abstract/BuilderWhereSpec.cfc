@@ -162,6 +162,32 @@ component extends="testbox.system.BaseSpec" {
                         } ).toThrow( type = "InvalidSQLType", regex = "Illegal operator" );
                     } );
 
+                    it( "validates combinators for every where clause type", function() {
+                        var invalidCalls = [
+                            ( builder ) => builder.whereIn( "id", [ 1 ], "xor" ),
+                            ( builder ) => builder.whereInBulk(
+                                "id",
+                                [ 1 ],
+                                javacast( "null", "" ),
+                                "xor"
+                            ),
+                            ( builder ) => builder.whereRaw( "1 = 1", [], "xor" ),
+                            ( builder ) => builder.whereColumn( "id", "=", "otherId", "xor" ),
+                            ( builder ) => builder.whereExists( ( query ) => query.from( "users" ), "xor" ),
+                            ( builder ) => builder.whereNested( ( query ) => query.where( "id", 1 ), "xor" ),
+                            ( builder ) => builder.addNestedWhereQuery( builder.newQuery().where( "id", 1 ), "xor" ),
+                            ( builder ) => builder.whereNull( "deletedDate", "xor" ),
+                            ( builder ) => builder.whereNullSub( ( query ) => query.select( "deletedDate" ).from( "users" ), "xor" ),
+                            ( builder ) => builder.whereBetween( "id", 1, 2, "xor" )
+                        ];
+
+                        invalidCalls.each( function( invalidCall ) {
+                            expect( function() {
+                                invalidCall( new qb.models.Query.QueryBuilder() );
+                            } ).toThrow( type = "InvalidSQLType", regex = "Illegal combinator" );
+                        } );
+                    } );
+
                     it( "can disable operator and combinator validation", function() {
                         var relaxedQB = new qb.models.Query.QueryBuilder( validateOperatorsAndCombinators = false );
                         getMockBox().prepareMock( relaxedQB );

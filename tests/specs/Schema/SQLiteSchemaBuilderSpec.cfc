@@ -1,5 +1,64 @@
 component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "SQLite schema-scoped indexes", function() {
+            it( "drops indexes from the table's schema", function() {
+                var statements = getBuilder()
+                    .setDefaultSchema( "tenant" )
+                    .alter(
+                        "users",
+                        function( table ) {
+                            table.dropIndex( "idx_users_email" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [ "DROP INDEX ""tenant"".""idx_users_email""" ] );
+            } );
+        } );
+
+        describe( "SQLite altered constraints", function() {
+            it( "rejects adding primary-key constraints", function() {
+                expect( function() {
+                    getBuilder()
+                        .alter(
+                            "users",
+                            function( table ) {
+                                table.addConstraint( table.primaryKey( "id" ) );
+                            },
+                            {},
+                            false
+                        )
+                        .toSQL();
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
+
+            it( "rejects adding foreign-key constraints", function() {
+                expect( function() {
+                    getBuilder()
+                        .alter(
+                            "posts",
+                            function( table ) {
+                                table.addConstraint(
+                                    table
+                                        .foreignKey( "author_id" )
+                                        .references( "id" )
+                                        .onTable( "users" )
+                                );
+                            },
+                            {},
+                            false
+                        )
+                        .toSQL();
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
+        } );
+    }
+
     function emptyTable() {
         return [ "CREATE TABLE ""users"" ()" ];
     }
@@ -124,7 +183,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TABLE ""employees"" (""tshirt_size"" TEXT NOT NULL CHECK (""tshirt_size"" IN ('S', 'M', 'L', 'XL', 'XXL')))"
+            "CREATE TABLE ""employees"" (""tshirt_size"" TEXT NOT NULL CHECK (""tshirt_size"" IN ('S''s', 'M', 'L', 'XL', 'XXL')))"
         ];
     }
 
@@ -390,7 +449,15 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function defaultForString() {
-        return [ "CREATE TABLE ""users"" (""country"" TEXT NOT NULL DEFAULT 'USA')" ];
+        return [ "CREATE TABLE ""users"" (""country"" TEXT NOT NULL DEFAULT 'O''Brien')" ];
+    }
+
+    function defaultForEmptyString() {
+        return [ "CREATE TABLE ""users"" (""nickname"" TEXT NOT NULL DEFAULT '')" ];
+    }
+
+    function defaultForUnicodeString() {
+        return [ "CREATE TABLE ""users"" (""nickname"" TEXT NOT NULL DEFAULT 'O''Brien')" ];
     }
 
     function timestampWithCurrent() {

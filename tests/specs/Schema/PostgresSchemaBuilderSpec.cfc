@@ -16,6 +16,52 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                     );
                 }, defaultForJsonbCastShorthand() );
             } );
+
+            it( "discovers and qualifies tables in the requested schema when dropping all objects", function() {
+                var schema = getBuilder();
+                variables.mockGrammar.$( "runQuery", queryNew( "table_name", "varchar", [ { table_name: "users" } ] ) );
+
+                expect( schema.dropAllObjects( {}, false, "tenant" ) ).toBe( [ "DROP TABLE ""tenant"".""users"" CASCADE" ] );
+                expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 1 ] ).toBeWithCase(
+                    "SELECT ""table_name"" FROM ""information_schema"".""tables"" WHERE ""table_schema"" = ? AND ""table_type"" = 'BASE TABLE'"
+                );
+                expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ] ).toBe( [ "tenant" ] );
+            } );
+
+            it( "drops indexes from the table's schema", function() {
+                var statements = getBuilder()
+                    .setDefaultSchema( "tenant" )
+                    .alter(
+                        "users",
+                        function( table ) {
+                            table.dropIndex( "idx_users_email" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [ "DROP INDEX ""tenant"".""idx_users_email""" ] );
+            } );
+
+            it( "creates enum types in the table's schema", function() {
+                var statements = getBuilder()
+                    .setDefaultSchema( "tenant" )
+                    .create(
+                        "users",
+                        function( table ) {
+                            table.enum( "status", [ "active", "inactive" ] ).default( "active" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [
+                    "CREATE TYPE ""tenant"".""status"" AS ENUM ('active', 'inactive')",
+                    "CREATE TABLE ""tenant"".""users"" (""status"" ""tenant"".""status"" NOT NULL DEFAULT 'active')"
+                ] );
+            } );
         } );
     }
 
@@ -107,8 +153,8 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
-            "CREATE TABLE ""employees"" (""tshirt_size"" tshirt_size NOT NULL)"
+            "CREATE TYPE ""tshirt_size"" AS ENUM ('S''s', 'M', 'L', 'XL', 'XXL')",
+            "CREATE TABLE ""employees"" (""tshirt_size"" ""tshirt_size"" NOT NULL)"
         ];
     }
 
@@ -356,7 +402,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function comment() {
         return [
             "CREATE TABLE ""users"" (""active"" BOOLEAN NOT NULL)",
-            "COMMENT ON COLUMN ""users"".""active"" IS 'This is a comment'"
+            "COMMENT ON COLUMN ""users"".""active"" IS 'Pete''s comment'"
         ];
     }
 
@@ -373,7 +419,15 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function defaultForString() {
-        return [ "CREATE TABLE ""users"" (""country"" VARCHAR(255) NOT NULL DEFAULT 'USA')" ];
+        return [ "CREATE TABLE ""users"" (""country"" VARCHAR(255) NOT NULL DEFAULT 'O''Brien')" ];
+    }
+
+    function defaultForEmptyString() {
+        return [ "CREATE TABLE ""users"" (""nickname"" VARCHAR(255) NOT NULL DEFAULT '')" ];
+    }
+
+    function defaultForUnicodeString() {
+        return [ "CREATE TABLE ""users"" (""nickname"" VARCHAR(255) NOT NULL DEFAULT 'O''Brien')" ];
     }
 
     function timestampWithCurrent() {
@@ -561,7 +615,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function addColumn() {
         return [
             "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
-            "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL"
+            "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" ""tshirt_size"" NOT NULL"
         ];
     }
 
@@ -575,7 +629,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function addMultiple() {
         return [
             "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
-            "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL",
+            "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" ""tshirt_size"" NOT NULL",
             "ALTER TABLE ""users"" ADD COLUMN ""is_active"" BOOLEAN NOT NULL"
         ];
     }
@@ -584,7 +638,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "CREATE TYPE ""tshirt_size"" AS ENUM ('S', 'M', 'L', 'XL', 'XXL')",
             "ALTER TABLE ""users"" DROP COLUMN ""is_active"" CASCADE",
-            "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" tshirt_size NOT NULL",
+            "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" ""tshirt_size"" NOT NULL",
             "ALTER TABLE ""users"" RENAME COLUMN ""name"" TO ""username""",
             "ALTER TABLE ""users"" ALTER COLUMN ""purchase_date"" TYPE TIMESTAMP, ALTER COLUMN ""purchase_date"" DROP NOT NULL",
             "ALTER TABLE ""users"" ADD CONSTRAINT ""unq_users_username"" UNIQUE (""username"")",

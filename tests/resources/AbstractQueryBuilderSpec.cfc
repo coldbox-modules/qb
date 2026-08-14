@@ -2180,6 +2180,15 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     describe( "can accept an array for the column argument", function() {
+                        it( "rejects invalid default directions", function() {
+                            expect( function() {
+                                getBuilder().from( "users" ).orderBy( "email", "DESC; DROP TABLE users" );
+                            } ).toThrow( type = "InvalidSQLType", regex = "Illegal order direction" );
+                            expect( function() {
+                                getBuilder().orderBySub( ( query ) => query.selectRaw( "1" ), "DESC; DROP TABLE users" );
+                            } ).toThrow( type = "InvalidSQLType", regex = "Illegal order direction" );
+                        } );
+
                         describe( "with the array values", function() {
                             it( "as simple strings", function() {
                                 testCase( function( builder ) {

@@ -453,12 +453,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
         }
 
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( defaultValue );
+        }
+
         switch ( column.getType() ) {
             case "boolean":
                 return uCase( defaultValue );
-            case "char":
-            case "string":
-                return "'#defaultValue#'";
             default:
                 return defaultValue;
         }
@@ -581,7 +582,19 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileDropIndex( blueprint, commandParameters ) {
-        return "DROP INDEX #wrapValue( commandParameters.name )#";
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            var indexName = qualifyObjectNameForTable( blueprint.getTable(), commandParameters.name );
+            return "DROP INDEX #wrapTable( indexName )#";
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
     }
 
     function compileDropAllObjects( required struct options, string schema = "", SchemaBuilder sb ) {
@@ -609,16 +622,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function getAllTableNames( options, schema = "" ) {
-        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )# FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_schema" } )# = 'public'";
-        var args = [];
-        if ( schema != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
-            args.append( schema );
-        }
+        var effectiveSchema = arguments.schema == "" ? "public" : arguments.schema;
+        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )# FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ? AND #wrapColumn( { "type": "simple", "value": "table_type" } )# = 'BASE TABLE'";
+        var args = [ effectiveSchema ];
         var tablesQuery = runQuery( sql, args, options, "query" );
         var tables = [];
         for ( var table in tablesQuery ) {
-            arrayAppend( tables, table[ "table_name" ] );
+            arrayAppend( tables, "#effectiveSchema#.#table[ "table_name" ]#" );
         }
         return tables;
     }
@@ -706,7 +716,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeEnum( column ) {
-        return column.getName();
+        var typeName = qualifyObjectNameForTable( column.getBlueprint().getTable(), column.getName() );
+        return wrapTable( typeName );
     }
 
     function typeFloat( column ) {
@@ -850,9 +861,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             var values = arrayMap( commandParameters.values, function( val ) {
-                return "'" & val & "'";
+                return quoteStringLiteral( val );
             } );
-            return "CREATE TYPE #wrapColumn( { "type": "simple", "value": commandParameters.name } )# AS ENUM (#arrayToList( values, ", " )#)";
+            var typeName = qualifyObjectNameForTable( blueprint.getTable(), commandParameters.name );
+            return "CREATE TYPE #wrapTable( typeName )# AS ENUM (#arrayToList( values, ", " )#)";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

@@ -67,6 +67,20 @@ component extends="testbox.system.BaseSpec" {
                 blueprint.softDeletesTz();
                 expectCommandTypes( blueprint, [ "addColumn" ] );
             } );
+
+            it( "rejects invalid foreign-key actions", function() {
+                var index = new qb.models.Schema.TableIndex();
+
+                expect( function() {
+                    index.onDelete( "CASCADE; DROP TABLE users" );
+                } ).toThrow( type = "InvalidReferentialAction" );
+                expect( function() {
+                    index.setOnUpdateAction( "CUSTOM ACTION" );
+                } ).toThrow( type = "InvalidReferentialAction" );
+
+                expect( index.onDelete( " set null " ).getOnDeleteAction() ).toBe( "SET NULL" );
+                expect( index.onUpdate( "cascade" ).getOnUpdateAction() ).toBe( "CASCADE" );
+            } );
         } );
     }
 

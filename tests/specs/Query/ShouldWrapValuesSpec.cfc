@@ -97,6 +97,26 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.clone().toSQL() ).toBe( "SELECT id FROM users" );
             } );
         } );
+
+        describe( "SQL literal escaping", function() {
+            it( "escapes each grammar's identifier delimiter", function() {
+                expect( new qb.models.Grammars.PostgresGrammar().wrapValue( "odd""name" ) ).toBe( """odd""""name""" );
+                expect( new qb.models.Grammars.SQLiteGrammar().wrapValue( "odd""name" ) ).toBe( """odd""""name""" );
+                expect( new qb.models.Grammars.DerbyGrammar().wrapValue( "odd""name" ) ).toBe( """odd""""name""" );
+                expect( new qb.models.Grammars.OracleGrammar().wrapValue( "odd""name" ) ).toBe( """ODD""""NAME""" );
+                expect( new qb.models.Grammars.MySQLGrammar().wrapValue( "odd#chr( 96 )#name" ) ).toBe(
+                    "#chr( 96 )#odd#chr( 96 )##chr( 96 )#name#chr( 96 )#"
+                );
+                expect( new qb.models.Grammars.SqlServerGrammar().wrapValue( "odd]name" ) ).toBe( "[odd]]name]" );
+            } );
+
+            it( "escapes backslashes in JSON path segments", function() {
+                var slash = chr( 92 );
+                var grammar = new qb.models.Grammars.BaseGrammar();
+
+                expect( grammar.buildJsonPath( [ "folder#slash#name" ] ) ).toBe( "$.""folder#slash##slash#name""" );
+            } );
+        } );
     }
 
 }

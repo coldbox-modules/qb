@@ -281,7 +281,7 @@ component extends="testbox.system.BaseSpec" {
                         return schema.create(
                             "employees",
                             function( table ) {
-                                table.enum( "tshirt_size", [ "S", "M", "L", "XL", "XXL" ] );
+                                table.enum( "tshirt_size", [ "S's", "M", "L", "XL", "XXL" ] );
                             },
                             {},
                             false
@@ -1055,7 +1055,7 @@ component extends="testbox.system.BaseSpec" {
                         return schema.create(
                             "users",
                             function( table ) {
-                                table.boolean( "active" ).comment( "This is a comment" );
+                                table.boolean( "active" ).comment( "Pete's comment" );
                             },
                             {},
                             false
@@ -1107,12 +1107,38 @@ component extends="testbox.system.BaseSpec" {
                         return schema.create(
                             "users",
                             function( table ) {
-                                table.string( "country" ).default( "USA" );
+                                table.string( "country" ).default( "O'Brien" );
                             },
                             {},
                             false
                         );
                     }, defaultForString() );
+                } );
+
+                it( "default for empty string", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "users",
+                            function( table ) {
+                                table.string( "nickname" ).default( "" );
+                            },
+                            {},
+                            false
+                        );
+                    }, defaultForEmptyString() );
+                } );
+
+                it( "default for unicode string", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "users",
+                            function( table ) {
+                                table.unicodeString( "nickname" ).default( "O'Brien" );
+                            },
+                            {},
+                            false
+                        );
+                    }, defaultForUnicodeString() );
                 } );
 
                 it( "timestamp withCurrent", function() {

@@ -52,6 +52,29 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                 expect( statements ).toBe( [ "EXEC sp_rename N'worker''s', N'employee''s'" ] );
             } );
         } );
+
+        describe( "SQL Server drop all objects", function() {
+            it( "scopes foreign keys and qualifies tables in the requested schema", function() {
+                var schema = getBuilder();
+                variables.mockGrammar.$(
+                    "runQuery",
+                    queryNew(
+                        "table_name,table_schema",
+                        "varchar,varchar",
+                        [ { table_name: "users", table_schema: "tenant" } ]
+                    )
+                );
+
+                var statements = schema.dropAllObjects( {}, false, "tenant" );
+
+                expect( statements[ 1 ] ).toInclude( "QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id))" );
+                expect( statements[ 1 ] ).toInclude( "WHERE OBJECT_SCHEMA_NAME(parent_object_id) = N'tenant'" );
+                expect( statements[ 2 ] ).toBeWithCase( "DROP TABLE [tenant].[users]" );
+                expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 1 ] ).toInclude(
+                    "WHERE [table_schema] = ? AND [table_type] = 'BASE TABLE'"
+                );
+            } );
+        } );
     }
 
     function emptyTable() {
@@ -138,7 +161,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TABLE [employees] ([tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_employees_tshirt_size] CHECK ([tshirt_size] IN ('S', 'M', 'L', 'XL', 'XXL')))"
+            "CREATE TABLE [employees] ([tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_employees_tshirt_size] CHECK ([tshirt_size] IN ('S''s', 'M', 'L', 'XL', 'XXL')))"
         ];
     }
 
@@ -411,7 +434,19 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function defaultForString() {
-        return [ "CREATE TABLE [users] ([country] VARCHAR(255) NOT NULL CONSTRAINT [df_users_country] DEFAULT 'USA')" ];
+        return [
+            "CREATE TABLE [users] ([country] VARCHAR(255) NOT NULL CONSTRAINT [df_users_country] DEFAULT 'O''Brien')"
+        ];
+    }
+
+    function defaultForEmptyString() {
+        return [ "CREATE TABLE [users] ([nickname] VARCHAR(255) NOT NULL CONSTRAINT [df_users_nickname] DEFAULT '')" ];
+    }
+
+    function defaultForUnicodeString() {
+        return [
+            "CREATE TABLE [users] ([nickname] NVARCHAR(255) NOT NULL CONSTRAINT [df_users_nickname] DEFAULT 'O''Brien')"
+        ];
     }
 
     function nullable() {

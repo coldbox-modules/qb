@@ -409,15 +409,19 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return arguments.value;
         }
 
-        if (
-            len( arguments.value ) == 0 ||
-            arguments.value == "*" ||
-            left( arguments.value, 1 ) == """"
-        ) {
+        if ( len( arguments.value ) == 0 || arguments.value == "*" ) {
             return arguments.value;
         }
 
-        return """#uCase( arguments.value )#""";
+        var value = toString( arguments.value );
+        var isQuoted = len( value ) >= 2 && left( value, 1 ) == """" && right( value, 1 ) == """";
+        if ( isQuoted ) {
+            value = mid( value, 2, len( value ) - 2 );
+        } else {
+            value = uCase( value );
+        }
+        value = replace( value, """", """""", "all" );
+        return """#value#""";
     }
 
     function compileCreateColumn( column, blueprint ) {
@@ -653,12 +657,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? 1 : 0;
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }
@@ -872,14 +876,26 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 "."
             ) : "";
             var sequenceName = "SEQ_#table#";
-            if ( hasSequence( arguments.blueprint, sequenceName ) ) {
-                statements.append( "DROP SEQUENCE #wrapTable( schema == "" ? sequenceName : "#schema#.#sequenceName#" )#" );
-            }
+            var qualifiedSequenceName = wrapTable( schema == "" ? sequenceName : "#schema#.#sequenceName#" );
+            statements.append(
+                "BEGIN EXECUTE IMMEDIATE 'DROP SEQUENCE #replace(
+                    qualifiedSequenceName,
+                    "'",
+                    "''",
+                    "all"
+                )#'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -2289 THEN RAISE; END IF; END;"
+            );
 
             var triggerName = "TRG_#table#";
-            if ( hasTrigger( arguments.blueprint, triggerName ) ) {
-                statements.append( "DROP TRIGGER #wrapTable( schema == "" ? triggerName : "#schema#.#triggerName#" )#" );
-            }
+            var qualifiedTriggerName = wrapTable( schema == "" ? triggerName : "#schema#.#triggerName#" );
+            statements.append(
+                "BEGIN EXECUTE IMMEDIATE 'DROP TRIGGER #replace(
+                    qualifiedTriggerName,
+                    "'",
+                    "''",
+                    "all"
+                )#'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -4080 THEN RAISE; END IF; END;"
+            );
 
             return statements;
         } finally {
@@ -889,36 +905,34 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
     }
 
-    private boolean function hasSequence( required Blueprint blueprint, required string sequenceName ) {
-        var sql = "SELECT 1 FROM #wrapTable( "all_sequences" )# WHERE #wrapColumn( { "type": "simple", "value": "sequence_name" } )# = ?";
-        var params = [ arguments.sequenceName ];
-        if ( arguments.blueprint.getDefaultSchema() != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "owner" } )# = ?";
-            params.append( arguments.blueprint.getDefaultSchema() );
-        }
-        var result = queryExecute( sql, params, arguments.blueprint.getQueryOptions() );
-        return result.recordCount > 0;
-    }
-
-    private boolean function hasTrigger( required Blueprint blueprint, required string triggerName ) {
-        var sql = "SELECT 1 FROM #wrapTable( "all_triggers" )# WHERE #wrapColumn( { "type": "simple", "value": "trigger_name" } )# = ?";
-        var params = [ arguments.triggerName ];
-        if ( arguments.blueprint.getDefaultSchema() != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "owner" } )# = ?";
-            params.append( arguments.blueprint.getDefaultSchema() );
-        }
-        var result = queryExecute( sql, params, arguments.blueprint.getQueryOptions() );
-        return result.recordCount > 0;
-    }
-
     function compileDropAllObjects( required struct options, string schema = "", SchemaBuilder sb ) {
+        var tableCatalog = "user_tables";
+        var sequenceCatalog = "user_sequences";
+        var tablePredicate = "";
+        var sequencePredicate = "";
+        var qualifiedPrefix = "";
+        if ( arguments.schema != "" ) {
+            var schemaLookup = prepareSchemaIdentifierForLookup( arguments.schema );
+            var escapedSchemaLookup = replace( schemaLookup, "'", "''", "all" );
+            tableCatalog = "all_tables";
+            sequenceCatalog = "all_sequences";
+            tablePredicate = " WHERE owner = '#escapedSchemaLookup#'";
+            sequencePredicate = " WHERE sequence_owner = '#escapedSchemaLookup#'";
+            qualifiedPrefix = replace(
+                wrapValue( schemaLookup ),
+                "'",
+                "''",
+                "all"
+            ) & ".";
+        }
+
         return [
             "BEGIN
-            FOR c IN (SELECT table_name FROM user_tables) LOOP
-            EXECUTE IMMEDIATE ('DROP TABLE ""' || c.table_name || '"" CASCADE CONSTRAINTS');
+            FOR c IN (SELECT table_name FROM #tableCatalog##tablePredicate#) LOOP
+            EXECUTE IMMEDIATE ('DROP TABLE #qualifiedPrefix#""' || REPLACE(c.table_name, '""', '""""') || '"" CASCADE CONSTRAINTS');
             END LOOP;
-            FOR s IN (SELECT sequence_name FROM user_sequences) LOOP
-            EXECUTE IMMEDIATE ('DROP SEQUENCE ' || s.sequence_name);
+            FOR s IN (SELECT sequence_name FROM #sequenceCatalog##sequencePredicate#) LOOP
+            EXECUTE IMMEDIATE ('DROP SEQUENCE #qualifiedPrefix#""' || REPLACE(s.sequence_name, '""', '""""') || '""');
             END LOOP;
             END;"
         ];

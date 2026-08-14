@@ -502,9 +502,9 @@ component accessors="true" {
         if ( listLen( arguments.name, "." ) > 1 ) {
             arguments.schema = listDeleteAt( arguments.name, listLen( arguments.name, "." ), "." );
         }
-        var args = [ listLast( arguments.name, "." ) ];
+        var args = [ getGrammar().prepareSchemaIdentifierForLookup( listLast( arguments.name, "." ) ) ];
         if ( arguments.schema != "" ) {
-            arrayAppend( args, arguments.schema );
+            arrayAppend( args, getGrammar().prepareSchemaIdentifierForLookup( arguments.schema ) );
         }
         var sql = getGrammar().compileTableExists( arguments.name, arguments.schema );
         if ( arguments.execute ) {
@@ -545,9 +545,12 @@ component accessors="true" {
         if ( listLen( arguments.table, "." ) > 1 ) {
             arguments.schema = listDeleteAt( arguments.table, listLen( arguments.table, "." ), "." );
         }
-        var args = [ listLast( arguments.table, "." ), arguments.column ];
+        var args = [
+            getGrammar().prepareSchemaIdentifierForLookup( listLast( arguments.table, "." ) ),
+            getGrammar().prepareSchemaIdentifierForLookup( arguments.column )
+        ];
         if ( arguments.schema != "" ) {
-            arrayAppend( args, arguments.schema );
+            arrayAppend( args, getGrammar().prepareSchemaIdentifierForLookup( arguments.schema ) );
         }
         var sql = getGrammar().compileColumnExists( arguments.table, arguments.column, arguments.schema );
         if ( arguments.execute ) {

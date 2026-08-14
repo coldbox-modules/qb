@@ -307,6 +307,13 @@ component singleton displayname="QueryUtils" accessors="true" {
             position++;
         }
 
+        if ( index <= arguments.bindings.len() ) {
+            throw(
+                type = "BindingMismatch",
+                message = "The supplied bindings contain more values than the SQL parameter placeholders."
+            );
+        }
+
         return output.toList( "" );
     }
 

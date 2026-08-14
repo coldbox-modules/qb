@@ -308,6 +308,14 @@ component extends="testbox.system.BaseSpec" {
                     utils.replaceBindings( "SELECT 'isn''t ?' AS marker FROM users WHERE id = ?", [ binding ], true )
                 ).toBe( "SELECT 'isn''t ?' AS marker FROM users WHERE id = 42" );
             } );
+
+            it( "rejects bindings without matching placeholders", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect( function() {
+                    utils.replaceBindings( "SELECT 1", [ binding ], true );
+                } ).toThrow( type = "BindingMismatch" );
+            } );
         } );
 
         describe( "extractBinding()", function() {

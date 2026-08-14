@@ -68,6 +68,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         var sql = wrapJsonColumn( arguments.jsonPath );
         var scalarExtraction = arguments.scalar;
         var pathLength = arguments.jsonPath.path.len();
+        if ( scalarExtraction && pathLength == 0 ) {
+            return sql & chr( 35 ) & ">>'{}'";
+        }
         arguments.jsonPath.path.each( function( segment, index ) {
             var operator = scalarExtraction && index == pathLength ? "->>" : "->";
             var pathSegment = getUtils().isActuallyNumeric( segment ) ? segment : "'" & replace(

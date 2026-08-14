@@ -724,7 +724,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
         sql &= " WHERE #wrapColumn( { "type": "simple", "value": "t.tablename" } )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemanname" } )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemaname" } )# = ?";
         }
         return sql;
     }
@@ -736,7 +736,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
         sql &= " WHERE #wrapColumn( { "type": "simple", "value": "t.tablename" } )# = ? AND #wrapColumn( { "type": "simple", "value": "c.columnname" } )# = ?";
         if ( schema != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemanname" } )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemaname" } )# = ?";
         }
         return sql;
     }

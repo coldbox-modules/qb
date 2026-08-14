@@ -2285,6 +2285,18 @@ component displayname="Grammar" accessors="true" singleton {
 
     /*=====  End of Index Types  ======*/
 
+    /**
+     * Prepares an identifier for use as a schema catalog lookup binding.
+     * Grammars with case-sensitive catalogs can override this method.
+     *
+     * @identifier The table, column, or schema identifier to prepare.
+     *
+     * @return The identifier value to bind to the catalog query.
+     */
+    public string function prepareSchemaIdentifierForLookup( required string identifier ) {
+        return arguments.identifier;
+    }
+
     function compileTableExists( tableName, schemaName = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ?";
         if ( schemaName != "" ) {

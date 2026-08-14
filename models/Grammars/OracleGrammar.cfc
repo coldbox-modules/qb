@@ -828,6 +828,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "";
     }
 
+    public string function prepareSchemaIdentifierForLookup( required string identifier ) {
+        var normalizedIdentifier = trim( arguments.identifier );
+        if (
+            len( normalizedIdentifier ) >= 2 &&
+            left( normalizedIdentifier, 1 ) == """" &&
+            right( normalizedIdentifier, 1 ) == """"
+        ) {
+            return mid( normalizedIdentifier, 2, len( normalizedIdentifier ) - 2 );
+        }
+        return uCase( normalizedIdentifier );
+    }
+
     function compileTableExists( tableName, schemaName = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "all_tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ?";
         if ( schemaName != "" ) {

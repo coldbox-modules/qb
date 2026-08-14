@@ -860,7 +860,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "EXEC sp_rename #wrapTable( blueprint.getTable() )#, #wrapTable( commandParameters.to )#";
+            return "EXEC sp_rename #quoteUnicodeStringLiteral( blueprint.getTable() )#, #quoteUnicodeStringLiteral( commandParameters.to )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -875,7 +875,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "EXEC sp_rename #wrapValue( blueprint.getTable() & "." & commandParameters.from )#, #wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } )#, [COLUMN]";
+            return "EXEC sp_rename #quoteUnicodeStringLiteral( blueprint.getTable() & "." & commandParameters.from )#, #quoteUnicodeStringLiteral( commandParameters.to.getName() )#, #quoteUnicodeStringLiteral( "COLUMN" )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -890,12 +890,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "EXEC sp_rename #wrapValue( commandParameters.from )#, #wrapValue( commandParameters.to )#";
+            return "EXEC sp_rename #quoteUnicodeStringLiteral( commandParameters.from )#, #quoteUnicodeStringLiteral( commandParameters.to )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    private string function quoteUnicodeStringLiteral( required string value ) {
+        return "N'" & replace( arguments.value, "'", "''", "all" ) & "'";
     }
 
     function compileDropConstraint( blueprint, commandParameters ) {

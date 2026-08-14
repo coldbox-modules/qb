@@ -601,7 +601,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function hasTableInSchema() {
         return [
-            "SELECT 1 FROM ""sys"".""systables"" AS ""t"" JOIN ""sys"".""sysschemas"" AS ""s"" ON ""t"".""schemaid"" = ""s"".""schemaid"" WHERE ""t"".""tablename"" = ? AND ""s"".""schemanname"" = ?"
+            "SELECT 1 FROM ""sys"".""systables"" AS ""t"" JOIN ""sys"".""sysschemas"" AS ""s"" ON ""t"".""schemaid"" = ""s"".""schemaid"" WHERE ""t"".""tablename"" = ? AND ""s"".""schemaname"" = ?"
         ];
     }
 
@@ -613,7 +613,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function hasColumnInSchema() {
         return [
-            "SELECT 1 FROM ""sys"".""syscolumns"" AS ""c"" JOIN ""sys"".""systables"" AS ""t"" ON ""c"".""referenceid"" = ""t"".""tableid"" JOIN ""sys"".""sysschemas"" AS ""s"" ON ""t"".""schemaid"" = ""s"".""schemaid"" WHERE ""t"".""tablename"" = ? AND ""c"".""columnname"" = ? AND ""s"".""schemanname"" = ?"
+            "SELECT 1 FROM ""sys"".""syscolumns"" AS ""c"" JOIN ""sys"".""systables"" AS ""t"" ON ""c"".""referenceid"" = ""t"".""tableid"" JOIN ""sys"".""sysschemas"" AS ""s"" ON ""t"".""schemaid"" = ""s"".""schemaid"" WHERE ""t"".""tablename"" = ? AND ""c"".""columnname"" = ? AND ""s"".""schemaname"" = ?"
         ];
     }
 

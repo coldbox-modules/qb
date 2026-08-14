@@ -44,6 +44,14 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                 );
             } );
         } );
+
+        describe( "SQL Server rename literals", function() {
+            it( "escapes apostrophes in object names", function() {
+                var statements = getBuilder().rename( "worker's", "employee's", {}, false ).toSQL();
+
+                expect( statements ).toBe( [ "EXEC sp_rename N'worker''s', N'employee''s'" ] );
+            } );
+        } );
     }
 
     function emptyTable() {
@@ -448,7 +456,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function renameConstraint() {
-        return [ "EXEC sp_rename [unq_users_first_name_last_name], [unq_users_full_name]" ];
+        return [ "EXEC sp_rename N'unq_users_first_name_last_name', N'unq_users_full_name'" ];
     }
 
     function dropConstraintFromName() {
@@ -550,17 +558,17 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function renameTable() {
-        return [ "EXEC sp_rename [workers], [employees]" ];
+        return [ "EXEC sp_rename N'workers', N'employees'" ];
     }
 
     function renameColumn() {
-        return [ "EXEC sp_rename [users.name], [username], [COLUMN]" ];
+        return [ "EXEC sp_rename N'users.name', N'username', N'COLUMN'" ];
     }
 
     function renameMultipleColumns() {
         return [
-            "EXEC sp_rename [users.name], [username], [COLUMN]",
-            "EXEC sp_rename [users.purchase_date], [purchased_at], [COLUMN]"
+            "EXEC sp_rename N'users.name', N'username', N'COLUMN'",
+            "EXEC sp_rename N'users.purchase_date', N'purchased_at', N'COLUMN'"
         ];
     }
 
@@ -599,7 +607,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "ALTER TABLE [users] DROP COLUMN [is_active]",
             "ALTER TABLE [users] ADD [tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_users_tshirt_size] CHECK ([tshirt_size] IN ('S', 'M', 'L', 'XL', 'XXL'))",
-            "EXEC sp_rename [users.name], [username], [COLUMN]",
+            "EXEC sp_rename N'users.name', N'username', N'COLUMN'",
             "ALTER TABLE [users] ALTER COLUMN [purchase_date] DATETIME2",
             "ALTER TABLE [users] ADD CONSTRAINT [unq_users_username] UNIQUE ([username])",
             "ALTER TABLE [users] ADD CONSTRAINT [unq_users_email] UNIQUE ([email])",

@@ -68,12 +68,25 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                 ] );
             } );
 
-            it( "uses an explicit table schema for existence checks", () => {
+            it( "normalizes unquoted identifiers for existence checks", () => {
                 var schema = getBuilder().setDefaultSchema( "app" );
                 variables.mockGrammar.$( "runQuery", queryNew( "" ) );
                 schema.hasTable( "audit.users" );
 
-                expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ] ).toBe( [ "users", "audit" ] );
+                var bindings = variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ];
+                expect( compare( bindings[ 1 ], "USERS" ) ).toBe( 0 );
+                expect( compare( bindings[ 2 ], "AUDIT" ) ).toBe( 0 );
+            } );
+
+            it( "preserves quoted identifier case for existence checks", () => {
+                var schema = getBuilder();
+                variables.mockGrammar.$( "runQuery", queryNew( "" ) );
+                schema.hasColumn( """audit"".""users""", """emailAddress""" );
+
+                var bindings = variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ];
+                expect( compare( bindings[ 1 ], "users" ) ).toBe( 0 );
+                expect( compare( bindings[ 2 ], "emailAddress" ) ).toBe( 0 );
+                expect( compare( bindings[ 3 ], "audit" ) ).toBe( 0 );
             } );
 
             it( "attempts to drop sequences and triggers when dropping a table", () => {

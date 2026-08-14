@@ -29,6 +29,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 expect( findNoCase( "RETURNING", sql ) ).toBeGT( findNoCase( "ON CONFLICT", sql ) );
             } );
         } );
+
+        describe( "PostgreSQL root JSON scalars", function() {
+            it( "extracts root JSON scalar values as text", function() {
+                var builder = getBuilder()
+                    .select( [ getBuilder().jsonPath( "payload" ) ] )
+                    .from( "records" )
+                    .where( getBuilder().jsonPath( "payload" ), "name" );
+
+                expect( builder.toSQL() ).toBeWithCase(
+                    "SELECT ""payload""#chr( 35 )#>>'{}' FROM ""records"" WHERE ""payload""#chr( 35 )#>>'{}' = ?"
+                );
+            } );
+        } );
     }
 
     function selectAllColumns() {

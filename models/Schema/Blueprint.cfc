@@ -52,6 +52,11 @@ component accessors="true" {
         return appendColumn( argumentCollection = arguments );
     }
 
+    public Column function binary( required string name ) {
+        arguments.type = "binary";
+        return appendColumn( argumentCollection = arguments );
+    }
+
     public Column function bit( required string name, numeric length = 1 ) {
         arguments.type = "bit";
         return appendColumn( argumentCollection = arguments );

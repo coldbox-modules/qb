@@ -159,6 +159,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE ""WEATHER_REPORTS"" (""TEMPERATURE"" NUMBER(5, 0) NOT NULL)" ];
     }
 
+    function binary() {
+        return [ "CREATE TABLE ""USERS"" (""AVATAR"" BLOB NOT NULL)" ];
+    }
+
     function bit() {
         return [ "CREATE TABLE ""USERS"" (""ACTIVE"" RAW NOT NULL)" ];
     }

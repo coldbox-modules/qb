@@ -166,10 +166,19 @@ component singleton displayname="QueryUtils" accessors="true" {
             arguments.grammar,
             "qb.models.Grammars.PostgresGrammar"
         );
+        var isOracle = !isNull( arguments.grammar ) && isInstanceOf(
+            arguments.grammar,
+            "qb.models.Grammars.OracleGrammar"
+        );
+        var isSQLite = !isNull( arguments.grammar ) && isInstanceOf(
+            arguments.grammar,
+            "qb.models.Grammars.SQLiteGrammar"
+        );
         var isSqlServer = !isNull( arguments.grammar ) && isInstanceOf(
             arguments.grammar,
             "qb.models.Grammars.SqlServerGrammar"
         );
+        var oracleQuoteClosing = "";
 
         while ( position <= sqlLength ) {
             var character = mid( arguments.sql, position, 1 );
@@ -211,6 +220,18 @@ component singleton displayname="QueryUtils" accessors="true" {
                 continue;
             }
 
+            if ( state == "oracleQuote" ) {
+                if ( mid( arguments.sql, position, len( oracleQuoteClosing ) ) == oracleQuoteClosing ) {
+                    output.append( oracleQuoteClosing );
+                    position += len( oracleQuoteClosing );
+                    state = "sql";
+                } else {
+                    output.append( character );
+                    position++;
+                }
+                continue;
+            }
+
             if ( state != "sql" ) {
                 output.append( character );
                 if (
@@ -240,7 +261,14 @@ component singleton displayname="QueryUtils" accessors="true" {
                 continue;
             }
 
-            if ( character == "-" && nextCharacter == "-" ) {
+            var startsLineComment = character == "-" &&
+            nextCharacter == "-" &&
+            (
+                !isMySQL ||
+                position + 2 > sqlLength ||
+                asc( mid( arguments.sql, position + 2, 1 ) ) <= 32
+            );
+            if ( startsLineComment ) {
                 output.append( character );
                 output.append( nextCharacter );
                 position += 2;
@@ -282,7 +310,36 @@ component singleton displayname="QueryUtils" accessors="true" {
                 }
             }
 
-            if ( character == "'" || character == """" || character == chr( 96 ) || ( isSqlServer && character == "[" ) ) {
+            if (
+                isOracle &&
+                ( character == "q" || character == "Q" ) &&
+                nextCharacter == "'" &&
+                position + 2 <= sqlLength
+            ) {
+                var oracleQuoteOpening = mid( arguments.sql, position + 2, 1 );
+                var oracleQuotePairs = {
+                    "[": "]",
+                    "{": "}",
+                    "(": ")",
+                    "<": ">"
+                };
+                oracleQuoteClosing = (
+                    oracleQuotePairs.keyExists( oracleQuoteOpening )
+                     ? oracleQuotePairs[ oracleQuoteOpening ]
+                     : oracleQuoteOpening
+                ) & "'";
+                output.append( mid( arguments.sql, position, 3 ) );
+                position += 3;
+                state = "oracleQuote";
+                continue;
+            }
+
+            if (
+                character == "'" ||
+                character == """" ||
+                character == chr( 96 ) ||
+                ( ( isSqlServer || isSQLite ) && character == "[" )
+            ) {
                 output.append( character );
                 state = character == "'" ? "singleQuote" : (
                     character == """" ? "doubleQuote" : ( character == chr( 96 ) ? "backtickQuote" : "bracketQuote" )
@@ -562,7 +619,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         // Includes quick check for a "(" to avoid the regex to look for the subquery pattern if possible
         return isSimpleValue( arguments.value ) &&
         arguments.value.find( "(" ) &&
-        arguments.value.reFindNoCase( "^\s*\(.+\)(\s|\sAS\s){0,1}[^\(\s]*\s*$" );
+        arguments.value.reFindNoCase( "(?s)^\s*\(.+\)(?:\s+AS\s+|\s*)[^\(\s]*\s*$" );
     }
 
     /**

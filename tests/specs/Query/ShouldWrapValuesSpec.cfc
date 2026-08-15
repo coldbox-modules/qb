@@ -107,7 +107,11 @@ component extends="testbox.system.BaseSpec" {
                 expect( new qb.models.Grammars.MySQLGrammar().wrapValue( "odd#chr( 96 )#name" ) ).toBe(
                     "#chr( 96 )#odd#chr( 96 )##chr( 96 )#name#chr( 96 )#"
                 );
+                expect( new qb.models.Grammars.MySQLGrammar().wrapValue( "odd""name" ) ).toBe(
+                    "#chr( 96 )#odd""name#chr( 96 )#"
+                );
                 expect( new qb.models.Grammars.SqlServerGrammar().wrapValue( "odd]name" ) ).toBe( "[odd]]name]" );
+                expect( new qb.models.Grammars.SqlServerGrammar().wrapValue( "odd""name" ) ).toBe( "[odd""name]" );
             } );
 
             it( "escapes backslashes in JSON path segments", function() {

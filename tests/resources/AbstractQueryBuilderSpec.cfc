@@ -2523,6 +2523,35 @@ component extends="testbox.system.BaseSpec" {
                         expect( getTestBindings( builder ) ).toBe( [] );
                     } );
 
+                    it( "orders union bindings before outer order bindings", function() {
+                        var builder = getBuilder()
+                            .select( "name" )
+                            .from( "users" )
+                            .where( "status", "current" )
+                            .union( function( unionQuery ) {
+                                unionQuery
+                                    .select( "name" )
+                                    .from( "archived_users" )
+                                    .where( "status", "archived" );
+                            } )
+                            .orderByRaw( "CASE WHEN name = ? THEN 0 ELSE 1 END", [ "preferred" ] );
+
+                        expect( getTestBindings( builder ) ).toBe( [ "current", "archived", "preferred" ] );
+                    } );
+
+                    it( "retains root select bindings when aggregating a union", function() {
+                        var builder = getBuilder()
+                            .selectRaw( "? AS name", [ "current" ] )
+                            .from( "users" )
+                            .union( function( unionQuery ) {
+                                unionQuery.selectRaw( "? AS name", [ "archived" ] ).from( "archived_users" );
+                            } );
+
+                        expect( function() {
+                            builder.count( toSQL = true, showBindings = "inline" );
+                        } ).notToThrow();
+                    } );
+
                     it( "can run an aggregate query like count on a union query", function() {
                         testCase( function( builder ) {
                             return builder

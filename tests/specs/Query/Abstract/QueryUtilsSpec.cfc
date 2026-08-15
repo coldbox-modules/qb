@@ -288,6 +288,19 @@ component extends="testbox.system.BaseSpec" {
                 ).toBe( "SELECT * FROM records WHERE id = 42 ## why?#chr( 10 )#" );
             } );
 
+            it( "does not treat MySQL dollar-delimited identifiers as PostgreSQL dollar quotes", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT $tag$, ? FROM records",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.MySQLGrammar()
+                    )
+                ).toBe( "SELECT $tag$, 42 FROM records" );
+            } );
+
             it( "preserves question marks in SQL Server bracketed identifiers", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
 
@@ -319,6 +332,15 @@ component extends="testbox.system.BaseSpec" {
         } );
 
         describe( "extractBinding()", function() {
+            it( "does not mutate query parameter structs supplied by callers", function() {
+                var queryParam = { "value": 42, "cfsqltype": "INTEGER" };
+                var originalQueryParam = duplicate( queryParam );
+
+                utils.extractBinding( queryParam, variables.mockGrammar );
+
+                expect( queryParam ).toBe( originalQueryParam );
+            } );
+
             it( "includes sensible defaults", function() {
                 var datetime = parseDateTime( "05/10/2016" );
                 var binding = utils.extractBinding( datetime, variables.mockGrammar );

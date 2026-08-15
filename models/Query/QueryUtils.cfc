@@ -89,7 +89,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 checkForNonQueryParamStructKeys( value );
             }
 
-            binding = value;
+            binding = structCopy( value );
         } else {
             binding = { value: normalizeSqlValue( value ) };
         }
@@ -260,7 +260,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 continue;
             }
 
-            if ( character == "$" ) {
+            if ( ( isNull( arguments.grammar ) || isPostgres ) && character == "$" ) {
                 var dollarQuoteMatch = reFind(
                     "^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$",
                     mid( arguments.sql, position ),

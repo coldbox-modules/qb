@@ -140,6 +140,40 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                     "SELECT * FROM (SELECT [id] FROM [users]) AS [qb_union_0] UNION ALL SELECT * FROM (SELECT TOP (5) [id] FROM [archivedUsers] ORDER BY [id] DESC) AS [qb_union_1]"
                 );
             } );
+
+            it( "keeps root order bindings before independently ordered union branches", function() {
+                var builder = getBuilder()
+                    .select( "id" )
+                    .from( "users" )
+                    .where( "status", "current" )
+                    .orderByRaw( "CASE WHEN id = ? THEN 0 ELSE 1 END", [ 10 ] )
+                    .unionAll( function( unionQuery ) {
+                        unionQuery
+                            .select( "id" )
+                            .from( "archivedUsers" )
+                            .where( "status", "archived" )
+                            .orderByRaw( "CASE WHEN id = ? THEN 0 ELSE 1 END", [ 20 ] )
+                            .limit( 5 );
+                    } );
+
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ "current", 10, "archived", 20 ] );
+            } );
+        } );
+
+        describe( "SQL Server data modification CTEs", function() {
+            it( "compiles CTEs before update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toMatch( "^;?WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed", 42 ] );
+            } );
         } );
     }
 

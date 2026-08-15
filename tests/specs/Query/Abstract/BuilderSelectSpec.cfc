@@ -296,6 +296,18 @@ component extends="testbox.system.BaseSpec" {
                     expect( query.getDistinct() ).toBe( true, "Distinct should be set to true" );
                 } );
             } );
+
+            describe( "setGrammar()", function() {
+                it( "rejects grammar changes after compiling a derived table", function() {
+                    query.fromSub( "active_users", function( subquery ) {
+                        subquery.from( "users" );
+                    } );
+
+                    expect( function() {
+                        query.setGrammar( new qb.models.Grammars.MySQLGrammar() );
+                    } ).toThrow( type = "QBSetGrammarAfterCompilationError" );
+                } );
+            } );
         } );
     }
 

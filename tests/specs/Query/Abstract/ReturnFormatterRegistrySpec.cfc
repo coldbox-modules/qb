@@ -87,6 +87,26 @@ component extends="testbox.system.BaseSpec" {
                 expect( registry.getReturnFormatter( "custom" )( queryNew( "" ) ) ).toBe( "custom" );
             } );
 
+            it( "does not mutate formatter definitions while normalizing them", function() {
+                var definition = {
+                    "factory": function( options ) {
+                        return function( q ) {
+                            return q;
+                        };
+                    }
+                };
+                var originalKeys = definition.keyArray();
+                var registry = new qb.models.Query.ReturnFormatterRegistry(
+                    returnFormatters = { "custom": definition }
+                );
+
+                expect( definition.keyArray() ).toBe( originalKeys );
+                expect( definition ).notToHaveKey( "options" );
+                expect( definition ).notToHaveKey( "properties" );
+                expect( definition ).notToHaveKey( "force" );
+                expect( registry.hasReturnFormatter( "custom" ) ).toBeTrue();
+            } );
+
             it( "resolves WireBox formatter factories with properties", function() {
                 var registry = new qb.models.Query.ReturnFormatterRegistry();
                 registry.setWirebox( {

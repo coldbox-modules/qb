@@ -1378,16 +1378,16 @@ component displayname="Grammar" accessors="true" singleton {
         var parts = { "alias": "", "table": trim( arguments.table ) };
 
         // Quick check to see if we should bother to use a regex to look for a table alias
-        if ( parts.table.find( " " ) ) {
+        if ( reFind( "\s", parts.table ) ) {
             var matches = reFindNoCase(
-                "(.*?)(?:\s(?:AS\s){0,1})([^\)]+)$",
+                "^(.+?)\s+(?:AS\s+)?(\S+)\s*$",
                 parts.table,
                 1,
                 true
             );
-            if ( matches.pos.len() >= 3 ) {
-                parts.alias = mid( parts.table, matches.pos[ 3 ], matches.len[ 3 ] );
-                parts.table = mid( parts.table, matches.pos[ 2 ], matches.len[ 2 ] );
+            if ( matches.pos.len() >= 3 && matches.pos[ 1 ] > 0 ) {
+                parts.alias = trim( mid( parts.table, matches.pos[ 3 ], matches.len[ 3 ] ) );
+                parts.table = trim( mid( parts.table, matches.pos[ 2 ], matches.len[ 2 ] ) );
             }
         }
 
@@ -1417,23 +1417,9 @@ component displayname="Grammar" accessors="true" singleton {
              : jsonSql;
         }
 
-        arguments.column = trim( arguments.column.value );
-        var alias = "";
-        if ( arguments.column.findNoCase( " as " ) > 0 ) {
-            var matches = reFindNoCase(
-                "(.*)(?:\sAS\s)(.*)",
-                arguments.column,
-                1,
-                true
-            );
-            if ( matches.pos.len() >= 3 ) {
-                alias = mid( arguments.column, matches.pos[ 3 ], matches.len[ 3 ] );
-                arguments.column = mid( arguments.column, matches.pos[ 2 ], matches.len[ 2 ] );
-            }
-        } else if ( arguments.column.findNoCase( " " ) > 0 ) {
-            alias = listGetAt( arguments.column, 2, " " );
-            arguments.column = listGetAt( arguments.column, 1, " " );
-        }
+        var columnParts = explodeColumnAlias( arguments.column.value );
+        arguments.column = columnParts.column;
+        var alias = columnParts.alias;
         arguments.column = arguments.column
             .listToArray( "." )
             .map( wrapValue )
@@ -1548,22 +1534,62 @@ component displayname="Grammar" accessors="true" singleton {
             arguments.column = trim( arguments.column.value );
         }
 
-        var alias = "";
-        if ( arguments.column.findNoCase( " as " ) > 0 ) {
-            var matches = reFindNoCase(
-                "(.*)(?:\sAS\s)(.*)",
-                arguments.column,
+        var columnParts = explodeColumnAlias( arguments.column );
+        if ( columnParts.alias != "" ) {
+            return columnParts.alias;
+        }
+
+        return listLast( columnParts.column, "." );
+    }
+
+    /**
+     * Splits a column expression from a trailing explicit or implicit alias.
+     */
+    private struct function explodeColumnAlias( required string column ) {
+        var parts = { "alias": "", "column": trim( arguments.column ) };
+        var matches = reFindNoCase(
+            "^(.+?)\s+AS\s+(.+?)\s*$",
+            parts.column,
+            1,
+            true
+        );
+
+        if ( matches.pos.len() < 3 || matches.pos[ 1 ] == 0 ) {
+            matches = reFind(
+                "^(.+?)\s+([^\s]+)\s*$",
+                parts.column,
                 1,
                 true
             );
-            if ( matches.pos.len() >= 3 ) {
-                return mid( arguments.column, matches.pos[ 3 ], matches.len[ 3 ] );
-            }
-        } else if ( arguments.column.findNoCase( " " ) > 0 ) {
-            return listLast( arguments.column, " " );
         }
 
-        return listLast( arguments.column, "." );
+        if ( matches.pos.len() >= 3 && matches.pos[ 1 ] > 0 ) {
+            var alias = trim( mid( parts.column, matches.pos[ 3 ], matches.len[ 3 ] ) );
+            if ( isValidColumnAlias( alias ) ) {
+                parts.alias = alias;
+                parts.column = trim( mid( parts.column, matches.pos[ 2 ], matches.len[ 2 ] ) );
+            }
+        }
+
+        return parts;
+    }
+
+    /**
+     * Rejects parenthesized SQL fragments mistaken for trailing aliases.
+     */
+    private boolean function isValidColumnAlias( required string alias ) {
+        if ( len( arguments.alias ) >= 2 ) {
+            var firstCharacter = left( arguments.alias, 1 );
+            var lastCharacter = right( arguments.alias, 1 );
+            if (
+                ( firstCharacter == """" && lastCharacter == """" ) ||
+                ( firstCharacter == chr( 96 ) && lastCharacter == chr( 96 ) ) ||
+                ( firstCharacter == "[" && lastCharacter == "]" )
+            ) {
+                return true;
+            }
+        }
+        return !reFind( "[()]", arguments.alias );
     }
 
     /**

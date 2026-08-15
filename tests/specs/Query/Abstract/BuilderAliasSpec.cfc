@@ -2,6 +2,44 @@ component extends="testbox.system.BaseSpec" {
 
     function run() {
         describe( "builder alias", () => {
+            it( "parses table aliases separated by repeated whitespace", () => {
+                var qb = new qb.models.Query.QueryBuilder();
+
+                qb.from( "users   AS   u" ).select( "u.id" );
+
+                expect( qb.getTableName() ).toBe( "users" );
+                expect( qb.getAlias() ).toBe( "u" );
+                expect( qb.toSQL() ).toBe( "SELECT ""u"".""id"" FROM ""users"" AS ""u""" );
+            } );
+
+            it( "parses join aliases separated by repeated whitespace", () => {
+                var qb = new qb.models.Query.QueryBuilder();
+
+                qb.from( "users AS u" ).join( "profiles   AS   p", "p.userId", "u.id" );
+
+                expect( qb.toSQL() ).toBe(
+                    "SELECT * FROM ""users"" AS ""u"" INNER JOIN ""profiles"" AS ""p"" ON ""p"".""userId"" = ""u"".""id"""
+                );
+            } );
+
+            it( "parses join aliases separated by tabs", () => {
+                var qb = new qb.models.Query.QueryBuilder();
+
+                qb.from( "users AS u" ).join( "profiles#chr( 9 )#AS#chr( 9 )#p", "p.userId", "u.id" );
+
+                expect( qb.toSQL() ).toBe(
+                    "SELECT * FROM ""users"" AS ""u"" INNER JOIN ""profiles"" AS ""p"" ON ""p"".""userId"" = ""u"".""id"""
+                );
+            } );
+
+            it( "parses column aliases separated by repeated whitespace", () => {
+                var qb = new qb.models.Query.QueryBuilder();
+
+                qb.from( "users" ).select( "users.id   AS   userId" );
+
+                expect( qb.toSQL() ).toBe( "SELECT ""users"".""id"" AS ""userId"" FROM ""users""" );
+            } );
+
             describe( "columns", () => {
                 it( "it renames aliases in the select clause", () => {
                     var qb = new qb.models.Query.QueryBuilder();

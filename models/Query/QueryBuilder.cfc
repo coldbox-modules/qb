@@ -867,10 +867,17 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     private void function parseIntoTableAndAlias( required string table ) {
-        var parts = arguments.table.split( "\s(?:[Aa][Ss]\s)?" );
-        variables.tableName = trim( parts[ 1 ] );
-        if ( arrayLen( parts ) > 1 ) {
-            variables.alias = trim( parts[ 2 ] );
+        var normalizedTable = trim( arguments.table );
+        var aliasMatch = reFindNoCase(
+            "^(.+?)\s+(?:AS\s+)?(\S+)\s*$",
+            normalizedTable,
+            1,
+            true
+        );
+        variables.tableName = normalizedTable;
+        if ( aliasMatch.pos.len() >= 3 && aliasMatch.pos[ 1 ] > 0 ) {
+            variables.tableName = trim( mid( normalizedTable, aliasMatch.pos[ 2 ], aliasMatch.len[ 2 ] ) );
+            variables.alias = trim( mid( normalizedTable, aliasMatch.pos[ 3 ], aliasMatch.len[ 3 ] ) );
         }
     }
 

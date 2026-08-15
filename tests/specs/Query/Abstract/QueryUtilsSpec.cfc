@@ -259,6 +259,12 @@ component extends="testbox.system.BaseSpec" {
             } );
         } );
 
+        describe( "isSubQuery()", function() {
+            it( "recognizes aliases separated by repeated whitespace", function() {
+                expect( utils.isSubQuery( "(SELECT id FROM users)   AS   activeUsers" ) ).toBeTrue();
+            } );
+        } );
+
         describe( "replaceBindings()", function() {
             it( "only replaces parameter placeholders in executable SQL", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
@@ -301,6 +307,19 @@ component extends="testbox.system.BaseSpec" {
                 ).toBe( "SELECT * FROM records WHERE id = 42 ## why?#chr( 10 )#" );
             } );
 
+            it( "replaces question marks after MySQL double minus operators", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT 10--? AS result",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.MySQLGrammar()
+                    )
+                ).toBe( "SELECT 10--42 AS result" );
+            } );
+
             it( "does not treat MySQL dollar-delimited identifiers as PostgreSQL dollar quotes", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
 
@@ -335,12 +354,39 @@ component extends="testbox.system.BaseSpec" {
                 ).toBe( "SELECT [why?] FROM records WHERE id = 42" );
             } );
 
+            it( "preserves question marks in SQLite bracketed identifiers", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT [why?] FROM records WHERE id = ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.SQLiteGrammar()
+                    )
+                ).toBe( "SELECT [why?] FROM records WHERE id = 42" );
+            } );
+
             it( "preserves question marks in escaped string literals", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
 
                 expect(
                     utils.replaceBindings( "SELECT 'isn''t ?' AS marker FROM users WHERE id = ?", [ binding ], true )
                 ).toBe( "SELECT 'isn''t ?' AS marker FROM users WHERE id = 42" );
+            } );
+
+            it( "preserves question marks in Oracle alternative quoted literals", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+                var oracleGrammar = new qb.models.Grammars.OracleGrammar( utils );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT q'[isn't ? -- /* a placeholder */]' AS marker FROM users WHERE id = ?",
+                        [ binding ],
+                        true,
+                        oracleGrammar
+                    )
+                ).toBe( "SELECT q'[isn't ? -- /* a placeholder */]' AS marker FROM users WHERE id = 42" );
             } );
 
             it( "rejects bindings without matching placeholders", function() {

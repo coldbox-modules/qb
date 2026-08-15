@@ -119,6 +119,22 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                 ] );
             } );
         } );
+
+        describe( "SQL Server view execution", function() {
+            it( "only binds the CREATE statement when altering a view", function() {
+                var schema = getBuilder();
+                schema.getGrammar().$( "runQuery", {} );
+
+                schema.alterView( "active_users", function( query ) {
+                    query.from( "users" ).where( "active", 1 );
+                } );
+
+                var calls = schema.getGrammar().$callLog().runQuery;
+                expect( calls ).toHaveLength( 2 );
+                expect( calls[ 1 ][ 2 ] ).toBeEmpty();
+                expect( calls[ 2 ][ 2 ].map( ( binding ) => binding.value ) ).toBe( [ 1 ] );
+            } );
+        } );
     }
 
     function emptyTable() {

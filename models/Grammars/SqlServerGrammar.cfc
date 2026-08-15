@@ -501,7 +501,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             return value;
         }
 
-        arguments.value = reReplace( arguments.value, """", "", "all" );
+        if ( len( arguments.value ) >= 2 && left( arguments.value, 1 ) == """" && right( arguments.value, 1 ) == """" ) {
+            arguments.value = mid( arguments.value, 2, len( arguments.value ) - 2 );
+        }
         arguments.value = replace( arguments.value, "]", "]]", "all" );
 
         return "[#value#]";

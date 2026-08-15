@@ -1672,6 +1672,18 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getGrammar().$callLog().runQuery[ 1 ].options ).toBe( {} );
             } );
 
+            it( "does not mutate per-query options while preparing them for execution", function() {
+                var options = { "returntype": "array", "columnkey": "id", "timeout": 5 };
+                var originalOptions = duplicate( options );
+
+                new qb.models.Query.QueryBuilder( new qb.models.Grammars.BaseGrammar() )
+                    .pretend()
+                    .from( "users" )
+                    .get( options = options );
+
+                expect( options ).toBe( originalOptions );
+            } );
+
             it( "can strip native queryExecute returntype options from default options without mutating them", function() {
                 var builder = getBuilder();
                 builder.mergeDefaultOptions( { "returntype": "array", "columnkey": "id", "columnKey": "id" } );
@@ -1719,7 +1731,89 @@ component extends="testbox.system.BaseSpec" {
             } );
         } );
 
+        describe( "write input immutability", function() {
+            it( "does not merge configured update values into the caller's struct", function() {
+                var values = { "name": "Jane" };
+                var originalValues = duplicate( values );
+                var builder = new qb.models.Query.QueryBuilder( new qb.models.Grammars.BaseGrammar() )
+                    .from( "users" )
+                    .addUpdate( { "active": true } );
+
+                builder.update( values = values, toSql = true );
+
+                expect( values ).toBe( originalValues );
+            } );
+        } );
+
         describe( "bulk inserts", function() {
+            it( "includes columns introduced by later insert rows", function() {
+                var builder = getBuilder().from( "users" );
+
+                var sql = builder.insert(
+                    values = [ { "id": 1 }, { "email": "two@example.com", "id": 2 } ],
+                    toSql = true
+                );
+
+                expect( sql ).toBe( "INSERT INTO ""users"" (""email"", ""id"") VALUES (?, ?), (?, ?)" );
+                expect( builder.getBindings() ).toHaveLength( 4 );
+                expect( builder.getBindings()[ 1 ].null ).toBeTrue();
+                expect( builder.getBindings()[ 2 ].value ).toBe( 1 );
+                expect( builder.getBindings()[ 3 ].value ).toBe( "two@example.com" );
+                expect( builder.getBindings()[ 4 ].value ).toBe( 2 );
+            } );
+
+            it( "includes columns introduced by later upsert rows", function() {
+                var builder = new qb.models.Query.QueryBuilder( new qb.models.Grammars.PostgresGrammar() ).from( "users" );
+
+                var sql = builder.upsert(
+                    values = [ { "id": 1 }, { "email": "two@example.com", "id": 2 } ],
+                    target = "id",
+                    update = [ "email" ],
+                    toSql = true
+                );
+
+                expect( sql ).toBe(
+                    "INSERT INTO ""users"" (""email"", ""id"") VALUES (?, ?), (?, ?) ON CONFLICT (""id"") DO UPDATE SET ""email"" = EXCLUDED.""email"""
+                );
+                expect( builder.getBindings() ).toHaveLength( 4 );
+                expect( builder.getBindings()[ 1 ].null ).toBeTrue();
+                expect( builder.getBindings()[ 2 ].value ).toBe( 1 );
+                expect( builder.getBindings()[ 3 ].value ).toBe( "two@example.com" );
+                expect( builder.getBindings()[ 4 ].value ).toBe( 2 );
+            } );
+
+            it( "keeps all source bindings before explicit upsert update bindings", function() {
+                var grammar = new qb.models.Grammars.PostgresGrammar();
+                var source = new qb.models.Query.QueryBuilder( grammar )
+                    .selectRaw( "? AS id", [ 1 ] )
+                    .unionAll( ( query ) => query.selectRaw( "? AS id", [ 2 ] ) );
+                var builder = new qb.models.Query.QueryBuilder( grammar ).from( "users" );
+
+                builder.upsert(
+                    values = [ "id" ],
+                    target = [ "id" ],
+                    update = { "id": 3 },
+                    source = source,
+                    toSql = true
+                );
+
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, 2, 3 ] );
+            } );
+
+            it( "includes columns introduced by later native bulk insert rows", function() {
+                var grammar = new qb.models.Grammars.SqlServerGrammar();
+                var builder = new qb.models.Query.QueryBuilder( grammar ).from( "users" );
+
+                var prepared = grammar.prepareBulkInsert(
+                    builder,
+                    [ { "id": 1 }, { "email": "two@example.com", "id": 2 } ],
+                    {}
+                );
+
+                expect( prepared.columns.map( ( column ) => column.original ) ).toBe( [ "email", "id" ] );
+                expect( deserializeJSON( prepared.binding.value ) ).toBe( [ { "email": javacast( "null", "" ), "id": 1 }, { "email": "two@example.com", "id": 2 } ] );
+            } );
+
             it( "does not include unrelated builder bindings in native bulk inserts", function() {
                 var grammar = getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init();
                 grammar.$( "runQuery", {} );

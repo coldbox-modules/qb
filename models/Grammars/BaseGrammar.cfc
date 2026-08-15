@@ -116,7 +116,7 @@ component displayname="Grammar" accessors="true" singleton {
         var data = {
             "sql": arguments.sql,
             "bindings": arguments.bindings,
-            "options": arguments.options,
+            "options": structCopy( arguments.options ),
             "returnObject": arguments.returnObject,
             "pretend": arguments.pretend
         };
@@ -966,6 +966,33 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Resolve the complete set of columns present across all rows in a multi-row insert.
+     *
+     * @values The rows to inspect.
+     *
+     * @return The unique column names in first-seen order.
+     */
+    public array function resolveInsertColumnNames( required array values ) {
+        var columnNames = [];
+        var seenColumns = {};
+
+        arguments.values.each( function( row ) {
+            if ( !isStruct( arguments.row ) ) {
+                throw( type = "InvalidSQLType", message = "Please pass an array of structs mapping columns to values" );
+            }
+
+            for ( var key in arguments.row ) {
+                if ( !seenColumns.keyExists( key ) ) {
+                    seenColumns[ key ] = true;
+                    columnNames.append( key );
+                }
+            }
+        } );
+
+        return columnNames;
+    }
+
+    /**
      * Prepare values and column metadata for a grammar's native bulk insert compiler.
      *
      * @query The Builder instance.
@@ -974,12 +1001,10 @@ component displayname="Grammar" accessors="true" singleton {
      */
     public struct function prepareBulkInsert( required any query, required array values, required struct sqlTypes ) {
         var builder = arguments.query;
-        var columns = arguments.values[ 1 ]
-            .keyArray()
-            .map( function( column ) {
-                var formatted = listLast( builder.applyColumnFormatter( column ), "." );
-                return { "original": column, "formatted": { "type": "simple", "value": formatted } };
-            } );
+        var columns = resolveInsertColumnNames( arguments.values ).map( function( column ) {
+            var formatted = listLast( builder.applyColumnFormatter( column ), "." );
+            return { "original": column, "formatted": { "type": "simple", "value": formatted } };
+        } );
         columns.sort( ( a, b ) => compareNoCase( a.formatted.value, b.formatted.value ) );
 
         arguments.values.each( function( row ) {
@@ -1514,13 +1539,17 @@ component displayname="Grammar" accessors="true" singleton {
             return arguments.value;
         }
 
-        var value = toString( arguments.value );
-        if ( len( value ) >= 2 && left( value, 1 ) == """" && right( value, 1 ) == """" ) {
-            value = mid( value, 2, len( value ) - 2 );
+        var normalizedValue = toString( arguments.value );
+        if (
+            len( normalizedValue ) >= 2 &&
+            left( normalizedValue, 1 ) == """" &&
+            right( normalizedValue, 1 ) == """"
+        ) {
+            normalizedValue = mid( normalizedValue, 2, len( normalizedValue ) - 2 );
         }
-        value = replace( value, """", """""", "all" );
+        normalizedValue = replace( normalizedValue, """", """""", "all" );
 
-        return """#value#""";
+        return """#normalizedValue#""";
     }
 
     /**

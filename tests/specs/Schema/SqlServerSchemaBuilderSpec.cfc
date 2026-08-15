@@ -77,6 +77,21 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         } );
 
         describe( "SQL Server CTE-backed schema queries", function() {
+            it( "creates a table from a projection without a FROM clause", function() {
+                var statements = getBuilder()
+                    .createAs(
+                        "answer",
+                        function( query ) {
+                            query.selectRaw( "42 AS value" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [ "SELECT 42 AS value INTO [answer]" ] );
+            } );
+
             it( "creates views with a statement-level common table expression", function() {
                 var statements = getBuilder()
                     .createView(

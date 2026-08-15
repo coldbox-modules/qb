@@ -878,14 +878,23 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     /**
-     * Inserts a SQL Server INTO clause before the outer query's FROM clause.
-     * FROM tokens inside CTEs, subqueries, literals, identifiers, and comments are ignored.
+     * Inserts a SQL Server INTO clause after the outer query's select list.
+     * Tokens inside CTEs, subqueries, literals, identifiers, and comments are ignored.
      */
     private string function insertIntoOuterSelect( required string sql, required string table ) {
         var position = 1;
         var depth = 0;
         var state = "sql";
         var sqlLength = arguments.sql.len();
+        var hasOuterSelect = false;
+        var selectListBoundaries = [
+            " FROM ",
+            " UNION ",
+            " ORDER BY ",
+            " OFFSET ",
+            " FOR ",
+            " OPTION "
+        ];
 
         while ( position <= sqlLength ) {
             var character = arguments.sql.mid( position, 1 );
@@ -947,20 +956,36 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 position++;
                 continue;
             }
-            if (
-                depth == 0 &&
-                position + 5 <= sqlLength &&
-                compareNoCase( arguments.sql.mid( position, 6 ), " FROM " ) == 0
-            ) {
-                return arguments.sql.left( position - 1 ) &
-                " INTO #arguments.table#" &
-                mid( arguments.sql, position, sqlLength - position + 1 );
+
+            if ( depth == 0 && !hasOuterSelect && position + 5 <= sqlLength ) {
+                var previousCharacter = position == 1 ? "" : arguments.sql.mid( position - 1, 1 );
+                var characterAfterSelect = position + 6 > sqlLength ? "" : arguments.sql.mid( position + 6, 1 );
+                hasOuterSelect = compareNoCase( arguments.sql.mid( position, 6 ), "SELECT" ) == 0 &&
+                ( previousCharacter == "" || previousCharacter == ";" || reFind( "\s", previousCharacter ) ) &&
+                ( characterAfterSelect == "" || reFind( "\s", characterAfterSelect ) );
+            }
+
+            if ( depth == 0 && hasOuterSelect ) {
+                for ( var boundary in selectListBoundaries ) {
+                    if (
+                        position + len( boundary ) - 1 <= sqlLength &&
+                        compareNoCase( arguments.sql.mid( position, len( boundary ) ), boundary ) == 0
+                    ) {
+                        return arguments.sql.left( position - 1 ) &
+                        " INTO #arguments.table#" &
+                        mid( arguments.sql, position, sqlLength - position + 1 );
+                    }
+                }
             }
 
             position++;
         }
 
-        throw( type = "InvalidCreateAsQuery", message = "SQL Server CREATE AS queries require an outer FROM clause." );
+        if ( hasOuterSelect ) {
+            return rTrim( arguments.sql ) & " INTO #arguments.table#";
+        }
+
+        throw( type = "InvalidCreateAsQuery", message = "SQL Server CREATE AS queries require an outer SELECT clause." );
     }
 
     function compileDropColumn( blueprint, commandParameters ) {

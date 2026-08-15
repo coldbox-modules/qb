@@ -126,6 +126,22 @@ component extends="testbox.system.BaseSpec" {
                 expect( registry.getReturnFormatter( "ids" )( q ) ).toBe( "user-1" );
             } );
 
+            it( "preserves null values while snapshotting formatter configuration", function() {
+                var registry = new qb.models.Query.ReturnFormatterRegistry();
+
+                expect( function() {
+                    registry.registerReturnFormatter(
+                        name = "nullable",
+                        factory = function( options ) {
+                            return function( q ) {
+                                return q;
+                            };
+                        },
+                        options = { "nullable": javacast( "null", "" ) }
+                    );
+                } ).notToThrow();
+            } );
+
             it( "resolves WireBox formatter factories with properties", function() {
                 var registry = new qb.models.Query.ReturnFormatterRegistry();
                 registry.setWirebox( {

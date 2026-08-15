@@ -1769,13 +1769,17 @@ component displayname="QueryBuilder" accessors="true" {
             getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
             arguments.input.getBindings()
         );
-        variables.grammarCompiledJoin = true;
 
         // remove the non-standard arguments
         structDelete( arguments, "input" );
         structDelete( arguments, "alias" );
 
-        return join( argumentCollection = arguments );
+        var joinCount = variables.joins.len();
+        var result = join( argumentCollection = arguments );
+        if ( variables.joins.len() > joinCount ) {
+            variables.grammarCompiledJoin = true;
+        }
+        return result;
     }
 
     private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
@@ -1919,9 +1923,10 @@ component displayname="QueryBuilder" accessors="true" {
             getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
             arguments.input.getBindings()
         );
-        variables.grammarCompiledJoin = true;
 
-        return crossJoin( table );
+        var result = crossJoin( table );
+        variables.grammarCompiledJoin = true;
+        return result;
     }
 
     /**

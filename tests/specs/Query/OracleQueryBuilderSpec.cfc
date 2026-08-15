@@ -1,5 +1,23 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "Oracle data modification CTEs", function() {
+            it( "rejects unsupported CTE update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" );
+
+                expect( function() {
+                    builder.update( values = { "name": "changed" }, toSQL = true );
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
+        } );
+    }
+
     function selectAllColumns() {
         return "SELECT * FROM ""USERS""";
     }

@@ -191,6 +191,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array columns,
         required struct updateMap
     ) {
+        if ( !query.getCommonTables().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support UPDATE statements with Common Table Expressions."
+            );
+        }
         if ( !query.getJoins().isEmpty() ) {
             throw(
                 type = "UnsupportedOperation",

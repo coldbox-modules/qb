@@ -226,7 +226,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
 
             if ( joins.isEmpty() ) {
-                return updateStatement & returningClause;
+                return trim(
+                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause
+                );
             }
 
             var firstJoin = joins[ 1 ];
@@ -239,17 +241,38 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             updateStatement &= " FROM #wrapTable( firstJoin.getTable() )# #compileWheres( arguments.query, firstJoin.getWheres() )#";
 
             if ( joins.len() <= 1 ) {
-                return trim( updateStatement & " " & whereStatement & returningClause );
+                return trim(
+                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & whereStatement & returningClause
+                );
             }
 
             var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );
 
-            return trim( "#updateStatement# #compileJoins( arguments.query, restJoins )# #whereStatement##returningClause#" );
+            return trim(
+                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & compileJoins(
+                    arguments.query,
+                    restJoins
+                ) & " " & whereStatement & returningClause
+            );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    public array function getUpdateBindingOrder( required QueryBuilder query ) {
+        return [
+            "commonTables",
+            "from",
+            "update",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
     }
 
     /**

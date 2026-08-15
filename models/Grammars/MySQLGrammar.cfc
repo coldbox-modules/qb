@@ -1,5 +1,17 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileUpdate(
+        required QueryBuilder query,
+        required array columns,
+        required struct updateMap
+    ) {
+        return trim(
+            compileCommonTables( arguments.query, arguments.query.getCommonTables() ) & " " & super.compileUpdate(
+                argumentCollection = arguments
+            )
+        );
+    }
+
     public string function compileWhereInBulkValues( required string sqlType ) {
         return "SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` #arguments.sqlType# PATH '$')) AS `qb_bulk_values`";
     }

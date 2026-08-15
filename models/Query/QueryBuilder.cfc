@@ -119,6 +119,11 @@ component displayname="QueryBuilder" accessors="true" {
      */
     property name="collectQueryLog" type="boolean";
 
+    /**
+     * Tracks whether this builder contains SQL compiled by its current grammar.
+     */
+    property name="grammarCompilationLocked" type="boolean";
+
     /******************** Query Properties ********************/
 
     /**
@@ -437,6 +442,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.pretending = false;
         variables.queryLog = [];
         variables.shouldWrapValues = javacast( "null", "" );
+        variables.grammarCompilationLocked = false;
     }
 
     /**
@@ -884,7 +890,39 @@ component displayname="QueryBuilder" accessors="true" {
         renameAliasesInGroups( oldAlias, newAlias );
         renameAliasesInHavings( oldAlias, newAlias );
         renameAliasesInOrders( oldAlias, newAlias );
+        renameAliasesInUnions( oldAlias, newAlias );
+        renameAliasesInCommonTables( oldAlias, newAlias );
         return;
+    }
+
+    private void function renameAliasesInUnions( required string oldAlias, required string newAlias ) {
+        for ( var union in variables.unions ) {
+            renameAliasesInNestedQuery( union.query, arguments.oldAlias, arguments.newAlias );
+        }
+    }
+
+    private void function renameAliasesInCommonTables( required string oldAlias, required string newAlias ) {
+        for ( var commonTable in variables.commonTables ) {
+            renameAliasesInNestedQuery( commonTable.query, arguments.oldAlias, arguments.newAlias );
+        }
+    }
+
+    private void function renameAliasesInNestedQuery(
+        required QueryBuilder query,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        var nestedAlias = arguments.query.getAlias();
+        var nestedTable = arguments.query.getTableName();
+        var shadowsAlias = compareNoCase( nestedAlias, arguments.oldAlias ) == 0;
+
+        if ( !shadowsAlias && nestedAlias == "" && isSimpleValue( nestedTable ) ) {
+            shadowsAlias = compareNoCase( listLast( nestedTable, "." ), arguments.oldAlias ) == 0;
+        }
+
+        if ( !shadowsAlias ) {
+            arguments.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+        }
     }
 
     private void function renameAliasesInColumns( required string oldAlias, required string newAlias ) {
@@ -1115,6 +1153,12 @@ component displayname="QueryBuilder" accessors="true" {
         required string newAlias
     ) {
         renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( getUtils().isBuilder( arguments.where.start ) ) {
+            renameAliasesInNestedQuery( arguments.where.start, arguments.oldAlias, arguments.newAlias );
+        }
+        if ( getUtils().isBuilder( arguments.where.end ) ) {
+            renameAliasesInNestedQuery( arguments.where.end, arguments.oldAlias, arguments.newAlias );
+        }
     }
 
     private void function renameAliasInWhereNotBetween(
@@ -1123,6 +1167,12 @@ component displayname="QueryBuilder" accessors="true" {
         required string newAlias
     ) {
         renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        if ( getUtils().isBuilder( arguments.where.start ) ) {
+            renameAliasesInNestedQuery( arguments.where.start, arguments.oldAlias, arguments.newAlias );
+        }
+        if ( getUtils().isBuilder( arguments.where.end ) ) {
+            renameAliasesInNestedQuery( arguments.where.end, arguments.oldAlias, arguments.newAlias );
+        }
     }
 
     private string function swapAlias( required string column, required string oldAlias, required string newAlias ) {
@@ -1222,6 +1272,7 @@ component displayname="QueryBuilder" accessors="true" {
 
         // generate the derived table SQL
         this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
+        variables.grammarCompilationLocked = true;
         addBindings( arguments.input.getBindings(), "from" );
         return this;
     }
@@ -1713,6 +1764,7 @@ component displayname="QueryBuilder" accessors="true" {
             getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
             arguments.input.getBindings()
         );
+        variables.grammarCompilationLocked = true;
 
         // remove the non-standard arguments
         structDelete( arguments, "input" );
@@ -1767,6 +1819,7 @@ component displayname="QueryBuilder" accessors="true" {
 
         addBindings( tableLikeSource.getBindings(), "join" );
         variables.joins.append( join );
+        variables.grammarCompilationLocked = true;
 
         return this;
     }
@@ -1861,6 +1914,7 @@ component displayname="QueryBuilder" accessors="true" {
             getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
             arguments.input.getBindings()
         );
+        variables.grammarCompilationLocked = true;
 
         return crossJoin( table );
     }
@@ -4019,7 +4073,12 @@ component displayname="QueryBuilder" accessors="true" {
             return sql;
         }
 
-        return runQuery( sql, arguments.options, "result" );
+        return runQuery(
+            sql,
+            arguments.options,
+            "result",
+            getBindings( order = getGrammar().getUpdateBindingOrder( this ) )
+        );
     }
 
     /**
@@ -4285,26 +4344,13 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return array of bindings
      */
-    public array function getBindings( array except = [] ) {
-        var bindingOrder = arrayFilter(
-            [
-                "commonTables",
-                "update",
-                "insert",
-                "aggregate",
-                "select",
-                "from",
-                "join",
-                "where",
-                "groupBy",
-                "having",
-                "orderBy",
-                "union"
-            ],
-            function( type ) {
-                return !arrayContainsNoCase( except, type );
-            }
-        );
+    public array function getBindings( array except = [], array order = [] ) {
+        if ( arguments.order.isEmpty() ) {
+            arguments.order = getGrammar().getSelectBindingOrder( this );
+        }
+        var bindingOrder = arrayFilter( arguments.order, function( type ) {
+            return !arrayContainsNoCase( except, type );
+        } );
 
         var flatBindings = [];
         for ( var key in bindingOrder ) {
@@ -5019,11 +5065,21 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return       any
      */
-    private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
+    private any function runQuery(
+        required string sql,
+        struct options = {},
+        string returnObject = "query",
+        array bindings
+    ) {
         var queryOptions = structCopy( arguments.options );
         structAppend( queryOptions, getDefaultOptions(), false );
         guardAgainstReturnTypeOption( queryOptions );
-        var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select", "orderBy" ] );
+        var aggregateBindingExclusions = getAggregate().isEmpty()
+         ? []
+         : ( getUnions().isEmpty() ? [ "select", "orderBy" ] : [ "orderBy" ] );
+        var queryBindings = isNull( arguments.bindings )
+         ? getBindings( except = aggregateBindingExclusions )
+         : arguments.bindings;
 
         var result = grammar.runQuery(
             sql = variables.sqlCommenter.appendSqlComments(
@@ -5032,9 +5088,9 @@ component displayname="QueryBuilder" accessors="true" {
                     "null",
                     ""
                 ),
-                bindings = bindings
+                bindings = queryBindings
             ),
-            bindings = bindings,
+            bindings = queryBindings,
             options = queryOptions,
             returnObject = returnObject,
             pretend = variables.pretending,
@@ -5147,6 +5203,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
         arguments.target.setReturning( cloneQueryStateValue( arguments.source.getReturning() ) );
         arguments.target.setUpdates( cloneQueryStateValue( arguments.source.getUpdates() ) );
+        arguments.target.setGrammarCompilationLocked( arguments.source.getGrammarCompilationLocked() );
 
         var sourceBindings = arguments.source.getRawBindings();
         for ( var bindingType in sourceBindings ) {
@@ -5243,7 +5300,10 @@ component displayname="QueryBuilder" accessors="true" {
             return sql;
         }
 
-        var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select", "orderBy" ] );
+        var aggregateBindingExclusions = getAggregate().isEmpty()
+         ? []
+         : ( getUnions().isEmpty() ? [ "select", "orderBy" ] : [ "orderBy" ] );
+        var bindings = getBindings( except = aggregateBindingExclusions );
         return getUtils().replaceBindings(
             sql,
             bindings,
@@ -5662,6 +5722,13 @@ component displayname="QueryBuilder" accessors="true" {
                 type = "QBSetGrammarWithBindingsError",
                 message = "You cannot switch grammars after adding bindings.  Please set the grammar before adding bindings.",
                 detail = "The easiest way to fix this error is to set the grammar before any other actions on the query builder."
+            );
+        }
+        if ( variables.grammarCompilationLocked ) {
+            throw(
+                type = "QBSetGrammarAfterCompilationError",
+                message = "You cannot switch grammars after adding a grammar-compiled subquery.",
+                detail = "Set the grammar before adding derived tables, subquery joins, or lateral joins."
             );
         }
         variables.grammar = arguments.grammar;

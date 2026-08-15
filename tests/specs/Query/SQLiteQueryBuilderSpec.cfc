@@ -19,6 +19,35 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 expect( findNoCase( "RETURNING", sql ) ).toBeGT( findNoCase( "ON CONFLICT", sql ) );
             } );
         } );
+
+        describe( "SQLite data modification CTEs", function() {
+            it( "compiles CTEs before update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed", 42 ] );
+            } );
+
+            it( "binds update values before joined predicates", function() {
+                var builder = getBuilder().pretend();
+
+                builder
+                    .table( "employees" )
+                    .join( "departments", function( join ) {
+                        join.on( "departments.id", "employees.departmentId" ).where( "departments.active", 1 );
+                    } )
+                    .update( values = { "departmentName": "changed" } );
+
+                expect( builder.getQueryLog()[ 1 ].bindings.map( ( binding ) => binding.value ) ).toBe( [ "changed", 1 ] );
+            } );
+        } );
     }
 
     private function getBuilder() {

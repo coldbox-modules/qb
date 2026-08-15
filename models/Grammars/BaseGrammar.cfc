@@ -92,6 +92,43 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Returns the binding groups in the order they appear in a SELECT statement.
+     */
+    public array function getSelectBindingOrder( required QueryBuilder query ) {
+        return [
+            "commonTables",
+            "update",
+            "insert",
+            "aggregate",
+            "select",
+            "from",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "union",
+            "orderBy"
+        ];
+    }
+
+    /**
+     * Returns the binding groups in the order they appear in an UPDATE statement.
+     */
+    public array function getUpdateBindingOrder( required QueryBuilder query ) {
+        return [
+            "commonTables",
+            "from",
+            "join",
+            "update",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
+    }
+
+    /**
      * Runs a query through `queryExecute`.
      * This function exists so that platform-specific grammars can override it if needed.
      *

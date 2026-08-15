@@ -42,6 +42,22 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 );
             } );
         } );
+
+        describe( "PostgreSQL data modification CTEs", function() {
+            it( "compiles CTEs before update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", true );
+                    } )
+                    .from( "active_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ true, "changed", 42 ] );
+            } );
+        } );
     }
 
     function selectAllColumns() {

@@ -263,6 +263,30 @@ component extends="testbox.system.BaseSpec" {
                     expect( qb.toSQL() ).toBe( "SELECT * FROM ""users"" AS ""u"" WHERE ""u"".""lastLoginDate"" BETWEEN ? AND ?" );
                 } );
 
+                it( "renames correlated aliases inside where between subqueries", function() {
+                    var qb = new qb.models.Query.QueryBuilder();
+                    qb.from( "users" )
+                        .whereBetween(
+                            "users.score",
+                            function( lowerBound ) {
+                                lowerBound
+                                    .selectRaw( "MIN(score)" )
+                                    .from( "scores" )
+                                    .whereColumn( "scores.userId", "users.id" );
+                            },
+                            function( upperBound ) {
+                                upperBound
+                                    .selectRaw( "MAX(score)" )
+                                    .from( "scores" )
+                                    .whereColumn( "scores.userId", "users.id" );
+                            }
+                        )
+                        .withAlias( "u" );
+
+                    expect( qb.toSQL() ).notToInclude( """users"".""id""" );
+                    expect( qb.toSQL() ).toInclude( """u"".""id""" );
+                } );
+
                 it( "renames the columns used in where not between clauses", () => {
                     var qb = new qb.models.Query.QueryBuilder();
                     qb.from( "users" )
@@ -339,6 +363,71 @@ component extends="testbox.system.BaseSpec" {
                     .withAlias( "u" );
 
                 expect( qb.toSQL() ).toBe( "SELECT ""usersArchive"".""id"" FROM ""users"" AS ""u""" );
+            } );
+
+            it( "renames correlated aliases inside union branches", function() {
+                var qb = new qb.models.Query.QueryBuilder();
+                qb.from( "users" )
+                    .whereExists( function( existsQuery ) {
+                        existsQuery
+                            .selectRaw( "1" )
+                            .from( "logins" )
+                            .whereColumn( "logins.userId", "users.id" )
+                            .union( function( unionQuery ) {
+                                unionQuery
+                                    .selectRaw( "1" )
+                                    .from( "archived_logins" )
+                                    .whereColumn( "archived_logins.userId", "users.id" );
+                            } );
+                    } )
+                    .withAlias( "u" );
+
+                expect( qb.toSQL() ).notToInclude( """users"".""id""" );
+                expect( qb.toSQL() ).toInclude( """u"".""id""" );
+            } );
+
+            it( "does not rename aliases shadowed by a union branch table", function() {
+                var qb = new qb.models.Query.QueryBuilder();
+                qb.from( "users" )
+                    .select( "users.id" )
+                    .union( function( unionQuery ) {
+                        unionQuery.from( "users" ).select( "users.id" );
+                    } )
+                    .withAlias( "u" );
+
+                expect( qb.toSQL() ).toBe(
+                    "SELECT ""u"".""id"" FROM ""users"" AS ""u"" UNION SELECT ""users"".""id"" FROM ""users"""
+                );
+            } );
+
+            it( "renames correlated aliases inside common table expressions", function() {
+                var qb = new qb.models.Query.QueryBuilder();
+                qb.from( "users" )
+                    .whereExists( function( existsQuery ) {
+                        existsQuery
+                            .with( "recent_logins", function( cte ) {
+                                cte.from( "logins" ).whereColumn( "logins.userId", "users.id" );
+                            } )
+                            .from( "recent_logins" );
+                    } )
+                    .withAlias( "u" );
+
+                expect( qb.toSQL() ).notToInclude( """users"".""id""" );
+                expect( qb.toSQL() ).toInclude( """u"".""id""" );
+            } );
+
+            it( "does not rename aliases shadowed by a common table expression table", function() {
+                var qb = new qb.models.Query.QueryBuilder();
+                qb.with( "local_users", function( cte ) {
+                        cte.from( "users" ).select( "users.id" );
+                    } )
+                    .from( "users" )
+                    .select( "users.id" )
+                    .withAlias( "u" );
+
+                expect( qb.toSQL() ).toBe(
+                    "WITH ""local_users"" AS (SELECT ""users"".""id"" FROM ""users"") SELECT ""u"".""id"" FROM ""users"" AS ""u"""
+                );
             } );
         } );
     }

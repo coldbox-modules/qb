@@ -206,6 +206,41 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return arguments.query.getUnions().some( ( union ) => union.query.getOrders().len() );
     }
 
+    public array function getSelectBindingOrder( required QueryBuilder query ) {
+        if ( !shouldCompileOrderedUnionBranches( arguments.query ) ) {
+            return super.getSelectBindingOrder( arguments.query );
+        }
+
+        return [
+            "commonTables",
+            "update",
+            "insert",
+            "aggregate",
+            "select",
+            "from",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
+    }
+
+    public array function getUpdateBindingOrder( required QueryBuilder query ) {
+        return [
+            "commonTables",
+            "from",
+            "update",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
+    }
+
     private boolean function isOrderedLimitedQuery( required QueryBuilder query ) {
         return arguments.query.getOrders().len() && isLimitedQuery( arguments.query );
     }
@@ -567,11 +602,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
 
             if ( arguments.query.getJoins().isEmpty() ) {
-                return trim( updateStatement & returningClause & " " & compileWheres( query, query.getWheres() ) );
+                return trim(
+                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause & " " & compileWheres(
+                        query,
+                        query.getWheres()
+                    )
+                );
             }
 
             return trim(
-                updateStatement & returningClause & " FROM #wrapTable( query.getTableName() )# " & compileJoins(
+                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause & " FROM #wrapTable( query.getTableName() )# " & compileJoins(
                     arguments.query,
                     arguments.query.getJoins()
                 ) & " " & compileWheres( query, query.getWheres() )

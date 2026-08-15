@@ -307,6 +307,30 @@ component extends="testbox.system.BaseSpec" {
                         query.setGrammar( new qb.models.Grammars.MySQLGrammar() );
                     } ).toThrow( type = "QBSetGrammarAfterCompilationError" );
                 } );
+
+                it( "allows grammar changes after replacing a compiled derived table", function() {
+                    query.fromSub( "active_users", function( subquery ) {
+                        subquery.from( "users" );
+                    } );
+                    query.from( "users" );
+
+                    query.setGrammar( new qb.models.Grammars.MySQLGrammar() );
+
+                    expect( query.toSQL() ).toBe( "SELECT * FROM `users`" );
+                } );
+            } );
+
+            describe( "clone()", function() {
+                it( "owns cloned raw expression state independently", function() {
+                    var expression = query.raw( "1 AS value" );
+                    query.select( expression ).from( "users" );
+                    var clonedQuery = query.clone();
+
+                    clonedQuery.getColumns()[ 1 ].value.setSql( "2 AS value" );
+
+                    expect( query.toSQL() ).toBe( "SELECT 1 AS value FROM ""users""" );
+                    expect( clonedQuery.toSQL() ).toBe( "SELECT 2 AS value FROM ""users""" );
+                } );
             } );
         } );
     }

@@ -312,6 +312,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 arrayToList(
                     arrayFilter(
                         [
+                            compileCommonTables( query, query.getCommonTables() ),
                             "DELETE",
                             hasJoins ? wrapTable( query.getTableName() ) : "",
                             "FROM",

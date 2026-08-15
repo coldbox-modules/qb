@@ -318,6 +318,24 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( query.toSQL() ).toBe( "SELECT * FROM `users`" );
                 } );
+
+                it( "does not retain a grammar lock when adding a derived join fails", function() {
+                    expect( function() {
+                        query.joinSub(
+                            alias = "active_users",
+                            input = function( subquery ) {
+                                subquery.from( "users" );
+                            },
+                            first = "active_users.id",
+                            operator = "invalid",
+                            second = "users.id"
+                        );
+                    } ).toThrow();
+
+                    expect( function() {
+                        query.setGrammar( new qb.models.Grammars.MySQLGrammar() );
+                    } ).notToThrow();
+                } );
             } );
 
             describe( "clone()", function() {

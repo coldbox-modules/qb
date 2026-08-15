@@ -207,20 +207,19 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        query.getBindings(),
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            var statements = blueprint.toSql();
+            statements.each( function( statement, index ) {
+                getGrammar().runQuery(
+                    statement,
+                    index == statements.len() ? query.getBindings() : [],
+                    options,
+                    "result",
+                    variables.pretending,
+                    function( data ) {
+                        variables.queryLog.append( data );
+                    }
+                );
+            } );
         }
 
         return blueprint;

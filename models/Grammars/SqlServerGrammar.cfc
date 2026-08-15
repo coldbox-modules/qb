@@ -779,8 +779,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .toList( ", " );
 
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
-
-            return "MERGE #wrapTable( arguments.qb.getTableName() )# AS [qb_target] USING #sourceString# ON #constraintString##updateStatement# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)#deleteStatement##returningClause#;";
+            return trim(
+                compileCommonTables( arguments.qb, arguments.qb.getCommonTables() ) &
+                " MERGE #wrapTable( arguments.qb.getTableName() )# AS [qb_target] USING #sourceString# ON #constraintString##updateStatement# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)#deleteStatement##returningClause#;"
+            );
         } finally {
             if ( !isNull( arguments.qb.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -835,6 +837,30 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return "";
     }
 
+    function compileCreateView( blueprint, commandParameters ) {
+        var query = arguments.commandParameters[ "query" ];
+        if ( query.getCommonTables().isEmpty() ) {
+            return super.compileCreateView( argumentCollection = arguments );
+        }
+
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            var selectStatement = compileSelect( query );
+            if ( selectStatement.left( 1 ) == ";" ) {
+                selectStatement = mid( selectStatement, 2, selectStatement.len() - 1 );
+            }
+            return "CREATE VIEW #wrapTable( blueprint.getTable() )# AS #selectStatement#";
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
     function compileCreateAs( blueprint, commandParameters ) {
         try {
             var originalShouldWrapValues = getShouldWrapValues();
@@ -843,17 +869,98 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             var query = commandParameters[ "query" ];
-            return replace(
-                compileSelect( query ),
-                "FROM",
-                "INTO #wrapTable( blueprint.getTable() )# FROM",
-                "one"
-            );
+            return insertIntoOuterSelect( compileSelect( query ), wrapTable( blueprint.getTable() ) );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    /**
+     * Inserts a SQL Server INTO clause before the outer query's FROM clause.
+     * FROM tokens inside CTEs, subqueries, literals, identifiers, and comments are ignored.
+     */
+    private string function insertIntoOuterSelect( required string sql, required string table ) {
+        var position = 1;
+        var depth = 0;
+        var state = "sql";
+        var sqlLength = arguments.sql.len();
+
+        while ( position <= sqlLength ) {
+            var character = arguments.sql.mid( position, 1 );
+            var nextCharacter = position < sqlLength ? arguments.sql.mid( position + 1, 1 ) : "";
+
+            if ( state == "lineComment" ) {
+                if ( character == chr( 10 ) || character == chr( 13 ) ) {
+                    state = "sql";
+                }
+                position++;
+                continue;
+            }
+            if ( state == "blockComment" ) {
+                if ( character == "*" && nextCharacter == "/" ) {
+                    position += 2;
+                    state = "sql";
+                } else {
+                    position++;
+                }
+                continue;
+            }
+            if ( state != "sql" ) {
+                var closingCharacter = state == "singleQuote" ? "'" : ( state == "doubleQuote" ? """" : "]" );
+                if ( character == closingCharacter ) {
+                    if ( nextCharacter == closingCharacter ) {
+                        position += 2;
+                    } else {
+                        position++;
+                        state = "sql";
+                    }
+                } else {
+                    position++;
+                }
+                continue;
+            }
+
+            if ( character == "-" && nextCharacter == "-" ) {
+                position += 2;
+                state = "lineComment";
+                continue;
+            }
+            if ( character == "/" && nextCharacter == "*" ) {
+                position += 2;
+                state = "blockComment";
+                continue;
+            }
+            if ( character == "'" || character == """" || character == "[" ) {
+                state = character == "'" ? "singleQuote" : ( character == """" ? "doubleQuote" : "bracketQuote" );
+                position++;
+                continue;
+            }
+            if ( character == "(" ) {
+                depth++;
+                position++;
+                continue;
+            }
+            if ( character == ")" ) {
+                depth = max( 0, depth - 1 );
+                position++;
+                continue;
+            }
+            if (
+                depth == 0 &&
+                position + 5 <= sqlLength &&
+                compareNoCase( arguments.sql.mid( position, 6 ), " FROM " ) == 0
+            ) {
+                return arguments.sql.left( position - 1 ) &
+                " INTO #arguments.table#" &
+                mid( arguments.sql, position, sqlLength - position + 1 );
+            }
+
+            position++;
+        }
+
+        throw( type = "InvalidCreateAsQuery", message = "SQL Server CREATE AS queries require an outer FROM clause." );
     }
 
     function compileDropColumn( blueprint, commandParameters ) {

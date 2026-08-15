@@ -79,6 +79,19 @@ component extends="testbox.system.BaseSpec" {
                 ).toBe( 0 );
             } );
 
+            it( "does not format null temporal query parameters", function() {
+                [ "DATE", "TIME", "TIMESTAMP" ].each( function( sqlType ) {
+                    var binding = utils.extractBinding(
+                        { value: javacast( "null", "" ), cfsqltype: sqlType, null: true },
+                        variables.mockGrammar
+                    );
+
+                    expect( binding.null ).toBeTrue();
+                    expect( binding.cfsqltype ).toBe( sqlType );
+                    expect( utils.replaceBindings( "SELECT ?", [ binding ] ) ).toInclude( """null"":true" );
+                } );
+            } );
+
             describe( "boolean", () => {
                 it( "infers boolean types correctly", () => {
                     makePublic( utils, "checkIsActuallyBoolean", "publicCheckIsActuallyBoolean" );

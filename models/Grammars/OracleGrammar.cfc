@@ -413,15 +413,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return arguments.value;
         }
 
-        var value = toString( arguments.value );
-        var isQuoted = len( value ) >= 2 && left( value, 1 ) == """" && right( value, 1 ) == """";
+        var normalizedValue = toString( arguments.value );
+        var isQuoted = len( normalizedValue ) >= 2 && left( normalizedValue, 1 ) == """" && right( normalizedValue, 1 ) == """";
         if ( isQuoted ) {
-            value = mid( value, 2, len( value ) - 2 );
+            normalizedValue = mid( normalizedValue, 2, len( normalizedValue ) - 2 );
         } else {
-            value = uCase( value );
+            normalizedValue = uCase( normalizedValue );
         }
-        value = replace( value, """", """""", "all" );
-        return """#value#""";
+        normalizedValue = replace( normalizedValue, """", """""", "all" );
+        return """#normalizedValue#""";
     }
 
     function compileCreateColumn( column, blueprint ) {

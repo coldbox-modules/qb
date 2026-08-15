@@ -756,8 +756,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function selectRaw( required any expression, array bindings = [] ) {
-        for ( var sql in arrayWrap( arguments.expression ) ) {
-            addSelect( raw( sql, arguments.bindings ) );
+        var expressions = arrayWrap( arguments.expression );
+        for ( var index = 1; index <= expressions.len(); index++ ) {
+            addSelect( raw( expressions[ index ], index == 1 ? arguments.bindings : [] ) );
         }
         return this;
     }
@@ -889,18 +890,8 @@ component displayname="QueryBuilder" accessors="true" {
     private void function renameAliasesInColumns( required string oldAlias, required string newAlias ) {
         for ( var i = 1; i <= variables.columns.len(); i++ ) {
             var column = variables.columns[ i ];
-            if ( column.type == "simple" ) {
-                variables.columns[ i ] = {
-                    "type": "simple",
-                    "value": swapAlias( column.value, arguments.oldAlias, arguments.newAlias )
-                };
-            } else if ( column.type == "jsonPath" ) {
-                variables.columns[ i ].value.column = swapAlias(
-                    column.value.column,
-                    arguments.oldAlias,
-                    arguments.newAlias
-                );
-            } else if ( column.type == "builder" ) {
+            renameAliasInTypedColumn( column, arguments.oldAlias, arguments.newAlias );
+            if ( column.type == "builder" ) {
                 column.value.renameAliases( arguments.oldAlias, arguments.newAlias );
             }
         }
@@ -920,49 +911,42 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     private void function renameAliasesInGroups( required string oldAlias, required string newAlias ) {
-        for ( var i = 1; i <= variables.groups.len(); i++ ) {
-            var column = variables.groups[ i ];
-            if ( column.type == "simple" ) {
-                variables.groups[ i ].value = swapAlias( column.value, arguments.oldAlias, arguments.newAlias );
-            } else if ( column.type == "jsonPath" ) {
-                variables.groups[ i ].value.column = swapAlias(
-                    column.value.column,
-                    arguments.oldAlias,
-                    arguments.newAlias
-                );
-            }
+        for ( var column in variables.groups ) {
+            renameAliasInTypedColumn( column, arguments.oldAlias, arguments.newAlias );
         }
     }
 
     private void function renameAliasesInHavings( required string oldAlias, required string newAlias ) {
         for ( var having in variables.havings ) {
             if ( structKeyExists( having, "column" ) ) {
-                if ( having.column.type == "simple" ) {
-                    having.column.value = swapAlias( having.column.value, arguments.oldAlias, arguments.newAlias );
-                } else if ( having.column.type == "jsonPath" ) {
-                    having.column.value.column = swapAlias(
-                        having.column.value.column,
-                        arguments.oldAlias,
-                        arguments.newAlias
-                    );
-                }
+                renameAliasInTypedColumn( having.column, arguments.oldAlias, arguments.newAlias );
             }
         }
     }
 
     private void function renameAliasesInOrders( required string oldAlias, required string newAlias ) {
         for ( var order in variables.orders ) {
-            if ( order.direction != "raw" ) {
-                if ( order.column.type == "simple" ) {
-                    order.column.value = swapAlias( order.column.value, arguments.oldAlias, arguments.newAlias );
-                } else if ( order.column.type == "jsonPath" ) {
-                    order.column.value.column = swapAlias(
-                        order.column.value.column,
-                        arguments.oldAlias,
-                        arguments.newAlias
-                    );
-                }
+            if ( order.keyExists( "query" ) ) {
+                order.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+            } else if ( order.keyExists( "column" ) && order.direction != "raw" ) {
+                renameAliasInTypedColumn( order.column, arguments.oldAlias, arguments.newAlias );
             }
+        }
+    }
+
+    private void function renameAliasInTypedColumn(
+        required struct column,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        if ( arguments.column.type == "simple" ) {
+            arguments.column.value = swapAlias( arguments.column.value, arguments.oldAlias, arguments.newAlias );
+        } else if ( arguments.column.type == "jsonPath" ) {
+            arguments.column.value.column = swapAlias(
+                arguments.column.value.column,
+                arguments.oldAlias,
+                arguments.newAlias
+            );
         }
     }
 
@@ -971,19 +955,7 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        } else if ( arguments.where.column.type == "jsonPath" ) {
-            arguments.where.column.value.column = swapAlias(
-                arguments.where.column.value.column,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
     }
 
     private void function renameAliasInWhereJsonContains(
@@ -1019,20 +991,8 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( arguments.where.first.type == "simple" ) {
-            arguments.where.first.value = swapAlias(
-                arguments.where.first.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-        if ( arguments.where.second.type == "simple" ) {
-            arguments.where.second.value = swapAlias(
-                arguments.where.second.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.first, arguments.oldAlias, arguments.newAlias );
+        renameAliasInTypedColumn( arguments.where.second, arguments.oldAlias, arguments.newAlias );
     }
 
     private void function renameAliasInWhereSub(
@@ -1040,13 +1000,7 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
         arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
     }
 
@@ -1055,13 +1009,7 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
     }
 
     private void function renameAliasInWhereNotIn(
@@ -1069,13 +1017,32 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereInBulk(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereInSub(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
+        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
+    }
+
+    private void function renameAliasInWhereNotInSub(
+        required struct where,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        renameAliasInWhereInSub( argumentCollection = arguments );
     }
 
     private void function renameAliasInWhereRaw(
@@ -1115,13 +1082,7 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
     }
 
     private void function renameAliasInWhereNotNull(
@@ -1129,13 +1090,7 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
     }
 
     private void function renameAliasInWhereNullSub(
@@ -1159,13 +1114,7 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
     }
 
     private void function renameAliasInWhereNotBetween(
@@ -1173,17 +1122,11 @@ component displayname="QueryBuilder" accessors="true" {
         required string oldAlias,
         required string newAlias
     ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
+        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
     }
 
     private string function swapAlias( required string column, required string oldAlias, required string newAlias ) {
-        if ( startsWith( arguments.column, arguments.oldAlias ) ) {
+        if ( startsWith( arguments.column, arguments.oldAlias & "." ) ) {
             return arguments.newAlias & "." & listLast( arguments.column, "." );
         }
         return arguments.column;
@@ -3610,7 +3553,9 @@ component displayname="QueryBuilder" accessors="true" {
     private numeric function getCountForPagination( struct options = {} ) {
         if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
             var countSource = clone().clearOrders();
-            return newQuery().fromSub( "aggregate_table", countSource ).count( options = arguments.options );
+            return prepareInternalExecutionBuilder( newQuery() )
+                .fromSub( "aggregate_table", countSource )
+                .count( options = arguments.options );
         }
         return count( options = arguments.options );
     }
@@ -3754,8 +3699,8 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.values = [ arguments.values ];
         }
 
-        var columns = arguments.values[ 1 ]
-            .keyArray()
+        var columns = getGrammar()
+            .resolveInsertColumnNames( arguments.values )
             .map( function( column ) {
                 var formatted = listLast( applyColumnFormatter( column ), "." );
                 return { "original": column, "formatted": formatted };
@@ -3820,7 +3765,7 @@ component displayname="QueryBuilder" accessors="true" {
             return [];
         }
 
-        var columnCount = arguments.values[ 1 ].count();
+        var columnCount = getGrammar().resolveInsertColumnNames( arguments.values ).len();
         if ( columnCount == 0 ) {
             throw( type = "InvalidSQLType", message = "Please pass structs with at least one column to insertBulk." );
         }
@@ -3851,7 +3796,7 @@ component displayname="QueryBuilder" accessors="true" {
                     clearBindings( only = [ "insert" ] );
                 }
             } else {
-                var batchQuery = clone();
+                var batchQuery = prepareInternalExecutionBuilder( clone() );
                 results.append(
                     batchQuery.insert( values = batch, options = arguments.options, toSql = arguments.toSql )
                 );
@@ -3945,8 +3890,8 @@ component displayname="QueryBuilder" accessors="true" {
             values = [ values ];
         }
 
-        var columns = arguments.values[ 1 ]
-            .keyArray()
+        var columns = getGrammar()
+            .resolveInsertColumnNames( arguments.values )
             .map( function( column ) {
                 var formatted = listLast( applyColumnFormatter( column ), "." );
                 return { "original": column, "formatted": formatted };
@@ -4034,6 +3979,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return query
      */
     public any function update( struct values = {}, struct options = {}, boolean toSql = false ) {
+        arguments.values = structCopy( arguments.values );
         structAppend( arguments.values, variables.updates, false );
         var updateArray = arguments.values
             .keyArray()
@@ -4145,7 +4091,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( !isNull( arguments.source ) ) {
-            addBindingsFromBuilder( arguments.source );
+            addBindings( arguments.source.getBindings(), "insert" );
         }
 
         if ( !isArray( arguments.values ) ) {
@@ -4169,7 +4115,7 @@ component displayname="QueryBuilder" accessors="true" {
 
         var columns = [];
         if ( isStruct( arguments.values[ 1 ] ) ) {
-            columns = arguments.values[ 1 ].keyArray();
+            columns = getGrammar().resolveInsertColumnNames( arguments.values );
         } else {
             columns = arguments.values;
         }
@@ -4244,10 +4190,10 @@ component displayname="QueryBuilder" accessors="true" {
                             isNull( updates[ column.original ] ) ? javacast( "null", "" ) : updates[ column.original ],
                             variables.grammar
                         ),
-                        "where"
+                        "insert"
                     );
                 } else {
-                    addExpressionBindings( updates[ column.original ], "where" );
+                    addExpressionBindings( updates[ column.original ], "insert" );
                 }
             } );
         }
@@ -4264,7 +4210,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( getUtils().isBuilder( arguments.deleteUnmatched ) ) {
-            addBindingsFromBuilder( arguments.deleteUnmatched );
+            addBindings( arguments.deleteUnmatched.getBindings(), "insert" );
         }
 
         columns.each( ( c ) => {
@@ -4667,16 +4613,18 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public any function exists( struct options = {}, boolean toSQL = false ) {
         var existsSource = clone().setLimitValue( 1 );
-        var existsQuery = newQuery()
+        var existsQuery = prepareInternalExecutionBuilder( newQuery() )
             .clearFrom()
             .selectRaw(
                 "CASE WHEN EXISTS (#getGrammar().compileSelect( existsSource )#) THEN 1 ELSE 0 END AS aggregate",
                 existsSource.getBindings()
             );
-        return arguments.toSQL ? existsQuery.toSQL() : existsQuery
-            .setReturnFormat( "query" )
-            .get( options = arguments.options )
-            .aggregate == 1;
+        if ( arguments.toSQL ) {
+            return existsQuery.toSQL();
+        }
+
+        var result = existsQuery.setReturnFormat( "query" ).get( options = arguments.options );
+        return result.recordCount > 0 && result.aggregate == 1;
     }
 
     /**
@@ -5023,6 +4971,9 @@ component displayname="QueryBuilder" accessors="true" {
         var q = runQuery( argumentCollection = arguments );
 
         if ( isNull( q ) ) {
+            if ( variables.pretending ) {
+                return applyReturnFormat( queryNew( "" ) );
+            }
             return;
         }
 
@@ -5069,21 +5020,22 @@ component displayname="QueryBuilder" accessors="true" {
      * @return       any
      */
     private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
-        structAppend( arguments.options, getDefaultOptions(), false );
-        guardAgainstReturnTypeOption( arguments.options );
+        var queryOptions = structCopy( arguments.options );
+        structAppend( queryOptions, getDefaultOptions(), false );
+        guardAgainstReturnTypeOption( queryOptions );
         var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select", "orderBy" ] );
 
         var result = grammar.runQuery(
             sql = variables.sqlCommenter.appendSqlComments(
                 sql = sql,
-                datasource = arguments.options.keyExists( "datasource" ) && !isNull( arguments.options.datasource ) ? arguments.options.datasource : javacast(
+                datasource = queryOptions.keyExists( "datasource" ) && !isNull( queryOptions.datasource ) ? queryOptions.datasource : javacast(
                     "null",
                     ""
                 ),
                 bindings = bindings
             ),
             bindings = bindings,
-            options = arguments.options,
+            options = queryOptions,
             returnObject = returnObject,
             pretend = variables.pretending,
             postProcessHook = function( data ) {
@@ -5144,6 +5096,13 @@ component displayname="QueryBuilder" accessors="true" {
             }
         }
         return query;
+    }
+
+    private QueryBuilder function prepareInternalExecutionBuilder( required QueryBuilder query ) {
+        if ( variables.pretending ) {
+            arguments.query.pretend();
+        }
+        return arguments.query;
     }
 
     /**

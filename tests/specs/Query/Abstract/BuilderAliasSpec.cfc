@@ -106,6 +106,70 @@ component extends="testbox.system.BaseSpec" {
                     expect( qb.toSQL() ).toBe( "SELECT * FROM ""users"" AS ""u"" WHERE ""u"".""id"" NOT IN (?, ?, ?)" );
                 } );
 
+                it( "renames the columns used in bulk and subquery where in clauses", () => {
+                    var bulkQuery = new qb.models.Query.QueryBuilder();
+                    bulkQuery
+                        .from( "users" )
+                        .whereInBulk( "users.id", [ 1, 2, 3 ] )
+                        .withAlias( "u" );
+                    expect( bulkQuery.getWheres()[ 1 ].column.value ).toBe( "u.id" );
+
+                    var inSubQuery = new qb.models.Query.QueryBuilder();
+                    inSubQuery
+                        .from( "users" )
+                        .whereIn( "users.id", function( query ) {
+                            query.from( "members" ).select( "members.userId" );
+                        } )
+                        .withAlias( "u" );
+                    expect( inSubQuery.getWheres()[ 1 ].column.value ).toBe( "u.id" );
+
+                    var notInSubQuery = new qb.models.Query.QueryBuilder();
+                    notInSubQuery
+                        .from( "users" )
+                        .whereNotIn( "users.id", function( query ) {
+                            query.from( "members" ).select( "members.userId" );
+                        } )
+                        .withAlias( "u" );
+                    expect( notInSubQuery.getWheres()[ 1 ].column.value ).toBe( "u.id" );
+                } );
+
+                it( "renames aliases inside JSON path columns for every supported where shape", () => {
+                    var queries = [];
+                    queries.append(
+                        new qb.models.Query.QueryBuilder().from( "users" ).whereIn( "users.profile->id", [ 1 ] )
+                    );
+                    queries.append(
+                        new qb.models.Query.QueryBuilder().from( "users" ).whereNull( "users.profile->id" )
+                    );
+                    queries.append(
+                        new qb.models.Query.QueryBuilder().from( "users" ).whereBetween( "users.profile->id", 1, 2 )
+                    );
+
+                    queries.each( function( query ) {
+                        arguments.query.withAlias( "u" );
+                        expect( arguments.query.getWheres()[ 1 ].column.value.column ).toBe( "u.profile" );
+                    } );
+
+                    var columnQuery = new qb.models.Query.QueryBuilder()
+                        .from( "users" )
+                        .whereColumn( "users.profile->id", "users.settings->profileId" )
+                        .withAlias( "u" );
+                    expect( columnQuery.getWheres()[ 1 ].first.value.column ).toBe( "u.profile" );
+                    expect( columnQuery.getWheres()[ 1 ].second.value.column ).toBe( "u.settings" );
+
+                    var subQuery = new qb.models.Query.QueryBuilder()
+                        .from( "users" )
+                        .where(
+                            "users.profile->id",
+                            "=",
+                            function( query ) {
+                                query.from( "members" ).select( "members.userId" );
+                            }
+                        )
+                        .withAlias( "u" );
+                    expect( subQuery.getWheres()[ 1 ].column.value.column ).toBe( "u.profile" );
+                } );
+
                 it( "renames the columns used in where exists clauses", () => {
                     var qb = new qb.models.Query.QueryBuilder();
                     qb.from( "users" )
@@ -248,6 +312,33 @@ component extends="testbox.system.BaseSpec" {
                     qb.withAlias( "u" );
                     expect( qb.toSQL() ).toBe( "SELECT * FROM ""users"" AS ""u"" ORDER BY ""u"".""lastLoginDate"" DESC" );
                 } );
+
+                it( "supports random and subquery orders while renaming aliases", () => {
+                    var randomQuery = new qb.models.Query.QueryBuilder()
+                        .from( "users" )
+                        .orderByRandom()
+                        .withAlias( "u" );
+                    expect( randomQuery.toSQL() ).toBe( "SELECT * FROM ""users"" AS ""u"" ORDER BY RANDOM()" );
+
+                    var subQuery = new qb.models.Query.QueryBuilder()
+                        .from( "users" )
+                        .orderBy( function( query ) {
+                            query.from( "logins" ).selectRaw( "MAX(logins.createdDate)" );
+                        } )
+                        .withAlias( "u" );
+                    expect( subQuery.toSQL() ).toBe(
+                        "SELECT * FROM ""users"" AS ""u"" ORDER BY (SELECT MAX(logins.createdDate) FROM ""logins"") ASC"
+                    );
+                } );
+            } );
+
+            it( "does not rewrite aliases that only share a prefix", () => {
+                var qb = new qb.models.Query.QueryBuilder()
+                    .from( "users" )
+                    .select( "usersArchive.id" )
+                    .withAlias( "u" );
+
+                expect( qb.toSQL() ).toBe( "SELECT ""usersArchive"".""id"" FROM ""users"" AS ""u""" );
             } );
         } );
     }

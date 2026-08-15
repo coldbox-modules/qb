@@ -14,6 +14,28 @@ component extends="testbox.system.BaseSpec" {
                     ).toBeTrue();
                     expect( variables.sqlCommenter.containsSQLCommentPublic( "SELECT * FROM users" ) ).toBeFalse();
                 } );
+
+                it( "ignores comment tokens inside SQL string and identifier literals", function() {
+                    makePublic( variables.sqlCommenter, "containsSQLComment", "containsSQLCommentPublic" );
+
+                    expect( variables.sqlCommenter.containsSQLCommentPublic( "SELECT '--' AS marker" ) ).toBeFalse();
+                    expect( variables.sqlCommenter.containsSQLCommentPublic( "SELECT '/*' AS marker" ) ).toBeFalse();
+                    expect( variables.sqlCommenter.containsSQLCommentPublic( "SELECT ""--"" FROM users" ) ).toBeFalse();
+                    expect(
+                        variables.sqlCommenter.containsSQLCommentPublic( "SELECT '--' AS marker /* actual comment */" )
+                    ).toBeTrue();
+                } );
+
+                it( "ignores comment tokens inside PostgreSQL dollar-quoted literals", function() {
+                    makePublic( variables.sqlCommenter, "containsSQLComment", "containsSQLCommentPublic" );
+
+                    expect( variables.sqlCommenter.containsSQLCommentPublic( "SELECT $$-- not a comment$$" ) ).toBeFalse();
+                    expect(
+                        variables.sqlCommenter.containsSQLCommentPublic(
+                            "SELECT $payload$/* not a comment */$payload$"
+                        )
+                    ).toBeFalse();
+                } );
             } );
 
             describe( "serializeValue", () => {
@@ -51,6 +73,24 @@ component extends="testbox.system.BaseSpec" {
                         "SELECT * FROM foo /*action='index',dbDriver='mysql-connector-java-8.0.25%20%28Revision%3A%2008be9e9b4cba6aa115f9b27b215887af40b159e0%29',event='Main.index',framework='coldbox-6.0.0',handler='Main',route='%2F'*/"
                     );
                 } );
+
+                it( "appends comments when comment tokens only appear inside literals", function() {
+                    expect(
+                        variables.sqlCommenter.appendCommentsToSQL(
+                            sql = "SELECT '--' AS marker",
+                            comments = { "framework": "qb" }
+                        )
+                    ).toBeWithCase( "SELECT '--' AS marker /*framework='qb'*/" );
+                } );
+
+                it( "appends comments when comment tokens only appear inside dollar-quoted literals", function() {
+                    expect(
+                        variables.sqlCommenter.appendCommentsToSQL(
+                            sql = "SELECT $payload$-- not a comment$payload$ AS marker",
+                            comments = { "framework": "qb" }
+                        )
+                    ).toBeWithCase( "SELECT $payload$-- not a comment$payload$ AS marker /*framework='qb'*/" );
+                } );
             } );
 
             describe( "parseCommentedSQL", () => {
@@ -66,6 +106,15 @@ component extends="testbox.system.BaseSpec" {
                         "route": "/",
                         "dbDriver": "mysql-connector-java-8.0.25 (Revision: 08be9e9b4cba6aa115f9b27b215887af40b159e0)"
                     } );
+                } );
+
+                it( "skips comment tokens inside literals when parsing appended comments", function() {
+                    var sqlAndComments = variables.sqlCommenter.parseCommentedSQL(
+                        "SELECT '/*' AS marker /*framework='qb'*/"
+                    );
+
+                    expect( sqlAndComments.sql ).toBeWithCase( "SELECT '/*' AS marker" );
+                    expect( sqlAndComments.comments ).toBe( { "framework": "qb" } );
                 } );
             } );
         } );

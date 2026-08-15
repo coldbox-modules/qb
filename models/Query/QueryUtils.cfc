@@ -852,12 +852,13 @@ component singleton displayname="QueryUtils" accessors="true" {
 
         // Loop through the keys and compare them one at a time
         for ( var key in arguments.LeftStruct ) {
-            // key is null, null check the other side
-            if ( isNull( arguments.leftStruct[ key ] ) ) {
-                local.result = isNull( arguments.rightStruct[ key ] );
-                if ( !local.result ) {
+            var leftIsNull = isNull( arguments.leftStruct[ key ] );
+            var rightIsNull = isNull( arguments.rightStruct[ key ] );
+            if ( leftIsNull || rightIsNull ) {
+                if ( leftIsNull != rightIsNull ) {
                     return false;
                 }
+                continue;
             }
             // Key is a structure, call structCompare()
             else if ( isStruct( arguments.LeftStruct[ key ] ) ) {
@@ -909,6 +910,15 @@ component singleton displayname="QueryUtils" accessors="true" {
 
         // Loop through the elements and compare them one at a time
         for ( var i = 1; local.i lte arrayLen( LeftArray ); local.i = local.i + 1 ) {
+            var leftIsNull = isNull( arguments.LeftArray[ i ] );
+            var rightIsNull = isNull( arguments.RightArray[ i ] );
+            if ( leftIsNull || rightIsNull ) {
+                if ( leftIsNull != rightIsNull ) {
+                    return false;
+                }
+                continue;
+            }
+
             // elements is a structure, call structCompare()
             if ( isStruct( arguments.LeftArray[ i ] ) ) {
                 local.result = structCompare( arguments.LeftArray[ i ], arguments.RightArray[ i ] );

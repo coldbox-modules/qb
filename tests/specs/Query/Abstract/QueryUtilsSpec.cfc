@@ -554,6 +554,30 @@ component extends="testbox.system.BaseSpec" {
             } );
         } );
 
+        describe( "null-aware comparisons", function() {
+            it( "compares null array elements without throwing", function() {
+                var left = [ javacast( "null", "" ) ];
+                var right = [ javacast( "null", "" ) ];
+
+                expect( utils.arrayCompare( left, right ) ).toBeTrue();
+                expect( utils.arrayCompare( left, [ "value" ] ) ).toBeFalse();
+                expect( utils.arrayCompare( [ "value" ], right ) ).toBeFalse();
+            } );
+
+            it( "compares null struct values symmetrically when full null support is enabled", function() {
+                var fullNull = createObject( "java", "java.lang.System" ).getEnv( "FULL_NULL" );
+                if ( isNull( fullNull ) || !fullNull ) {
+                    return;
+                }
+
+                expect(
+                    utils.structCompare( { "value": javacast( "null", "" ) }, { "value": javacast( "null", "" ) } )
+                ).toBeTrue();
+                expect( utils.structCompare( { "value": javacast( "null", "" ) }, { "value": "present" } ) ).toBeFalse();
+                expect( utils.structCompare( { "value": "present" }, { "value": javacast( "null", "" ) } ) ).toBeFalse();
+            } );
+        } );
+
         describe( "isEqualTo()", function() {
             it( "compares equivalent common table expressions", function() {
                 var first = new qb.models.Query.QueryBuilder().with( "active_users", function( q ) {

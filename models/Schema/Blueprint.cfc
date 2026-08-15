@@ -449,8 +449,11 @@ component accessors="true" {
      * @returns The created TableIndex instance.
      */
     public TableIndex function default( required string column, string name ) {
-        param arguments.name = "df_#getUnqualifiedTableName()#_#column#";
-        return createIndex( type = "default", columns = arguments.column, name = arguments.name );
+        throw(
+            type = "UnsupportedOperation",
+            message = "Named default constraints are not supported.",
+            detail = "Set a column default by chaining `.default( value )` from the column definition."
+        );
     }
 
 
@@ -574,22 +577,29 @@ component accessors="true" {
     }
 
     public array function toSql() {
+        var originalCommands = variables.commands.map( ( command ) => command );
+        var originalIndexes = variables.indexes.map( ( index ) => index );
         var statements = [];
-        // we use a for loop here because we can potentially modify this array while looping over it.
-        for ( var i = 1; i <= variables.commands.len(); i++ ) {
-            var command = variables.commands[ i ];
-            var result = invoke(
-                getGrammar(),
-                "compile#command.getType()#",
-                { blueprint: this, commandParameters: command.getParameters() }
-            );
-            if ( isArray( result ) ) {
-                statements.append( result, true );
-            } else if ( isSimpleValue( result ) && result != "" ) {
-                statements.append( result );
+        try {
+            // we use a for loop here because we can potentially modify this array while looping over it.
+            for ( var i = 1; i <= variables.commands.len(); i++ ) {
+                var command = variables.commands[ i ];
+                var result = invoke(
+                    getGrammar(),
+                    "compile#command.getType()#",
+                    { blueprint: this, commandParameters: command.getParameters() }
+                );
+                if ( isArray( result ) ) {
+                    statements.append( result, true );
+                } else if ( isSimpleValue( result ) && result != "" ) {
+                    statements.append( result );
+                }
             }
+            return statements;
+        } finally {
+            setCommands( originalCommands );
+            setIndexes( originalIndexes );
         }
-        return statements;
     }
 
     private array function arrayWrap( required any value ) {

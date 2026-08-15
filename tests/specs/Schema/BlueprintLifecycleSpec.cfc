@@ -81,6 +81,65 @@ component extends="testbox.system.BaseSpec" {
                 expect( index.onDelete( " set null " ).getOnDeleteAction() ).toBe( "SET NULL" );
                 expect( index.onUpdate( "cascade" ).getOnUpdateAction() ).toBe( "CASCADE" );
             } );
+
+            it( "rejects unsupported named default constraints when declared", function() {
+                var blueprint = newBlueprint( new qb.models.Grammars.BaseGrammar() );
+
+                expect( function() {
+                    blueprint.default( "status" );
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
+
+            it( "does not mutate per-operation schema options", function() {
+                var options = { "timeout": 5 };
+                var originalOptions = duplicate( options );
+                var schema = new qb.models.Schema.SchemaBuilder(
+                    grammar = new qb.models.Grammars.BaseGrammar(),
+                    defaultOptions = { "datasource": "main" }
+                ).pretend();
+
+                schema.create( "users", ( table ) => table.integer( "id" ), options );
+
+                expect( options ).toBe( originalOptions );
+            } );
+
+            it( "does not retain PostgreSQL comment commands generated during compilation", function() {
+                var grammar = new qb.models.Grammars.PostgresGrammar();
+                var schema = new qb.models.Schema.SchemaBuilder( grammar );
+                var blueprint = schema.create(
+                    "users",
+                    function( table ) {
+                        table.string( "name" ).comment( "Display name" );
+                    },
+                    {},
+                    false
+                );
+
+                var firstCompilation = blueprint.toSql();
+                var secondCompilation = blueprint.toSql();
+
+                expect( secondCompilation ).toBe( firstCompilation );
+                expect( blueprint.getCommands() ).toHaveLength( 1 );
+            } );
+
+            it( "does not retain Oracle sequence and trigger commands generated during compilation", function() {
+                var grammar = new qb.models.Grammars.OracleGrammar();
+                var schema = new qb.models.Schema.SchemaBuilder( grammar );
+                var blueprint = schema.create(
+                    "users",
+                    function( table ) {
+                        table.increments( "id" );
+                    },
+                    {},
+                    false
+                );
+
+                var firstCompilation = blueprint.toSql();
+                var secondCompilation = blueprint.toSql();
+
+                expect( secondCompilation ).toBe( firstCompilation );
+                expect( blueprint.getCommands() ).toHaveLength( 1 );
+            } );
         } );
     }
 

@@ -65,19 +65,30 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return value;
         }
 
-        var value = reReplace(
-            toString( arguments.value ),
-            """",
-            "",
+        var normalizedValue = toString( arguments.value );
+        if (
+            len( normalizedValue ) >= 2 &&
+            left( normalizedValue, 1 ) == """" &&
+            right( normalizedValue, 1 ) == """"
+        ) {
+            normalizedValue = mid( normalizedValue, 2, len( normalizedValue ) - 2 );
+        }
+        var quote = chr( 96 );
+        if (
+            len( normalizedValue ) >= 2 &&
+            left( normalizedValue, 1 ) == quote &&
+            right( normalizedValue, 1 ) == quote
+        ) {
+            normalizedValue = mid( normalizedValue, 2, len( normalizedValue ) - 2 );
+        }
+        normalizedValue = replace(
+            normalizedValue,
+            quote,
+            quote & quote,
             "all"
         );
-        var quote = chr( 96 );
-        if ( len( value ) >= 2 && left( value, 1 ) == quote && right( value, 1 ) == quote ) {
-            value = mid( value, 2, len( value ) - 2 );
-        }
-        value = replace( value, quote, quote & quote, "all" );
 
-        return "#quote##value##quote#";
+        return "#quote##normalizedValue##quote#";
     }
 
     /**

@@ -377,12 +377,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return arguments.value;
         }
 
-        var value = toString( arguments.value );
-        if ( len( value ) >= 2 && left( value, 1 ) == """" && right( value, 1 ) == """" ) {
-            value = mid( value, 2, len( value ) - 2 );
+        var normalizedValue = toString( arguments.value );
+        if (
+            len( normalizedValue ) >= 2 &&
+            left( normalizedValue, 1 ) == """" &&
+            right( normalizedValue, 1 ) == """"
+        ) {
+            normalizedValue = mid( normalizedValue, 2, len( normalizedValue ) - 2 );
         }
-        value = replace( value, """", """""", "all" );
-        return """#value#""";
+        normalizedValue = replace( normalizedValue, """", """""", "all" );
+        return """#normalizedValue#""";
     }
 
     function compileCreateAs( blueprint, commandParameters ) {

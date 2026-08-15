@@ -224,6 +224,15 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            describe( "selectRaw()", function() {
+                it( "applies a flat binding list once across multiple expressions", function() {
+                    query.selectRaw( [ "? AS firstValue", "? AS secondValue" ], [ 1, 2 ] ).from( "users" );
+
+                    expect( query.toSql() ).toBe( "SELECT ? AS firstValue, ? AS secondValue FROM ""users""" );
+                    expect( query.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, 2 ] );
+                } );
+            } );
+
             describe( "addSelect()", function() {
                 beforeEach( function() {
                     query.select( "::some_column::" );

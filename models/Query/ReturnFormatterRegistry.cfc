@@ -48,8 +48,8 @@ component accessors="true" singleton {
 
         variables.returnFormatters[ arguments.name ] = {
             "factory": arguments.factory,
-            "options": arguments.options,
-            "properties": arguments.properties
+            "options": cloneConfigurationValue( arguments.options ),
+            "properties": cloneConfigurationValue( arguments.properties )
         };
 
         return this;
@@ -64,11 +64,10 @@ component accessors="true" singleton {
         }
 
         var definition = variables.returnFormatters[ arguments.name ];
-        var formatterOptions = {};
-        structAppend( formatterOptions, definition.options, true );
-        structAppend( formatterOptions, arguments.options, true );
+        var formatterOptions = cloneConfigurationValue( definition.options );
+        structAppend( formatterOptions, cloneConfigurationValue( arguments.options ), true );
 
-        var factory = resolveFactory( definition.factory, definition.properties );
+        var factory = resolveFactory( definition.factory, cloneConfigurationValue( definition.properties ) );
 
         if ( isClosure( factory ) || isCustomFunction( factory ) ) {
             return factory( formatterOptions );
@@ -133,6 +132,22 @@ component accessors="true" singleton {
             "properties": {},
             "force": false
         };
+    }
+
+    private any function cloneConfigurationValue( required any value ) {
+        if ( isStruct( arguments.value ) ) {
+            var clonedStruct = {};
+            for ( var key in arguments.value ) {
+                clonedStruct[ key ] = cloneConfigurationValue( arguments.value[ key ] );
+            }
+            return clonedStruct;
+        }
+
+        if ( isArray( arguments.value ) ) {
+            return arguments.value.map( ( item ) => cloneConfigurationValue( item ) );
+        }
+
+        return arguments.value;
     }
 
     private function resolveFactory( required any factory, struct properties = {} ) {

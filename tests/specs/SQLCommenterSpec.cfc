@@ -91,6 +91,17 @@ component extends="testbox.system.BaseSpec" {
                         )
                     ).toBeWithCase( "SELECT $payload$-- not a comment$payload$ AS marker /*framework='qb'*/" );
                 } );
+
+                it( "detects existing comments after unmatched dollar-delimited identifiers", function() {
+                    var sql = "SELECT $tag$ FROM records /*framework='existing'*/";
+
+                    expect(
+                        variables.sqlCommenter.appendCommentsToSQL(
+                            sql = sql,
+                            comments = { "framework": "replacement" }
+                        )
+                    ).toBeWithCase( sql );
+                } );
             } );
 
             describe( "parseCommentedSQL", () => {

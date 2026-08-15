@@ -157,9 +157,12 @@ component singleton {
                     true
                 );
                 if ( dollarQuoteMatch.len[ 1 ] > 0 ) {
-                    dollarQuoteDelimiter = mid( arguments.sql, position, dollarQuoteMatch.len[ 1 ] );
-                    position += len( dollarQuoteDelimiter );
-                    continue;
+                    var candidateDelimiter = mid( arguments.sql, position, dollarQuoteMatch.len[ 1 ] );
+                    if ( find( candidateDelimiter, arguments.sql, position + len( candidateDelimiter ) ) > 0 ) {
+                        dollarQuoteDelimiter = candidateDelimiter;
+                        position += len( dollarQuoteDelimiter );
+                        continue;
+                    }
                 }
             }
             if ( character == "'" || character == """" || character == chr( 96 ) || character == "[" ) {

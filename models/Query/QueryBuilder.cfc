@@ -1275,6 +1275,8 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.input = subquery;
         }
 
+        arguments.input = snapshotBuilder( arguments.input );
+
         // generate the derived table SQL
         this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
         variables.grammarCompiledFrom = true;
@@ -1404,13 +1406,20 @@ component displayname="QueryBuilder" accessors="true" {
         var join = new qb.models.Query.JoinClause( joiningQuery = this, type = arguments.type, table = arguments.table );
 
         if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
-            first( join );
+            var commonTableState = captureCommonTableState();
+            try {
+                first( join );
+            } catch ( any e ) {
+                restoreCommonTableState( commonTableState );
+                rethrow;
+            }
             if ( arguments.preventDuplicateJoins ) {
                 var hasThisJoin = variables.joins.find( function( existingJoin ) {
                     return existingJoin.isEqualTo( join );
                 } );
 
                 if ( hasThisJoin ) {
+                    restoreCommonTableState( commonTableState );
                     return this;
                 }
             }
@@ -1756,33 +1765,43 @@ component displayname="QueryBuilder" accessors="true" {
         string type = "inner",
         boolean where = false
     ) {
+        var commonTableState = captureCommonTableState();
         // since we have a callback, we generate a new query object and pass it into the callback
-        if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
-            var subquery = newQuery();
-            arguments.input( subquery );
-            // replace the original query builder with the results of the sub-query
-            arguments.input = subquery;
+        try {
+            if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
+                var subquery = newQuery();
+                arguments.input( subquery );
+                // replace the original query builder with the results of the sub-query
+                arguments.input = subquery;
+            }
+            arguments.input = snapshotBuilder( arguments.input );
+
+            // create the table reference
+            arguments.table = raw(
+                getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
+                arguments.input.getBindings()
+            );
+
+            // remove the non-standard arguments
+            structDelete( arguments, "input" );
+            structDelete( arguments, "alias" );
+
+            var joinCount = variables.joins.len();
+            var result = join( argumentCollection = arguments );
+            if ( variables.joins.len() > joinCount ) {
+                variables.grammarCompiledJoin = true;
+            } else {
+                restoreCommonTableState( commonTableState );
+            }
+            return result;
+        } catch ( any e ) {
+            restoreCommonTableState( commonTableState );
+            rethrow;
         }
-
-        // create the table reference
-        arguments.table = raw(
-            getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
-            arguments.input.getBindings()
-        );
-
-        // remove the non-standard arguments
-        structDelete( arguments, "input" );
-        structDelete( arguments, "alias" );
-
-        var joinCount = variables.joins.len();
-        var result = join( argumentCollection = arguments );
-        if ( variables.joins.len() > joinCount ) {
-            variables.grammarCompiledJoin = true;
-        }
-        return result;
     }
 
     private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
+        var commonTableState = captureCommonTableState();
         if ( type != "outer apply" && type != "cross apply" && type != "lateral" ) {
             throw(
                 type = "QBInvalidJoinType",
@@ -1806,6 +1825,8 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.tableLikeSource = subquery;
         }
 
+        arguments.tableLikeSource = snapshotBuilder( arguments.tableLikeSource );
+
         var join = new qb.models.Query.JoinClause(
             joiningQuery = this,
             type = type,
@@ -1821,7 +1842,7 @@ component displayname="QueryBuilder" accessors="true" {
 
             if ( hasThisJoin ) {
                 // Do nothing, early return
-                // We have not mutated `this` in any way.
+                restoreCommonTableState( commonTableState );
                 return this;
             }
         }
@@ -1910,23 +1931,30 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoinSub( required any alias, required any input ) {
+        var commonTableState = captureCommonTableState();
         // since we have a callback, we generate a new query object and pass it into the callback
-        if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
-            var subquery = newQuery();
-            arguments.input( subquery );
-            // replace the original query builder with the results of the sub-query
-            arguments.input = subquery;
+        try {
+            if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
+                var subquery = newQuery();
+                arguments.input( subquery );
+                // replace the original query builder with the results of the sub-query
+                arguments.input = subquery;
+            }
+            arguments.input = snapshotBuilder( arguments.input );
+
+            // create the table reference
+            var table = raw(
+                getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
+                arguments.input.getBindings()
+            );
+
+            var result = crossJoin( table );
+            variables.grammarCompiledJoin = true;
+            return result;
+        } catch ( any e ) {
+            restoreCommonTableState( commonTableState );
+            rethrow;
         }
-
-        // create the table reference
-        var table = raw(
-            getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
-            arguments.input.getBindings()
-        );
-
-        var result = crossJoin( table );
-        variables.grammarCompiledJoin = true;
-        return result;
     }
 
     /**
@@ -2428,7 +2456,9 @@ component displayname="QueryBuilder" accessors="true" {
         } );
 
         var bindings = [];
-        addColumnBindings( [ typedColumn ], "where" );
+        if ( !arguments.values.isEmpty() ) {
+            addColumnBindings( [ typedColumn ], "where" );
+        }
         for ( var value in arguments.values ) {
             if ( getUtils().isExpression( value ) ) {
                 bindings.append( extractExpressionBindings( value ), true );
@@ -2503,8 +2533,8 @@ component displayname="QueryBuilder" accessors="true" {
             combinator: arguments.combinator
         } );
 
-        addColumnBindings( [ typedColumn ], "where" );
         if ( !arguments.values.isEmpty() ) {
+            addColumnBindings( [ typedColumn ], "where" );
             var serializedValues = extractedBindings.map( function( binding ) {
                 return binding.null ? javacast( "null", "" ) : binding.value;
             } );
@@ -3892,6 +3922,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.source = newQuery();
             callback( arguments.source );
         }
+        arguments.source = snapshotBuilder( arguments.source );
 
         clearBindings( except = [ "commonTables" ] );
 
@@ -4061,8 +4092,8 @@ component displayname="QueryBuilder" accessors="true" {
             if ( isCustomFunction( value ) || isClosure( value ) ) {
                 var subselect = newQuery();
                 value( subselect );
-                arguments.values[ column.original ] = subselect;
-                addBindings( subselect.getBindings(), "update" );
+                arguments.values[ column.original ] = snapshotBuilder( subselect );
+                addBindings( arguments.values[ column.original ].getBindings(), "update" );
             } else if ( getUtils().isBuilder( value ) ) {
                 arguments.values[ column.original ] = snapshotBuilder( value );
                 addBindings( arguments.values[ column.original ].getBindings(), "update" );
@@ -4160,6 +4191,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( !isNull( arguments.source ) ) {
+            arguments.source = snapshotBuilder( arguments.source );
             addBindings( arguments.source.getBindings(), "insert" );
         }
 
@@ -4279,6 +4311,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         if ( getUtils().isBuilder( arguments.deleteUnmatched ) ) {
+            arguments.deleteUnmatched = snapshotBuilder( arguments.deleteUnmatched );
             addBindings( arguments.deleteUnmatched.getBindings(), "insert" );
         }
 
@@ -4443,7 +4476,49 @@ component displayname="QueryBuilder" accessors="true" {
      * Clones a child builder when it is attached so its SQL and copied bindings cannot diverge later.
      */
     private QueryBuilder function snapshotBuilder( required QueryBuilder builder ) {
-        return arguments.builder.clone();
+        var snapshot = arguments.builder.clone();
+        var hoistTarget = isJoin() ? getJoiningQuery() : this;
+        hoistNestedCommonTables( snapshot, hoistTarget );
+        return snapshot;
+    }
+
+    private struct function captureCommonTableState() {
+        return {
+            commonTableCount: variables.commonTables.len(),
+            commonTableBindingCount: variables.bindings.commonTables.len()
+        };
+    }
+
+    private void function restoreCommonTableState( required struct state ) {
+        variables.commonTables = arguments.state.commonTableCount == 0
+         ? []
+         : variables.commonTables.slice( 1, arguments.state.commonTableCount );
+        variables.bindings.commonTables = arguments.state.commonTableBindingCount == 0
+         ? []
+         : variables.bindings.commonTables.slice( 1, arguments.state.commonTableBindingCount );
+    }
+
+    /**
+     * Moves SQL Server CTEs from an embedded query to the statement that contains it.
+     * T-SQL only permits the WITH clause at the statement level, not inside the
+     * parentheses used for derived tables and predicate subqueries.
+     */
+    private QueryBuilder function hoistNestedCommonTables( required QueryBuilder source, required QueryBuilder target ) {
+        if (
+            !isInstanceOf( arguments.target.getGrammar(), "qb.models.Grammars.SqlServerGrammar" ) ||
+            arguments.source.getCommonTables().isEmpty()
+        ) {
+            return arguments.source;
+        }
+
+        var targetCommonTables = arguments.target.getCommonTables();
+        targetCommonTables.append( arguments.source.getCommonTables(), true );
+        arguments.target.setCommonTables( targetCommonTables );
+        arguments.target.addBindings( arguments.source.getRawBindings().commonTables, "commonTables" );
+
+        arguments.source.setCommonTables( [] );
+        arguments.source.getRawBindings().commonTables = [];
+        return arguments.source;
     }
 
     /**
@@ -4669,12 +4744,12 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public any function exists( struct options = {}, boolean toSQL = false ) {
         var existsSource = clone().setLimitValue( 1 );
-        var existsQuery = prepareInternalExecutionBuilder( newQuery() )
-            .clearFrom()
-            .selectRaw(
-                "CASE WHEN EXISTS (#getGrammar().compileSelect( existsSource )#) THEN 1 ELSE 0 END AS aggregate",
-                existsSource.getBindings()
-            );
+        var existsQuery = prepareInternalExecutionBuilder( newQuery() ).clearFrom();
+        hoistNestedCommonTables( existsSource, existsQuery );
+        existsQuery.selectRaw(
+            "CASE WHEN EXISTS (#getGrammar().compileSelect( existsSource )#) THEN 1 ELSE 0 END AS aggregate",
+            existsSource.getBindings()
+        );
         if ( arguments.toSQL ) {
             return existsQuery.toSQL();
         }

@@ -75,6 +75,50 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                 );
             } );
         } );
+
+        describe( "SQL Server CTE-backed schema queries", function() {
+            it( "creates views with a statement-level common table expression", function() {
+                var statements = getBuilder()
+                    .createView(
+                        "active_users",
+                        function( query ) {
+                            query
+                                .with( "filtered_users", function( cte ) {
+                                    cte.from( "users" ).where( "active", 1 );
+                                } )
+                                .from( "filtered_users" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [
+                    "CREATE VIEW [active_users] AS WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * FROM [filtered_users]"
+                ] );
+            } );
+
+            it( "adds SELECT INTO to the outer query after a common table expression", function() {
+                var statements = getBuilder()
+                    .createAs(
+                        "active_users",
+                        function( query ) {
+                            query
+                                .with( "filtered_users", function( cte ) {
+                                    cte.from( "users" ).where( "active", 1 );
+                                } )
+                                .from( "filtered_users" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [
+                    ";WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * INTO [active_users] FROM [filtered_users]"
+                ] );
+            } );
+        } );
     }
 
     function emptyTable() {

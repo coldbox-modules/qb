@@ -111,18 +111,21 @@ component singleton displayname="QueryUtils" accessors="true" {
             }
         }
 
-        if ( binding.cfsqltype == "TIMESTAMP" ) {
+        structAppend( binding, { list: false, null: false }, false );
+        if ( binding.null && ( !binding.keyExists( "value" ) || isNull( binding.value ) ) ) {
+            binding.value = "";
+        }
+
+        if ( !binding.null && binding.cfsqltype == "TIMESTAMP" ) {
             binding.value = isBoxLang() ? dateTimeFormat( binding.value, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX" ) : dateTimeFormat(
                 binding.value,
                 "yyyy-mm-dd'T'HH:nn:ss.lllXXX"
             );
-        } else if ( binding.cfsqltype == "DATE" ) {
+        } else if ( !binding.null && binding.cfsqltype == "DATE" ) {
             binding.value = dateFormat( binding.value, "yyyy-MM-dd" );
-        } else if ( binding.cfsqltype == "TIME" ) {
+        } else if ( !binding.null && binding.cfsqltype == "TIME" ) {
             binding.value = timeFormat( binding.value, "HH:mm:ss.nZ" );
         }
-        structAppend( binding, { list: false, null: false }, false );
-
         if ( isFloatingPoint( binding ) ) {
             param binding.scale = calculateNumberOfDecimalDigits( binding );
         }

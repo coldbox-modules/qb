@@ -657,10 +657,10 @@ component displayname="Grammar" accessors="true" singleton {
      */
     private string function whereBetween( required QueryBuilder query, required struct where ) {
         var start = variables.utils.isExpression( where.start ) ? where.start.getSql() : (
-            isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)"
+            variables.utils.isBuilder( where.start ) ? "(#compileSelect( where.start )#)" : "?"
         );
         var end = variables.utils.isExpression( where.end ) ? where.end.getSql() : (
-            isSimpleValue( where.end ) ? "?" : "(#compileSelect( where.end )#)"
+            variables.utils.isBuilder( where.end ) ? "(#compileSelect( where.end )#)" : "?"
         );
         return "#wrapColumn( where.column )# BETWEEN #start# AND #end#";
     }
@@ -675,10 +675,10 @@ component displayname="Grammar" accessors="true" singleton {
      */
     private string function whereNotBetween( required QueryBuilder query, required struct where ) {
         var start = variables.utils.isExpression( where.start ) ? where.start.getSql() : (
-            isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)"
+            variables.utils.isBuilder( where.start ) ? "(#compileSelect( where.start )#)" : "?"
         );
         var end = variables.utils.isExpression( where.end ) ? where.end.getSql() : (
-            isSimpleValue( where.end ) ? "?" : "(#compileSelect( where.end )#)"
+            variables.utils.isBuilder( where.end ) ? "(#compileSelect( where.end )#)" : "?"
         );
         return "#wrapColumn( where.column )# NOT BETWEEN #start# AND #end#";
     }

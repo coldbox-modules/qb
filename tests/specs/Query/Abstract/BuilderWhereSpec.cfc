@@ -92,6 +92,38 @@ component extends="testbox.system.BaseSpec" {
                         expect( where.type ).toBe( "notIn" );
                     } );
 
+                    it( "does not retain raw column bindings for empty IN predicates", function() {
+                        var cases = [
+                            { apply: ( builder, column ) => builder.whereIn( column, [] ), predicate: "0 = 1" },
+                            { apply: ( builder, column ) => builder.whereNotIn( column, [] ), predicate: "1 = 1" },
+                            { apply: ( builder, column ) => builder.whereInBulk( column, [] ), predicate: "0 = 1" },
+                            { apply: ( builder, column ) => builder.whereNotInBulk( column, [] ), predicate: "1 = 1" }
+                        ];
+
+                        cases.each( function( testCase ) {
+                            var builder = new qb.models.Query.QueryBuilder().from( "users" );
+                            testCase.apply( builder, builder.raw( "COALESCE(?, id)", [ 99 ] ) );
+
+                            expect( builder.toSQL( showBindings = true ) ).toBe(
+                                "SELECT * FROM ""users"" WHERE #testCase.predicate#"
+                            );
+                            expect( builder.getBindings() ).toBeEmpty();
+                        } );
+                    } );
+
+                    it( "treats null query parameter structs as BETWEEN bindings", function() {
+                        var builder = new qb.models.Query.QueryBuilder()
+                            .from( "users" )
+                            .whereBetween(
+                                "age",
+                                { value: javacast( "null", "" ), cfsqltype: "INTEGER", null: true },
+                                10
+                            );
+
+                        expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""age"" BETWEEN ? AND ?" );
+                        expect( builder.getBindings()[ 1 ].null ).toBeTrue();
+                    } );
+
                     it( "has a orWhere shortcut", function() {
                         qb.orWhere( "::some column::", "<>", "::some value::" );
 

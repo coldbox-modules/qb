@@ -15,6 +15,18 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                     builder.update( values = { "name": "changed" }, toSQL = true );
                 } ).toThrow( type = "UnsupportedOperation" );
             } );
+
+            it( "rejects unsupported CTE delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 0 );
+                    } )
+                    .from( "inactive_users" );
+
+                expect( function() {
+                    builder.delete( toSQL = true );
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
         } );
     }
 

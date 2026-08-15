@@ -301,7 +301,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 .map( wrapColumn )
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
-            return trim( "DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )##returningClause#" );
+            return trim(
+                compileCommonTables( query, query.getCommonTables() ) & " DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )##returningClause#"
+            );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

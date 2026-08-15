@@ -107,6 +107,25 @@ component extends="testbox.system.BaseSpec" {
                 expect( registry.hasReturnFormatter( "custom" ) ).toBeTrue();
             } );
 
+            it( "snapshots formatter options supplied by callers", function() {
+                var options = { "prefix": { "value": "user-" } };
+                var registry = new qb.models.Query.ReturnFormatterRegistry();
+                registry.registerReturnFormatter(
+                    name = "ids",
+                    factory = function( formatterOptions ) {
+                        return function( q ) {
+                            return formatterOptions.prefix.value & q.id[ 1 ];
+                        };
+                    },
+                    options = options
+                );
+
+                options.prefix.value = "account-";
+                var q = queryNew( "id", "integer", [ { "id": 1 } ] );
+
+                expect( registry.getReturnFormatter( "ids" )( q ) ).toBe( "user-1" );
+            } );
+
             it( "resolves WireBox formatter factories with properties", function() {
                 var registry = new qb.models.Query.ReturnFormatterRegistry();
                 registry.setWirebox( {

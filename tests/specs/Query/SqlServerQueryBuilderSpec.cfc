@@ -174,6 +174,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 expect( sql ).toMatch( "^;?WITH" );
                 expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed", 42 ] );
             } );
+
+            it( "compiles CTEs before delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 0 );
+                    } )
+                    .from( "inactive_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.delete( toSQL = true );
+
+                expect( sql ).toMatch( "^;?WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 0, 42 ] );
+            } );
         } );
     }
 

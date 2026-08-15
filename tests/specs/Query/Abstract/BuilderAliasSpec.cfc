@@ -429,6 +429,19 @@ component extends="testbox.system.BaseSpec" {
                     "WITH ""local_users"" AS (SELECT ""users"".""id"" FROM ""users"") SELECT ""u"".""id"" FROM ""users"" AS ""u"""
                 );
             } );
+
+            it( "does not rename aliases shadowed by an exists subquery table", function() {
+                var qb = new qb.models.Query.QueryBuilder();
+                qb.from( "users" )
+                    .whereExists( function( existsQuery ) {
+                        existsQuery.from( "users" ).whereColumn( "users.managerId", "users.id" );
+                    } )
+                    .withAlias( "u" );
+
+                expect( qb.toSQL() ).toBe(
+                    "SELECT * FROM ""users"" AS ""u"" WHERE EXISTS (SELECT * FROM ""users"" WHERE ""users"".""managerId"" = ""users"".""id"")"
+                );
+            } );
         } );
     }
 

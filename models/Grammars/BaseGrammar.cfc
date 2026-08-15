@@ -95,6 +95,10 @@ component displayname="Grammar" accessors="true" singleton {
      * Returns the binding groups in the order they appear in a SELECT statement.
      */
     public array function getSelectBindingOrder( required QueryBuilder query ) {
+        if ( !arguments.query.getRawBindings().update.isEmpty() ) {
+            return getUpdateBindingOrder( arguments.query );
+        }
+
         return [
             "commonTables",
             "update",
@@ -1229,6 +1233,12 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function compileDelete( required QueryBuilder query ) {
+        if ( !arguments.query.getCommonTables().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support DELETE statements with Common Table Expressions."
+            );
+        }
         if ( !arguments.query.getReturning().isEmpty() ) {
             throw(
                 type = "UnsupportedOperation",

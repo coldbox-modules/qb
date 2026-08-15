@@ -16,6 +16,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
                 expect( builder.getQueryLog()[ 1 ].bindings.map( ( binding ) => binding.value ) ).toBe( [ 1, "changed" ] );
             } );
+
+            it( "returns bindings in update SQL order for manual execution", function() {
+                var builder = getBuilder();
+
+                builder
+                    .table( "employees" )
+                    .join( "departments", function( join ) {
+                        join.on( "departments.id", "employees.departmentId" ).where( "departments.active", 1 );
+                    } )
+                    .update( values = { "departmentName": "changed" }, toSQL = true );
+
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed" ] );
+            } );
         } );
 
         describe( "MySQL data modification CTEs", function() {
@@ -31,6 +44,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
                 expect( sql ).toStartWith( "WITH" );
                 expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed", 42 ] );
+            } );
+
+            it( "compiles CTEs before delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 0 );
+                    } )
+                    .from( "inactive_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.delete( toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 0, 42 ] );
             } );
         } );
     }

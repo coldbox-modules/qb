@@ -134,17 +134,30 @@ component accessors="true" singleton {
         };
     }
 
-    private any function cloneConfigurationValue( required any value ) {
+    private any function cloneConfigurationValue( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return javacast( "null", "" );
+        }
+
         if ( isStruct( arguments.value ) ) {
             var clonedStruct = {};
             for ( var key in arguments.value ) {
-                clonedStruct[ key ] = cloneConfigurationValue( arguments.value[ key ] );
+                clonedStruct[ key ] = isNull( arguments.value[ key ] )
+                 ? javacast( "null", "" )
+                 : cloneConfigurationValue( arguments.value[ key ] );
             }
             return clonedStruct;
         }
 
         if ( isArray( arguments.value ) ) {
-            return arguments.value.map( ( item ) => cloneConfigurationValue( item ) );
+            var clonedArray = [];
+            arrayResize( clonedArray, arguments.value.len() );
+            for ( var i = 1; i <= arguments.value.len(); i++ ) {
+                clonedArray[ i ] = isNull( arguments.value[ i ] )
+                 ? javacast( "null", "" )
+                 : cloneConfigurationValue( arguments.value[ i ] );
+            }
+            return clonedArray;
         }
 
         return arguments.value;

@@ -268,11 +268,14 @@ component singleton displayname="QueryUtils" accessors="true" {
                     true
                 );
                 if ( dollarQuoteMatch.len[ 1 ] > 0 ) {
-                    dollarQuoteDelimiter = mid( arguments.sql, position, dollarQuoteMatch.len[ 1 ] );
-                    output.append( dollarQuoteDelimiter );
-                    position += len( dollarQuoteDelimiter );
-                    state = "dollarQuote";
-                    continue;
+                    var candidateDelimiter = mid( arguments.sql, position, dollarQuoteMatch.len[ 1 ] );
+                    if ( find( candidateDelimiter, arguments.sql, position + len( candidateDelimiter ) ) > 0 ) {
+                        dollarQuoteDelimiter = candidateDelimiter;
+                        output.append( dollarQuoteDelimiter );
+                        position += len( dollarQuoteDelimiter );
+                        state = "dollarQuote";
+                        continue;
+                    }
                 }
             }
 

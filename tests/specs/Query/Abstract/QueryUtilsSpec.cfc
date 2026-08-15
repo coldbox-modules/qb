@@ -301,6 +301,14 @@ component extends="testbox.system.BaseSpec" {
                 ).toBe( "SELECT $tag$, 42 FROM records" );
             } );
 
+            it( "requires a closing delimiter before treating generic SQL as dollar quoted", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect( utils.replaceBindings( "SELECT $tag$, ? FROM records", [ binding ], true ) ).toBe(
+                    "SELECT $tag$, 42 FROM records"
+                );
+            } );
+
             it( "preserves question marks in SQL Server bracketed identifiers", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
 

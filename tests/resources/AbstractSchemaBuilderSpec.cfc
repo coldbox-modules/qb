@@ -92,6 +92,19 @@ component extends="testbox.system.BaseSpec" {
                     }, bigIntegerWithPrecision() );
                 } );
 
+                it( "binary", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "users",
+                            function( table ) {
+                                table.binary( "avatar" );
+                            },
+                            {},
+                            false
+                        );
+                    }, binary() );
+                } );
+
                 it( "bit", function() {
                     testCase( function( schema ) {
                         return schema.create(

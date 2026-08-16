@@ -585,6 +585,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     =           Column Types            =
     ===================================*/
 
+    function typeBinary( column ) {
+        return "BYTEA";
+    }
+
     function typeBoolean( column ) {
         return "BOOLEAN";
     }

@@ -492,6 +492,23 @@ component extends="testbox.system.BaseSpec" {
                     "SELECT * FROM ""users"" AS ""u"" WHERE EXISTS (SELECT * FROM ""users"" WHERE ""users"".""managerId"" = ""users"".""id"")"
                 );
             } );
+
+            it( "renames correlated aliases inside deferred update subqueries", function() {
+                var qb = new qb.models.Query.QueryBuilder().from( "users" );
+                qb.addUpdate( {
+                        score: qb
+                            .newQuery()
+                            .from( "scores" )
+                            .select( "scores.value" )
+                            .whereColumn( "scores.userId", "users.id" )
+                    } )
+                    .withAlias( "u" );
+
+                var sql = qb.update( toSQL = true );
+
+                expect( sql ).notToInclude( """users"".""id""" );
+                expect( sql ).toInclude( """u"".""id""" );
+            } );
         } );
     }
 

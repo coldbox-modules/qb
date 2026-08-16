@@ -87,10 +87,12 @@ component {
         if ( this.getValidateOperatorsAndCombinators() && isInvalidJsonCombinator( arguments.combinator ) ) {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
-        if (
-            !arguments.keyExists( "value" ) ||
-            ( isNull( arguments.value ) && arguments.column.find( "->" ) > 0 )
-        ) {
+        var valueWasOmitted = !arguments.keyExists( "value" );
+        if ( server.keyExists( "boxlang" ) && isNull( arguments.value ) ) {
+            valueWasOmitted = !isArray( arguments.path ) ||
+            ( arguments.column.find( "->" ) > 0 && !arguments.path.isEmpty() );
+        }
+        if ( valueWasOmitted ) {
             arguments.value = arguments.path;
             arguments.path = [];
         }
@@ -126,19 +128,11 @@ component {
         return whereJsonContains( argumentCollection = arguments, combinator = "or" );
     }
 
-    public QueryBuilder function whereJsonDoesntContain(
-        required string column,
-        any path = [],
-        any value
-    ) {
+    public QueryBuilder function whereJsonDoesntContain( required string column, any path = [], any value ) {
         return whereJsonContains( argumentCollection = arguments, negate = true );
     }
 
-    public QueryBuilder function orWhereJsonDoesntContain(
-        required string column,
-        any path = [],
-        any value
-    ) {
+    public QueryBuilder function orWhereJsonDoesntContain( required string column, any path = [], any value ) {
         return whereJsonContains( argumentCollection = arguments, combinator = "or", negate = true );
     }
 

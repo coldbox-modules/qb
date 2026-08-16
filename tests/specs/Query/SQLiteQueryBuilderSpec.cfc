@@ -1322,6 +1322,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function deleteWithJoinsAndAliases() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function crossApply() {
         return { exception: "UnsupportedOperation" }
     }
@@ -1382,6 +1386,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonEmptyCompoundContains() {
         return { exception: "UnsupportedOperation" };
     }
 

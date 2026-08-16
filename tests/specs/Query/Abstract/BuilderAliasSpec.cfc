@@ -12,6 +12,18 @@ component extends="testbox.system.BaseSpec" {
                 expect( qb.toSQL() ).toBe( "SELECT ""u"".""id"" FROM ""users"" AS ""u""" );
             } );
 
+            it( "keeps table() equivalent to from() when replacing an alias", () => {
+                var qb = new qb.models.Query.QueryBuilder();
+
+                qb.table( "users AS u" )
+                    .select( "u.id" )
+                    .withAlias( "members" );
+
+                expect( qb.getTableName() ).toBe( "users" );
+                expect( qb.getAlias() ).toBe( "members" );
+                expect( qb.toSQL() ).toBe( "SELECT ""members"".""id"" FROM ""users"" AS ""members""" );
+            } );
+
             it( "parses join aliases separated by repeated whitespace", () => {
                 var qb = new qb.models.Query.QueryBuilder();
 

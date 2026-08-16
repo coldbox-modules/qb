@@ -554,7 +554,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @return boolean
      */
-    public boolean function isExpression( required any value ) {
+    public boolean function isExpression( any value ) {
         return !isNull( arguments.value ) &&
         !isSimpleValue( arguments.value ) &&
         !isArray( arguments.value ) &&
@@ -568,7 +568,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @return boolean
      */
-    public boolean function isNotExpression( required any value ) {
+    public boolean function isNotExpression( any value ) {
         if ( isNull( arguments.value ) ) {
             return true;
         }
@@ -584,7 +584,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @return boolean
      */
-    public boolean function isBuilder( required any value ) {
+    public boolean function isBuilder( any value ) {
         if ( isNull( arguments.value ) ) {
             return false;
         }
@@ -604,7 +604,7 @@ component singleton displayname="QueryUtils" accessors="true" {
      *
      * @return boolean
      */
-    public boolean function isNotBuilder( required any value ) {
+    public boolean function isNotBuilder( any value ) {
         return !isBuilder( isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value );
     }
 

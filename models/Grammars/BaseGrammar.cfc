@@ -351,11 +351,7 @@ component displayname="Grammar" accessors="true" singleton {
             return "";
         }
 
-        var fullTable = arguments.tableName;
-        if ( query.getAlias() != "" ) {
-            fullTable &= " #query.getAlias()#";
-        }
-        return "FROM " & wrapTable( fullTable );
+        return "FROM " & wrapQueryTable( arguments.query );
     }
 
     private string function compileForClause( required QueryBuilder query, any forClause ) {
@@ -656,11 +652,15 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereBetween( required QueryBuilder query, required struct where ) {
-        var start = variables.utils.isExpression( where.start ) ? where.start.getSql() : (
-            variables.utils.isBuilder( where.start ) ? "(#compileSelect( where.start )#)" : "?"
+        var start = !where.keyExists( "start" ) || isNull( where.start ) ? "?" : (
+            variables.utils.isExpression( where.start ) ? where.start.getSql() : (
+                variables.utils.isBuilder( where.start ) ? "(#compileSelect( where.start )#)" : "?"
+            )
         );
-        var end = variables.utils.isExpression( where.end ) ? where.end.getSql() : (
-            variables.utils.isBuilder( where.end ) ? "(#compileSelect( where.end )#)" : "?"
+        var end = !where.keyExists( "end" ) || isNull( where.end ) ? "?" : (
+            variables.utils.isExpression( where.end ) ? where.end.getSql() : (
+                variables.utils.isBuilder( where.end ) ? "(#compileSelect( where.end )#)" : "?"
+            )
         );
         return "#wrapColumn( where.column )# BETWEEN #start# AND #end#";
     }
@@ -674,11 +674,15 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereNotBetween( required QueryBuilder query, required struct where ) {
-        var start = variables.utils.isExpression( where.start ) ? where.start.getSql() : (
-            variables.utils.isBuilder( where.start ) ? "(#compileSelect( where.start )#)" : "?"
+        var start = !where.keyExists( "start" ) || isNull( where.start ) ? "?" : (
+            variables.utils.isExpression( where.start ) ? where.start.getSql() : (
+                variables.utils.isBuilder( where.start ) ? "(#compileSelect( where.start )#)" : "?"
+            )
         );
-        var end = variables.utils.isExpression( where.end ) ? where.end.getSql() : (
-            variables.utils.isBuilder( where.end ) ? "(#compileSelect( where.end )#)" : "?"
+        var end = !where.keyExists( "end" ) || isNull( where.end ) ? "?" : (
+            variables.utils.isExpression( where.end ) ? where.end.getSql() : (
+                variables.utils.isBuilder( where.end ) ? "(#compileSelect( where.end )#)" : "?"
+            )
         );
         return "#wrapColumn( where.column )# NOT BETWEEN #start# AND #end#";
     }
@@ -830,7 +834,9 @@ component displayname="Grammar" accessors="true" singleton {
         if ( having.type == "raw" ) {
             return trim( "#having.combinator# #having.column.getSQL()#" );
         }
-        var placeholder = variables.utils.isExpression( having.value ) ? having.value.getSQL() : "?";
+        var placeholder = !isNull( having.value ) && variables.utils.isExpression( having.value )
+         ? having.value.getSQL()
+         : "?";
         return trim( "#having.combinator# #wrapColumn( having.column )# #having.operator# #placeholder#" );
     }
 
@@ -1209,7 +1215,7 @@ component displayname="Grammar" accessors="true" singleton {
                 } )
                 .toList( ", " );
 
-            var updateStatement = "UPDATE #wrapTable( query.getTableName() )#";
+            var updateStatement = "UPDATE #wrapQueryTable( query )#";
 
             if ( !arguments.query.getJoins().isEmpty() ) {
                 updateStatement &= " " & compileJoins( arguments.query, arguments.query.getJoins() );
@@ -1259,7 +1265,7 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            return trim( "DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )#" );
+            return trim( "DELETE FROM #wrapQueryTable( query )# #compileWheres( query, query.getWheres() )#" );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -1372,6 +1378,26 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         return parts.table & getTableAliasOperator() & wrapAlias( getTablePrefix() & parts.alias );
+    }
+
+    /**
+     * Wraps a builder's table together with its separately tracked alias.
+     *
+     * @query The query builder whose table should be wrapped.
+     * @includeAlias Whether to include the builder's table alias.
+     *
+     * @return string
+     */
+    public string function wrapQueryTable( required QueryBuilder query, boolean includeAlias = true ) {
+        var table = arguments.query.getTableName();
+        if (
+            arguments.includeAlias &&
+            !getUtils().isExpression( table ) &&
+            arguments.query.getAlias() != ""
+        ) {
+            table &= " #arguments.query.getAlias()#";
+        }
+        return wrapTable( table, arguments.includeAlias );
     }
 
     public struct function explodeTable( required string table ) {

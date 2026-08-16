@@ -192,7 +192,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 } )
                 .toList( ", " );
 
-            var updateStatement = "UPDATE #wrapTable( query.getTableName() )# SET #updateList#";
+            var updateStatement = "UPDATE #wrapQueryTable( query )# SET #updateList#";
 
             var joins = arguments.query.getJoins();
 
@@ -285,7 +285,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )##returningClause#"
+                compileCommonTables( query, query.getCommonTables() ) & " DELETE FROM #wrapQueryTable( query )# #compileWheres( query, query.getWheres() )##returningClause#"
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

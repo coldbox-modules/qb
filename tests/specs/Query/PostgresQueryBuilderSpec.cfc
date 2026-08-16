@@ -1236,6 +1236,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function deleteWithJoinsAndAliases() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function whereBuilderInstance() {
         return {
             sql: "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" = (SELECT MAX(id) FROM ""users"" WHERE ""email"" = ?)",
@@ -1391,6 +1395,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return {
             sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
             bindings: [ serializeJSON( [ "en", "de" ] ), serializeJSON( [ "en", "de" ] ) ]
+        };
+    }
+
+    function jsonEmptyCompoundContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb",
+            bindings: [ serializeJSON( [] ) ]
         };
     }
 

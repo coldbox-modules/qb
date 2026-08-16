@@ -804,14 +804,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function table( required any table ) {
-        clearBindings( only = [ "from" ] );
-        variables.grammarCompiledFrom = false;
-        variables.alias = "";
-        variables.tableName = arguments.table;
-        if ( getUtils().isExpression( arguments.table ) ) {
-            addExpressionBindings( arguments.table, "from" );
-        }
-        return this;
+        return from( arguments.table );
     }
 
     /**
@@ -2349,48 +2342,58 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         var type = negate ? "notBetween" : "between";
         var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
 
-        if ( isClosure( arguments.start ) || isCustomFunction( arguments.start ) ) {
+        if ( !isNull( arguments.start ) && ( isClosure( arguments.start ) || isCustomFunction( arguments.start ) ) ) {
             var callback = arguments.start;
             arguments.start = newQuery();
             callback( arguments.start );
         }
 
-        if ( isClosure( arguments.end ) || isCustomFunction( arguments.end ) ) {
+        if ( !isNull( arguments.end ) && ( isClosure( arguments.end ) || isCustomFunction( arguments.end ) ) ) {
             var callback = arguments.end;
             arguments.end = newQuery();
             callback( arguments.end );
         }
 
-        if ( getUtils().isBuilder( arguments.start ) ) {
+        if ( !isNull( arguments.start ) && getUtils().isBuilder( arguments.start ) ) {
             arguments.start = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.start );
         }
-        if ( getUtils().isBuilder( arguments.end ) ) {
+        if ( !isNull( arguments.end ) && getUtils().isBuilder( arguments.end ) ) {
             arguments.end = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.end );
         }
 
         addColumnBindings( [ typedColumn ], "where" );
-        if ( utils.isExpression( arguments.start ) ) {
+        if ( !isNull( arguments.start ) && utils.isExpression( arguments.start ) ) {
             addExpressionBindings( arguments.start, "where" );
         } else {
-            addBindings( utils.extractBinding( arguments.start, variables.grammar ), "where" );
+            addBindings(
+                isNull( arguments.start )
+                 ? utils.extractBinding( grammar = variables.grammar )
+                 : utils.extractBinding( arguments.start, variables.grammar ),
+                "where"
+            );
         }
-        if ( utils.isExpression( arguments.end ) ) {
+        if ( !isNull( arguments.end ) && utils.isExpression( arguments.end ) ) {
             addExpressionBindings( arguments.end, "where" );
         } else {
-            addBindings( utils.extractBinding( arguments.end, variables.grammar ), "where" );
+            addBindings(
+                isNull( arguments.end )
+                 ? utils.extractBinding( grammar = variables.grammar )
+                 : utils.extractBinding( arguments.end, variables.grammar ),
+                "where"
+            );
         }
 
         if (
-            isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && structKeyExists(
+            !isNull( arguments.start ) && isStruct( arguments.start ) && !structKeyExists(
                 arguments.start,
-                "value"
-            )
+                "isBuilder"
+            ) && structKeyExists( arguments.start, "value" )
         ) {
             arguments.start = arguments.start.value;
         }
 
         if (
-            isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && structKeyExists(
+            !isNull( arguments.end ) && isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && structKeyExists(
                 arguments.end,
                 "value"
             )
@@ -2401,8 +2404,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         variables.wheres.append( {
             type: type,
             column: typedColumn,
-            start: arguments.start,
-            end: arguments.end,
+            start: isNull( arguments.start ) ? javacast( "null", "" ) : arguments.start,
+            end: isNull( arguments.end ) ? javacast( "null", "" ) : arguments.end,
             combinator: arguments.combinator
         } );
 
@@ -2515,7 +2518,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             return this;
         }
 
-        if ( isNull( arguments.value ) ) {
+        if (
+            isNull( arguments.value ) &&
+            getCollaborator( "QueryValidator" ).isInvalidOperator( arguments.operator )
+        ) {
             arguments.value = arguments.operator;
             arguments.operator = "=";
         } else {
@@ -2528,7 +2534,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 type: "normal",
                 column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
                 operator: arguments.operator,
-                value: arguments.value,
+                value: isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
                 combinator: arguments.combinator
             }
         );
@@ -2544,10 +2550,15 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             );
         }
 
-        if ( getUtils().isExpression( arguments.value ) ) {
+        if ( !isNull( arguments.value ) && getUtils().isExpression( arguments.value ) ) {
             addExpressionBindings( arguments.value, "having" );
         } else {
-            addBindings( utils.extractBinding( arguments.value, variables.grammar ), "having" );
+            addBindings(
+                isNull( arguments.value )
+                 ? utils.extractBinding( grammar = variables.grammar )
+                 : utils.extractBinding( arguments.value, variables.grammar ),
+                "having"
+            );
         }
 
         return this;

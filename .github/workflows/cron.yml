@@ -57,4 +57,4 @@ jobs:
         env:
           FULL_NULL: ${{matrix.fullNull}}
         continue-on-error: ${{ matrix.experimental }}
-        run: box testbox run
+        run: box testbox run reporter=mintext

@@ -33,8 +33,8 @@ component {
      */
     public QueryBuilder function whereJsonContains(
         required string column,
-        any path = [],
-        any value = "__QB_INTERNAL_JSON_VALUE_OMITTED_8E1A33F6__",
+        any path,
+        any value,
         string combinator = "and",
         boolean negate = false
     ) {
@@ -42,19 +42,20 @@ component {
             getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         }
 
-        // Native BoxLang materializes omitted optional arguments as null, so use a non-null
-        // default token here because null is also a valid JSON containment value.
-        var valueWasOmitted = !isNull( arguments.value ) &&
-        isSimpleValue( arguments.value ) &&
-        arguments.value == "__QB_INTERNAL_JSON_VALUE_OMITTED_8E1A33F6__";
-        if ( valueWasOmitted ) {
-            arguments.value = arguments.path;
-            arguments.path = [];
+        // BoxLang applies defaults to explicit nulls in full-null mode, so `path` intentionally
+        // has no default. Arrow syntax then distinguishes shortcut null and empty-array values,
+        // while explicit path arrays retain their separately supplied null value.
+        var pathIsNull = isNull( arguments.path );
+        var valueWasOmitted = isNull( arguments.value ) &&
+        ( pathIsNull || !isArray( arguments.path ) || arguments.column.find( "->" ) > 0 );
+
+        var valueDefinition = { isNull: valueWasOmitted ? pathIsNull : isNull( arguments.value ) };
+        if ( !valueDefinition.isNull ) {
+            valueDefinition.value = valueWasOmitted ? arguments.path : arguments.value;
         }
 
-        var valueDefinition = { isNull: isNull( arguments.value ) };
-        if ( !valueDefinition.isNull ) {
-            valueDefinition.value = arguments.value;
+        if ( valueWasOmitted || pathIsNull ) {
+            arguments.path = [];
         }
 
         return getCollaborator( "JsonQueryClause" ).whereJsonContains(
@@ -67,27 +68,15 @@ component {
         );
     }
 
-    public QueryBuilder function orWhereJsonContains(
-        required string column,
-        any path = [],
-        any value = "__QB_INTERNAL_JSON_VALUE_OMITTED_8E1A33F6__"
-    ) {
+    public QueryBuilder function orWhereJsonContains( required string column, any path, any value ) {
         return whereJsonContains( argumentCollection = arguments, combinator = "or" );
     }
 
-    public QueryBuilder function whereJsonDoesntContain(
-        required string column,
-        any path = [],
-        any value = "__QB_INTERNAL_JSON_VALUE_OMITTED_8E1A33F6__"
-    ) {
+    public QueryBuilder function whereJsonDoesntContain( required string column, any path, any value ) {
         return whereJsonContains( argumentCollection = arguments, negate = true );
     }
 
-    public QueryBuilder function orWhereJsonDoesntContain(
-        required string column,
-        any path = [],
-        any value = "__QB_INTERNAL_JSON_VALUE_OMITTED_8E1A33F6__"
-    ) {
+    public QueryBuilder function orWhereJsonDoesntContain( required string column, any path, any value ) {
         return whereJsonContains( argumentCollection = arguments, combinator = "or", negate = true );
     }
 

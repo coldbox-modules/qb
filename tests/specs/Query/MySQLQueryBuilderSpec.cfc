@@ -1191,6 +1191,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function deleteWithJoinsAndAliases() {
+        return {
+            sql: "DELETE `u` FROM `users` AS `u` INNER JOIN `warnings` AS `w` ON `u`.`id` = `w`.`userId`",
+            bindings: []
+        };
+    }
+
     function whereBuilderInstance() {
         return {
             sql: "SELECT * FROM `users` WHERE `email` = ? OR `id` = (SELECT MAX(id) FROM `users` WHERE `email` = ?)",
@@ -1346,6 +1353,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return {
             sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
             bindings: [ serializeJSON( [ "en", "de" ] ), serializeJSON( [ "en", "de" ] ) ]
+        };
+    }
+
+    function jsonEmptyCompoundContains() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+            bindings: [ serializeJSON( [] ) ]
         };
     }
 

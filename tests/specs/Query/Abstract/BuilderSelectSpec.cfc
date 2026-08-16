@@ -195,6 +195,23 @@ component extends="testbox.system.BaseSpec" {
                         } ).toThrow( type = "DuplicateSelectColumn" );
                     } );
 
+                    it( "validates duplicate output names in nested predicate queries", function() {
+                        var validatingQuery = new qb.models.Query.QueryBuilder(
+                            grammar = variables.mockGrammar,
+                            validateDuplicateSelectColumns = true
+                        );
+
+                        validatingQuery
+                            .from( "users" )
+                            .whereExists( function( childQuery ) {
+                                childQuery.select( [ "equipment.id", "racks.id" ] ).from( "equipment" );
+                            } );
+
+                        expect( function() {
+                            validatingQuery.toSQL();
+                        } ).toThrow( type = "DuplicateSelectColumn" );
+                    } );
+
                     it( "validates the final selection after a reselect", function() {
                         var validatingQuery = new qb.models.Query.QueryBuilder(
                             grammar = variables.mockGrammar,

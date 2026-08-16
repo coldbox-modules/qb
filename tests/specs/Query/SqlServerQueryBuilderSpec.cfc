@@ -288,6 +288,27 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, 42 ] );
             } );
 
+            it( "rolls back hoisted CTEs when derived table compilation fails", function() {
+                var builder = getBuilder().from( "accounts" );
+
+                expect( function() {
+                    builder.fromSub( "active_users", function( source ) {
+                        source
+                            .with( "filtered_users", function( cte ) {
+                                cte.from( "users" ).where( "active", 1 );
+                            } )
+                            .from( "filtered_users" )
+                            .unionAll( function( archived ) {
+                                archived.from( "archived_users" ).orderBy( "id" );
+                            } );
+                    } );
+                } ).toThrow( type = "OrderByNotAllowed" );
+
+                expect( builder.getCommonTables() ).toBeEmpty();
+                expect( builder.getRawBindings().commonTables ).toBeEmpty();
+                expect( builder.toSQL() ).toBe( "SELECT * FROM [accounts]" );
+            } );
+
             it( "hoists common table expressions outside predicate subqueries", function() {
                 var builder = getBuilder()
                     .from( "accounts" )
@@ -383,6 +404,27 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 expect( builder.toSQL() ).toBe(
                     ";WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * FROM [accounts] CROSS APPLY (SELECT * FROM [filtered_users]) AS [active_users]"
                 );
+            } );
+
+            it( "rolls back hoisted CTEs when APPLY source compilation fails", function() {
+                var builder = getBuilder().from( "accounts" );
+
+                expect( function() {
+                    builder.crossApply( "active_users", function( source ) {
+                        source
+                            .with( "filtered_users", function( cte ) {
+                                cte.from( "users" ).where( "active", 1 );
+                            } )
+                            .from( "filtered_users" )
+                            .unionAll( function( archived ) {
+                                archived.from( "archived_users" ).orderBy( "id" );
+                            } );
+                    } );
+                } ).toThrow( type = "OrderByNotAllowed" );
+
+                expect( builder.getCommonTables() ).toBeEmpty();
+                expect( builder.getRawBindings().commonTables ).toBeEmpty();
+                expect( builder.toSQL() ).toBe( "SELECT * FROM [accounts]" );
             } );
 
             it( "hoists common table expressions outside insert sources", function() {

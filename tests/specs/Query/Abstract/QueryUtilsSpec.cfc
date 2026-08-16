@@ -10,6 +10,15 @@ component extends="testbox.system.BaseSpec" {
     }
 
     function run() {
+        describe( "null type predicates", function() {
+            it( "classifies null values without throwing", function() {
+                expect( utils.isExpression( javacast( "null", "" ) ) ).toBeFalse();
+                expect( utils.isNotExpression( javacast( "null", "" ) ) ).toBeTrue();
+                expect( utils.isBuilder( javacast( "null", "" ) ) ).toBeFalse();
+                expect( utils.isNotBuilder( javacast( "null", "" ) ) ).toBeTrue();
+            } );
+        } );
+
         describe( "inferSqlType()", function() {
             it( "maintains the passed in cfsqltype if provided", () => {
                 var binding = utils.extractBinding( { "value": 1, "cfsqltype": "BIT" }, variables.mockGrammar );

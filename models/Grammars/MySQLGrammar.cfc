@@ -314,9 +314,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                         [
                             compileCommonTables( query, query.getCommonTables() ),
                             "DELETE",
-                            hasJoins ? wrapTable( query.getTableName() ) : "",
+                            hasJoins
+                             ? (
+                                query.getAlias() != ""
+                                 ? wrapAlias( getTablePrefix() & query.getAlias() )
+                                 : wrapTable( query.getTableName(), false )
+                            )
+                             : "",
                             "FROM",
-                            wrapTable( query.getTableName() ),
+                            wrapQueryTable( query ),
                             hasJoins ? compileJoins( query, query.getJoins() ) : "",
                             compileWheres( query, query.getWheres() )
                         ],

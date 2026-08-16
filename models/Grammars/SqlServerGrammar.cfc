@@ -573,7 +573,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .toList( ", " );
 
             var updateTable = "";
-            if ( !getUtils().isExpression( query.getTableName() ) ) {
+            if ( arguments.query.getAlias() != "" ) {
+                updateTable = wrapAlias( arguments.query.getAlias() );
+            } else if ( !getUtils().isExpression( query.getTableName() ) ) {
                 var parts = explodeTable( query.getTableName() );
                 updateTable = parts.alias.len() ? wrapAlias( parts.alias ) : wrapTable( parts.table );
             } else {
@@ -611,7 +613,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause & " FROM #wrapTable( query.getTableName() )# " & compileJoins(
+                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause & " FROM #wrapQueryTable( query )# " & compileJoins(
                     arguments.query,
                     arguments.query.getJoins()
                 ) & " " & compileWheres( query, query.getWheres() )
@@ -659,9 +661,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                         [
                             compileCommonTables( query, query.getCommonTables() ),
                             "DELETE",
-                            hasJoins ? wrapTable( query.getTableName() ) : "",
+                            hasJoins
+                             ? (
+                                query.getAlias() != ""
+                                 ? wrapAlias( getTablePrefix() & query.getAlias() )
+                                 : wrapTable( query.getTableName(), false )
+                            )
+                             : "",
                             "FROM",
-                            wrapTable( query.getTableName() ),
+                            wrapQueryTable( query ),
                             returningClause,
                             hasJoins ? compileJoins( query, query.getJoins() ) : "",
                             compileWheres( query, query.getWheres() )

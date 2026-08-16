@@ -35,6 +35,17 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getBindings() ).toHaveLength( 1 );
                 expect( builder.getBindings()[ 1 ].value ).toBe( "new user" );
             } );
+
+            it( "preserves an explicit null HAVING value", function() {
+                var builder = new qb.models.Query.QueryBuilder()
+                    .from( "users" )
+                    .having( "score", "=", javacast( "null", "" ) );
+
+                expect( builder.getHavings()[ 1 ].operator ).toBe( "=" );
+                expect( builder.getRawBindings().having[ 1 ].null ).toBeTrue();
+                expect( builder.getRawBindings().having[ 1 ].value ).toBe( "" );
+                expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" HAVING ""score"" = ?" );
+            } );
         } );
     }
 

@@ -1591,6 +1591,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function deleteWithJoinsAndAliases() {
+        return {
+            sql: "DELETE [u] FROM [users] AS [u] INNER JOIN [warnings] AS [w] ON [u].[id] = [w].[userId]",
+            bindings: []
+        };
+    }
+
     function whereBuilderInstance() {
         return {
             sql: "SELECT * FROM [users] WHERE [email] = ? OR [id] = (SELECT MAX(id) FROM [users] WHERE [email] = ?)",
@@ -1755,6 +1762,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonEmptyCompoundContains() {
         return { exception: "UnsupportedOperation" };
     }
 

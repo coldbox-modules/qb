@@ -223,6 +223,10 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function compileSelect( required QueryBuilder query ) {
+        if ( arguments.query.getValidateDuplicateSelectColumns() && arguments.query.getAggregate().isEmpty() ) {
+            arguments.query.getQueryValidator().validateUniqueSelectColumns( arguments.query.getColumns(), this );
+        }
+
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

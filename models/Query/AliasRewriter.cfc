@@ -13,6 +13,7 @@ component {
         renameAliasesInOrders( argumentCollection = arguments );
         renameAliasesInUnions( argumentCollection = arguments );
         renameAliasesInCommonTables( argumentCollection = arguments );
+        renameAliasesInUpdates( argumentCollection = arguments );
     }
 
     private void function renameAliasesInUnions(
@@ -42,6 +43,25 @@ component {
                 arguments.oldAlias,
                 arguments.newAlias
             );
+        }
+    }
+
+    private void function renameAliasesInUpdates(
+        required QueryBuilder builder,
+        required string oldAlias,
+        required string newAlias
+    ) {
+        var updates = arguments.builder.getUpdates();
+        for ( var column in updates ) {
+            var value = updates[ column ];
+            if ( arguments.builder.getUtils().isBuilder( value ) ) {
+                renameAliasesInNestedQuery(
+                    arguments.builder,
+                    value,
+                    arguments.oldAlias,
+                    arguments.newAlias
+                );
+            }
         }
     }
 

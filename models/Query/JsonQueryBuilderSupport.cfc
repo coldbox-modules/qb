@@ -88,9 +88,12 @@ component {
             throw( type = "InvalidSQLType", message = "Illegal combinator" );
         }
         var valueWasOmitted = !arguments.keyExists( "value" );
-        if ( server.keyExists( "boxlang" ) && isNull( arguments.value ) ) {
-            valueWasOmitted = !isArray( arguments.path ) ||
+        if ( isNull( arguments.value ) ) {
+            var pathCarriesValue = !isArray( arguments.path ) ||
             ( arguments.column.find( "->" ) > 0 && !arguments.path.isEmpty() );
+            valueWasOmitted = server.keyExists( "boxlang" )
+             ? pathCarriesValue
+             : valueWasOmitted || pathCarriesValue;
         }
         if ( valueWasOmitted ) {
             arguments.value = arguments.path;

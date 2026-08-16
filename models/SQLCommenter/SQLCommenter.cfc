@@ -152,7 +152,7 @@ component singleton {
             if ( character == "$" ) {
                 var dollarQuoteMatch = reFind(
                     "^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$",
-                    mid( arguments.sql, position ),
+                    mid( arguments.sql, position, sqlLength - position + 1 ),
                     1,
                     true
                 );

@@ -3,14 +3,6 @@
  */
 component accessors="true" {
 
-    variables.validReferentialActions = [
-        "RESTRICT",
-        "CASCADE",
-        "SET NULL",
-        "NO ACTION",
-        "SET DEFAULT"
-    ];
-
     /**
      * The constraint type.
      */
@@ -51,6 +43,14 @@ component accessors="true" {
      * RESTRICT, CASCADE, SET NULL, NO ACTION, SET DEFAULT
      */
     property name="onDeleteAction" default="NO ACTION";
+
+    variables.validReferentialActions = [
+        "RESTRICT",
+        "CASCADE",
+        "SET NULL",
+        "NO ACTION",
+        "SET DEFAULT"
+    ];
 
     /**
      * Create a new TableIndex instance.

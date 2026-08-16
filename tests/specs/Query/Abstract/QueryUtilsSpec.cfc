@@ -80,11 +80,10 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "does not format null temporal query parameters", function() {
-                [ "DATE", "TIME", "TIMESTAMP" ].each( function( sqlType ) {
-                    var binding = utils.extractBinding(
-                        { value: javacast( "null", "" ), cfsqltype: sqlType, null: true },
-                        variables.mockGrammar
-                    );
+                var temporalTypes = [ "DATE", "TIME", "TIMESTAMP" ];
+                temporalTypes.each( function( sqlType ) {
+                    var queryParam = { "value": javacast( "null", "" ), "cfsqltype": sqlType, "null": true };
+                    var binding = utils.extractBinding( queryParam, variables.mockGrammar );
 
                     expect( binding.null ).toBeTrue();
                     expect( binding.cfsqltype ).toBe( sqlType );
@@ -598,6 +597,16 @@ component extends="testbox.system.BaseSpec" {
                     .orderByDesc( "qux.blah" );
                 var queryTwo = queryOne.clone();
                 expect( queryTwo.toSql( showBindings = "inline" ) ).toBe( queryOne.toSql( showBindings = "inline" ) );
+            } );
+
+            it( "preserves null predicate types as strings", function() {
+                var cloned = new qb.models.Query.QueryBuilder()
+                    .from( "users" )
+                    .whereNull( "deletedAt" )
+                    .clone();
+
+                expect( cloned.getWheres()[ 1 ].type ).toBe( "null" );
+                expect( cloned.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""deletedAt"" IS NULL" );
             } );
 
             it( "does not share mutable query clauses with the original", function() {

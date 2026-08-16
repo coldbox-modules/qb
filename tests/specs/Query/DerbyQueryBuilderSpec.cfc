@@ -1139,6 +1139,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function deleteWithJoinsAndAliases() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function whereBuilderInstance() {
         return {
             sql: "SELECT * FROM ""users"" WHERE ""email"" = ? OR ""id"" = (SELECT MAX(id) FROM ""users"" WHERE ""email"" = ?)",
@@ -1279,6 +1283,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonEmptyCompoundContains() {
         return { exception: "UnsupportedOperation" };
     }
 

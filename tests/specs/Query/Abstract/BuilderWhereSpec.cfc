@@ -135,6 +135,19 @@ component extends="testbox.system.BaseSpec" {
                         expect( builder.getBindings()[ 1 ].null ).toBeTrue();
                     } );
 
+                    it( "accepts explicit null BETWEEN bounds", function() {
+                        var builder = new qb.models.Query.QueryBuilder()
+                            .from( "users" )
+                            .whereBetween( "users.age", javacast( "null", "" ), 10 )
+                            .withAlias( "u" );
+
+                        expect( builder.toSQL() ).toBe(
+                            "SELECT * FROM ""users"" AS ""u"" WHERE ""u"".""age"" BETWEEN ? AND ?"
+                        );
+                        expect( builder.getBindings()[ 1 ].null ).toBeTrue();
+                        expect( builder.getBindings()[ 2 ].value ).toBe( 10 );
+                    } );
+
                     it( "has a orWhere shortcut", function() {
                         qb.orWhere( "::some column::", "<>", "::some value::" );
 

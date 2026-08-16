@@ -364,7 +364,11 @@ component {
         required string newAlias
     ) {
         renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-        if ( arguments.builder.getUtils().isBuilder( arguments.where.start ) ) {
+        if (
+            arguments.where.keyExists( "start" ) &&
+            !isNull( arguments.where.start ) &&
+            arguments.builder.getUtils().isBuilder( arguments.where.start )
+        ) {
             renameAliasesInNestedQuery(
                 arguments.builder,
                 arguments.where.start,
@@ -372,7 +376,11 @@ component {
                 arguments.newAlias
             );
         }
-        if ( arguments.builder.getUtils().isBuilder( arguments.where.end ) ) {
+        if (
+            arguments.where.keyExists( "end" ) &&
+            !isNull( arguments.where.end ) &&
+            arguments.builder.getUtils().isBuilder( arguments.where.end )
+        ) {
             renameAliasesInNestedQuery(
                 arguments.builder,
                 arguments.where.end,

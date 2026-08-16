@@ -2882,6 +2882,12 @@ component extends="testbox.system.BaseSpec" {
                     }, jsonCompoundContains() );
                 } );
 
+                it( "preserves an empty array passed as a shortcut containment value", function() {
+                    testCase( function( builder ) {
+                        return builder.from( "users" ).whereJsonContains( "profile->languages", [] );
+                    }, jsonEmptyCompoundContains() );
+                } );
+
                 it(
                     title = "preserves explicit paths when checking containment for JSON null",
                     body = function() {
@@ -3688,6 +3694,15 @@ component extends="testbox.system.BaseSpec" {
                             .join( "warnings", "users.id", "warnings.userId" )
                             .delete( toSql = true );
                     }, deleteWithJoins() );
+                } );
+
+                it( "can handle delete statements with aliased joins", function() {
+                    testCase( function( builder ) {
+                        return builder
+                            .from( "users u" )
+                            .join( "warnings w", "u.id", "w.userId" )
+                            .delete( toSql = true );
+                    }, deleteWithJoinsAndAliases() );
                 } );
             } );
         } );

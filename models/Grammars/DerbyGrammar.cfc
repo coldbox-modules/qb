@@ -227,7 +227,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 } )
                 .toList( ", " );
 
-            var updateStatement = "UPDATE #wrapTable( query.getTableName() )#";
+            var updateStatement = "UPDATE #wrapQueryTable( query )#";
 
             if ( !arguments.query.getJoins().isEmpty() ) {
                 updateStatement &= " " & compileJoins( arguments.query, arguments.query.getJoins() );

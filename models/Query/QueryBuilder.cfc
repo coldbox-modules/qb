@@ -962,7 +962,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @returns qb.models.Query.JoinClause
      */
     public JoinClause function newJoin( required any table, string type = "inner" ) {
-        return new qb.models.Query.JoinClause( joiningQuery = this, type = arguments.type, table = arguments.table );
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).newJoin( argumentCollection = arguments );
     }
 
     /**
@@ -991,79 +992,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         boolean where = false,
         boolean preventDuplicateJoins = this.getPreventDuplicateJoins()
     ) {
-        if ( getUtils().isBuilder( arguments.table ) ) {
-            arguments.table = getCollaborator( "QueryExecutor" ).cloneJoinClause( this, arguments.table, this );
-            if ( arguments.preventDuplicateJoins ) {
-                var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                    return existingJoin.isEqualTo( table );
-                } );
-
-                if ( hasThisJoin ) {
-                    return this;
-                }
-            }
-            variables.joins.append( arguments.table );
-            addBindings( getJoinBindings( arguments.table ), "join" );
-            return this;
-        }
-
-        var join = new qb.models.Query.JoinClause( joiningQuery = this, type = arguments.type, table = arguments.table );
-
-        if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
-            var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
-            try {
-                first( join );
-            } catch ( any e ) {
-                getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
-                rethrow;
-            }
-            if ( arguments.preventDuplicateJoins ) {
-                var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                    return existingJoin.isEqualTo( join );
-                } );
-
-                if ( hasThisJoin ) {
-                    getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
-                    return this;
-                }
-            }
-            variables.joins.append( join );
-            addBindings( getJoinBindings( join ), "join" );
-            return this;
-        }
-
-        var method = where ? "where" : "on";
-        arguments.column = arguments.first;
-        arguments.value = isNull( arguments.second ) ? javacast( "null", "" ) : arguments.second;
-        join = invoke( join, method, arguments );
-        if ( arguments.preventDuplicateJoins ) {
-            var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                return existingJoin.isEqualTo( join );
-            } );
-
-            if ( hasThisJoin ) {
-                return this;
-            }
-        }
-        variables.joins.append( join );
-        addBindings( getJoinBindings( join ), "join" );
-
-        return this;
-    }
-
-    /**
-     * Returns bindings in the order they appear within a compiled join.
-     */
-    private array function getJoinBindings( required any join ) {
-        var bindings = [];
-        if (
-            arguments.join.isJoin() &&
-            getUtils().isExpression( arguments.join.getTable() )
-        ) {
-            bindings.append( extractExpressionBindings( arguments.join.getTable() ), true );
-        }
-        bindings.append( arguments.join.getBindings(), true );
-        return bindings;
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).join( argumentCollection = arguments );
     }
 
     /**
@@ -1234,11 +1164,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoin( required any table ) {
-        var join = new qb.models.Query.JoinClause( this, "cross", arguments.table );
-        variables.joins.append( join );
-        addBindings( getJoinBindings( join ), "join" );
-
-        return this;
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).crossJoin( argumentCollection = arguments );
     }
 
     /**
@@ -1335,12 +1262,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoinRaw( required string table ) {
-        // create the table reference
-        arguments.table = raw( arguments.table );
-
-        variables.joins.append( new qb.models.Query.JoinClause( this, "cross", arguments.table ) );
-
-        return this;
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).crossJoinRaw( argumentCollection = arguments );
     }
 
     /**
@@ -1369,101 +1292,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         string type = "inner",
         boolean where = false
     ) {
-        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
-        // since we have a callback, we generate a new query object and pass it into the callback
-        try {
-            if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
-                var subquery = newQuery();
-                arguments.input( subquery );
-                // replace the original query builder with the results of the sub-query
-                arguments.input = subquery;
-            }
-            arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
-
-            // create the table reference
-            arguments.table = raw(
-                getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
-                arguments.input.getBindings()
-            );
-
-            // remove the non-standard arguments
-            structDelete( arguments, "input" );
-            structDelete( arguments, "alias" );
-
-            var joinCount = variables.joins.len();
-            var result = join( argumentCollection = arguments );
-            if ( variables.joins.len() > joinCount ) {
-                variables.grammarCompiledJoin = true;
-            } else {
-                getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
-            }
-            return result;
-        } catch ( any e ) {
-            getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
-            rethrow;
-        }
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).joinSub( argumentCollection = arguments );
     }
 
     private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
-        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
-        try {
-            if ( type != "outer apply" && type != "cross apply" && type != "lateral" ) {
-                throw(
-                    type = "QBInvalidJoinType",
-                    message = "Invalid join type: #arguments.type#. Valid types are [`outer apply`, `cross apply`, or `lateral`]"
-                );
-            }
-
-            var sourceIsBuilder = getUtils().isBuilder( arguments.tableLikeSource )
-            var sourceIsFunc = isClosure( arguments.tableLikeSource ) || isCustomFunction( arguments.tableLikeSource )
-
-            if ( !sourceIsBuilder && !sourceIsFunc ) {
-                throw(
-                    type = "QBInvalidJoinSource",
-                    message = "Invalid join source. Valid types are a QueryBuilder instance or a callback function that receives a new QueryBuilder instance."
-                );
-            }
-
-            if ( sourceIsFunc ) {
-                var subquery = newQuery();
-                arguments.tableLikeSource( subquery );
-                arguments.tableLikeSource = subquery;
-            }
-
-            arguments.tableLikeSource = getCollaborator( "QueryExecutor" ).snapshotBuilder(
-                this,
-                arguments.tableLikeSource
-            );
-
-            var join = new qb.models.Query.JoinClause(
-                joiningQuery = this,
-                type = type,
-                table = arguments.name,
-                lateralRawExpression = arguments.tableLikeSource.toSQL(),
-                lateralBindings = arguments.tableLikeSource.getBindings()
-            );
-
-            if ( this.getPreventDuplicateJoins() ) {
-                var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                    return existingJoin.isEqualTo( join );
-                } );
-
-                if ( hasThisJoin ) {
-                    // Do nothing, early return
-                    getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
-                    return this;
-                }
-            }
-
-            addBindings( tableLikeSource.getBindings(), "join" );
-            variables.joins.append( join );
-            variables.grammarCompiledJoin = true;
-
-            return this;
-        } catch ( any e ) {
-            getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
-            rethrow;
-        }
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).applyJoin( argumentCollection = arguments );
     }
 
     public function outerApply( required string name, required any tableDef ) {
@@ -1543,30 +1378,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoinSub( required any alias, required any input ) {
-        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
-        // since we have a callback, we generate a new query object and pass it into the callback
-        try {
-            if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
-                var subquery = newQuery();
-                arguments.input( subquery );
-                // replace the original query builder with the results of the sub-query
-                arguments.input = subquery;
-            }
-            arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
-
-            // create the table reference
-            var table = raw(
-                getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
-                arguments.input.getBindings()
-            );
-
-            var result = crossJoin( table );
-            variables.grammarCompiledJoin = true;
-            return result;
-        } catch ( any e ) {
-            getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
-            rethrow;
-        }
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).crossJoinSub( argumentCollection = arguments );
     }
 
     /**

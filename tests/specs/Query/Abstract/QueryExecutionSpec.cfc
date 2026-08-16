@@ -1569,7 +1569,8 @@ component extends="testbox.system.BaseSpec" {
                         shouldMaxRowsOverrideToAll = shouldMaxRowsOverrideToAll
                     );
 
-                [ builder.newQuery(), builder.clone() ].each( function( derivedBuilder ) {
+                var derivedBuilders = [ builder.newQuery(), builder.clone() ];
+                derivedBuilders.each( function( derivedBuilder ) {
                     expect( derivedBuilder.getPreventDuplicateJoins() ).toBeTrue();
                     $assert.isSameInstance( sqlCommenter, derivedBuilder.getSqlCommenter() );
                     $assert.isSameInstance( shouldMaxRowsOverrideToAll, derivedBuilder.getShouldMaxRowsOverrideToAll() );

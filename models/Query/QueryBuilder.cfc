@@ -2250,10 +2250,23 @@ component displayname="QueryBuilder" accessors="true" {
             combinator: arguments.combinator,
             negate: arguments.negate
         } );
-        addBindings(
-            utils.extractBinding( variables.grammar.prepareJsonContainsBinding( arguments.value ), variables.grammar ),
-            "where"
-        );
+        if ( isNull( arguments.value ) ) {
+            var preparedNullValue = variables.grammar.prepareJsonContainsBinding();
+            addBindings(
+                isNull( preparedNullValue )
+                 ? utils.extractBinding( grammar = variables.grammar )
+                 : utils.extractBinding( preparedNullValue, variables.grammar ),
+                "where"
+            );
+        } else {
+            addBindings(
+                utils.extractBinding(
+                    variables.grammar.prepareJsonContainsBinding( arguments.value ),
+                    variables.grammar
+                ),
+                "where"
+            );
+        }
         return this;
     }
 
@@ -2501,13 +2514,23 @@ component displayname="QueryBuilder" accessors="true" {
         guardAgainstInvalidCombinator( arguments.combinator );
         arguments.values = normalizeToArray( arguments.values );
 
-        if ( arguments.values.some( getUtils().isExpression ) ) {
-            throw( type = "InvalidBulkValue", message = "Bulk IN values cannot contain SQL expressions." );
+        var extractedBindings = [];
+        if ( !arguments.values.isEmpty() ) {
+            arrayResize( extractedBindings, arguments.values.len() );
         }
-
-        var extractedBindings = arguments.values.map( function( value ) {
-            return getUtils().extractBinding( arguments.value, variables.grammar );
-        } );
+        for ( var valueIndex = 1; valueIndex <= arguments.values.len(); valueIndex++ ) {
+            if ( !arrayIsDefined( arguments.values, valueIndex ) || isNull( arguments.values[ valueIndex ] ) ) {
+                extractedBindings[ valueIndex ] = getUtils().extractBinding( grammar = variables.grammar );
+                continue;
+            }
+            if ( getUtils().isExpression( arguments.values[ valueIndex ] ) ) {
+                throw( type = "InvalidBulkValue", message = "Bulk IN values cannot contain SQL expressions." );
+            }
+            extractedBindings[ valueIndex ] = getUtils().extractBinding(
+                arguments.values[ valueIndex ],
+                variables.grammar
+            );
+        }
 
         if ( isNull( arguments.sqlType ) ) {
             arguments.sqlType = variables.grammar.resolveWhereInBulkSqlType(
@@ -5317,6 +5340,9 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     private any function cloneQueryStateValue( any value ) {
+        if ( isSimpleValue( arguments.value ) ) {
+            return arguments.value;
+        }
         if ( isNull( arguments.value ) ) {
             return javacast( "null", "" );
         }
@@ -5334,9 +5360,11 @@ component displayname="QueryBuilder" accessors="true" {
         }
         if ( isArray( arguments.value ) ) {
             var clonedArray = [];
-            arrayResize( clonedArray, arguments.value.len() );
+            if ( !arguments.value.isEmpty() ) {
+                arrayResize( clonedArray, arguments.value.len() );
+            }
             for ( var i = 1; i <= arguments.value.len(); i++ ) {
-                if ( !isNull( arguments.value[ i ] ) ) {
+                if ( arrayIsDefined( arguments.value, i ) && !isNull( arguments.value[ i ] ) ) {
                     clonedArray[ i ] = cloneQueryStateValue( arguments.value[ i ] );
                 }
             }

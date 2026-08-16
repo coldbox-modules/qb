@@ -375,8 +375,10 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "snapshots a builder passed to a sub-select", function() {
-                        var child = getBuilder().from( "posts" ).selectRaw( "MAX(updated_date)" );
-                        var builder = getBuilder().from( "users" ).subSelect( "latestUpdatedDate", child );
+                        var child = getBuilder();
+                        child.from( "posts" ).selectRaw( "MAX(updated_date)" );
+                        var builder = getBuilder();
+                        builder.from( "users" ).subSelect( "latestUpdatedDate", child );
 
                         child.where( "posts.user_id", 1 );
 

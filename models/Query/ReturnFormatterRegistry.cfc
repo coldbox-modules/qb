@@ -151,11 +151,15 @@ component accessors="true" singleton {
 
         if ( isArray( arguments.value ) ) {
             var clonedArray = [];
-            arrayResize( clonedArray, arguments.value.len() );
+            if ( !arguments.value.isEmpty() ) {
+                arrayResize( clonedArray, arguments.value.len() );
+            }
             for ( var i = 1; i <= arguments.value.len(); i++ ) {
-                clonedArray[ i ] = isNull( arguments.value[ i ] )
-                 ? javacast( "null", "" )
-                 : cloneConfigurationValue( arguments.value[ i ] );
+                if ( arrayIsDefined( arguments.value, i ) ) {
+                    clonedArray[ i ] = isNull( arguments.value[ i ] )
+                     ? javacast( "null", "" )
+                     : cloneConfigurationValue( arguments.value[ i ] );
+                }
             }
             return clonedArray;
         }

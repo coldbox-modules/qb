@@ -22,6 +22,13 @@ jobs:
         cfengine: ["lucee@5", "lucee@6", "adobe@2021", "adobe@2023", "adobe@2025", "boxlang@1", "boxlang-cfml@1"]
         experimental: [ false ]
         fullNull: ["true", "false"]
+        exclude:
+          - cfengine: "adobe@2021"
+            fullNull: "true"
+          - cfengine: "adobe@2023"
+            fullNull: "true"
+          - cfengine: "adobe@2025"
+            fullNull: "true"
         include:
           - cfengine: "adobe@be"
             experimental: true

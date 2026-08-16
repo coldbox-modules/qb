@@ -190,6 +190,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             } );
         } );
 
+        describe( "SQL Server aliased data modifications", function() {
+            it( "declares the target alias for updates without joins", function() {
+                var sql = getBuilder()
+                    .from( "users AS u" )
+                    .where( "u.id", 42 )
+                    .update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toBe( "UPDATE [u] SET [name] = ? FROM [users] AS [u] WHERE [u].[id] = ?" );
+            } );
+
+            it( "declares the target alias for deletes without joins", function() {
+                var sql = getBuilder()
+                    .from( "users AS u" )
+                    .where( "u.id", 42 )
+                    .delete( toSQL = true );
+
+                expect( sql ).toBe( "DELETE [u] FROM [users] AS [u] WHERE [u].[id] = ?" );
+            } );
+
+            it( "uses the prefixed target alias for updates", function() {
+                var builder = getBuilder();
+                builder.getGrammar().setTablePrefix( "prefix_" );
+
+                var sql = builder
+                    .from( "users AS u" )
+                    .where( "id", 42 )
+                    .update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toBe(
+                    "UPDATE [prefix_u] SET [name] = ? FROM [prefix_users] AS [prefix_u] WHERE [id] = ?"
+                );
+            } );
+
+            it( "uses the prefixed target alias for deletes", function() {
+                var builder = getBuilder();
+                builder.getGrammar().setTablePrefix( "prefix_" );
+
+                var sql = builder
+                    .from( "users AS u" )
+                    .where( "id", 42 )
+                    .delete( toSQL = true );
+
+                expect( sql ).toBe( "DELETE [prefix_u] FROM [prefix_users] AS [prefix_u] WHERE [id] = ?" );
+            } );
+
+            it( "places returning columns before the source table for aliased deletes", function() {
+                var sql = getBuilder()
+                    .from( "users AS u" )
+                    .where( "u.id", 42 )
+                    .returning( "id" )
+                    .delete( toSQL = true );
+
+                expect( sql ).toBe( "DELETE [u] OUTPUT DELETED.[id] FROM [users] AS [u] WHERE [u].[id] = ?" );
+            } );
+
+            it( "places returning columns before the source table for joined deletes", function() {
+                var sql = getBuilder()
+                    .from( "users AS u" )
+                    .join( "warnings AS w", "u.id", "w.userId" )
+                    .returning( "id" )
+                    .delete( toSQL = true );
+
+                expect( sql ).toBe(
+                    "DELETE [u] OUTPUT DELETED.[id] FROM [users] AS [u] INNER JOIN [warnings] AS [w] ON [u].[id] = [w].[userId]"
+                );
+            } );
+        } );
+
         describe( "SQL Server nested CTE queries", function() {
             it( "hoists common table expressions outside the EXISTS subquery", function() {
                 var builder = getBuilder()

@@ -574,7 +574,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
             var updateTable = "";
             if ( arguments.query.getAlias() != "" ) {
-                updateTable = wrapAlias( arguments.query.getAlias() );
+                updateTable = wrapAlias( getTablePrefix() & arguments.query.getAlias() );
             } else if ( !getUtils().isExpression( query.getTableName() ) ) {
                 var parts = explodeTable( query.getTableName() );
                 updateTable = parts.alias.len() ? wrapAlias( parts.alias ) : wrapTable( parts.table );
@@ -603,7 +603,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
 
-            if ( arguments.query.getJoins().isEmpty() ) {
+            if ( arguments.query.getJoins().isEmpty() && arguments.query.getAlias() == "" ) {
                 return trim(
                     compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause & " " & compileWheres(
                         query,
@@ -613,10 +613,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause & " FROM #wrapQueryTable( query )# " & compileJoins(
-                    arguments.query,
-                    arguments.query.getJoins()
-                ) & " " & compileWheres( query, query.getWheres() )
+                concatenate( [
+                    compileCommonTables( query, query.getCommonTables() ),
+                    updateStatement & returningClause,
+                    "FROM #wrapQueryTable( query )#",
+                    compileJoins( arguments.query, arguments.query.getJoins() ),
+                    compileWheres( query, query.getWheres() )
+                ] )
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -654,6 +657,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             var returningClause = returningColumns != "" ? "OUTPUT #returningColumns#" : "";
 
             var hasJoins = !arguments.query.getJoins().isEmpty();
+            var hasAlias = arguments.query.getAlias() != "";
+
+            if ( !hasJoins && !hasAlias ) {
+                return trim(
+                    arrayToList(
+                        arrayFilter(
+                            [
+                                compileCommonTables( query, query.getCommonTables() ),
+                                "DELETE FROM",
+                                wrapQueryTable( query ),
+                                returningClause,
+                                compileWheres( query, query.getWheres() )
+                            ],
+                            function( sql ) {
+                                return sql != "";
+                            }
+                        ),
+                        " "
+                    )
+                );
+            }
 
             return trim(
                 arrayToList(
@@ -661,16 +685,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                         [
                             compileCommonTables( query, query.getCommonTables() ),
                             "DELETE",
-                            hasJoins
-                             ? (
-                                query.getAlias() != ""
-                                 ? wrapAlias( getTablePrefix() & query.getAlias() )
-                                 : wrapTable( query.getTableName(), false )
-                            )
-                             : "",
+                            hasAlias
+                             ? wrapAlias( getTablePrefix() & query.getAlias() )
+                             : wrapTable( query.getTableName(), false ),
+                            returningClause,
                             "FROM",
                             wrapQueryTable( query ),
-                            returningClause,
                             hasJoins ? compileJoins( query, query.getJoins() ) : "",
                             compileWheres( query, query.getWheres() )
                         ],

@@ -244,43 +244,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     this.isBuilder = true;
 
     /**
-     * The list of allowed operators in join and where statements.
-     */
-    variables.operators = [
-        "=",
-        "<",
-        ">",
-        "<=",
-        ">=",
-        "<>",
-        "!=",
-        "like",
-        "like binary",
-        "not like",
-        "between",
-        "ilike",
-        "&",
-        "|",
-        "^",
-        "<<",
-        ">>",
-        "rlike",
-        "regexp",
-        "not regexp",
-        "~",
-        "~*",
-        "!~",
-        "!~*",
-        "similar to",
-        "not similar to"
-    ];
-
-    /**
-     * The list of allowed combinators between statements.
-     */
-    variables.combinators = [ "AND", "OR" ];
-
-    /**
      * Object holding all of the different bindings.
      * Bindings are separated by the different clauses
      * so we can serialize them in the correct order.
@@ -361,6 +324,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         boolean collectQueryLog = true,
         boolean validateDuplicateSelectColumns = false
     ) {
+        variables.collaborators = {};
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
@@ -398,6 +362,66 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         setDefaultValues();
 
         return this;
+    }
+
+    /**
+     * Updates operator and combinator validation and invalidates any validator
+     * created with the previous settings.
+     */
+    public QueryBuilder function setValidateOperatorsAndCombinators( required boolean state ) {
+        variables.validateOperatorsAndCombinators = arguments.state;
+        invalidateCollaborator( "QueryValidator" );
+        return this;
+    }
+
+    /**
+     * Updates duplicate select validation and invalidates any validator created
+     * with the previous settings.
+     */
+    public QueryBuilder function setValidateDuplicateSelectColumns( required boolean state ) {
+        variables.validateDuplicateSelectColumns = arguments.state;
+        invalidateCollaborator( "QueryValidator" );
+        return this;
+    }
+
+    /**
+     * Updates queryExecute return type validation and invalidates any validator
+     * created with the previous settings.
+     */
+    public QueryBuilder function setValidateQueryExecuteReturnType( required boolean state ) {
+        variables.validateQueryExecuteReturnType = arguments.state;
+        invalidateCollaborator( "QueryValidator" );
+        return this;
+    }
+
+    /**
+     * Resolves and caches an internal collaborator on first use.
+     */
+    package any function getCollaborator( required string name ) {
+        if ( !variables.collaborators.keyExists( arguments.name ) ) {
+            if ( arguments.name == "QueryValidator" ) {
+                variables.collaborators[ arguments.name ] = new qb.models.Query.QueryValidator(
+                    validateOperatorsAndCombinators = getValidateOperatorsAndCombinators(),
+                    validateDuplicateSelectColumns = getValidateDuplicateSelectColumns(),
+                    validateQueryExecuteReturnType = getValidateQueryExecuteReturnType()
+                );
+            } else {
+                variables.collaborators[ arguments.name ] = createObject(
+                    "component",
+                    "qb.models.Query.#arguments.name#"
+                );
+            }
+        }
+        return variables.collaborators[ arguments.name ];
+    }
+
+    /**
+     * Removes a cached collaborator after its configuration changes.
+     */
+    private void function invalidateCollaborator( required string name ) {
+        if ( variables.keyExists( "collaborators" ) ) {
+            variables.collaborators.delete( arguments.name );
+        }
     }
 
     /**
@@ -458,6 +482,22 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
     /**
+     * Returns whether this builder is collecting SQL instead of executing it.
+     * This bridge is public so collaborators can operate on QueryBuilder subclasses.
+     */
+    public boolean function isPretending() {
+        return variables.pretending;
+    }
+
+    /**
+     * Returns the lazily instantiated validator for collaborators operating on
+     * this builder or one of its subclasses.
+     */
+    public QueryValidator function getQueryValidator() {
+        return getCollaborator( "QueryValidator" );
+    }
+
+    /**
      * Resets the query builder instance.
      *
      * @return QueryBuilder
@@ -510,8 +550,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
 
     /**
      * Adds bindings carried by typed raw-expression and builder columns.
+     * This bridge is public so collaborators can operate on QueryBuilder subclasses.
      */
-    private void function addColumnBindings( required array columns, required string type ) {
+    public void function addColumnBindings( required array columns, required string type ) {
         for ( var column in arguments.columns ) {
             if ( column.type == "raw" ) {
                 addExpressionBindings( column.value, arguments.type );
@@ -547,87 +588,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
     }
 
-    /**
-     * Validates that all statically identifiable select output names are unique.
-     * Wildcards and raw expressions without explicit aliases are skipped because
-     * their output names cannot be determined without executing the query.
-     */
-    private void function validateUniqueSelectColumns( required array columns ) {
-        if ( !getValidateDuplicateSelectColumns() ) {
-            return;
-        }
-
-        var outputNames = {};
-        for ( var column in arguments.columns ) {
-            var outputName = getSelectOutputName( column );
-            if ( isNull( outputName ) ) {
-                continue;
-            }
-
-            var normalizedName = normalizeSelectOutputName( outputName );
-            if ( structKeyExists( outputNames, normalizedName ) ) {
-                throw(
-                    type = "DuplicateSelectColumn",
-                    message = "Multiple selected columns produce the output name [#outputName#].",
-                    detail = "Alias one of the columns to produce unique result keys."
-                );
-            }
-            outputNames[ normalizedName ] = true;
-        }
-    }
-
-    /**
-     * Returns a statically identifiable output name for a selected column.
-     */
-    private any function getSelectOutputName( required struct column ) {
-        if ( arguments.column.type == "builder" ) {
-            return arguments.column.alias;
-        }
-
-        if ( arguments.column.type == "raw" ) {
-            var rawSql = trim( arguments.column.value.getSQL() );
-            var aliasMatch = reFindNoCase(
-                "\s+AS\s+((?:`[^`]+`)|(?:\[[^\]]+\])|(?:""[^""]+"")|(?:[A-Za-z_][A-Za-z0-9_$]*))\s*$",
-                rawSql,
-                1,
-                true
-            );
-            if ( aliasMatch.pos.len() < 2 || aliasMatch.pos[ 1 ] == 0 ) {
-                return;
-            }
-            return mid( rawSql, aliasMatch.pos[ 2 ], aliasMatch.len[ 2 ] );
-        }
-
-        if ( arguments.column.type == "simple" && find( "*", arguments.column.value ) ) {
-            return;
-        }
-
-        if ( arguments.column.type == "jsonPath" && !arguments.column.keyExists( "alias" ) ) {
-            return;
-        }
-
-        if ( listFindNoCase( "simple,jsonPath", arguments.column.type ) ) {
-            return getGrammar().extractAlias( arguments.column );
-        }
-    }
-
-    /**
-     * Normalizes an output name for the case-insensitive keys used by CFML structs.
-     */
-    private string function normalizeSelectOutputName( required string outputName ) {
-        var normalizedName = trim( arguments.outputName );
-        if (
-            len( normalizedName ) >= 2 &&
-            (
-                ( left( normalizedName, 1 ) == "[" && right( normalizedName, 1 ) == "]" ) ||
-                ( left( normalizedName, 1 ) == "`" && right( normalizedName, 1 ) == "`" ) ||
-                ( left( normalizedName, 1 ) == """" && right( normalizedName, 1 ) == """" )
-            )
-        ) {
-            normalizedName = mid( normalizedName, 2, len( normalizedName ) - 2 );
-        }
-        return lCase( normalizedName );
-    }
 
     /**
      * Adds a sub-select to the query.
@@ -643,7 +603,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             arguments.query = newQuery();
             callback( arguments.query );
         }
-        arguments.query = snapshotBuilder( arguments.query );
+        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
         variables.columns.append( { "type": "builder", "value": arguments.query, "alias": arguments.alias } );
         addBindings( arguments.query.getBindings(), "select" );
         return this;
@@ -828,306 +788,11 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
     public void function renameAliases( required string oldAlias, required string newAlias ) {
-        renameAliasesInColumns( oldAlias, newAlias );
-        renameAliasesInJoins( oldAlias, newAlias );
-        renameAliasesInWheres( oldAlias, newAlias );
-        renameAliasesInGroups( oldAlias, newAlias );
-        renameAliasesInHavings( oldAlias, newAlias );
-        renameAliasesInOrders( oldAlias, newAlias );
-        renameAliasesInUnions( oldAlias, newAlias );
-        renameAliasesInCommonTables( oldAlias, newAlias );
-        return;
-    }
-
-    private void function renameAliasesInUnions( required string oldAlias, required string newAlias ) {
-        for ( var union in variables.unions ) {
-            renameAliasesInNestedQuery( union.query, arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasesInCommonTables( required string oldAlias, required string newAlias ) {
-        for ( var commonTable in variables.commonTables ) {
-            renameAliasesInNestedQuery( commonTable.query, arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasesInNestedQuery(
-        required QueryBuilder query,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        var nestedAlias = arguments.query.getAlias();
-        var nestedTable = arguments.query.getTableName();
-        var shadowsAlias = compareNoCase( nestedAlias, arguments.oldAlias ) == 0;
-
-        if ( !shadowsAlias && nestedAlias == "" && isSimpleValue( nestedTable ) ) {
-            shadowsAlias = compareNoCase( listLast( nestedTable, "." ), arguments.oldAlias ) == 0;
-        }
-
-        if ( !shadowsAlias ) {
-            arguments.query.renameAliases( arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasesInColumns( required string oldAlias, required string newAlias ) {
-        for ( var i = 1; i <= variables.columns.len(); i++ ) {
-            var column = variables.columns[ i ];
-            renameAliasInTypedColumn( column, arguments.oldAlias, arguments.newAlias );
-            if ( column.type == "builder" ) {
-                renameAliasesInNestedQuery( column.value, arguments.oldAlias, arguments.newAlias );
-            }
-        }
-    }
-
-    private void function renameAliasesInJoins( required string oldAlias, required string newAlias ) {
-        for ( var join in variables.joins ) {
-            join.renameAliases( arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasesInWheres( required string oldAlias, required string newAlias ) {
-        for ( var where in variables.wheres ) {
-            var renameWhereFunc = variables[ "renameAliasInWhere#where.type#" ];
-            renameWhereFunc( where, arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasesInGroups( required string oldAlias, required string newAlias ) {
-        for ( var column in variables.groups ) {
-            renameAliasInTypedColumn( column, arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasesInHavings( required string oldAlias, required string newAlias ) {
-        for ( var having in variables.havings ) {
-            if ( structKeyExists( having, "column" ) ) {
-                renameAliasInTypedColumn( having.column, arguments.oldAlias, arguments.newAlias );
-            }
-        }
-    }
-
-    private void function renameAliasesInOrders( required string oldAlias, required string newAlias ) {
-        for ( var order in variables.orders ) {
-            if ( order.keyExists( "query" ) ) {
-                renameAliasesInNestedQuery( order.query, arguments.oldAlias, arguments.newAlias );
-            } else if ( order.keyExists( "column" ) && order.direction != "raw" ) {
-                renameAliasInTypedColumn( order.column, arguments.oldAlias, arguments.newAlias );
-            }
-        }
-    }
-
-    private void function renameAliasInTypedColumn(
-        required struct column,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.column.type == "simple" ) {
-            arguments.column.value = swapAlias( arguments.column.value, arguments.oldAlias, arguments.newAlias );
-        } else if ( arguments.column.type == "jsonPath" ) {
-            arguments.column.value.column = swapAlias(
-                arguments.column.value.column,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private void function renameAliasInWhereBasic(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereJsonContains(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        arguments.where.path.value.column = swapAlias(
-            arguments.where.path.value.column,
-            arguments.oldAlias,
-            arguments.newAlias
+        getCollaborator( "AliasRewriter" ).rewrite(
+            builder = this,
+            oldAlias = arguments.oldAlias,
+            newAlias = arguments.newAlias
         );
-    }
-
-    private void function renameAliasInWhereJsonExists(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInWhereJsonContains( argumentCollection = arguments );
-    }
-
-    private void function renameAliasInWhereJsonLength(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInWhereJsonContains( argumentCollection = arguments );
-    }
-
-    private void function renameAliasInWhereColumn(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.first, arguments.oldAlias, arguments.newAlias );
-        renameAliasInTypedColumn( arguments.where.second, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereSub(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-        renameAliasesInNestedQuery( arguments.where.query, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereIn(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNotIn(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereInBulk(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereInSub(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-        renameAliasesInNestedQuery( arguments.where.query, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNotInSub(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInWhereInSub( argumentCollection = arguments );
-    }
-
-    private void function renameAliasInWhereRaw(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        return;
-    }
-
-    private void function renameAliasInWhereExists(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasesInNestedQuery( arguments.where.query, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNotExists(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasesInNestedQuery( arguments.where.query, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNested(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNull(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNotNull(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNullSub(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasesInNestedQuery( arguments.where.query, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNotNullSub(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasesInNestedQuery( arguments.where.query, arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereBetween(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-        if ( getUtils().isBuilder( arguments.where.start ) ) {
-            renameAliasesInNestedQuery( arguments.where.start, arguments.oldAlias, arguments.newAlias );
-        }
-        if ( getUtils().isBuilder( arguments.where.end ) ) {
-            renameAliasesInNestedQuery( arguments.where.end, arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasInWhereNotBetween(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        renameAliasInTypedColumn( arguments.where.column, arguments.oldAlias, arguments.newAlias );
-        if ( getUtils().isBuilder( arguments.where.start ) ) {
-            renameAliasesInNestedQuery( arguments.where.start, arguments.oldAlias, arguments.newAlias );
-        }
-        if ( getUtils().isBuilder( arguments.where.end ) ) {
-            renameAliasesInNestedQuery( arguments.where.end, arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private string function swapAlias( required string column, required string oldAlias, required string newAlias ) {
-        if ( startsWith( arguments.column, arguments.oldAlias & "." ) ) {
-            return arguments.newAlias & "." & listLast( arguments.column, "." );
-        }
-        return arguments.column;
-    }
-
-    private boolean function startsWith( required string word, required string substring ) {
-        return left( arguments.word, len( arguments.substring ) ) == arguments.substring;
     }
 
     /**
@@ -1215,7 +880,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             arguments.input = subquery;
         }
 
-        arguments.input = snapshotBuilder( arguments.input );
+        arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
         // generate the derived table SQL
         this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
@@ -1328,7 +993,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         boolean preventDuplicateJoins = this.getPreventDuplicateJoins()
     ) {
         if ( getUtils().isBuilder( arguments.table ) ) {
-            arguments.table = cloneJoinClause( arguments.table, this );
+            arguments.table = getCollaborator( "QueryExecutor" ).cloneJoinClause( this, arguments.table, this );
             if ( arguments.preventDuplicateJoins ) {
                 var hasThisJoin = variables.joins.find( function( existingJoin ) {
                     return existingJoin.isEqualTo( table );
@@ -1346,11 +1011,11 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         var join = new qb.models.Query.JoinClause( joiningQuery = this, type = arguments.type, table = arguments.table );
 
         if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
-            var commonTableState = captureCommonTableState();
+            var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
             try {
                 first( join );
             } catch ( any e ) {
-                restoreCommonTableState( commonTableState );
+                getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
                 rethrow;
             }
             if ( arguments.preventDuplicateJoins ) {
@@ -1359,7 +1024,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 } );
 
                 if ( hasThisJoin ) {
-                    restoreCommonTableState( commonTableState );
+                    getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
                     return this;
                 }
             }
@@ -1705,7 +1370,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         string type = "inner",
         boolean where = false
     ) {
-        var commonTableState = captureCommonTableState();
+        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
         // since we have a callback, we generate a new query object and pass it into the callback
         try {
             if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
@@ -1714,7 +1379,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 // replace the original query builder with the results of the sub-query
                 arguments.input = subquery;
             }
-            arguments.input = snapshotBuilder( arguments.input );
+            arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
             // create the table reference
             arguments.table = raw(
@@ -1731,17 +1396,17 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             if ( variables.joins.len() > joinCount ) {
                 variables.grammarCompiledJoin = true;
             } else {
-                restoreCommonTableState( commonTableState );
+                getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
             }
             return result;
         } catch ( any e ) {
-            restoreCommonTableState( commonTableState );
+            getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
             rethrow;
         }
     }
 
     private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
-        var commonTableState = captureCommonTableState();
+        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
         if ( type != "outer apply" && type != "cross apply" && type != "lateral" ) {
             throw(
                 type = "QBInvalidJoinType",
@@ -1765,7 +1430,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             arguments.tableLikeSource = subquery;
         }
 
-        arguments.tableLikeSource = snapshotBuilder( arguments.tableLikeSource );
+        arguments.tableLikeSource = getCollaborator( "QueryExecutor" ).snapshotBuilder(
+            this,
+            arguments.tableLikeSource
+        );
 
         var join = new qb.models.Query.JoinClause(
             joiningQuery = this,
@@ -1782,7 +1450,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
 
             if ( hasThisJoin ) {
                 // Do nothing, early return
-                restoreCommonTableState( commonTableState );
+                getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
                 return this;
             }
         }
@@ -1871,7 +1539,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoinSub( required any alias, required any input ) {
-        var commonTableState = captureCommonTableState();
+        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
         // since we have a callback, we generate a new query object and pass it into the callback
         try {
             if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
@@ -1880,7 +1548,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 // replace the original query builder with the results of the sub-query
                 arguments.input = subquery;
             }
-            arguments.input = snapshotBuilder( arguments.input );
+            arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
             // create the table reference
             var table = raw(
@@ -1892,7 +1560,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             variables.grammarCompiledJoin = true;
             return result;
         } catch ( any e ) {
-            restoreCommonTableState( commonTableState );
+            getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
             rethrow;
         }
     }
@@ -2073,15 +1741,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             return whereNested( arguments.column, arguments.combinator );
         }
 
-        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal combinator" );
-        }
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
 
-        if ( isNull( arguments.value ) && isInvalidOperator( arguments.operator ) ) {
+        if ( isNull( arguments.value ) && getCollaborator( "QueryValidator" ).isInvalidOperator( arguments.operator ) ) {
             arguments.value = arguments.operator;
             arguments.operator = "=";
-        } else if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( arguments.operator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal operator" );
+        } else {
+            getCollaborator( "QueryValidator" ).validateOperator( arguments.operator );
         }
 
         if (
@@ -2189,7 +1855,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             arguments.query = newQuery();
             callback( arguments.query );
         }
-        arguments.query = snapshotBuilder( arguments.query );
+        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
         var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
         variables.wheres.append( {
             type: "sub",
@@ -2233,7 +1899,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         combinator = "and",
         negate = false
     ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         if (
             isClosure( values ) ||
             isCustomFunction( values ) ||
@@ -2290,7 +1956,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         string combinator = "and",
         boolean negate = false
     ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         arguments.values = normalizeToArray( arguments.values );
 
         var extractedBindings = [];
@@ -2402,7 +2068,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             arguments.query = newQuery();
             callback( arguments.query );
         }
-        arguments.query = snapshotBuilder( arguments.query );
+        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
 
         var type = negate ? "notInSub" : "inSub";
         var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
@@ -2442,7 +2108,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         addBindings(
             whereBindings.map( function( binding ) {
                 return utils.extractBinding( binding, variables.grammar );
@@ -2469,15 +2135,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         second,
         string combinator = "and"
     ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         if ( isNull( arguments.second ) ) {
             arguments.second = arguments.operator;
             arguments.operator = "=";
         }
 
-        if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( operator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal operator" );
-        }
+        getCollaborator( "QueryValidator" ).validateOperator( arguments.operator );
 
         if (
             isClosure( arguments.second ) ||
@@ -2516,7 +2180,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereExists( query, combinator = "and", negate = false ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
@@ -2535,7 +2199,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     private QueryBuilder function addWhereExistsQuery( query, combinator = "and", negate = false ) {
-        arguments.query = snapshotBuilder( arguments.query );
+        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
         var type = negate ? "notExists" : "exists";
         variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
         addBindings( query.getBindings(), "where" );
@@ -2565,7 +2229,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNested( required callback, combinator = "and" ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         var query = forNestedWhere();
         callback( query );
         return addNestedWhereQuery( query, combinator );
@@ -2580,9 +2244,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addNestedWhereQuery( required QueryBuilder query, string combinator = "and" ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         if ( !query.getWheres().isEmpty() ) {
-            arguments.query = snapshotBuilder( arguments.query );
+            arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
             variables.wheres.append( { type: "nested", query: arguments.query, combinator: arguments.combinator } );
             addBindings( query.getBindings(), "where" );
         }
@@ -2609,7 +2273,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNull( column, combinator = "and", negate = false ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         if (
             isClosure( arguments.column ) ||
             isCustomFunction( arguments.column ) ||
@@ -2635,13 +2299,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNullSub( query, combinator = "and", negate = false ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
             callback( arguments.query );
         }
-        arguments.query = snapshotBuilder( arguments.query );
+        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
 
         var type = arguments.negate ? "notNullSub" : "nullSub";
         variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
@@ -2681,7 +2345,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         combinator = "and",
         negate = false
     ) {
-        guardAgainstInvalidCombinator( arguments.combinator );
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
         var type = negate ? "notBetween" : "between";
         var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
 
@@ -2698,10 +2362,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
 
         if ( getUtils().isBuilder( arguments.start ) ) {
-            arguments.start = snapshotBuilder( arguments.start );
+            arguments.start = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.start );
         }
         if ( getUtils().isBuilder( arguments.end ) ) {
-            arguments.end = snapshotBuilder( arguments.end );
+            arguments.end = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.end );
         }
 
         addColumnBindings( [ typedColumn ], "where" );
@@ -2829,9 +2493,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         value,
         string combinator = "and"
     ) {
-        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal combinator" );
-        }
+        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
 
         if (
             isNull( arguments.value ) &&
@@ -2856,8 +2518,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         if ( isNull( arguments.value ) ) {
             arguments.value = arguments.operator;
             arguments.operator = "=";
-        } else if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( arguments.operator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal operator" );
+        } else {
+            getCollaborator( "QueryValidator" ).validateOperator( arguments.operator );
         }
 
         arrayAppend(
@@ -2964,7 +2626,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBy( required any column, string direction = "asc" ) {
-        guardAgainstInvalidOrderDirection( arguments.direction );
+        getCollaborator( "QueryValidator" ).validateOrderDirection( arguments.direction );
         arguments.direction = lCase( trim( arguments.direction ) );
         // We are trying to determine if a positional array of [ column, direction ]
         // was passed in.  This is the craziness that does that.
@@ -3173,7 +2835,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBySub( required any query, string direction = "asc" ) {
-        guardAgainstInvalidOrderDirection( arguments.direction );
+        getCollaborator( "QueryValidator" ).validateOrderDirection( arguments.direction );
         arguments.direction = lCase( trim( arguments.direction ) );
         if ( !getUtils().isBuilder( arguments.query ) ) {
             var callback = arguments.query;
@@ -3181,7 +2843,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             callback( arguments.query );
         }
 
-        arguments.query = snapshotBuilder( arguments.query );
+        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
 
         variables.orders.append( { direction: arguments.direction, query: arguments.query } );
         addBindings( arguments.query.getBindings(), "orderBy" );
@@ -3249,7 +2911,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             // replace the original query builder with the results of the sub-query
             arguments.input = subquery;
         }
-        arguments.input = snapshotBuilder( arguments.input );
+        arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
         // track the union statement
         variables.unions.append( { query: arguments.input, all: arguments.all } );
@@ -3298,7 +2960,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             // replace the original query builder with the results of the sub-query
             arguments.input = subquery;
         }
-        arguments.input = snapshotBuilder( arguments.input );
+        arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
         // track the union statement
         arrayAppend(
@@ -3456,7 +3118,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     private numeric function getCountForPagination( struct options = {} ) {
         if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
             var countSource = clone().clearOrders();
-            return prepareInternalExecutionBuilder( newQuery() )
+            return getCollaborator( "QueryExecutor" )
+                .prepareInternalExecutionBuilder( this, newQuery() )
                 .fromSub( "aggregate_table", countSource )
                 .count( options = arguments.options );
         }
@@ -3699,7 +3362,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                     clearBindings( only = [ "insert" ] );
                 }
             } else {
-                var batchQuery = prepareInternalExecutionBuilder( clone() );
+                var batchQuery = getCollaborator( "QueryExecutor" ).prepareInternalExecutionBuilder( this, clone() );
                 results.append(
                     batchQuery.insert( values = batch, options = arguments.options, toSql = arguments.toSql )
                 );
@@ -3731,7 +3394,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             arguments.source = newQuery();
             callback( arguments.source );
         }
-        arguments.source = snapshotBuilder( arguments.source );
+        arguments.source = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.source );
 
         clearBindings( except = [ "commonTables" ] );
 
@@ -3901,10 +3564,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             if ( isCustomFunction( value ) || isClosure( value ) ) {
                 var subselect = newQuery();
                 value( subselect );
-                arguments.values[ column.original ] = snapshotBuilder( subselect );
+                arguments.values[ column.original ] = getCollaborator( "QueryExecutor" ).snapshotBuilder(
+                    this,
+                    subselect
+                );
                 addBindings( arguments.values[ column.original ].getBindings(), "update" );
             } else if ( getUtils().isBuilder( value ) ) {
-                arguments.values[ column.original ] = snapshotBuilder( value );
+                arguments.values[ column.original ] = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, value );
                 addBindings( arguments.values[ column.original ].getBindings(), "update" );
             } else if ( getUtils().isExpression( value ) ) {
                 addExpressionBindings( value, "update" );
@@ -4000,7 +3666,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
 
         if ( !isNull( arguments.source ) ) {
-            arguments.source = snapshotBuilder( arguments.source );
+            arguments.source = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.source );
             addBindings( arguments.source.getBindings(), "insert" );
         }
 
@@ -4120,7 +3786,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
 
         if ( getUtils().isBuilder( arguments.deleteUnmatched ) ) {
-            arguments.deleteUnmatched = snapshotBuilder( arguments.deleteUnmatched );
+            arguments.deleteUnmatched = getCollaborator( "QueryExecutor" ).snapshotBuilder(
+                this,
+                arguments.deleteUnmatched
+            );
             addBindings( arguments.deleteUnmatched.getBindings(), "insert" );
         }
 
@@ -4279,55 +3948,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     private QueryBuilder function addExpressionBindings( required any expression, required string type ) {
         addBindings( extractExpressionBindings( arguments.expression ), arguments.type );
         return this;
-    }
-
-    /**
-     * Clones a child builder when it is attached so its SQL and copied bindings cannot diverge later.
-     */
-    private QueryBuilder function snapshotBuilder( required QueryBuilder builder ) {
-        var snapshot = arguments.builder.clone();
-        var hoistTarget = isJoin() ? getJoiningQuery() : this;
-        hoistNestedCommonTables( snapshot, hoistTarget );
-        return snapshot;
-    }
-
-    private struct function captureCommonTableState() {
-        return {
-            commonTableCount: variables.commonTables.len(),
-            commonTableBindingCount: variables.bindings.commonTables.len()
-        };
-    }
-
-    private void function restoreCommonTableState( required struct state ) {
-        variables.commonTables = arguments.state.commonTableCount == 0
-         ? []
-         : variables.commonTables.slice( 1, arguments.state.commonTableCount );
-        variables.bindings.commonTables = arguments.state.commonTableBindingCount == 0
-         ? []
-         : variables.bindings.commonTables.slice( 1, arguments.state.commonTableBindingCount );
-    }
-
-    /**
-     * Moves SQL Server CTEs from an embedded query to the statement that contains it.
-     * T-SQL only permits the WITH clause at the statement level, not inside the
-     * parentheses used for derived tables and predicate subqueries.
-     */
-    private QueryBuilder function hoistNestedCommonTables( required QueryBuilder source, required QueryBuilder target ) {
-        if (
-            !isInstanceOf( arguments.target.getGrammar(), "qb.models.Grammars.SqlServerGrammar" ) ||
-            arguments.source.getCommonTables().isEmpty()
-        ) {
-            return arguments.source;
-        }
-
-        var targetCommonTables = arguments.target.getCommonTables();
-        targetCommonTables.append( arguments.source.getCommonTables(), true );
-        arguments.target.setCommonTables( targetCommonTables );
-        arguments.target.addBindings( arguments.source.getRawBindings().commonTables, "commonTables" );
-
-        arguments.source.setCommonTables( [] );
-        arguments.source.getRawBindings().commonTables = [];
-        return arguments.source;
     }
 
     /**
@@ -4519,26 +4139,31 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         boolean toSQL = false,
         any showBindings = false
     ) {
-        return withAggregate(
-            {
+        return getCollaborator( "QueryExecutor" ).withAggregate(
+            builder = this,
+            aggregate = {
                 type: type,
                 column: mapToColumnType( arguments.column ),
                 defaultValue: isNull( arguments.defaultValue ) ? javacast( "null", "" ) : arguments.defaultValue
             },
-            function() {
+            callback = function() {
                 return withReturnFormat( "query", function() {
-                    return withColumns( column, function() {
-                        if ( toSQL ) {
-                            return this.toSQL( showBindings = showBindings );
-                        }
+                    return getCollaborator( "QueryExecutor" ).withColumns(
+                        builder = this,
+                        columns = column,
+                        callback = function() {
+                            if ( toSQL ) {
+                                return this.toSQL( showBindings = showBindings );
+                            }
 
-                        var result = get( options = options );
-                        if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
-                            return defaultValue;
-                        } else {
-                            return result.aggregate;
+                            var result = get( options = options );
+                            if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
+                                return defaultValue;
+                            } else {
+                                return result.aggregate;
+                            }
                         }
-                    } );
+                    );
                 } );
             }
         );
@@ -4553,8 +4178,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      */
     public any function exists( struct options = {}, boolean toSQL = false ) {
         var existsSource = clone().setLimitValue( 1 );
-        var existsQuery = prepareInternalExecutionBuilder( newQuery() ).clearFrom();
-        hoistNestedCommonTables( existsSource, existsQuery );
+        var existsQuery = getCollaborator( "QueryExecutor" )
+            .prepareInternalExecutionBuilder( this, newQuery() )
+            .clearFrom();
+        getCollaborator( "QueryExecutor" ).hoistNestedCommonTables( existsSource, existsQuery );
         existsQuery.selectRaw(
             "CASE WHEN EXISTS (#getGrammar().compileSelect( existsSource )#) THEN 1 ELSE 0 END AS aggregate",
             existsSource.getBindings()
@@ -4900,105 +4527,33 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
     /**
-     * Execute a query and convert it to the proper return format.
-     *
-     * @sql         The sql string to execute.
-     * @options     Any options to pass to `queryExecute`. Default: {}.
-     *
-     * @return      any
+     * Delegates select execution to the lazily instantiated executor.
      */
     private any function run( required string sql, struct options = {} ) {
-        var q = runQuery( argumentCollection = arguments );
-
-        if ( isNull( q ) ) {
-            if ( variables.pretending ) {
-                return applyReturnFormat( queryNew( "" ) );
-            }
-            return;
-        }
-
-        if ( isQuery( q ) ) {
-            return applyReturnFormat( q );
-        }
-
-        if ( isArray( q ) ) {
-            return applyReturnFormat( q );
-        }
-
-        if ( !q.keyExists( "result" ) || !q.keyExists( "query" ) ) {
-            return applyReturnFormat( q );
-        }
-
-        return { result: q.result, query: applyReturnFormat( q.query ) };
-    }
-
-    private any function applyReturnFormat( required any q ) {
-        var formatter = getReturnFormat();
-
-        if ( isClosure( formatter ) || isCustomFunction( formatter ) ) {
-            return formatter( arguments.q );
-        }
-
-        if ( structKeyExists( formatter, "format" ) ) {
-            return formatter.format( arguments.q );
-        }
-
-        throw(
-            type = "InvalidFormat",
-            message = "The configured return formatter must be a closure or a component with a format method."
-        );
+        return getCollaborator( "QueryExecutor" ).run( this, arguments.sql, arguments.options );
     }
 
     /**
-     * Run a query through the specified grammar then clear all bindings.
-     *
-     * @sql          The sql string to execute.
-     * @options      Any options to pass to `queryExecute`. Default: {}.
-     * @returnObject The return object that running the query should return.
-     *               Can be either `query` or `result`. Default: `query`.
-     *
-     * @return       any
+     * Delegates grammar execution while preserving the builder's established
+     * test seam and supporting collaborators operating on subclasses.
      */
-    private any function runQuery(
+    public any function runQuery(
         required string sql,
         struct options = {},
         string returnObject = "query",
         array bindings
     ) {
-        var queryOptions = structCopy( arguments.options );
-        structAppend( queryOptions, getDefaultOptions(), false );
-        guardAgainstReturnTypeOption( queryOptions );
-        var aggregateBindingExclusions = getAggregate().isEmpty()
-         ? []
-         : ( getUnions().isEmpty() ? [ "select", "orderBy" ] : [ "orderBy" ] );
-        var queryBindings = isNull( arguments.bindings )
-         ? getBindings( except = aggregateBindingExclusions )
-         : arguments.bindings;
-
-        var result = grammar.runQuery(
-            sql = variables.sqlCommenter.appendSqlComments(
-                sql = sql,
-                datasource = queryOptions.keyExists( "datasource" ) && !isNull( queryOptions.datasource ) ? queryOptions.datasource : javacast(
-                    "null",
-                    ""
-                ),
-                bindings = queryBindings
-            ),
-            bindings = queryBindings,
-            options = queryOptions,
-            returnObject = returnObject,
-            pretend = variables.pretending,
-            postProcessHook = function( data ) {
-                if ( this.getCollectQueryLog() ) {
-                    variables.queryLog.append( data );
-                }
-            }
-        );
-
-        if ( !isNull( result ) ) {
-            return result;
+        var bindingsDefinition = { provided: !isNull( arguments.bindings ) };
+        if ( bindingsDefinition.provided ) {
+            bindingsDefinition.value = arguments.bindings;
         }
-        return;
+        return getCollaborator( "QueryExecutor" ).runQuery(
+            builder = this,
+            sql = arguments.sql,
+            options = arguments.options,
+            returnObject = arguments.returnObject,
+            bindingsDefinition = bindingsDefinition
+        );
     }
 
     /*******************************************************************************\
@@ -5048,120 +4603,15 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         return query;
     }
 
-    private QueryBuilder function prepareInternalExecutionBuilder( required QueryBuilder query ) {
-        if ( variables.pretending ) {
-            arguments.query.pretend();
-        }
-        return arguments.query;
-    }
-
     /**
      * Clones the current query into a new query instance.
      *
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function clone() {
-        var clonedQuery = newQuery();
-        copyQueryState( this, clonedQuery );
-        return clonedQuery;
+        return getCollaborator( "QueryExecutor" ).cloneBuilder( this );
     }
 
-    private void function copyQueryState( required QueryBuilder source, required QueryBuilder target ) {
-        var targetQuery = arguments.target;
-        arguments.target.setDistinct( arguments.source.getDistinct() );
-        arguments.target.setAggregate( cloneQueryStateValue( arguments.source.getAggregate() ) );
-        arguments.target.setColumns( cloneQueryStateValue( arguments.source.getColumns() ) );
-        arguments.target.setTableName( cloneQueryStateValue( arguments.source.getTableName() ) );
-        if ( !isNull( arguments.source.getForClause() ) ) {
-            arguments.target.setForClause( cloneQueryStateValue( arguments.source.getForClause() ) );
-        }
-        arguments.target.setAlias( arguments.source.getAlias() );
-        arguments.target.setLockType( arguments.source.getLockType() );
-        arguments.target.setLockValue( arguments.source.getLockValue() );
-        var clonedJoins = [];
-        for ( var join in arguments.source.getJoins() ) {
-            clonedJoins.append( cloneJoinClause( join, targetQuery ) );
-        }
-        arguments.target.setJoins( clonedJoins );
-        arguments.target.setWheres( cloneQueryStateValue( arguments.source.getWheres() ) );
-        arguments.target.setGroups( cloneQueryStateValue( arguments.source.getGroups() ) );
-        arguments.target.setHavings( cloneQueryStateValue( arguments.source.getHavings() ) );
-        arguments.target.setUnions( cloneQueryStateValue( arguments.source.getUnions() ) );
-        arguments.target.setOrders( cloneQueryStateValue( arguments.source.getOrders() ) );
-        arguments.target.setCommonTables( cloneQueryStateValue( arguments.source.getCommonTables() ) );
-        if ( !isNull( arguments.source.getLimitValue() ) ) {
-            arguments.target.setLimitValue( arguments.source.getLimitValue() );
-        }
-        if ( !isNull( arguments.source.getOffsetValue() ) ) {
-            arguments.target.setOffsetValue( arguments.source.getOffsetValue() );
-        }
-        arguments.target.setReturning( cloneQueryStateValue( arguments.source.getReturning() ) );
-        arguments.target.setUpdates( cloneQueryStateValue( arguments.source.getUpdates() ) );
-        arguments.target.setGrammarCompiledFrom( arguments.source.getGrammarCompiledFrom() );
-        arguments.target.setGrammarCompiledJoin( arguments.source.getGrammarCompiledJoin() );
-
-        var sourceBindings = arguments.source.getRawBindings();
-        for ( var bindingType in sourceBindings ) {
-            arguments.target.addBindings( cloneQueryStateValue( sourceBindings[ bindingType ] ), bindingType );
-        }
-    }
-
-    private JoinClause function cloneJoinClause( required JoinClause join, required QueryBuilder joiningQuery ) {
-        var clonedJoin = new qb.models.Query.JoinClause(
-            arguments.joiningQuery,
-            arguments.join.getType(),
-            cloneQueryStateValue( arguments.join.getTable() ),
-            arguments.join.getLateralRawExpression(),
-            cloneQueryStateValue( arguments.join.getLateralBindings() )
-        );
-        copyQueryState( arguments.join, clonedJoin );
-        return clonedJoin;
-    }
-
-    private any function cloneQueryStateValue( any value ) {
-        if ( isSimpleValue( arguments.value ) ) {
-            return arguments.value;
-        }
-        if ( isNull( arguments.value ) ) {
-            return javacast( "null", "" );
-        }
-        if ( getUtils().isBuilder( arguments.value ) ) {
-            return arguments.value.clone();
-        }
-        if ( getUtils().isExpression( arguments.value ) ) {
-            return new qb.models.Query.Expression(
-                arguments.value.getSQL(),
-                cloneQueryStateValue( arguments.value.getBindings() )
-            );
-        }
-        if ( isObject( arguments.value ) ) {
-            return arguments.value;
-        }
-        if ( isArray( arguments.value ) ) {
-            var clonedArray = [];
-            if ( !arguments.value.isEmpty() ) {
-                arrayResize( clonedArray, arguments.value.len() );
-            }
-            for ( var i = 1; i <= arguments.value.len(); i++ ) {
-                if ( arrayIsDefined( arguments.value, i ) && !isNull( arguments.value[ i ] ) ) {
-                    clonedArray[ i ] = cloneQueryStateValue( arguments.value[ i ] );
-                }
-            }
-            return clonedArray;
-        }
-        if ( isStruct( arguments.value ) ) {
-            var clonedStruct = {};
-            for ( var key in arguments.value ) {
-                if ( isNull( arguments.value[ key ] ) ) {
-                    clonedStruct[ key ] = javacast( "null", "" );
-                } else {
-                    clonedStruct[ key ] = cloneQueryStateValue( arguments.value[ key ] );
-                }
-            }
-            return clonedStruct;
-        }
-        return arguments.value;
-    }
 
     /**
      * Wrap up any sql in an Expression.
@@ -5197,8 +4647,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return string
      */
     public string function toSQL( any showBindings = false ) {
-        if ( getAggregate().isEmpty() ) {
-            validateUniqueSelectColumns( getColumns() );
+        if ( getValidateDuplicateSelectColumns() && getAggregate().isEmpty() ) {
+            getCollaborator( "QueryValidator" ).validateUniqueSelectColumns( getColumns(), getGrammar() );
         }
         var sql = grammar.compileSelect( this );
 
@@ -5320,76 +4770,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         return result;
     }
 
-    private void function guardAgainstReturnTypeOption( required struct options ) {
-        if ( !arguments.options.keyExists( "returntype" ) ) {
-            return;
-        }
-
-        if ( getValidateQueryExecuteReturnType() ) {
-            throw(
-                type = "InvalidQueryExecuteOption",
-                message = "The queryExecute returntype option cannot be used with qb return formatters."
-            );
-        }
-
-        structDelete( arguments.options, "returntype" );
-        structDelete( arguments.options, "columnkey" );
-        structDelete( arguments.options, "columnKey" );
-    }
-
-    /**
-     * Runs the code inside the callback with the given columns selected and then sets the columns back to its original value.
-     *
-     * @columns A single column, a list or columns (comma-separated), or an array of columns.
-     * @callback The code to execute with the given columns.
-     *
-     * @return any
-     */
-    private any function withColumns( required any columns, required any callback ) {
-        var originalColumns = [ { "type": "simple", "value": "*" } ];
-        var shouldRestoreColumns = getUnions().isEmpty();
-        if ( shouldRestoreColumns ) {
-            originalColumns = getColumns();
-            select( arguments.columns );
-        }
-        var result = javacast( "null", "" );
-        try {
-            result = callback();
-        } finally {
-            if ( shouldRestoreColumns ) {
-                select( originalColumns );
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Runs the code inside the callback with the given aggregate in place and then sets the aggregate back to its original value.
-     *
-     * @aggregate he aggregate option and column to execute. (e.g. `{ type = "count", column = "*" }`).
-     * @callback The code to execute with the given aggregate.
-     *
-     * @return any
-     */
-    private any function withAggregate( required struct aggregate, required any callback ) {
-        var originalAggregate = getAggregate();
-        var originalOrders = getOrders();
-        var originalAggregateBindings = variables.bindings.aggregate;
-        setAggregate( arguments.aggregate );
-        setOrders( [] );
-        variables.bindings.aggregate = [];
-        addColumnBindings( [ arguments.aggregate.column ], "aggregate" );
-        var result = javacast( "null", "" );
-        try {
-            result = callback();
-        } finally {
-            setAggregate( originalAggregate );
-            setOrders( originalOrders );
-            variables.bindings.aggregate = originalAggregateBindings;
-        }
-        return result;
-    }
-
     /**
      * Converts the arguments passed in to it into an array.
      *
@@ -5432,54 +4812,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             return arraySlice( arguments.value.split( ",\s*" ), 1 );
         } else {
             return [ arguments.value ];
-        }
-    }
-
-    /**
-     * Checks if an operator is an invalid sql operator (according to qb).
-     *
-     * @operator The operator to check.
-     *
-     * @return boolean
-     */
-    private boolean function isInvalidOperator( required any operator ) {
-        if ( isNull( arguments.operator ) ) {
-            return true;
-        }
-
-        if ( !isSimpleValue( arguments.operator ) ) {
-            return true;
-        }
-
-        return !arrayContains( variables.operators, lCase( arguments.operator ) );
-    }
-
-    /**
-     * Checks if a combinator is an invalid sql combinator (according to qb).
-     *
-     * @combinator The combinator to check.
-     *
-     * @return boolean
-     */
-    private boolean function isInvalidCombinator( required string combinator ) {
-        return !arrayContains( variables.combinators, uCase( arguments.combinator ) );
-    }
-
-    /**
-     * Throws when combinator validation is enabled and the value is unsupported.
-     */
-    private void function guardAgainstInvalidCombinator( required string combinator ) {
-        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal combinator" );
-        }
-    }
-
-    /**
-     * Throws when an ORDER BY direction is unsupported.
-     */
-    private void function guardAgainstInvalidOrderDirection( required string direction ) {
-        if ( !arrayFindNoCase( variables.directions, trim( arguments.direction ) ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal order direction" );
         }
     }
 

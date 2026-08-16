@@ -498,6 +498,18 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
     /**
+     * Returns the lazily instantiated predicate builder. It is cached separately
+     * because predicate validation remains the only general collaborator involved
+     * in a basic WHERE clause.
+     */
+    package PredicateClause function getPredicateClause() {
+        if ( !variables.keyExists( "predicateClause" ) ) {
+            variables.predicateClause = new qb.models.Query.PredicateClause();
+        }
+        return variables.predicateClause;
+    }
+
+    /**
      * Resets the query builder instance.
      *
      * @return QueryBuilder
@@ -562,7 +574,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
     }
 
-    private struct function mapToColumnType( required any column ) {
+    public struct function mapToColumnType( required any column ) {
         if ( isSimpleValue( arguments.column ) ) {
             if ( find( "->", arguments.column ) ) {
                 return jsonPath( column = arguments.column );
@@ -1554,85 +1566,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         value,
         string combinator = "and"
     ) {
-        if ( isClosure( arguments.column ) || isCustomFunction( arguments.column ) ) {
-            return whereNested( arguments.column, arguments.combinator );
-        }
-
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-
-        if ( isNull( arguments.value ) && getCollaborator( "QueryValidator" ).isInvalidOperator( arguments.operator ) ) {
-            arguments.value = arguments.operator;
-            arguments.operator = "=";
-        } else {
-            getCollaborator( "QueryValidator" ).validateOperator( arguments.operator );
-        }
-
-        if (
-            !isNull( arguments.value ) && (
-                isClosure( arguments.value ) ||
-                isCustomFunction( arguments.value ) ||
-                getUtils().isBuilder( arguments.value )
-            )
-        ) {
-            return whereSub(
-                arguments.column,
-                arguments.operator,
-                arguments.value,
-                arguments.combinator
-            );
-        }
-
-        return whereBasic(
-            arguments.column,
-            arguments.operator,
-            isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
-            arguments.combinator
-        );
-    }
-
-    /**
-     * Adds a WHERE clause to the query.
-     *
-     * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
-     * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
-     * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
-     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-     *
-     * @return qb.models.Query.QueryBuilder
-     */
-    private QueryBuilder function whereBasic(
-        required any column,
-        required any operator,
-        any value,
-        string combinator = "and"
-    ) {
-        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
-        arrayAppend(
-            variables.wheres,
-            {
-                column: typedColumn,
-                operator: arguments.operator,
-                value: isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
-                combinator: arguments.combinator,
-                type: "basic"
-            }
-        );
-
-        addColumnBindings( [ typedColumn ], "where" );
-
-        if ( !isNull( arguments.value ) && getUtils().isExpression( arguments.value ) ) {
-            addExpressionBindings( arguments.value, "where" );
-        } else {
-            addBindings(
-                utils.extractBinding(
-                    isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
-                    variables.grammar
-                ),
-                "where"
-            );
-        }
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().where( argumentCollection = arguments );
     }
 
     /**
@@ -1649,41 +1584,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     public QueryBuilder function andWhere( column, operator, value ) {
         arguments.combinator = "and";
         return where( argumentCollection = arguments );
-    }
-
-    /**
-     * Adds a where clause where the value is a subquery.
-     *
-     * @column The name of the column with which to constrain the query.
-     * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).
-     * @callback The closure that defines the subquery. A new query will be passed to the closure as the only argument.
-     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-     *
-     * @return qb.models.Query.QueryBuilder
-     */
-    private QueryBuilder function whereSub(
-        column,
-        operator,
-        query,
-        combinator = "and"
-    ) {
-        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
-            var callback = arguments.query;
-            arguments.query = newQuery();
-            callback( arguments.query );
-        }
-        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
-        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
-        variables.wheres.append( {
-            type: "sub",
-            column: typedColumn,
-            operator: arguments.operator,
-            query: arguments.query,
-            combinator: arguments.combinator
-        } );
-        addColumnBindings( [ typedColumn ], "where" );
-        addBindings( query.getBindings(), "where" );
-        return this;
     }
 
     /**
@@ -1716,42 +1616,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         combinator = "and",
         negate = false
     ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        if (
-            isClosure( values ) ||
-            isCustomFunction( values ) ||
-            getUtils().isBuilder( values )
-        ) {
-            arguments.query = arguments.values;
-            return whereInSub( argumentCollection = arguments );
-        }
-
-        arguments.values = normalizeToArray( arguments.values );
-
-        var type = negate ? "notIn" : "in";
-        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
-        variables.wheres.append( {
-            type: type,
-            column: typedColumn,
-            values: arguments.values,
-            combinator: arguments.combinator
-        } );
-
-        var bindings = [];
-        if ( !arguments.values.isEmpty() ) {
-            addColumnBindings( [ typedColumn ], "where" );
-        }
-        for ( var value in arguments.values ) {
-            if ( getUtils().isExpression( value ) ) {
-                bindings.append( extractExpressionBindings( value ), true );
-            } else {
-                bindings.append( utils.extractBinding( value, variables.grammar ) );
-            }
-        }
-
-        addBindings( bindings, "where" );
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereIn( argumentCollection = arguments );
     }
 
     /**
@@ -1773,75 +1639,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         string combinator = "and",
         boolean negate = false
     ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        arguments.values = normalizeToArray( arguments.values );
-
-        var extractedBindings = [];
-        if ( !arguments.values.isEmpty() ) {
-            arrayResize( extractedBindings, arguments.values.len() );
-        }
-        for ( var valueIndex = 1; valueIndex <= arguments.values.len(); valueIndex++ ) {
-            if ( !arrayIsDefined( arguments.values, valueIndex ) || isNull( arguments.values[ valueIndex ] ) ) {
-                extractedBindings[ valueIndex ] = getUtils().extractBinding( grammar = variables.grammar );
-                continue;
-            }
-            if ( getUtils().isExpression( arguments.values[ valueIndex ] ) ) {
-                throw( type = "InvalidBulkValue", message = "Bulk IN values cannot contain SQL expressions." );
-            }
-            extractedBindings[ valueIndex ] = getUtils().extractBinding(
-                arguments.values[ valueIndex ],
-                variables.grammar
-            );
-        }
-
-        if ( isNull( arguments.sqlType ) ) {
-            arguments.sqlType = variables.grammar.resolveWhereInBulkSqlType(
-                getUtils().inferSqlType( arguments.values, variables.grammar )
-            );
-        }
-
-        arguments.sqlType = trim( arguments.sqlType );
-
-        if (
-            arguments.sqlType == "" ||
-            !reFindNoCase(
-                "^[a-z][a-z0-9_]*(?:\s+[a-z][a-z0-9_]*)*(?:\s*\(\s*(?:max|\d+)(?:\s*,\s*\d+)?\s*\))?$",
-                arguments.sqlType
-            )
-        ) {
-            throw(
-                type = "InvalidSQLType",
-                message = "Invalid SQL type [#arguments.sqlType#] for a bulk IN statement."
-            );
-        }
-
-        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
-        variables.wheres.append( {
-            type: "inBulk",
-            column: typedColumn,
-            sqlType: arguments.sqlType,
-            isEmpty: arguments.values.isEmpty(),
-            negate: arguments.negate,
-            combinator: arguments.combinator
-        } );
-
-        if ( !arguments.values.isEmpty() ) {
-            addColumnBindings( [ typedColumn ], "where" );
-            var serializedValues = extractedBindings.map( function( binding ) {
-                return binding.null ? javacast( "null", "" ) : binding.value;
-            } );
-            addBindings(
-                [
-                    getUtils().extractBinding(
-                        { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
-                        variables.grammar
-                    )
-                ],
-                "where"
-            );
-        }
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereInBulk( argumentCollection = arguments );
     }
 
     /**
@@ -1862,43 +1661,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     ) {
         arguments.negate = true;
         return whereInBulk( argumentCollection = arguments );
-    }
-
-    /**
-     * Adds a WHERE IN clause to the query using a subselect.  To call this using the public api, pass a closure to `whereIn` as the second argument (`values`).
-     *
-     * @column The name of the column with which to constrain the query.
-     * @callback A closure that will contain the subquery with which to constain this clause.
-     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-     * @negate False for IN, True for NOT IN. Default: false.
-     *
-     * @return qb.models.Query.QueryBuilder
-     */
-    private QueryBuilder function whereInSub(
-        column,
-        query,
-        combinator = "and",
-        negate = false
-    ) {
-        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
-            var callback = arguments.query;
-            arguments.query = newQuery();
-            callback( arguments.query );
-        }
-        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
-
-        var type = negate ? "notInSub" : "inSub";
-        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
-        variables.wheres.append( {
-            type: type,
-            column: typedColumn,
-            query: arguments.query,
-            combinator: arguments.combinator
-        } );
-        addColumnBindings( [ typedColumn ], "where" );
-        addBindings( arguments.query.getBindings(), "where" );
-
-        return this;
     }
 
     /**
@@ -1925,15 +1687,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        addBindings(
-            whereBindings.map( function( binding ) {
-                return utils.extractBinding( binding, variables.grammar );
-            } ),
-            "where"
-        );
-        variables.wheres.append( { type: "raw", sql: sql, combinator: arguments.combinator } );
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereRaw( argumentCollection = arguments );
     }
 
     /**
@@ -1952,39 +1707,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         second,
         string combinator = "and"
     ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        if ( isNull( arguments.second ) ) {
-            arguments.second = arguments.operator;
-            arguments.operator = "=";
-        }
-
-        getCollaborator( "QueryValidator" ).validateOperator( arguments.operator );
-
-        if (
-            isClosure( arguments.second ) ||
-            isCustomFunction( arguments.second ) ||
-            getUtils().isBuilder( arguments.second )
-        ) {
-            return whereSub(
-                arguments.first,
-                arguments.operator,
-                arguments.second,
-                arguments.combinator
-            );
-        }
-
-        var firstColumn = mapToColumnType( applyColumnFormatter( arguments.first ) );
-        var secondColumn = mapToColumnType( applyColumnFormatter( arguments.second ) );
-        variables.wheres.append( {
-            type: "column",
-            first: firstColumn,
-            operator: arguments.operator,
-            second: secondColumn,
-            combinator: arguments.combinator
-        } );
-        addColumnBindings( [ firstColumn, secondColumn ], "where" );
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereColumn( argumentCollection = arguments );
     }
 
     /**
@@ -1997,30 +1721,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereExists( query, combinator = "and", negate = false ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
-            var callback = arguments.query;
-            arguments.query = newQuery();
-            callback( arguments.query );
-        }
-        return addWhereExistsQuery( arguments.query, arguments.combinator, arguments.negate );
-    }
-
-    /**
-     * Adds a WHERE EXISTS clause to the query.
-     *
-     * @query The EXISTS query to add as a constraint.
-     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-     * @negate False for EXISTS, True for NOT EXISTS. Default: false.
-     *
-     * @return qb.models.Query.QueryBuilder
-     */
-    private QueryBuilder function addWhereExistsQuery( query, combinator = "and", negate = false ) {
-        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
-        var type = negate ? "notExists" : "exists";
-        variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
-        addBindings( query.getBindings(), "where" );
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereExists( argumentCollection = arguments );
     }
 
     /**
@@ -2046,10 +1748,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNested( required callback, combinator = "and" ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        var query = forNestedWhere();
-        callback( query );
-        return addNestedWhereQuery( query, combinator );
+        arguments.builder = this;
+        return getPredicateClause().whereNested( argumentCollection = arguments );
     }
 
     /**
@@ -2061,13 +1761,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addNestedWhereQuery( required QueryBuilder query, string combinator = "and" ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        if ( !query.getWheres().isEmpty() ) {
-            arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
-            variables.wheres.append( { type: "nested", query: arguments.query, combinator: arguments.combinator } );
-            addBindings( query.getBindings(), "where" );
-        }
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().addNestedWhereQuery( argumentCollection = arguments );
     }
 
     /**
@@ -2076,8 +1771,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function forNestedWhere() {
-        var query = newQuery();
-        return query.from( getTableName() );
+        return getPredicateClause().forNestedWhere( this );
     }
 
     /**
@@ -2090,20 +1784,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNull( column, combinator = "and", negate = false ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        if (
-            isClosure( arguments.column ) ||
-            isCustomFunction( arguments.column ) ||
-            getUtils().isBuilder( arguments.column )
-        ) {
-            return whereNullSub( arguments.column, arguments.combinator, arguments.negate );
-        }
-
-        var type = negate ? "notNull" : "null";
-        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
-        variables.wheres.append( { type: type, column: typedColumn, combinator: arguments.combinator } );
-        addColumnBindings( [ typedColumn ], "where" );
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereNull( argumentCollection = arguments );
     }
 
     /**
@@ -2116,19 +1798,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNullSub( query, combinator = "and", negate = false ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
-            var callback = arguments.query;
-            arguments.query = newQuery();
-            callback( arguments.query );
-        }
-        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
-
-        var type = arguments.negate ? "notNullSub" : "nullSub";
-        variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
-        addBindings( arguments.query.getBindings(), "where" );
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereNullSub( argumentCollection = arguments );
     }
 
     /**
@@ -2162,79 +1833,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         combinator = "and",
         negate = false
     ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-        var type = negate ? "notBetween" : "between";
-        var typedColumn = mapToColumnType( applyColumnFormatter( arguments.column ) );
-
-        if ( !isNull( arguments.start ) && ( isClosure( arguments.start ) || isCustomFunction( arguments.start ) ) ) {
-            var callback = arguments.start;
-            arguments.start = newQuery();
-            callback( arguments.start );
-        }
-
-        if ( !isNull( arguments.end ) && ( isClosure( arguments.end ) || isCustomFunction( arguments.end ) ) ) {
-            var callback = arguments.end;
-            arguments.end = newQuery();
-            callback( arguments.end );
-        }
-
-        if ( !isNull( arguments.start ) && getUtils().isBuilder( arguments.start ) ) {
-            arguments.start = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.start );
-        }
-        if ( !isNull( arguments.end ) && getUtils().isBuilder( arguments.end ) ) {
-            arguments.end = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.end );
-        }
-
-        addColumnBindings( [ typedColumn ], "where" );
-        if ( !isNull( arguments.start ) && utils.isExpression( arguments.start ) ) {
-            addExpressionBindings( arguments.start, "where" );
-        } else {
-            addBindings(
-                isNull( arguments.start )
-                 ? utils.extractBinding( grammar = variables.grammar )
-                 : utils.extractBinding( arguments.start, variables.grammar ),
-                "where"
-            );
-        }
-        if ( !isNull( arguments.end ) && utils.isExpression( arguments.end ) ) {
-            addExpressionBindings( arguments.end, "where" );
-        } else {
-            addBindings(
-                isNull( arguments.end )
-                 ? utils.extractBinding( grammar = variables.grammar )
-                 : utils.extractBinding( arguments.end, variables.grammar ),
-                "where"
-            );
-        }
-
-        if (
-            !isNull( arguments.start ) && isStruct( arguments.start ) && !structKeyExists(
-                arguments.start,
-                "isBuilder"
-            ) && structKeyExists( arguments.start, "value" )
-        ) {
-            arguments.start = arguments.start.value;
-        }
-
-        if (
-            !isNull( arguments.end ) && isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && structKeyExists(
-                arguments.end,
-                "value"
-            )
-        ) {
-            arguments.end = arguments.end.value;
-        }
-
-        variables.wheres.append( {
-            type: type,
-            column: typedColumn,
-            start: isNull( arguments.start ) ? javacast( "null", "" ) : arguments.start,
-            end: isNull( arguments.end ) ? javacast( "null", "" ) : arguments.end,
-            combinator: arguments.combinator
-        } );
-
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereBetween( argumentCollection = arguments );
     }
 
     /**
@@ -2320,72 +1920,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         value,
         string combinator = "and"
     ) {
-        getCollaborator( "QueryValidator" ).validateCombinator( arguments.combinator );
-
-        if (
-            isNull( arguments.value ) &&
-            isNull( arguments.operator ) &&
-            getUtils().isExpression( arguments.column )
-        ) {
-            arrayAppend(
-                variables.havings,
-                { type: "raw", column: arguments.column, combinator: arguments.combinator }
-            );
-            addBindings(
-                arguments.column
-                    .getBindings()
-                    .map( function( binding ) {
-                        return utils.extractBinding( binding, variables.grammar );
-                    } ),
-                "having"
-            );
-            return this;
-        }
-
-        if (
-            isNull( arguments.value ) &&
-            getCollaborator( "QueryValidator" ).isInvalidOperator( arguments.operator )
-        ) {
-            arguments.value = arguments.operator;
-            arguments.operator = "=";
-        } else {
-            getCollaborator( "QueryValidator" ).validateOperator( arguments.operator );
-        }
-
-        arrayAppend(
-            variables.havings,
-            {
-                type: "normal",
-                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-                operator: arguments.operator,
-                value: isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
-                combinator: arguments.combinator
-            }
-        );
-
-        if ( getUtils().isExpression( arguments.column ) ) {
-            addBindings(
-                arguments.column
-                    .getBindings()
-                    .map( function( binding ) {
-                        return utils.extractBinding( binding, variables.grammar );
-                    } ),
-                "having"
-            );
-        }
-
-        if ( !isNull( arguments.value ) && getUtils().isExpression( arguments.value ) ) {
-            addExpressionBindings( arguments.value, "having" );
-        } else {
-            addBindings(
-                isNull( arguments.value )
-                 ? utils.extractBinding( grammar = variables.grammar )
-                 : utils.extractBinding( arguments.value, variables.grammar ),
-                "having"
-            );
-        }
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().having( argumentCollection = arguments );
     }
 
     /**
@@ -3014,48 +2550,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function withScoping( required function callback ) {
-        var originalWhereCount = this.getWheres().len();
-        arguments.callback();
-        if ( this.getWheres().len() > originalWhereCount ) {
-            addNewWheresWithinGroup( originalWhereCount );
-        }
-        return this;
-    }
-
-    /**
-     * Adds a new nested where clause for the wheres added in a scope.
-     * It only does this when there is an OR combinator inside the scope.
-     *
-     * @originalWhereCount  The number of where clauses before the scope was added.
-     */
-    private void function addNewWheresWithinGroup( required numeric originalWhereCount ) {
-        var allWheres = this.getWheres();
-        this.setWheres( [] );
-
-        if ( arguments.originalWhereCount > 0 ) {
-            groupWhereSliceForScope( arraySlice( allWheres, 1, arguments.originalWhereCount ) );
-        }
-
-        groupWhereSliceForScope( arraySlice( allWheres, arguments.originalWhereCount + 1 ) );
-    }
-
-    /**
-     * Checks if a where slice needs to be grouped in parenthesis.
-     * It only does this when there is an OR combinator inside the scope.
-     *
-     * @whereSlice  The array of where clauses to maybe be grouped.
-     */
-    private void function groupWhereSliceForScope( required array whereSlice ) {
-        var hasOrCombinator = false;
-        for ( var where in arguments.whereSlice ) {
-            if ( compareNoCase( where.combinator, "OR" ) == 0 ) {
-                this.addNestedWhereQuery( this.forNestedWhere().setWheres( arguments.whereSlice ) );
-                return;
-            }
-        }
-        var newWheres = this.getWheres();
-        arrayAppend( newWheres, arguments.whereSlice, true );
-        this.setWheres( newWheres );
+        arguments.builder = this;
+        return getPredicateClause().withScoping( argumentCollection = arguments );
     }
 
     /**
@@ -3769,7 +3265,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     /**
      * Normalizes the bindings carried by an Expression for query execution.
      */
-    private array function extractExpressionBindings( required any expression ) {
+    public array function extractExpressionBindings( required any expression ) {
         return arguments.expression
             .getBindings()
             .map( function( binding ) {
@@ -3780,7 +3276,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     /**
      * Adds normalized bindings carried by an Expression to a binding group.
      */
-    private QueryBuilder function addExpressionBindings( required any expression, required string type ) {
+    public QueryBuilder function addExpressionBindings( required any expression, required string type ) {
         addBindings( extractExpressionBindings( arguments.expression ), arguments.type );
         return this;
     }
@@ -4610,7 +4106,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      *
      * @return array
      */
-    private array function normalizeToArray( required listOrArray ) {
+    public array function normalizeToArray( required listOrArray ) {
         if ( isArray( arguments.listOrArray ) ) {
             return arguments.listOrArray;
         }

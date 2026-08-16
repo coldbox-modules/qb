@@ -1470,6 +1470,9 @@ component displayname="Grammar" accessors="true" singleton {
      * Allows grammars to serialize containment bindings where required.
      */
     public any function prepareJsonContainsBinding( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return javacast( "null", "" );
+        }
         if ( !isNull( arguments.value ) && !isSimpleValue( arguments.value ) ) {
             throw(
                 type = "UnsupportedOperation",

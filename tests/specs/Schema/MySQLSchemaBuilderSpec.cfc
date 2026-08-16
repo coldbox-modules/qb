@@ -65,6 +65,10 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [ "CREATE TABLE `weather_reports` (`temperature` BIGINT(5) NOT NULL)" ];
     }
 
+    function binary() {
+        return [ "CREATE TABLE `users` (`avatar` BLOB NOT NULL)" ];
+    }
+
     function bit() {
         return [ "CREATE TABLE `users` (`active` BIT(1) NOT NULL)" ];
     }

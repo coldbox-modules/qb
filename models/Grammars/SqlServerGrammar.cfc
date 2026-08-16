@@ -1230,6 +1230,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         return "BIGINT";
     }
 
+    function typeBinary( column ) {
+        return "VARBINARY(MAX)";
+    }
+
     function typeBit( column ) {
         return "BIT";
     }

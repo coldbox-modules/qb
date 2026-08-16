@@ -2078,6 +2078,10 @@ component displayname="Grammar" accessors="true" singleton {
         return concatenate( [ "BIGINT", isNull( column.getPrecision() ) ? "" : "(#column.getPrecision()#)" ], "" );
     }
 
+    function typeBinary( column ) {
+        return "BLOB";
+    }
+
     function typeBit( column ) {
         return "BIT(#column.getLength()#)";
     }

@@ -53,8 +53,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "JSON_LENGTH(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
     }
 
-    public any function prepareJsonContainsBinding( required any value ) {
-        return serializeJSON( arguments.value );
+    public any function prepareJsonContainsBinding( any value ) {
+        return isNull( arguments.value ) ? "null" : serializeJSON( arguments.value );
     }
 
     private string function orderByRandom() {

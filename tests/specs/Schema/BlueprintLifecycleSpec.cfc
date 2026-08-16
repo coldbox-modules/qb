@@ -3,11 +3,12 @@ component extends="testbox.system.BaseSpec" {
     function run() {
         describe( "Blueprint lifecycle", function() {
             it( "restores indexes when add-column compilation throws", function() {
-                [
+                var grammars = [
                     new qb.models.Grammars.BaseGrammar(),
                     new qb.models.Grammars.DerbyGrammar(),
                     new qb.models.Grammars.OracleGrammar()
-                ].each( function( grammar ) {
+                ];
+                grammars.each( function( grammar ) {
                     var blueprint = newBlueprint( grammar );
                     blueprint.appendIndex( type = "basic", columns = [ "email" ], name = "idx_users_email" );
 

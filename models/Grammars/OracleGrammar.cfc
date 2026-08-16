@@ -40,7 +40,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "JSON_EXISTS(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#[*]?(@ == $value)' PASSING ? AS ""value"")";
     }
 
-    public any function prepareJsonContainsBinding( required any value ) {
+    public any function prepareJsonContainsBinding( any value ) {
         if ( isNull( arguments.value ) ) {
             return {
                 "value": "",

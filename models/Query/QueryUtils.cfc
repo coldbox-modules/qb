@@ -294,7 +294,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             if ( ( isNull( arguments.grammar ) || isPostgres ) && character == "$" ) {
                 var dollarQuoteMatch = reFind(
                     "^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$",
-                    mid( arguments.sql, position ),
+                    mid( arguments.sql, position, sqlLength - position + 1 ),
                     1,
                     true
                 );
@@ -463,7 +463,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         if ( isArray( value ) ) {
             var inferredTypes = [];
             for ( var i = 1; i <= arguments.value.len(); i++ ) {
-                if ( isNull( arguments.value[ i ] ) ) {
+                if ( !arrayIsDefined( arguments.value, i ) || isNull( arguments.value[ i ] ) ) {
                     continue;
                 }
                 var item = arguments.value[ i ];
@@ -973,8 +973,14 @@ component singleton displayname="QueryUtils" accessors="true" {
 
         // Loop through the elements and compare them one at a time
         for ( var i = 1; local.i lte arrayLen( LeftArray ); local.i = local.i + 1 ) {
-            var leftIsNull = isNull( arguments.LeftArray[ i ] );
-            var rightIsNull = isNull( arguments.RightArray[ i ] );
+            var leftIsNull = !arrayIsDefined( arguments.LeftArray, i );
+            var rightIsNull = !arrayIsDefined( arguments.RightArray, i );
+            if ( !leftIsNull ) {
+                leftIsNull = isNull( arguments.LeftArray[ i ] );
+            }
+            if ( !rightIsNull ) {
+                rightIsNull = isNull( arguments.RightArray[ i ] );
+            }
             if ( leftIsNull || rightIsNull ) {
                 if ( leftIsNull != rightIsNull ) {
                     return false;

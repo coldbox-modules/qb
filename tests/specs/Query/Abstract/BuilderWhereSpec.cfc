@@ -93,32 +93,43 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "does not retain raw column bindings for empty IN predicates", function() {
-                        var cases = [
-                            { apply: ( builder, column ) => builder.whereIn( column, [] ), predicate: "0 = 1" },
-                            { apply: ( builder, column ) => builder.whereNotIn( column, [] ), predicate: "1 = 1" },
-                            { apply: ( builder, column ) => builder.whereInBulk( column, [] ), predicate: "0 = 1" },
-                            { apply: ( builder, column ) => builder.whereNotInBulk( column, [] ), predicate: "1 = 1" }
-                        ];
+                        var whereInBuilder = new qb.models.Query.QueryBuilder().from( "users" );
+                        whereInBuilder.whereIn( whereInBuilder.raw( "COALESCE(?, id)", [ 99 ] ), [] );
+                        expect( whereInBuilder.toSQL( showBindings = true ) ).toBe(
+                            "SELECT * FROM ""users"" WHERE 0 = 1"
+                        );
+                        expect( whereInBuilder.getBindings() ).toBeEmpty();
 
-                        cases.each( function( testCase ) {
-                            var builder = new qb.models.Query.QueryBuilder().from( "users" );
-                            testCase.apply( builder, builder.raw( "COALESCE(?, id)", [ 99 ] ) );
+                        var whereNotInBuilder = new qb.models.Query.QueryBuilder().from( "users" );
+                        whereNotInBuilder.whereNotIn( whereNotInBuilder.raw( "COALESCE(?, id)", [ 99 ] ), [] );
+                        expect( whereNotInBuilder.toSQL( showBindings = true ) ).toBe(
+                            "SELECT * FROM ""users"" WHERE 1 = 1"
+                        );
+                        expect( whereNotInBuilder.getBindings() ).toBeEmpty();
 
-                            expect( builder.toSQL( showBindings = true ) ).toBe(
-                                "SELECT * FROM ""users"" WHERE #testCase.predicate#"
-                            );
-                            expect( builder.getBindings() ).toBeEmpty();
-                        } );
+                        var whereInBulkBuilder = new qb.models.Query.QueryBuilder().from( "users" );
+                        whereInBulkBuilder.whereInBulk( whereInBulkBuilder.raw( "COALESCE(?, id)", [ 99 ] ), [] );
+                        expect( whereInBulkBuilder.toSQL( showBindings = true ) ).toBe(
+                            "SELECT * FROM ""users"" WHERE 0 = 1"
+                        );
+                        expect( whereInBulkBuilder.getBindings() ).toBeEmpty();
+
+                        var whereNotInBulkBuilder = new qb.models.Query.QueryBuilder().from( "users" );
+                        whereNotInBulkBuilder.whereNotInBulk(
+                            whereNotInBulkBuilder.raw( "COALESCE(?, id)", [ 99 ] ),
+                            []
+                        );
+                        expect( whereNotInBulkBuilder.toSQL( showBindings = true ) ).toBe(
+                            "SELECT * FROM ""users"" WHERE 1 = 1"
+                        );
+                        expect( whereNotInBulkBuilder.getBindings() ).toBeEmpty();
                     } );
 
                     it( "treats null query parameter structs as BETWEEN bindings", function() {
+                        var nullQueryParam = { "value": javacast( "null", "" ), "cfsqltype": "INTEGER", "null": true };
                         var builder = new qb.models.Query.QueryBuilder()
                             .from( "users" )
-                            .whereBetween(
-                                "age",
-                                { value: javacast( "null", "" ), cfsqltype: "INTEGER", null: true },
-                                10
-                            );
+                            .whereBetween( "age", nullQueryParam, 10 );
 
                         expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""age"" BETWEEN ? AND ?" );
                         expect( builder.getBindings()[ 1 ].null ).toBeTrue();
@@ -195,28 +206,52 @@ component extends="testbox.system.BaseSpec" {
                     } );
 
                     it( "validates combinators for every where clause type", function() {
-                        var invalidCalls = [
-                            ( builder ) => builder.whereIn( "id", [ 1 ], "xor" ),
-                            ( builder ) => builder.whereInBulk(
+                        var expectInvalidCombinator = function( invalidCall ) {
+                            expect( function() {
+                                invalidCall( new qb.models.Query.QueryBuilder() );
+                            } ).toThrow( type = "InvalidSQLType", regex = "Illegal combinator" );
+                        };
+
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereIn( "id", [ 1 ], "xor" );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereInBulk(
                                 "id",
                                 [ 1 ],
                                 javacast( "null", "" ),
                                 "xor"
-                            ),
-                            ( builder ) => builder.whereRaw( "1 = 1", [], "xor" ),
-                            ( builder ) => builder.whereColumn( "id", "=", "otherId", "xor" ),
-                            ( builder ) => builder.whereExists( ( query ) => query.from( "users" ), "xor" ),
-                            ( builder ) => builder.whereNested( ( query ) => query.where( "id", 1 ), "xor" ),
-                            ( builder ) => builder.addNestedWhereQuery( builder.newQuery().where( "id", 1 ), "xor" ),
-                            ( builder ) => builder.whereNull( "deletedDate", "xor" ),
-                            ( builder ) => builder.whereNullSub( ( query ) => query.select( "deletedDate" ).from( "users" ), "xor" ),
-                            ( builder ) => builder.whereBetween( "id", 1, 2, "xor" )
-                        ];
-
-                        invalidCalls.each( function( invalidCall ) {
-                            expect( function() {
-                                invalidCall( new qb.models.Query.QueryBuilder() );
-                            } ).toThrow( type = "InvalidSQLType", regex = "Illegal combinator" );
+                            );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereRaw( "1 = 1", [], "xor" );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereColumn( "id", "=", "otherId", "xor" );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereExists( function( query ) {
+                                query.from( "users" );
+                            }, "xor" );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereNested( function( query ) {
+                                query.where( "id", 1 );
+                            }, "xor" );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.addNestedWhereQuery( builder.newQuery().where( "id", 1 ), "xor" );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereNull( "deletedDate", "xor" );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereNullSub( function( query ) {
+                                query.select( "deletedDate" ).from( "users" );
+                            }, "xor" );
+                        } );
+                        expectInvalidCombinator( function( builder ) {
+                            builder.whereBetween( "id", 1, 2, "xor" );
                         } );
                     } );
 

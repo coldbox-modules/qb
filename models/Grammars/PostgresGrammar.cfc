@@ -60,8 +60,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "JSONB_ARRAY_LENGTH((#compilePostgresJsonTraversal( arguments.jsonPath, false )#)::jsonb)";
     }
 
-    public any function prepareJsonContainsBinding( required any value ) {
-        return serializeJSON( arguments.value );
+    public any function prepareJsonContainsBinding( any value ) {
+        return isNull( arguments.value ) ? "null" : serializeJSON( arguments.value );
     }
 
     private string function compilePostgresJsonTraversal( required struct jsonPath, boolean scalar = false ) {

@@ -33,9 +33,9 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             } );
 
             it( "infers bulk SQL types from negative and nullable values", function() {
-                var insertSql = getBuilder()
-                    .from( "measurements" )
-                    .insertBulk( values = [ { "reading": -1 }, { "reading": javacast( "null", "" ) } ], toSql = true );
+                var insertValues = [ { "reading": -1 }, { "reading": javacast( "null", "" ) } ];
+                var insertBuilder = getBuilder().from( "measurements" );
+                var insertSql = insertBuilder.insertBulk( values = insertValues, toSql = true );
                 var whereSql = getBuilder()
                     .from( "measurements" )
                     .whereInBulk( "reading", [ -1, javacast( "null", "" ), 2 ] )

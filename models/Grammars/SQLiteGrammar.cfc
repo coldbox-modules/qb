@@ -594,6 +594,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 message = "SQLite does not support adding columns with inline UNIQUE constraints to existing tables."
             );
         }
+        if (
+            !getUtils().isExpression( arguments.commandParameters.column ) &&
+            structKeyExists( arguments.commandParameters.column, "getComputedType" ) &&
+            arguments.commandParameters.column.getComputedType() == "stored"
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQLite does not support adding stored generated columns to existing tables."
+            );
+        }
 
         try {
             var originalShouldWrapValues = getShouldWrapValues();

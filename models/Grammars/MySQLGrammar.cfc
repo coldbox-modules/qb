@@ -274,10 +274,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                     return wrapColumn( column.formatted );
                 } )
                 .toList( ", " );
+            var targetColumns = columnsString == "" ? "" : " (#columnsString#)";
 
             var cteClause = query.getCommonTables().isEmpty() ? "" : " #compileCommonTables( query, query.getCommonTables() )#";
 
-            return "INSERT INTO #wrapTable( arguments.query.getTableName() )# (#columnsString#)#cteClause# #compileSelect( arguments.source )#";
+            return "INSERT INTO #wrapTable( arguments.query.getTableName() )##targetColumns##cteClause# #compileSelect( arguments.source )#";
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

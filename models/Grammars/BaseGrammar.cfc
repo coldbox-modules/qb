@@ -1190,9 +1190,10 @@ component displayname="Grammar" accessors="true" singleton {
                     return wrapColumn( column.formatted );
                 } )
                 .toList( ", " );
+            var targetColumns = columnsString == "" ? "" : " (#columnsString#)";
 
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " INSERT INTO #wrapTable( arguments.query.getTableName() )# (#columnsString#) #compileSelect( arguments.source )#"
+                compileCommonTables( query, query.getCommonTables() ) & " INSERT INTO #wrapTable( arguments.query.getTableName() )##targetColumns# #compileSelect( arguments.source )#"
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

@@ -2765,6 +2765,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                     .map( function( column ) {
                         return getGrammar().extractAlias( mapToColumnType( column ) );
                     } );
+                if ( arguments.columns.len() == 1 && arguments.columns[ 1 ] == "*" ) {
+                    arguments.columns = [];
+                }
             }
 
             var formattedColumns = arguments.columns.map( function( column ) {

@@ -250,6 +250,32 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getRawBindings().insert ).toHaveLength( 1 );
                 expect( builder.getRawBindings().insert[ 1 ].value ).toBe( "first" );
             } );
+
+            it( "replaces insert-ignore bindings when reusing a builder", function() {
+                var builder = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.MySQLGrammar() ).from(
+                    "users"
+                );
+
+                builder.insertIgnore( values = { "name": "first" }, toSQL = true );
+                builder.insertIgnore( values = { "name": "second" }, toSQL = true );
+
+                expect( builder.getRawBindings().insert ).toHaveLength( 1 );
+                expect( builder.getRawBindings().insert[ 1 ].value ).toBe( "second" );
+            } );
+
+            it( "preserves insert-ignore bindings when replacement validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.MySQLGrammar() ).from(
+                    "users"
+                );
+                builder.insertIgnore( values = { "name": "first" }, toSQL = true );
+
+                expect( function() {
+                    builder.insertIgnore( values = { "name": { "unexpected": "value" } }, toSQL = true );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getRawBindings().insert ).toHaveLength( 1 );
+                expect( builder.getRawBindings().insert[ 1 ].value ).toBe( "first" );
+            } );
         } );
     }
 

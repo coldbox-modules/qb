@@ -83,9 +83,7 @@ component {
 
         var type = arguments.negate ? "notIn" : "in";
         var typedColumn = toColumnType( arguments.builder, arguments.column );
-        var bindings = arguments.values.isEmpty()
-         ? []
-         : extractColumnBindings( arguments.builder, [ typedColumn ] );
+        var bindings = arguments.values.isEmpty() ? [] : arguments.builder.extractColumnBindings( [ typedColumn ] );
         for ( var value in arguments.values ) {
             if ( arguments.builder.getUtils().isExpression( value ) ) {
                 bindings.append( arguments.builder.extractExpressionBindings( value ), true );
@@ -164,7 +162,7 @@ component {
         var typedColumn = toColumnType( arguments.builder, arguments.column );
         var columnBindings = arguments.values.isEmpty()
          ? []
-         : extractColumnBindings( arguments.builder, [ typedColumn ] );
+         : arguments.builder.extractColumnBindings( [ typedColumn ] );
         arguments.builder
             .getWheres()
             .append( {
@@ -252,7 +250,7 @@ component {
 
         var firstColumn = toColumnType( arguments.builder, arguments.first );
         var secondColumn = toColumnType( arguments.builder, arguments.second );
-        var bindings = extractColumnBindings( arguments.builder, [ firstColumn, secondColumn ] );
+        var bindings = arguments.builder.extractColumnBindings( [ firstColumn, secondColumn ] );
         arguments.builder
             .getWheres()
             .append( {
@@ -352,7 +350,7 @@ component {
 
         var type = arguments.negate ? "notNull" : "null";
         var typedColumn = toColumnType( arguments.builder, arguments.column );
-        var bindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        var bindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
         arguments.builder.getWheres().append( { type: type, column: typedColumn, combinator: arguments.combinator } );
         arguments.builder.addBindings( bindings, "where" );
         return arguments.builder;
@@ -421,7 +419,7 @@ component {
                 .snapshotBuilder( arguments.builder, arguments.end );
         }
 
-        var bindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        var bindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
         bindings.append(
             extractPredicateBindings(
                 builder = arguments.builder,
@@ -504,7 +502,7 @@ component {
         }
 
         var typedColumn = toColumnType( arguments.builder, arguments.column );
-        var bindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        var bindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
         bindings.append(
             extractPredicateBindings(
                 builder = arguments.builder,
@@ -548,7 +546,7 @@ component {
         string combinator = "and"
     ) {
         var typedColumn = toColumnType( arguments.builder, arguments.column );
-        var bindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        var bindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
         bindings.append(
             extractPredicateBindings(
                 builder = arguments.builder,
@@ -585,7 +583,7 @@ component {
             callback( arguments.query );
         }
         var typedColumn = toColumnType( arguments.builder, arguments.column );
-        var columnBindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        var columnBindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
         arguments.query = arguments.builder
             .getCollaborator( "QueryExecutor" )
             .snapshotBuilder( arguments.builder, arguments.query );
@@ -619,7 +617,7 @@ component {
             callback( arguments.query );
         }
         var typedColumn = toColumnType( arguments.builder, arguments.column );
-        var columnBindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        var columnBindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
         arguments.query = arguments.builder
             .getCollaborator( "QueryExecutor" )
             .snapshotBuilder( arguments.builder, arguments.query );
@@ -667,21 +665,6 @@ component {
          ? arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
          : arguments.builder.getUtils().extractBinding( arguments.value, arguments.builder.getGrammar() );
         return isArray( binding ) ? binding : [ binding ];
-    }
-
-    /**
-     * Extracts bindings carried by typed columns without mutating the builder.
-     */
-    private array function extractColumnBindings( required QueryBuilder builder, required array columns ) {
-        var bindings = [];
-        for ( var column in arguments.columns ) {
-            if ( column.type == "raw" ) {
-                bindings.append( arguments.builder.extractExpressionBindings( column.value ), true );
-            } else if ( column.type == "builder" ) {
-                bindings.append( column.value.getBindings(), true );
-            }
-        }
-        return bindings;
     }
 
     /**

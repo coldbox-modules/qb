@@ -554,9 +554,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         if ( newColumns.isEmpty() ) {
             newColumns = [ { "type": "simple", "value": "*" } ];
         }
+        var newBindings = extractColumnBindings( newColumns );
         clearBindings( only = [ "select" ] );
         variables.columns = newColumns;
-        addColumnBindings( newColumns, "select" );
+        addBindings( newBindings, "select" );
         return this;
     }
 
@@ -565,13 +566,22 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * This bridge is public so collaborators can operate on QueryBuilder subclasses.
      */
     public void function addColumnBindings( required array columns, required string type ) {
+        addBindings( extractColumnBindings( arguments.columns ), arguments.type );
+    }
+
+    /**
+     * Normalizes bindings carried by typed raw-expression and builder columns.
+     */
+    public array function extractColumnBindings( required array columns ) {
+        var bindings = [];
         for ( var column in arguments.columns ) {
             if ( column.type == "raw" ) {
-                addExpressionBindings( column.value, arguments.type );
+                bindings.append( extractExpressionBindings( column.value ), true );
             } else if ( column.type == "builder" ) {
-                addBindings( column.value.getBindings(), arguments.type );
+                bindings.append( column.value.getBindings(), true );
             }
         }
+        return bindings;
     }
 
     public struct function mapToColumnType( required any column ) {
@@ -638,6 +648,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         var newColumns = normalizeToArray( arguments.columns )
             .map( ( column ) => applyColumnFormatter( column ) )
             .map( ( column ) => mapToColumnType( column ) );
+        var newBindings = extractColumnBindings( newColumns );
         var selectedColumns = variables.columns.isEmpty() ? [] : arraySlice( variables.columns, 1 );
 
         if (
@@ -651,7 +662,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
 
         arrayAppend( selectedColumns, newColumns, true );
         variables.columns = selectedColumns;
-        addColumnBindings( newColumns, "select" );
+        addBindings( newBindings, "select" );
         return this;
     }
 
@@ -670,10 +681,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      */
     public QueryBuilder function selectRaw( required any expression, array bindings = [] ) {
         var expressions = arrayWrap( arguments.expression );
-        for ( var index = 1; index <= expressions.len(); index++ ) {
-            addSelect( raw( expressions[ index ], index == 1 ? arguments.bindings : [] ) );
-        }
-        return this;
+        var rawBindings = arguments.bindings;
+        return addSelect( expressions.map( ( expression, index ) => raw( expression, index == 1 ? rawBindings : [] ) ) );
     }
 
     /**
@@ -701,7 +710,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function reselect( any columns = "*" ) {
-        clearSelect();
         return select( argumentCollection = arguments );
     }
 
@@ -720,8 +728,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function reselectRaw( required any expression, array bindings = [] ) {
-        clearSelect();
-        return selectRaw( argumentCollection = arguments );
+        var expressions = arrayWrap( arguments.expression );
+        var rawBindings = arguments.bindings;
+        return select( expressions.map( ( expression, index ) => raw( expression, index == 1 ? rawBindings : [] ) ) );
     }
 
     /********************************************************************************\
@@ -743,6 +752,11 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             );
         }
 
+        var fromBindings = [];
+        if ( !isSimpleValue( arguments.from ) && getUtils().isExpression( arguments.from ) ) {
+            fromBindings = extractExpressionBindings( arguments.from );
+        }
+
         clearBindings( only = [ "from" ] );
         variables.grammarCompiledFrom = false;
         variables.alias = "";
@@ -750,9 +764,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             parseIntoTableAndAlias( arguments.from );
         } else {
             variables.tableName = arguments.from;
-            if ( getUtils().isExpression( arguments.from ) ) {
-                addExpressionBindings( arguments.from, "from" );
-            }
+            addBindings( fromBindings, "from" );
         }
 
         return this;
@@ -829,19 +841,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function tableRaw( required string table, array bindings = [] ) {
-        this.table( raw( arguments.table ) );
-
-        // add the bindings required by the table
-        if ( !arrayIsEmpty( arguments.bindings ) ) {
-            addBindings(
-                arguments.bindings.map( function( value ) {
-                    return utils.extractBinding( value, variables.grammar );
-                } ),
-                "from"
-            );
-        }
-
-        return this;
+        return this.table( raw( arguments.table, arguments.bindings ) );
     }
 
     /**
@@ -853,19 +853,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function fromRaw( required string from, array bindings = [] ) {
-        this.from( raw( arguments.from ) );
-
-        // add the bindings required by the table
-        if ( !arrayIsEmpty( arguments.bindings ) ) {
-            addBindings(
-                arguments.bindings.map( function( value ) {
-                    return utils.extractBinding( value, variables.grammar );
-                } ),
-                "from"
-            );
-        }
-
-        return this;
+        return this.from( raw( arguments.from, arguments.bindings ) );
     }
 
     /**
@@ -1897,12 +1885,12 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function groupBy( required groups ) {
-        var groupBys = normalizeToArray( arguments.groups );
-        for ( var groupBy in groupBys ) {
-            var typedGroupBy = mapToColumnType( applyColumnFormatter( groupBy ) );
-            variables.groups.append( typedGroupBy );
-            addColumnBindings( [ typedGroupBy ], "groupBy" );
-        }
+        var groupBys = normalizeToArray( arguments.groups )
+            .map( ( groupBy ) => applyColumnFormatter( groupBy ) )
+            .map( ( groupBy ) => mapToColumnType( groupBy ) );
+        var groupBindings = extractColumnBindings( groupBys );
+        variables.groups.append( groupBys, true );
+        addBindings( groupBindings, "groupBy" );
         return this;
     }
 
@@ -2022,8 +2010,20 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             arguments.column = listToArray( arguments.column );
         }
 
-        for ( var col in arrayWrap( arguments.column ) ) {
-            orderBySingle( col, arguments.direction );
+        var originalOrders = variables.orders.isEmpty() ? [] : arraySlice( variables.orders, 1 );
+        var originalOrderBindings = variables.bindings.orderBy.isEmpty()
+         ? []
+         : arraySlice( variables.bindings.orderBy, 1 );
+        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
+        try {
+            for ( var col in arrayWrap( arguments.column ) ) {
+                orderBySingle( col, arguments.direction );
+            }
+        } catch ( any e ) {
+            variables.orders = originalOrders;
+            variables.bindings.orderBy = originalOrderBindings;
+            getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
+            rethrow;
         }
         return this;
     }
@@ -2048,15 +2048,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         // check the value of the current iteration to determine what blend of column def they went with
         // ex: "DATE(created_at)" -- RAW expression
         if ( getUtils().isExpression( column ) ) {
+            var expressionBindings = extractExpressionBindings( column );
             variables.orders.append( { direction: "raw", column: column } );
-            addBindings(
-                column
-                    .getBindings()
-                    .map( function( value ) {
-                        return variables.utils.extractBinding( arguments.value, variables.grammar );
-                    } ),
-                "orderBy"
-            );
+            addBindings( expressionBindings, "orderBy" );
             return this;
         }
 
@@ -2083,8 +2077,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         if ( isStruct( column ) && structKeyExists( column, "column" ) ) {
             // as long as the struct provided contains the column keyName then we can append it. If the direction column is omitted we will assume direction argument's value
             if ( getUtils().isExpression( column.column ) ) {
+                var expressionBindings = extractExpressionBindings( column.column );
                 variables.orders.append( { direction: "raw", column: column.column } );
-                addExpressionBindings( column.column, "orderBy" );
+                addBindings( expressionBindings, "orderBy" );
             } else {
                 var dir = (
                     structKeyExists( column, "direction" ) && arrayFindNoCase( variables.directions, column.direction )

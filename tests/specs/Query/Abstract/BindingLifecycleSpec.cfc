@@ -140,6 +140,72 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getJoins() ).toBeEmpty();
                 expect( builder.getRawBindings().join ).toBeEmpty();
             } );
+
+            it( "preserves selected columns when replacement binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).select( "id" );
+
+                expect( function() {
+                    builder.select( builder.raw( "?", [ { unexpected: "value" } ] ) );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.toSQL() ).toBe( "SELECT ""id"" FROM ""users""" );
+                expect( builder.getRawBindings().select ).toBeEmpty();
+            } );
+
+            it( "does not retain added columns when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).select( "id" );
+
+                expect( function() {
+                    builder.addSelect( builder.raw( "?", [ { unexpected: "value" } ] ) );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.toSQL() ).toBe( "SELECT ""id"" FROM ""users""" );
+                expect( builder.getRawBindings().select ).toBeEmpty();
+            } );
+
+            it( "preserves the FROM source when raw binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                expect( function() {
+                    builder.fromRaw( "accounts ?", [ { unexpected: "value" } ] );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.toSQL() ).toBe( "SELECT * FROM ""users""" );
+                expect( builder.getRawBindings().from ).toBeEmpty();
+            } );
+
+            it( "does not retain grouping state when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).groupBy( "team_id" );
+
+                expect( function() {
+                    builder.groupBy( builder.raw( "?", [ { unexpected: "value" } ] ) );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getGroups() ).toHaveLength( 1 );
+                expect( builder.getRawBindings().groupBy ).toBeEmpty();
+            } );
+
+            it( "does not retain ordering state when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).orderBy( "name" );
+
+                expect( function() {
+                    builder.orderBy( builder.raw( "?", [ { unexpected: "value" } ] ) );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getOrders() ).toHaveLength( 1 );
+                expect( builder.getRawBindings().orderBy ).toBeEmpty();
+            } );
+
+            it( "preserves selected columns when raw reselection binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).select( "id" );
+
+                expect( function() {
+                    builder.reselectRaw( "?", [ { unexpected: "value" } ] );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.toSQL() ).toBe( "SELECT ""id"" FROM ""users""" );
+                expect( builder.getRawBindings().select ).toBeEmpty();
+            } );
         } );
     }
 

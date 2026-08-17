@@ -419,8 +419,16 @@ component {
         }
 
         arguments.builder.addColumnBindings( [ typedColumn ], "where" );
-        addPredicateBinding( arguments.builder, arguments.start, "where" );
-        addPredicateBinding( arguments.builder, arguments.end, "where" );
+        if ( isNull( arguments.start ) ) {
+            addPredicateBinding( builder = arguments.builder, type = "where" );
+        } else {
+            addPredicateBinding( arguments.builder, arguments.start, "where" );
+        }
+        if ( isNull( arguments.end ) ) {
+            addPredicateBinding( builder = arguments.builder, type = "where" );
+        } else {
+            addPredicateBinding( arguments.builder, arguments.end, "where" );
+        }
 
         if (
             !isNull( arguments.start ) &&
@@ -499,7 +507,11 @@ component {
         if ( arguments.builder.getUtils().isExpression( arguments.column ) ) {
             arguments.builder.addExpressionBindings( arguments.column, "having" );
         }
-        addPredicateBinding( arguments.builder, arguments.value, "having" );
+        if ( isNull( arguments.value ) ) {
+            addPredicateBinding( builder = arguments.builder, type = "having" );
+        } else {
+            addPredicateBinding( arguments.builder, arguments.value, "having" );
+        }
         return arguments.builder;
     }
 
@@ -537,7 +549,11 @@ component {
             } );
 
         arguments.builder.addColumnBindings( [ typedColumn ], "where" );
-        addPredicateBinding( arguments.builder, arguments.value, "where" );
+        if ( isNull( arguments.value ) ) {
+            addPredicateBinding( builder = arguments.builder, type = "where" );
+        } else {
+            addPredicateBinding( arguments.builder, arguments.value, "where" );
+        }
         return arguments.builder;
     }
 

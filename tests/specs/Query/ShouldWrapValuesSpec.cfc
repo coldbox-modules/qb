@@ -109,27 +109,33 @@ component extends="testbox.system.BaseSpec" {
                     .from( "users" );
                 var unwrappedThreadName = "unwrappedCompilation#replace( createUUID(), "-", "", "all" )#";
                 var wrappedThreadName = "wrappedCompilation#replace( createUUID(), "-", "", "all" )#";
-                var compilationResults = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
+                var unwrappedResultKey = "qb_#unwrappedThreadName#";
+                var wrappedResultKey = "qb_#wrappedThreadName#";
 
-                thread name=unwrappedThreadName action="run" builder=unwrappedBuilder results=compilationResults {
-                    attributes.results.put( "unwrapped", attributes.builder.toSQL() );
-                }
-                thread name=wrappedThreadName action="run" builder=wrappedBuilder results=compilationResults {
-                    attributes.results.put( "wrapped", attributes.builder.toSQL() );
-                }
-                thread action="join" name="#unwrappedThreadName#,#wrappedThreadName#" timeout="10000";
+                try {
+                    thread name=unwrappedThreadName action="run" builder=unwrappedBuilder resultKey=unwrappedResultKey {
+                        server[ attributes.resultKey ] = attributes.builder.toSQL();
+                    }
+                    thread name=wrappedThreadName action="run" builder=wrappedBuilder resultKey=wrappedResultKey {
+                        server[ attributes.resultKey ] = attributes.builder.toSQL();
+                    }
+                    thread action="join" name="#unwrappedThreadName#,#wrappedThreadName#" timeout="10000";
 
-                if (
-                    cfthread[ unwrappedThreadName ].status != "COMPLETED" ||
-                    cfthread[ wrappedThreadName ].status != "COMPLETED"
-                ) {
-                    throw(
-                        message = "Concurrent compilation did not complete",
-                        detail = serializeJSON( { "unwrapped": cfthread[ unwrappedThreadName ], "wrapped": cfthread[ wrappedThreadName ] } )
-                    );
+                    if (
+                        cfthread[ unwrappedThreadName ].status != "COMPLETED" ||
+                        cfthread[ wrappedThreadName ].status != "COMPLETED"
+                    ) {
+                        throw(
+                            message = "Concurrent compilation did not complete",
+                            detail = serializeJSON( { "unwrapped": cfthread[ unwrappedThreadName ], "wrapped": cfthread[ wrappedThreadName ] } )
+                        );
+                    }
+                    expect( server[ unwrappedResultKey ] ).toBe( "SELECT unwrapped_column FROM users" );
+                    expect( server[ wrappedResultKey ] ).toBe( "SELECT ""wrapped_column"" FROM ""users""" );
+                } finally {
+                    structDelete( server, unwrappedResultKey );
+                    structDelete( server, wrappedResultKey );
                 }
-                expect( compilationResults.get( "unwrapped" ) ).toBe( "SELECT unwrapped_column FROM users" );
-                expect( compilationResults.get( "wrapped" ) ).toBe( "SELECT ""wrapped_column"" FROM ""users""" );
             } );
         } );
 

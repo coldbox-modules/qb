@@ -566,8 +566,8 @@ component singleton displayname="QueryUtils" accessors="true" {
             case "NULL":
                 return "NULL";
             case "BLOB":
-            case "CLOB":
                 return toBase64( value );
+            case "CLOB":
             case "VARCHAR":
             case "NVARCHAR":
             case "CHAR":

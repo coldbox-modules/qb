@@ -515,7 +515,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return QueryBuilder
      */
     public QueryBuilder function reset() {
+        var wasPretending = variables.pretending;
         setDefaultValues();
+        variables.pretending = wasPretending;
         return this;
     }
 

@@ -585,7 +585,11 @@ component accessors="true" {
         if ( variables.pretending ) {
             return [];
         }
-        var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema, this );
+        var dropOptions = arguments.options;
+        var dropSchema = arguments.schema;
+        var statements = getGrammar().withShouldWrapValuesContext( getShouldWrapValues(), function() {
+            return getGrammar().compileDropAllObjects( dropOptions, dropSchema, this );
+        } );
         if ( arguments.execute ) {
             statements.each( function( statement ) {
                 getGrammar().runQuery(

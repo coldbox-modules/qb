@@ -923,25 +923,8 @@ component singleton displayname="QueryUtils" accessors="true" {
                 }
                 continue;
             }
-            // Key is a structure, call structCompare()
-            else if ( isStruct( arguments.LeftStruct[ key ] ) ) {
-                local.result = structCompare( arguments.LeftStruct[ key ], arguments.RightStruct[ key ] );
-                if ( !local.result ) {
-                    return false;
-                }
-            }
-            // Key is an array, call arrayCompare()
-            else if ( isArray( arguments.LeftStruct[ key ] ) ) {
-                local.result = arrayCompare( arguments.LeftStruct[ key ], arguments.RightStruct[ key ] );
-                if ( !local.result ) {
-                    return false;
-                }
-            }
-            // A simple type comparison here
-            else {
-                if ( arguments.LeftStruct[ key ] != arguments.RightStruct[ key ] ) {
-                    return false;
-                }
+            if ( !compareValues( arguments.LeftStruct[ key ], arguments.RightStruct[ key ] ) ) {
+                return false;
             }
         }
         return true;
@@ -988,21 +971,34 @@ component singleton displayname="QueryUtils" accessors="true" {
                 continue;
             }
 
-            // elements is a structure, call structCompare()
-            if ( isStruct( arguments.LeftArray[ i ] ) ) {
-                local.result = structCompare( arguments.LeftArray[ i ], arguments.RightArray[ i ] );
-                if ( !local.result ) return false;
-                // elements is an array, call arrayCompare()
-            } else if ( isArray( arguments.LeftArray[ i ] ) ) {
-                local.result = arrayCompare( arguments.LeftArray[ i ], arguments.RightArray[ i ] );
-                if ( !local.result ) return false;
-                // A simple type comparison here
-            } else {
-                if ( arguments.LeftArray[ i ] != arguments.RightArray[ i ] ) return false;
+            if ( !compareValues( arguments.LeftArray[ i ], arguments.RightArray[ i ] ) ) {
+                return false;
             }
         }
 
         return true;
+    }
+
+    private boolean function compareValues( required any left, required any right ) {
+        if ( isExpression( arguments.left ) || isExpression( arguments.right ) ) {
+            if ( !isExpression( arguments.left ) || !isExpression( arguments.right ) ) {
+                return false;
+            }
+            return arguments.left.getSQL() == arguments.right.getSQL() &&
+            arrayCompare( arguments.left.getBindings(), arguments.right.getBindings() );
+        }
+
+        if ( isStruct( arguments.left ) || isStruct( arguments.right ) ) {
+            return isStruct( arguments.left ) && isStruct( arguments.right ) &&
+            structCompare( arguments.left, arguments.right );
+        }
+
+        if ( isArray( arguments.left ) || isArray( arguments.right ) ) {
+            return isArray( arguments.left ) && isArray( arguments.right ) &&
+            arrayCompare( arguments.left, arguments.right );
+        }
+
+        return arguments.left == arguments.right;
     }
 
     public string function serializeBindings( required array bindings, required any grammar ) {

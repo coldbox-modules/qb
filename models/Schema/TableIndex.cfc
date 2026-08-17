@@ -3,6 +3,8 @@
  */
 component accessors="true" {
 
+    property name="blueprint";
+
     /**
      * The constraint type.
      */
@@ -57,7 +59,10 @@ component accessors="true" {
      *
      * @returns A TableIndex instance.
      */
-    public TableIndex function init() {
+    public TableIndex function init( Blueprint blueprint ) {
+        if ( !isNull( arguments.blueprint ) ) {
+            setBlueprint( arguments.blueprint );
+        }
         variables.columns = [];
         return this;
     }
@@ -96,6 +101,13 @@ component accessors="true" {
      * @returns The TableIndex instance.
      */
     public TableIndex function onTable( required string table ) {
+        if (
+            listLen( arguments.table, "." ) == 1 &&
+            !isNull( getBlueprint() ) &&
+            getBlueprint().getDefaultSchema() != ""
+        ) {
+            arguments.table = "#getBlueprint().getDefaultSchema()#.#arguments.table#";
+        }
         setTable( arguments.table );
         return this;
     }

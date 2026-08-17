@@ -528,7 +528,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
      * @return string
      */
     function wrapValue( required any value ) {
-        if ( !variables.shouldWrapValues ) {
+        if ( !getShouldWrapValues() ) {
             return arguments.value;
         }
 
@@ -846,7 +846,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function generateDefault( column, blueprint ) {
-        return column.getHasDefaultValue() ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
+        return column.getHasDefaultValue() ? "CONSTRAINT #wrapValue( "df_#listLast( blueprint.getTable(), "." )#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
     }
 
     function wrapDefaultType( column ) {
@@ -1044,7 +1044,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 ];
                 if ( commandParameters.name.getHasDefaultValue() ) {
                     statements.prepend(
-                        "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#commandParameters.name.getName()#" )#"
+                        "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( "df_#listLast( blueprint.getTable(), "." )#_#commandParameters.name.getName()#" )#"
                     );
                 }
                 return statements;
@@ -1182,7 +1182,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                     "ALTER TABLE",
                     wrappedTable,
                     "ADD CONSTRAINT",
-                    wrapValue( "df_#blueprint.getTable()#_#commandParameters.to.getName()#" ),
+                    wrapValue( "df_#listLast( blueprint.getTable(), "." )#_#commandParameters.to.getName()#" ),
                     "DEFAULT",
                     wrapDefaultType( commandParameters.to ),
                     "FOR",
@@ -1289,7 +1289,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     function typeEnum( column, blueprint ) {
         blueprint.appendIndex(
             type = "check",
-            name = "enum_#blueprint.getTable()#_#column.getName()#",
+            name = "enum_#listLast( blueprint.getTable(), "." )#_#column.getName()#",
             columns = column
         );
         return "NVARCHAR(255)";

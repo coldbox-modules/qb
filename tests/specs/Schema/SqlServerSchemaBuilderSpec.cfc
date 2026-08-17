@@ -43,6 +43,22 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                     ]
                 );
             } );
+
+            it( "keeps generated default constraint names unqualified", function() {
+                var statements = getBuilder()
+                    .setDefaultSchema( "app" )
+                    .create(
+                        "accounts",
+                        function( table ) {
+                            table.boolean( "active" ).default( true );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [ "CREATE TABLE [app].[accounts] ([active] BIT NOT NULL CONSTRAINT [df_accounts_active] DEFAULT 1)" ] );
+            } );
         } );
 
         describe( "SQL Server rename literals", function() {

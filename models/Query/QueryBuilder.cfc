@@ -1485,6 +1485,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                     return (
                         !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ index ][ "COLUMNS" ] ) ||
                         !getUtils().structCompare( cT[ "NAME" ], otherQB.getCommonTables()[ index ][ "NAME" ] ) ||
+                        cT[ "RECURSIVE" ] != otherQB.getCommonTables()[ index ][ "RECURSIVE" ] ||
                         !cT[ "QUERY" ].isEqualTo( otherQB.getCommonTables()[ index ][ "QUERY" ] )
                     );
                 } )
@@ -1517,6 +1518,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         };
 
         if ( !isJoin() ) {
+            memento[ "alias" ] = variables.alias;
             if ( !isCustomFunction( variables.tableName ) ) {
                 if ( getUtils().isExpression( getTableName() ) ) {
                     memento[ "from" ] = getTableName().getSQL();
@@ -2628,7 +2630,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var sql = getGrammar().compileInsert( this, columns, newBindings );
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileInsert( this, columns, newBindings );
+        } );
 
         clearBindings( except = "insert" );
 
@@ -2685,7 +2689,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             if ( getGrammar().supportsBulkInsert() ) {
                 var bulkInsert = getGrammar().prepareBulkInsert( this, batch, arguments.sqlTypes );
                 addBindings( [ bulkInsert.binding ], "insert" );
-                var sql = getGrammar().compileBulkInsert( this, bulkInsert.columns );
+                var sql = withWrappingContext( function() {
+                    return getGrammar().compileBulkInsert( this, bulkInsert.columns );
+                } );
                 if ( arguments.toSql ) {
                     results.append( sql );
                 } else {
@@ -2748,7 +2754,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var sql = getGrammar().compileInsertUsing( this, formattedColumns, arguments.source );
+        var source = arguments.source;
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileInsertUsing( this, formattedColumns, source );
+        } );
 
         if ( toSql ) {
             return sql;
@@ -2828,12 +2837,15 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var sql = getGrammar().compileInsertIgnore(
-            this,
-            columns,
-            arguments.target,
-            newBindings
-        );
+        var targetColumns = arguments.target;
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileInsertIgnore(
+                this,
+                columns,
+                targetColumns,
+                newBindings
+            );
+        } );
 
         clearBindings( except = "insert" );
 
@@ -2914,7 +2926,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var sql = getGrammar().compileUpdate( this, updateArray, arguments.values );
+        var updateValues = arguments.values;
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileUpdate( this, updateArray, updateValues );
+        } );
 
         if ( toSql ) {
             return sql;
@@ -3012,6 +3027,14 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
 
         if ( !isNull( arguments.update ) && arguments.update.isEmpty() ) {
+            if ( !isNull( arguments.source ) ) {
+                return this.insertUsing(
+                    columns = arguments.values,
+                    source = arguments.source,
+                    options = arguments.options,
+                    toSql = arguments.toSql
+                );
+            }
             return this.insert( values = arguments.values, options = arguments.options, toSql = arguments.toSql );
         }
 
@@ -3134,17 +3157,20 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var sql = getGrammar().compileUpsert(
-            this,
-            columns,
-            newInsertBindings,
-            updateArray,
-            arguments.update,
-            arguments.target,
-            isNull( arguments.source ) ? javacast( "null", "" ) : arguments.source,
-            arguments.deleteUnmatched,
-            arguments.matchNulls
-        );
+        var upsertArguments = arguments;
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileUpsert(
+                this,
+                columns,
+                newInsertBindings,
+                updateArray,
+                upsertArguments.update,
+                upsertArguments.target,
+                isNull( upsertArguments.source ) ? javacast( "null", "" ) : upsertArguments.source,
+                upsertArguments.deleteUnmatched,
+                upsertArguments.matchNulls
+            );
+        } );
 
         if ( toSql ) {
             return sql;
@@ -3176,7 +3202,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             where( arguments.idColumnName, "=", arguments.id );
         }
 
-        var sql = getGrammar().compileDelete( this );
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileDelete( this );
+        } );
 
         if ( toSql ) {
             return sql;
@@ -3513,8 +3541,11 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             .prepareInternalExecutionBuilder( this, newQuery() )
             .clearFrom();
         getCollaborator( "QueryExecutor" ).hoistNestedCommonTables( existsSource, existsQuery );
+        var existsSql = withWrappingContext( function() {
+            return getGrammar().compileSelect( existsSource );
+        } );
         existsQuery.selectRaw(
-            "CASE WHEN EXISTS (#getGrammar().compileSelect( existsSource )#) THEN 1 ELSE 0 END AS aggregate",
+            "CASE WHEN EXISTS (#existsSql#) THEN 1 ELSE 0 END AS aggregate",
             existsSource.getBindings()
         );
         if ( arguments.toSQL ) {
@@ -3972,6 +4003,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         );
     }
 
+    private any function withWrappingContext( required function callback ) {
+        return getGrammar().withShouldWrapValuesContext( getShouldWrapValues(), arguments.callback );
+    }
+
     /**
      * Returns the Builder compiled to grammar-specific sql.
      *
@@ -3981,7 +4016,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         if ( getValidateDuplicateSelectColumns() && getAggregate().isEmpty() ) {
             getCollaborator( "QueryValidator" ).validateUniqueSelectColumns( getColumns(), getGrammar() );
         }
-        var sql = grammar.compileSelect( this );
+        var sql = withWrappingContext( function() {
+            return grammar.compileSelect( this );
+        } );
 
         if ( isBoolean( arguments.showBindings ) && arguments.showBindings == false ) {
             return sql;

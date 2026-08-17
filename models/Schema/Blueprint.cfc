@@ -589,11 +589,13 @@ component accessors="true" {
             // we use a for loop here because we can potentially modify this array while looping over it.
             for ( var i = 1; i <= variables.commands.len(); i++ ) {
                 var command = variables.commands[ i ];
-                var result = invoke(
-                    getGrammar(),
-                    "compile#command.getType()#",
-                    { blueprint: this, commandParameters: command.getParameters() }
-                );
+                var result = getGrammar().withShouldWrapValuesContext( getSchemaBuilder().getShouldWrapValues(), function() {
+                    return invoke(
+                        getGrammar(),
+                        "compile#command.getType()#",
+                        { blueprint: this, commandParameters: command.getParameters() }
+                    );
+                } );
                 if ( isArray( result ) ) {
                     statements.append( result, true );
                 } else if ( isSimpleValue( result ) && result != "" ) {

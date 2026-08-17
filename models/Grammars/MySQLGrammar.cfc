@@ -5,11 +5,25 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array columns,
         required struct updateMap
     ) {
-        return trim(
-            compileCommonTables( arguments.query, arguments.query.getCommonTables() ) & " " & super.compileUpdate(
-                argumentCollection = arguments
-            )
-        );
+        var hasJoins = !arguments.query.getJoins().isEmpty();
+        var hasRowSelection = !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getLimitValue() );
+        if ( hasJoins && hasRowSelection ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "MySQL does not support ORDER BY or LIMIT on multi-table UPDATE statements."
+            );
+        }
+
+        var updateSql = super.compileUpdate( argumentCollection = arguments );
+        if ( !hasJoins && !arguments.query.getOrders().isEmpty() ) {
+            var limitClause = compileLimitValue( arguments.query, arguments.query.getLimitValue() );
+            if ( limitClause != "" ) {
+                updateSql = trim( left( updateSql, len( updateSql ) - len( limitClause ) ) );
+            }
+            updateSql = trim( "#updateSql# #compileOrders( arguments.query, arguments.query.getOrders() )# #limitClause#" );
+        }
+
+        return trim( compileCommonTables( arguments.query, arguments.query.getCommonTables() ) & " " & updateSql );
     }
 
     public string function compileWhereInBulkValues( required string sqlType ) {

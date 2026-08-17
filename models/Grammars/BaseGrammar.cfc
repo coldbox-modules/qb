@@ -2526,13 +2526,12 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
-     * Runs a compiler callback with a wrapping preference isolated to the current thread.
-     * Nested compiler calls restore the previous preference when they complete.
+     * Adds a wrapping preference isolated to the current thread.
+     * Each call must be paired with `popShouldWrapValuesContext`.
      *
      * @shouldWrap The wrapping preference, or null to use the current grammar preference.
-     * @callback   The compiler callback to run.
      */
-    public any function withShouldWrapValuesContext( any shouldWrap, required function callback ) {
+    public void function pushShouldWrapValuesContext( any shouldWrap ) {
         var context = variables.shouldWrapValuesContext.get();
         if ( isNull( context ) ) {
             context = [];
@@ -2540,13 +2539,39 @@ component displayname="Grammar" accessors="true" singleton {
         }
 
         context.append( isNull( arguments.shouldWrap ) ? getShouldWrapValues() : arguments.shouldWrap );
+        variables.shouldWrapValuesContext.set( context );
+    }
+
+    /**
+     * Removes the current thread's wrapping preference.
+     */
+    public void function popShouldWrapValuesContext() {
+        var context = variables.shouldWrapValuesContext.get();
+        if ( isNull( context ) || context.isEmpty() ) {
+            throw( type = "InvalidState", message = "There is no shouldWrapValues context to remove." );
+        }
+
+        context.deleteAt( context.len() );
+        if ( context.isEmpty() ) {
+            variables.shouldWrapValuesContext.remove();
+        } else {
+            variables.shouldWrapValuesContext.set( context );
+        }
+    }
+
+    /**
+     * Runs a compiler callback with a wrapping preference isolated to the current thread.
+     * Nested compiler calls restore the previous preference when they complete.
+     *
+     * @shouldWrap The wrapping preference, or null to use the current grammar preference.
+     * @callback   The compiler callback to run.
+     */
+    public any function withShouldWrapValuesContext( any shouldWrap, required function callback ) {
+        pushShouldWrapValuesContext( arguments.shouldWrap );
         try {
             return arguments.callback();
         } finally {
-            context.deleteAt( context.len() );
-            if ( context.isEmpty() ) {
-                variables.shouldWrapValuesContext.remove();
-            }
+            popShouldWrapValuesContext();
         }
     }
 

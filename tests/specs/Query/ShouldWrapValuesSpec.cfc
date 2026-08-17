@@ -98,7 +98,7 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             it( "isolates per-query wrapping overrides during concurrent compilation", function() {
-                var grammar = new tests.resources.ConcurrentWrappingGrammar();
+                var grammar = new qb.models.Grammars.PostgresGrammar();
                 var unwrappedBuilder = new qb.models.Query.QueryBuilder( grammar )
                     .withoutWrappingValues()
                     .select( "unwrapped_column" )
@@ -111,13 +111,51 @@ component extends="testbox.system.BaseSpec" {
                 var wrappedThreadName = "wrappedCompilation#replace( createUUID(), "-", "", "all" )#";
                 var unwrappedResultKey = "qb_#unwrappedThreadName#";
                 var wrappedResultKey = "qb_#wrappedThreadName#";
+                var unwrappedBuilderKey = "#unwrappedResultKey#_builder";
+                var wrappedBuilderKey = "#wrappedResultKey#_builder";
+                var grammarKey = "#unwrappedResultKey#_grammar";
+                var unwrappedEnteredKey = "#unwrappedResultKey#_entered";
+                var wrappedEnteredKey = "#wrappedResultKey#_entered";
+                server[ unwrappedBuilderKey ] = unwrappedBuilder;
+                server[ wrappedBuilderKey ] = wrappedBuilder;
+                server[ grammarKey ] = grammar;
+                server[ unwrappedEnteredKey ] = createObject( "java", "java.util.concurrent.CountDownLatch" ).init( 1 );
+                server[ wrappedEnteredKey ] = createObject( "java", "java.util.concurrent.CountDownLatch" ).init( 1 );
 
                 try {
-                    thread name=unwrappedThreadName action="run" builder=unwrappedBuilder resultKey=unwrappedResultKey {
-                        server[ attributes.resultKey ] = attributes.builder.toSQL();
+                    thread
+                        name=unwrappedThreadName
+                        action="run"
+                        grammarKey=grammarKey
+                        builderKey=unwrappedBuilderKey
+                        resultKey=unwrappedResultKey
+                        enteredKey=unwrappedEnteredKey
+                        otherEnteredKey=wrappedEnteredKey {
+                        server[ attributes.grammarKey ].pushShouldWrapValuesContext( false );
+                        try {
+                            server[ attributes.enteredKey ].countDown();
+                            server[ attributes.otherEnteredKey ].await();
+                            server[ attributes.resultKey ] = server[ attributes.builderKey ].toSQL();
+                        } finally {
+                            server[ attributes.grammarKey ].popShouldWrapValuesContext();
+                        }
                     }
-                    thread name=wrappedThreadName action="run" builder=wrappedBuilder resultKey=wrappedResultKey {
-                        server[ attributes.resultKey ] = attributes.builder.toSQL();
+                    thread
+                        name=wrappedThreadName
+                        action="run"
+                        grammarKey=grammarKey
+                        builderKey=wrappedBuilderKey
+                        resultKey=wrappedResultKey
+                        enteredKey=wrappedEnteredKey
+                        otherEnteredKey=unwrappedEnteredKey {
+                        server[ attributes.grammarKey ].pushShouldWrapValuesContext( true );
+                        try {
+                            server[ attributes.otherEnteredKey ].await();
+                            server[ attributes.enteredKey ].countDown();
+                            server[ attributes.resultKey ] = server[ attributes.builderKey ].toSQL();
+                        } finally {
+                            server[ attributes.grammarKey ].popShouldWrapValuesContext();
+                        }
                     }
                     thread action="join" name="#unwrappedThreadName#,#wrappedThreadName#" timeout="10000";
 
@@ -135,6 +173,11 @@ component extends="testbox.system.BaseSpec" {
                 } finally {
                     structDelete( server, unwrappedResultKey );
                     structDelete( server, wrappedResultKey );
+                    structDelete( server, unwrappedBuilderKey );
+                    structDelete( server, wrappedBuilderKey );
+                    structDelete( server, grammarKey );
+                    structDelete( server, unwrappedEnteredKey );
+                    structDelete( server, wrappedEnteredKey );
                 }
             } );
         } );

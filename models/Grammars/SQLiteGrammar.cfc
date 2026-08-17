@@ -200,17 +200,19 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 updateStatement = trim( "#updateStatement# #compileWheres( query, query.getWheres() )#" );
             }
 
-            updateStatement = trim( "#updateStatement# #compileLimitValue( query, query.getLimitValue() )#" );
-
             var returningColumns = arguments.query
                 .getReturning()
                 .map( wrapColumn )
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+            var rowLimitClause = trim(
+                "#compileLimitValue( query, query.getLimitValue() )# #compileOffsetValue( query, query.getOffsetValue() )#"
+            );
+            var trailingClauses = trim( "#returningClause# #rowLimitClause#" );
 
             if ( joins.isEmpty() ) {
                 return trim(
-                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause
+                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & trailingClauses
                 );
             }
 
@@ -240,7 +242,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause
+                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & trailingClauses
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

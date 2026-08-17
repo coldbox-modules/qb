@@ -553,6 +553,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
      * @return string
      */
     public string function compileUpdate( required query, required array columns, required struct updateMap ) {
+        if ( !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getOffsetValue() ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQL Server does not support direct ORDER BY or OFFSET clauses on UPDATE statements."
+            );
+        }
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -636,6 +642,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
      * @return string
      */
     public string function compileDelete( required QueryBuilder query ) {
+        if ( !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getOffsetValue() ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQL Server does not support direct ORDER BY or OFFSET clauses on DELETE statements."
+            );
+        }
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

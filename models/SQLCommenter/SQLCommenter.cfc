@@ -102,6 +102,7 @@ component singleton {
         var sqlLength = len( arguments.sql );
         var quote = "";
         var dollarQuoteDelimiter = "";
+        var oracleQuoteClosing = "";
 
         while ( position <= sqlLength ) {
             var character = mid( arguments.sql, position, 1 );
@@ -114,6 +115,16 @@ component singleton {
                 ) {
                     position += len( dollarQuoteDelimiter );
                     dollarQuoteDelimiter = "";
+                } else {
+                    position++;
+                }
+                continue;
+            }
+
+            if ( oracleQuoteClosing != "" ) {
+                if ( mid( arguments.sql, position, len( oracleQuoteClosing ) ) == oracleQuoteClosing ) {
+                    position += len( oracleQuoteClosing );
+                    oracleQuoteClosing = "";
                 } else {
                     position++;
                 }
@@ -164,6 +175,26 @@ component singleton {
                         continue;
                     }
                 }
+            }
+            if (
+                ( character == "q" || character == "Q" ) &&
+                nextCharacter == "'" &&
+                position + 2 <= sqlLength
+            ) {
+                var oracleQuoteOpening = mid( arguments.sql, position + 2, 1 );
+                var oracleQuotePairs = {
+                    "[": "]",
+                    "{": "}",
+                    "(": ")",
+                    "<": ">"
+                };
+                oracleQuoteClosing = (
+                    oracleQuotePairs.keyExists( oracleQuoteOpening )
+                     ? oracleQuotePairs[ oracleQuoteOpening ]
+                     : oracleQuoteOpening
+                ) & "'";
+                position += 3;
+                continue;
             }
             if ( character == "'" || character == """" || character == chr( 96 ) || character == "[" ) {
                 quote = character;

@@ -152,7 +152,7 @@ component {
      */
     private any function normalizeJsonPathSegment( required any segment ) {
         var normalized = trim( arguments.segment );
-        return reFind( "^\d+$", normalized ) ? val( normalized ) : normalized;
+        return reFind( "^-?\d+$", normalized ) ? val( normalized ) : normalized;
     }
 
 }

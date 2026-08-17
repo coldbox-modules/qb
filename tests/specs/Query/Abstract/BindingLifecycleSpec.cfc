@@ -206,6 +206,28 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.toSQL() ).toBe( "SELECT ""id"" FROM ""users""" );
                 expect( builder.getRawBindings().select ).toBeEmpty();
             } );
+
+            it( "replaces update bindings when reusing a builder", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                builder.update( values = { "name": "first" }, toSQL = true );
+                builder.update( values = { "name": "second" }, toSQL = true );
+
+                expect( builder.getRawBindings().update ).toHaveLength( 1 );
+                expect( builder.getRawBindings().update[ 1 ].value ).toBe( "second" );
+            } );
+
+            it( "preserves update bindings when replacement validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+                builder.update( values = { "name": "first" }, toSQL = true );
+
+                expect( function() {
+                    builder.update( values = { "name": { "unexpected": "value" } }, toSQL = true );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getRawBindings().update ).toHaveLength( 1 );
+                expect( builder.getRawBindings().update[ 1 ].value ).toBe( "first" );
+            } );
         } );
     }
 

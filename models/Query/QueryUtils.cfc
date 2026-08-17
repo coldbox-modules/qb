@@ -172,6 +172,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             resolvedGrammar,
             "qb.models.Grammars.SqlServerGrammar"
         );
+        var blockCommentDepth = 0;
         var oracleQuoteClosing = "";
         var quoteUsesBackslashEscapes = false;
 
@@ -190,10 +191,17 @@ component singleton displayname="QueryUtils" accessors="true" {
 
             if ( state == "blockComment" ) {
                 output.append( character );
-                if ( character == "*" && nextCharacter == "/" ) {
+                if ( isPostgres && character == "/" && nextCharacter == "*" ) {
                     output.append( nextCharacter );
                     position += 2;
-                    state = "sql";
+                    blockCommentDepth++;
+                } else if ( character == "*" && nextCharacter == "/" ) {
+                    output.append( nextCharacter );
+                    position += 2;
+                    blockCommentDepth--;
+                    if ( blockCommentDepth == 0 ) {
+                        state = "sql";
+                    }
                 } else {
                     position++;
                 }
@@ -284,6 +292,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 output.append( nextCharacter );
                 position += 2;
                 state = "blockComment";
+                blockCommentDepth = 1;
                 continue;
             }
 

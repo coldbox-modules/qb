@@ -3509,7 +3509,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             builder = this,
             aggregate = {
                 type: type,
-                column: mapToColumnType( arguments.column ),
+                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
                 defaultValue: isNull( arguments.defaultValue ) ? javacast( "null", "" ) : arguments.defaultValue
             },
             callback = function() {
@@ -3745,8 +3745,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         struct options = {}
     ) {
         return withReturnFormat( "query", function() {
-            var formattedColumn = applyColumnFormatter( column );
-            select( formattedColumn );
+            select( column );
             take( 1 );
             var result = get( options = options );
             if ( result.recordCount <= 0 ) {
@@ -3797,8 +3796,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      */
     public array function values( required any column, struct options = {} ) {
         return withReturnFormat( "query", function() {
-            var formattedColumn = applyColumnFormatter( column );
-            select( formattedColumn );
+            select( column );
             var result = get( options = options );
             var columnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
                 result

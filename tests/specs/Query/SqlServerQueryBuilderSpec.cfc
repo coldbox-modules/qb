@@ -3,6 +3,19 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     function run() {
         super.run();
 
+        describe( "SQL Server JSON validation", function() {
+            it( "does not retain a predicate when compound containment is unsupported", function() {
+                var builder = getBuilder().from( "users" );
+
+                expect( function() {
+                    builder.whereJsonContains( "profile->languages", [ "en", "de" ] );
+                } ).toThrow( type = "UnsupportedOperation" );
+
+                expect( builder.getWheres() ).toBeEmpty();
+                expect( builder.getRawBindings().where ).toBeEmpty();
+            } );
+        } );
+
         describe( "SQL Server bulk inserts", function() {
             it( "inserts all rows from one JSON parameter", function() {
                 var builder = getBuilder();

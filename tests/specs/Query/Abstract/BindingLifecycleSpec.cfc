@@ -311,6 +311,23 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getReturning() ).toHaveLength( 1 );
                 expect( builder.getReturning()[ 1 ].value.getSQL() ).toBe( "id" );
             } );
+
+            it( "preserves existing bindings when upsert validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).where( "tenant_id", 42 );
+
+                expect( function() {
+                    builder.upsert(
+                        values = { "email": { "unexpected": "value" } },
+                        target = [ "email" ],
+                        update = [ "email" ],
+                        toSQL = true
+                    );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getRawBindings().where ).toHaveLength( 1 );
+                expect( builder.getRawBindings().where[ 1 ].value ).toBe( 42 );
+                expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""tenant_id"" = ?" );
+            } );
         } );
     }
 

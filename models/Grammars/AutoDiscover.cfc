@@ -43,14 +43,18 @@ component singleton {
         return this;
     }
 
-    function onMissingMethod( missingMethodName, missingMethodArguments ) {
+    public any function getResolvedGrammar() {
         if ( isNull( variables.grammar ) || !structKeyExists( variables, "grammar" ) ) {
             variables.grammar = autoDiscoverGrammar();
             if ( !isNull( variables.shouldWrapValues ) ) {
                 variables.grammar.setShouldWrapValues( variables.shouldWrapValues );
             }
         }
-        return invoke( variables.grammar, missingMethodName, missingMethodArguments );
+        return variables.grammar;
+    }
+
+    function onMissingMethod( missingMethodName, missingMethodArguments ) {
+        return invoke( getResolvedGrammar(), missingMethodName, missingMethodArguments );
     }
 
 }

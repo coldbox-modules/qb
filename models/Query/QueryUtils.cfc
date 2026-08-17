@@ -158,27 +158,22 @@ component singleton displayname="QueryUtils" accessors="true" {
         var state = "sql";
         var dollarQuoteDelimiter = "";
         var sqlLength = len( arguments.sql );
-        var isMySQL = !isNull( arguments.grammar ) && isInstanceOf(
-            arguments.grammar,
-            "qb.models.Grammars.MySQLGrammar"
-        );
-        var isPostgres = !isNull( arguments.grammar ) && isInstanceOf(
-            arguments.grammar,
+        var resolvedGrammar = isNull( arguments.grammar )
+         ? javacast( "null", "" )
+         : arguments.grammar.getResolvedGrammar();
+        var isMySQL = !isNull( resolvedGrammar ) && isInstanceOf( resolvedGrammar, "qb.models.Grammars.MySQLGrammar" );
+        var isPostgres = !isNull( resolvedGrammar ) && isInstanceOf(
+            resolvedGrammar,
             "qb.models.Grammars.PostgresGrammar"
         );
-        var isOracle = !isNull( arguments.grammar ) && isInstanceOf(
-            arguments.grammar,
-            "qb.models.Grammars.OracleGrammar"
-        );
-        var isSQLite = !isNull( arguments.grammar ) && isInstanceOf(
-            arguments.grammar,
-            "qb.models.Grammars.SQLiteGrammar"
-        );
-        var isSqlServer = !isNull( arguments.grammar ) && isInstanceOf(
-            arguments.grammar,
+        var isOracle = !isNull( resolvedGrammar ) && isInstanceOf( resolvedGrammar, "qb.models.Grammars.OracleGrammar" );
+        var isSQLite = !isNull( resolvedGrammar ) && isInstanceOf( resolvedGrammar, "qb.models.Grammars.SQLiteGrammar" );
+        var isSqlServer = !isNull( resolvedGrammar ) && isInstanceOf(
+            resolvedGrammar,
             "qb.models.Grammars.SqlServerGrammar"
         );
         var oracleQuoteClosing = "";
+        var quoteUsesBackslashEscapes = false;
 
         while ( position <= sqlLength ) {
             var character = mid( arguments.sql, position, 1 );
@@ -236,6 +231,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 output.append( character );
                 if (
                     state != "bracketQuote" &&
+                    quoteUsesBackslashEscapes &&
                     character == chr( 92 ) &&
                     nextCharacter != ""
                 ) {
@@ -344,6 +340,13 @@ component singleton displayname="QueryUtils" accessors="true" {
                 state = character == "'" ? "singleQuote" : (
                     character == """" ? "doubleQuote" : ( character == chr( 96 ) ? "backtickQuote" : "bracketQuote" )
                 );
+                quoteUsesBackslashEscapes = isNull( resolvedGrammar ) ||
+                isMySQL ||
+                (
+                    isPostgres &&
+                    ( character == "'" || character == """" ) &&
+                    isPostgresBackslashEscapedQuote( arguments.sql, position, character )
+                );
                 position++;
                 continue;
             }
@@ -378,6 +381,23 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         return output.toList( "" );
+    }
+
+    /**
+     * Detects PostgreSQL escape and Unicode-escape string or identifier prefixes.
+     */
+    private boolean function isPostgresBackslashEscapedQuote(
+        required string sql,
+        required numeric position,
+        required string quote
+    ) {
+        if ( arguments.position <= 1 ) {
+            return false;
+        }
+
+        var prefix = left( arguments.sql, arguments.position - 1 );
+        var escapePrefix = arguments.quote == "'" ? "(?:E|U&)" : "U&";
+        return reFindNoCase( "(^|[^A-Za-z0-9_$])#escapePrefix#$", prefix ) > 0;
     }
 
     /**
@@ -1036,12 +1056,14 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         var numString = arguments.binding.value.toString();
-        var numStringParts = listToArray( numString, "." );
-        if ( numStringParts.len() != 2 ) {
-            return 0;
-        }
-        var decimalPortion = numStringParts[ 2 ];
-        return len( decimalPortion );
+        var exponentPosition = findNoCase( "E", numString );
+        var exponent = exponentPosition > 0
+         ? val( mid( numString, exponentPosition + 1, len( numString ) - exponentPosition ) )
+         : 0;
+        var mantissa = exponentPosition > 0 ? left( numString, exponentPosition - 1 ) : numString;
+        var decimalPosition = find( ".", mantissa );
+        var decimalDigits = decimalPosition > 0 ? len( mantissa ) - decimalPosition : 0;
+        return max( 0, decimalDigits - exponent );
     }
 
     private boolean function isPureBoxLang() {

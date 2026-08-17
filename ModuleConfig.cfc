@@ -18,7 +18,6 @@ component {
             "convertEmptyStringsToNull": true,
             "shouldWrapValues": true,
             "validateQueryParamStructKeys": true,
-            "numericSQLType": "NUMERIC",
             "integerSQLType": "INTEGER",
             "decimalSQLType": "DECIMAL",
             "defaultOptions": {},
@@ -55,7 +54,6 @@ component {
             .to( "qb.models.Query.QueryUtils" )
             .initArg( name = "convertEmptyStringsToNull", value = settings.convertEmptyStringsToNull )
             .initArg( name = "validateQueryParamStructKeys", value = settings.validateQueryParamStructKeys )
-            .initArg( name = "numericSQLType", value = settings.numericSQLType )
             .initArg( name = "integerSQLType", value = settings.integerSQLType )
             .initArg( name = "decimalSQLType", value = settings.decimalSQLType );
 

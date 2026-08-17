@@ -145,7 +145,7 @@ component {
      */
     public QueryBuilder function hoistNestedCommonTables( required QueryBuilder source, required QueryBuilder target ) {
         if (
-            !isInstanceOf( arguments.target.getGrammar(), "qb.models.Grammars.SqlServerGrammar" ) ||
+            !isInstanceOf( arguments.target.getGrammar().getResolvedGrammar(), "qb.models.Grammars.SqlServerGrammar" ) ||
             arguments.source.getCommonTables().isEmpty()
         ) {
             return arguments.source;

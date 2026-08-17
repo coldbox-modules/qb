@@ -251,6 +251,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array columns,
         required struct updateMap
     ) {
+        if ( !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getOffsetValue() ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "Oracle does not support direct ORDER BY or OFFSET clauses on UPDATE statements."
+            );
+        }
         if ( !query.getCommonTables().isEmpty() ) {
             throw(
                 type = "UnsupportedOperation",
@@ -264,6 +270,20 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             );
         }
         return super.compileUpdate( argumentCollection = arguments );
+    }
+
+    public string function compileDelete( required QueryBuilder query ) {
+        if (
+            !arguments.query.getOrders().isEmpty() ||
+            !isNull( arguments.query.getLimitValue() ) ||
+            !isNull( arguments.query.getOffsetValue() )
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "Oracle does not support direct ORDER BY, LIMIT, or OFFSET clauses on DELETE statements."
+            );
+        }
+        return super.compileDelete( arguments.query );
     }
 
     public string function compileUpsert(

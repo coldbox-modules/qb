@@ -15,7 +15,7 @@ component extends="testbox.system.BaseSpec" {
                     options = { dbtype: "query" }
                 );
 
-                expect( queryColumnList( result ) ).toInclude( "QB_RN" );
+                expect( listToArray( lCase( result.columnList ) ) ).toInclude( "qb_rn" );
                 expect( result.QB_RN[ 1 ] ).toBe( 7 );
             } );
 
@@ -24,15 +24,15 @@ component extends="testbox.system.BaseSpec" {
                 grammar.$property( propertyName = "userRows", mock = queryNew( "QB_RN,name", "integer,varchar" ) );
 
                 var result = grammar.runQuery(
-                    sql = "/* SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM ( */ SELECT QB_RN, name FROM userRows",
+                    sql = "SELECT QB_RN, name FROM userRows WHERE name = 'SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM ('",
                     bindings = [],
                     options = { dbtype: "query" }
                 );
 
                 expect( result ).toBeQuery();
                 expect( result.recordCount ).toBe( 0 );
-                expect( queryColumnList( result ) ).notToInclude( "QB_RN" );
-                expect( queryColumnList( result ) ).toInclude( "name" );
+                expect( listToArray( lCase( result.columnList ) ) ).notToInclude( "qb_rn" );
+                expect( listToArray( lCase( result.columnList ) ) ).toInclude( "name" );
             } );
         } );
     }

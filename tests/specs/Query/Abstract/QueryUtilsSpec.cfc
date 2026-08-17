@@ -62,6 +62,13 @@ component extends="testbox.system.BaseSpec" {
                 expect( utils.inferSqlType( now(), variables.mockGrammar ) ).toBe( "TIMESTAMP" );
             } );
 
+            it( "recognizes Java date values as timestamps", function() {
+                var javaDate = createObject( "java", "java.util.Date" ).init();
+
+                expect( isDate( javaDate ) ).toBeTrue();
+                expect( utils.inferSqlType( javaDate, variables.mockGrammar ) ).toBe( "TIMESTAMP" );
+            } );
+
             it( "empty strings as null", () => {
                 var bindingA = utils.extractBinding( "", variables.mockGrammar );
                 expect( bindingA.null ).toBeFalse();

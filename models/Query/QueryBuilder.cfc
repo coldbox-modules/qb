@@ -3353,11 +3353,20 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * Normalizes the bindings carried by an Expression for query execution.
      */
     public array function extractExpressionBindings( required any expression ) {
-        return arguments.expression
-            .getBindings()
-            .map( function( binding ) {
-                return utils.extractBinding( binding, variables.grammar );
-            } );
+        var expressionBindings = arguments.expression.getBindings();
+        var extractedBindings = [];
+        if ( !expressionBindings.isEmpty() ) {
+            arrayResize( extractedBindings, expressionBindings.len() );
+        }
+        for ( var bindingIndex = 1; bindingIndex <= expressionBindings.len(); bindingIndex++ ) {
+            extractedBindings[ bindingIndex ] = !arrayIsDefined( expressionBindings, bindingIndex ) || isNull(
+                expressionBindings[ bindingIndex ]
+            ) ? utils.extractBinding( grammar = variables.grammar ) : utils.extractBinding(
+                expressionBindings[ bindingIndex ],
+                variables.grammar
+            );
+        }
+        return extractedBindings;
     }
 
     /**

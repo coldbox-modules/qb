@@ -5,6 +5,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array columns,
         required struct updateMap
     ) {
+        if ( !isNull( arguments.query.getOffsetValue() ) ) {
+            throw( type = "UnsupportedOperation", message = "MySQL does not support OFFSET on UPDATE statements." );
+        }
+
         var hasJoins = !arguments.query.getJoins().isEmpty();
         var hasRowSelection = !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getLimitValue() );
         if ( hasJoins && hasRowSelection ) {
@@ -308,6 +312,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     public string function compileDelete( required QueryBuilder query ) {
+        if ( !isNull( arguments.query.getOffsetValue() ) ) {
+            throw( type = "UnsupportedOperation", message = "MySQL does not support OFFSET on DELETE statements." );
+        }
         if ( !arguments.query.getReturning().isEmpty() ) {
             throw(
                 type = "UnsupportedOperation",

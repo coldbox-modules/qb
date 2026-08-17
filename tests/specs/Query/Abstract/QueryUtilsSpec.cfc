@@ -37,6 +37,10 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "numbers", function() {
+                it( "recognizes byte values as integers", function() {
+                    expect( utils.inferSqlType( javacast( "byte", 7 ), variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
                 it( "integers", function() {
                     expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "INTEGER" );
                 } );

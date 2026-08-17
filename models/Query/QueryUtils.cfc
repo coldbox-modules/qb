@@ -854,6 +854,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 "AtomicLong",
                 "BigDecimal",
                 "BigInteger",
+                "Byte",
                 "CFDouble",
                 "Double",
                 "DoubleAccumulator",

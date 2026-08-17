@@ -276,6 +276,19 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getRawBindings().insert ).toHaveLength( 1 );
                 expect( builder.getRawBindings().insert[ 1 ].value ).toBe( "first" );
             } );
+
+            it( "preserves ordering state when reorder validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+                builder.orderBy( builder.raw( "FIELD(status, ?)", [ "active" ] ) );
+
+                expect( function() {
+                    builder.reorder( builder.raw( "FIELD(status, ?)", [ { "unexpected": "value" } ] ) );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getOrders() ).toHaveLength( 1 );
+                expect( builder.getRawBindings().orderBy ).toHaveLength( 1 );
+                expect( builder.getRawBindings().orderBy[ 1 ].value ).toBe( "active" );
+            } );
         } );
     }
 

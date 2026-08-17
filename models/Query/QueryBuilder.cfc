@@ -2255,8 +2255,16 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function reorder( required any column, string direction = "asc" ) {
-        clearOrders();
-        return orderBy( argumentCollection = arguments );
+        var originalOrders = variables.orders;
+        var originalOrderBindings = variables.bindings.orderBy;
+        try {
+            clearOrders();
+            return orderBy( argumentCollection = arguments );
+        } catch ( any e ) {
+            variables.orders = originalOrders;
+            variables.bindings.orderBy = originalOrderBindings;
+            rethrow;
+        }
     }
 
     /*******************************************************************************\

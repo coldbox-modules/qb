@@ -2369,7 +2369,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function limit( required numeric value ) {
-        variables.limitValue = value;
+        variables.limitValue = arguments.value > 0 ? arguments.value : 0;
         return this;
     }
 
@@ -2393,7 +2393,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function offset( required numeric value ) {
-        variables.offsetValue = value;
+        variables.offsetValue = arguments.value > 0 ? arguments.value : 0;
         return this;
     }
 

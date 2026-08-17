@@ -83,19 +83,9 @@ component {
 
         var type = arguments.negate ? "notIn" : "in";
         var typedColumn = toColumnType( arguments.builder, arguments.column );
-        arguments.builder
-            .getWheres()
-            .append( {
-                type: type,
-                column: typedColumn,
-                values: arguments.values,
-                combinator: arguments.combinator
-            } );
-
-        var bindings = [];
-        if ( !arguments.values.isEmpty() ) {
-            arguments.builder.addColumnBindings( [ typedColumn ], "where" );
-        }
+        var bindings = arguments.values.isEmpty()
+         ? []
+         : extractColumnBindings( arguments.builder, [ typedColumn ] );
         for ( var value in arguments.values ) {
             if ( arguments.builder.getUtils().isExpression( value ) ) {
                 bindings.append( arguments.builder.extractExpressionBindings( value ), true );
@@ -104,6 +94,14 @@ component {
             }
         }
 
+        arguments.builder
+            .getWheres()
+            .append( {
+                type: type,
+                column: typedColumn,
+                values: arguments.values,
+                combinator: arguments.combinator
+            } );
         arguments.builder.addBindings( bindings, "where" );
         return arguments.builder;
     }
@@ -164,6 +162,9 @@ component {
         }
 
         var typedColumn = toColumnType( arguments.builder, arguments.column );
+        var columnBindings = arguments.values.isEmpty()
+         ? []
+         : extractColumnBindings( arguments.builder, [ typedColumn ] );
         arguments.builder
             .getWheres()
             .append( {
@@ -176,10 +177,10 @@ component {
             } );
 
         if ( !arguments.values.isEmpty() ) {
-            arguments.builder.addColumnBindings( [ typedColumn ], "where" );
             var serializedValues = extractedBindings.map( function( binding ) {
                 return binding.null ? javacast( "null", "" ) : binding.value;
             } );
+            arguments.builder.addBindings( columnBindings, "where" );
             arguments.builder.addBindings(
                 [
                     arguments.builder
@@ -251,6 +252,7 @@ component {
 
         var firstColumn = toColumnType( arguments.builder, arguments.first );
         var secondColumn = toColumnType( arguments.builder, arguments.second );
+        var bindings = extractColumnBindings( arguments.builder, [ firstColumn, secondColumn ] );
         arguments.builder
             .getWheres()
             .append( {
@@ -260,7 +262,7 @@ component {
                 second: secondColumn,
                 combinator: arguments.combinator
             } );
-        arguments.builder.addColumnBindings( [ firstColumn, secondColumn ], "where" );
+        arguments.builder.addBindings( bindings, "where" );
         return arguments.builder;
     }
 
@@ -350,8 +352,9 @@ component {
 
         var type = arguments.negate ? "notNull" : "null";
         var typedColumn = toColumnType( arguments.builder, arguments.column );
+        var bindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
         arguments.builder.getWheres().append( { type: type, column: typedColumn, combinator: arguments.combinator } );
-        arguments.builder.addColumnBindings( [ typedColumn ], "where" );
+        arguments.builder.addBindings( bindings, "where" );
         return arguments.builder;
     }
 
@@ -418,17 +421,21 @@ component {
                 .snapshotBuilder( arguments.builder, arguments.end );
         }
 
-        arguments.builder.addColumnBindings( [ typedColumn ], "where" );
-        if ( isNull( arguments.start ) ) {
-            addPredicateBinding( builder = arguments.builder, type = "where" );
-        } else {
-            addPredicateBinding( arguments.builder, arguments.start, "where" );
-        }
-        if ( isNull( arguments.end ) ) {
-            addPredicateBinding( builder = arguments.builder, type = "where" );
-        } else {
-            addPredicateBinding( arguments.builder, arguments.end, "where" );
-        }
+        var bindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        bindings.append(
+            extractPredicateBindings(
+                builder = arguments.builder,
+                value = isNull( arguments.start ) ? javacast( "null", "" ) : arguments.start
+            ),
+            true
+        );
+        bindings.append(
+            extractPredicateBindings(
+                builder = arguments.builder,
+                value = isNull( arguments.end ) ? javacast( "null", "" ) : arguments.end
+            ),
+            true
+        );
 
         if (
             !isNull( arguments.start ) &&
@@ -457,6 +464,7 @@ component {
                 end: isNull( arguments.end ) ? javacast( "null", "" ) : arguments.end,
                 combinator: arguments.combinator
             } );
+        arguments.builder.addBindings( bindings, "where" );
         return arguments.builder;
     }
 
@@ -477,10 +485,11 @@ component {
             isNull( arguments.operator ) &&
             arguments.builder.getUtils().isExpression( arguments.column )
         ) {
+            var expressionBindings = arguments.builder.extractExpressionBindings( arguments.column );
             arguments.builder
                 .getHavings()
                 .append( { type: "raw", column: arguments.column, combinator: arguments.combinator } );
-            arguments.builder.addExpressionBindings( arguments.column, "having" );
+            arguments.builder.addBindings( expressionBindings, "having" );
             return arguments.builder;
         }
 
@@ -494,24 +503,25 @@ component {
             arguments.builder.getQueryValidator().validateOperator( arguments.operator );
         }
 
+        var typedColumn = toColumnType( arguments.builder, arguments.column );
+        var bindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        bindings.append(
+            extractPredicateBindings(
+                builder = arguments.builder,
+                value = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
+            ),
+            true
+        );
         arguments.builder
             .getHavings()
             .append( {
                 type: "normal",
-                column: toColumnType( arguments.builder, arguments.column ),
+                column: typedColumn,
                 operator: arguments.operator,
                 value: isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
                 combinator: arguments.combinator
             } );
-
-        if ( arguments.builder.getUtils().isExpression( arguments.column ) ) {
-            arguments.builder.addExpressionBindings( arguments.column, "having" );
-        }
-        if ( isNull( arguments.value ) ) {
-            addPredicateBinding( builder = arguments.builder, type = "having" );
-        } else {
-            addPredicateBinding( arguments.builder, arguments.value, "having" );
-        }
+        arguments.builder.addBindings( bindings, "having" );
         return arguments.builder;
     }
 
@@ -538,6 +548,14 @@ component {
         string combinator = "and"
     ) {
         var typedColumn = toColumnType( arguments.builder, arguments.column );
+        var bindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
+        bindings.append(
+            extractPredicateBindings(
+                builder = arguments.builder,
+                value = isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value
+            ),
+            true
+        );
         arguments.builder
             .getWheres()
             .append( {
@@ -547,13 +565,7 @@ component {
                 combinator: arguments.combinator,
                 type: "basic"
             } );
-
-        arguments.builder.addColumnBindings( [ typedColumn ], "where" );
-        if ( isNull( arguments.value ) ) {
-            addPredicateBinding( builder = arguments.builder, type = "where" );
-        } else {
-            addPredicateBinding( arguments.builder, arguments.value, "where" );
-        }
+        arguments.builder.addBindings( bindings, "where" );
         return arguments.builder;
     }
 
@@ -572,10 +584,11 @@ component {
             arguments.query = arguments.builder.newQuery();
             callback( arguments.query );
         }
+        var typedColumn = toColumnType( arguments.builder, arguments.column );
+        var columnBindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
         arguments.query = arguments.builder
             .getCollaborator( "QueryExecutor" )
             .snapshotBuilder( arguments.builder, arguments.query );
-        var typedColumn = toColumnType( arguments.builder, arguments.column );
         arguments.builder
             .getWheres()
             .append( {
@@ -585,7 +598,7 @@ component {
                 query: arguments.query,
                 combinator: arguments.combinator
             } );
-        arguments.builder.addColumnBindings( [ typedColumn ], "where" );
+        arguments.builder.addBindings( columnBindings, "where" );
         arguments.builder.addBindings( arguments.query.getBindings(), "where" );
         return arguments.builder;
     }
@@ -605,12 +618,13 @@ component {
             arguments.query = arguments.builder.newQuery();
             callback( arguments.query );
         }
+        var typedColumn = toColumnType( arguments.builder, arguments.column );
+        var columnBindings = extractColumnBindings( arguments.builder, [ typedColumn ] );
         arguments.query = arguments.builder
             .getCollaborator( "QueryExecutor" )
             .snapshotBuilder( arguments.builder, arguments.query );
 
         var type = arguments.negate ? "notInSub" : "inSub";
-        var typedColumn = toColumnType( arguments.builder, arguments.column );
         arguments.builder
             .getWheres()
             .append( {
@@ -619,7 +633,7 @@ component {
                 query: arguments.query,
                 combinator: arguments.combinator
             } );
-        arguments.builder.addColumnBindings( [ typedColumn ], "where" );
+        arguments.builder.addBindings( columnBindings, "where" );
         arguments.builder.addBindings( arguments.query.getBindings(), "where" );
         return arguments.builder;
     }
@@ -645,17 +659,29 @@ component {
     /**
      * Adds one expression or scalar binding.
      */
-    private void function addPredicateBinding( required QueryBuilder builder, any value, required string type ) {
+    private array function extractPredicateBindings( required QueryBuilder builder, any value ) {
         if ( !isNull( arguments.value ) && arguments.builder.getUtils().isExpression( arguments.value ) ) {
-            arguments.builder.addExpressionBindings( arguments.value, arguments.type );
-        } else {
-            arguments.builder.addBindings(
-                isNull( arguments.value )
-                 ? arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
-                 : arguments.builder.getUtils().extractBinding( arguments.value, arguments.builder.getGrammar() ),
-                arguments.type
-            );
+            return arguments.builder.extractExpressionBindings( arguments.value );
         }
+        var binding = isNull( arguments.value )
+         ? arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
+         : arguments.builder.getUtils().extractBinding( arguments.value, arguments.builder.getGrammar() );
+        return isArray( binding ) ? binding : [ binding ];
+    }
+
+    /**
+     * Extracts bindings carried by typed columns without mutating the builder.
+     */
+    private array function extractColumnBindings( required QueryBuilder builder, required array columns ) {
+        var bindings = [];
+        for ( var column in arguments.columns ) {
+            if ( column.type == "raw" ) {
+                bindings.append( arguments.builder.extractExpressionBindings( column.value ), true );
+            } else if ( column.type == "builder" ) {
+                bindings.append( column.value.getBindings(), true );
+            }
+        }
+        return bindings;
     }
 
     /**

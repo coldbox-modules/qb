@@ -189,12 +189,12 @@ component {
         var originalAggregate = arguments.builder.getAggregate();
         var originalOrders = arguments.builder.getOrders();
         var originalAggregateBindings = arguments.builder.getRawBindings().aggregate;
-        arguments.builder.setAggregate( arguments.aggregate );
-        arguments.builder.setOrders( [] );
-        arguments.builder.getRawBindings().aggregate = [];
-        arguments.builder.addColumnBindings( [ arguments.aggregate.column ], "aggregate" );
         var result = javacast( "null", "" );
         try {
+            arguments.builder.setAggregate( arguments.aggregate );
+            arguments.builder.setOrders( [] );
+            arguments.builder.getRawBindings().aggregate = [];
+            arguments.builder.addColumnBindings( [ arguments.aggregate.column ], "aggregate" );
             result = arguments.callback();
         } finally {
             arguments.builder.setAggregate( originalAggregate );

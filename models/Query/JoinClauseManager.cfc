@@ -252,8 +252,9 @@ component {
      * Adds a clause and its bindings to a builder.
      */
     private QueryBuilder function attachJoin( required QueryBuilder builder, required JoinClause join ) {
+        var bindings = getJoinBindings( arguments.builder, arguments.join );
         arguments.builder.getJoins().append( arguments.join );
-        arguments.builder.addBindings( getJoinBindings( arguments.builder, arguments.join ), "join" );
+        arguments.builder.addBindings( bindings, "join" );
         return arguments.builder;
     }
 

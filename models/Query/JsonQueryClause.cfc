@@ -123,6 +123,11 @@ component {
         required struct valueDefinition,
         string combinator = "and"
     ) {
+        var binding = arguments.valueDefinition.isNull
+         ? arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
+         : arguments.builder
+            .getUtils()
+            .extractBinding( arguments.valueDefinition.value, arguments.builder.getGrammar() );
         arguments.builder
             .getWheres()
             .append( {
@@ -131,14 +136,7 @@ component {
                 operator: arguments.operator,
                 combinator: arguments.combinator
             } );
-        arguments.builder.addBindings(
-            arguments.valueDefinition.isNull
-             ? arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
-             : arguments.builder
-                .getUtils()
-                .extractBinding( arguments.valueDefinition.value, arguments.builder.getGrammar() ),
-            "where"
-        );
+        arguments.builder.addBindings( binding, "where" );
         return arguments.builder;
     }
 

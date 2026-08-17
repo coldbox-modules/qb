@@ -3020,181 +3020,196 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             return;
         }
 
-        clearBindings( except = [ "commonTables" ] );
-
-        if ( !isNull( arguments.source ) && ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) ) {
-            var callback = arguments.source;
-            arguments.source = newQuery();
-            callback( arguments.source );
+        var originalBindings = {};
+        for ( var bindingType in variables.bindings ) {
+            originalBindings[ bindingType ] = variables.bindings[ bindingType ].isEmpty()
+             ? []
+             : arraySlice( variables.bindings[ bindingType ], 1 );
         }
+        var executor = getCollaborator( "QueryExecutor" );
+        var commonTableState = executor.captureCommonTableState( this );
 
-        if ( !isNull( arguments.source ) ) {
-            arguments.source = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.source );
-            addBindings( arguments.source.getBindings(), "insert" );
-        }
+        try {
+            clearBindings( except = [ "commonTables" ] );
 
-        if ( !isArray( arguments.values ) ) {
-            if ( !isStruct( arguments.values ) ) {
-                throw(
-                    type = "InvalidSQLType",
-                    message = "Please pass a struct or an array of structs mapping columns to values"
-                );
+            if ( !isNull( arguments.source ) && ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) ) {
+                var callback = arguments.source;
+                arguments.source = newQuery();
+                callback( arguments.source );
             }
-            arguments.values = arrayWrap( arguments.values );
-        }
 
-        if ( !isNull( arguments.update ) && arguments.update.isEmpty() ) {
             if ( !isNull( arguments.source ) ) {
-                return this.insertUsing(
-                    columns = arguments.values,
-                    source = arguments.source,
-                    options = arguments.options,
-                    toSql = arguments.toSql
-                );
+                arguments.source = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.source );
+                addBindings( arguments.source.getBindings(), "insert" );
             }
-            return this.insert( values = arguments.values, options = arguments.options, toSql = arguments.toSql );
-        }
 
-        arguments.target = arrayWrap( arguments.target ).map( function( column ) {
-            var formatted = listLast( applyColumnFormatter( column ), "." );
-            return { "original": column, "formatted": formatted };
-        } );
+            if ( !isArray( arguments.values ) ) {
+                if ( !isStruct( arguments.values ) ) {
+                    throw(
+                        type = "InvalidSQLType",
+                        message = "Please pass a struct or an array of structs mapping columns to values"
+                    );
+                }
+                arguments.values = arrayWrap( arguments.values );
+            }
 
-        var columns = [];
-        if ( isStruct( arguments.values[ 1 ] ) ) {
-            columns = getGrammar().resolveInsertColumnNames( arguments.values );
-        } else {
-            columns = arguments.values;
-        }
-        columns = columns.map( function( column ) {
-            var formatted = listLast( applyColumnFormatter( column ), "." );
-            return { "original": column, "formatted": formatted };
-        } );
-        if ( isStruct( arguments.values[ 1 ] ) ) {
-            columns.sort( function( a, b ) {
+            if ( !isNull( arguments.update ) && arguments.update.isEmpty() ) {
+                if ( !isNull( arguments.source ) ) {
+                    return this.insertUsing(
+                        columns = arguments.values,
+                        source = arguments.source,
+                        options = arguments.options,
+                        toSql = arguments.toSql
+                    );
+                }
+                return this.insert( values = arguments.values, options = arguments.options, toSql = arguments.toSql );
+            }
+
+            arguments.target = arrayWrap( arguments.target ).map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
+            } );
+
+            var columns = [];
+            if ( isStruct( arguments.values[ 1 ] ) ) {
+                columns = getGrammar().resolveInsertColumnNames( arguments.values );
+            } else {
+                columns = arguments.values;
+            }
+            columns = columns.map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
+            } );
+            if ( isStruct( arguments.values[ 1 ] ) ) {
+                columns.sort( function( a, b ) {
+                    return compareNoCase( a.formatted, b.formatted );
+                } );
+            }
+
+            var updateArray = [];
+            if ( isNull( arguments.update ) ) {
+                arguments.update = columns;
+            } else {
+                if ( isArray( arguments.update ) ) {
+                    arguments.update = arguments.update.map( function( column ) {
+                        var formatted = listLast( applyColumnFormatter( column ), "." );
+                        return { "original": column, "formatted": formatted };
+                    } );
+                }
+            }
+
+            if ( isArray( arguments.update ) ) {
+                updateArray = arguments.update;
+            } else {
+                updateArray = arguments.update
+                    .keyArray()
+                    .map( function( column ) {
+                        var formatted = listLast( applyColumnFormatter( column ), "." );
+                        return { original: column, formatted: formatted };
+                    } );
+            }
+
+            updateArray.sort( function( a, b ) {
                 return compareNoCase( a.formatted, b.formatted );
             } );
-        }
 
-        var updateArray = [];
-        if ( isNull( arguments.update ) ) {
-            arguments.update = columns;
-        } else {
-            if ( isArray( arguments.update ) ) {
-                arguments.update = arguments.update.map( function( column ) {
-                    var formatted = listLast( applyColumnFormatter( column ), "." );
-                    return { "original": column, "formatted": formatted };
+            var newInsertBindings = [];
+            if ( isStruct( arguments.values[ 1 ] ) ) {
+                newInsertBindings = arguments.values.map( function( value ) {
+                    return columns.map( function( column ) {
+                        return getUtils().extractBinding(
+                            value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
+                            variables.grammar
+                        );
+                    } );
                 } );
             }
-        }
 
-        if ( isArray( arguments.update ) ) {
-            updateArray = arguments.update;
-        } else {
-            updateArray = arguments.update
-                .keyArray()
-                .map( function( column ) {
-                    var formatted = listLast( applyColumnFormatter( column ), "." );
-                    return { original: column, formatted: formatted };
-                } );
-        }
-
-        updateArray.sort( function( a, b ) {
-            return compareNoCase( a.formatted, b.formatted );
-        } );
-
-        var newInsertBindings = [];
-        if ( isStruct( arguments.values[ 1 ] ) ) {
-            newInsertBindings = arguments.values.map( function( value ) {
-                return columns.map( function( column ) {
-                    return getUtils().extractBinding(
-                        value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
-                        variables.grammar
-                    );
+            newInsertBindings.each( function( bindingsArray ) {
+                bindingsArray.each( function( binding ) {
+                    if ( getUtils().isNotExpression( binding ) ) {
+                        addBindings( binding, "insert" );
+                    } else {
+                        addExpressionBindings( binding, "insert" );
+                    }
                 } );
             } );
-        }
 
-        newInsertBindings.each( function( bindingsArray ) {
-            bindingsArray.each( function( binding ) {
-                if ( getUtils().isNotExpression( binding ) ) {
-                    addBindings( binding, "insert" );
-                } else {
-                    addExpressionBindings( binding, "insert" );
-                }
+            if ( isStruct( arguments.update ) ) {
+                var updates = arguments.update;
+                updateArray.each( function( column ) {
+                    if (
+                        isNull( updates[ column.original ] ) ||
+                        getUtils().isNotExpression( updates[ column.original ] )
+                    ) {
+                        addBindings(
+                            getUtils().extractBinding(
+                                isNull( updates[ column.original ] ) ? javacast( "null", "" ) : updates[ column.original ],
+                                variables.grammar
+                            ),
+                            "insert"
+                        );
+                    } else {
+                        addExpressionBindings( updates[ column.original ], "insert" );
+                    }
+                } );
+            }
+
+            if ( isClosure( arguments.deleteUnmatched ) || isCustomFunction( arguments.deleteUnmatched ) ) {
+                var deleteRestrictions = newQuery().setColumnFormatter( ( column ) => {
+                    if ( listLen( column, "." ) > 1 ) {
+                        return column;
+                    }
+                    return "qb_target.#column#";
+                } );
+                arguments.deleteUnmatched( deleteRestrictions );
+                arguments.deleteUnmatched = deleteRestrictions;
+            }
+
+            if ( getUtils().isBuilder( arguments.deleteUnmatched ) ) {
+                arguments.deleteUnmatched = getCollaborator( "QueryExecutor" ).snapshotBuilder(
+                    this,
+                    arguments.deleteUnmatched
+                );
+                addBindings( arguments.deleteUnmatched.getBindings(), "insert" );
+            }
+
+            columns.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
             } );
-        } );
-
-        if ( isStruct( arguments.update ) ) {
-            var updates = arguments.update;
-            updateArray.each( function( column ) {
-                if (
-                    isNull( updates[ column.original ] ) ||
-                    getUtils().isNotExpression( updates[ column.original ] )
-                ) {
-                    addBindings(
-                        getUtils().extractBinding(
-                            isNull( updates[ column.original ] ) ? javacast( "null", "" ) : updates[ column.original ],
-                            variables.grammar
-                        ),
-                        "insert"
-                    );
-                } else {
-                    addExpressionBindings( updates[ column.original ], "insert" );
-                }
+            updateArray.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
             } );
-        }
-
-        if ( isClosure( arguments.deleteUnmatched ) || isCustomFunction( arguments.deleteUnmatched ) ) {
-            var deleteRestrictions = newQuery().setColumnFormatter( ( column ) => {
-                if ( listLen( column, "." ) > 1 ) {
-                    return column;
-                }
-                return "qb_target.#column#";
+            arguments.target.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
             } );
-            arguments.deleteUnmatched( deleteRestrictions );
-            arguments.deleteUnmatched = deleteRestrictions;
-        }
 
-        if ( getUtils().isBuilder( arguments.deleteUnmatched ) ) {
-            arguments.deleteUnmatched = getCollaborator( "QueryExecutor" ).snapshotBuilder(
-                this,
-                arguments.deleteUnmatched
-            );
-            addBindings( arguments.deleteUnmatched.getBindings(), "insert" );
+            var updateForUpsert = arguments.update;
+            var targetForUpsert = arguments.target;
+            var hasSourceForUpsert = !isNull( arguments.source );
+            if ( hasSourceForUpsert ) {
+                var sourceForUpsert = arguments.source;
+            }
+            var deleteUnmatchedForUpsert = arguments.deleteUnmatched;
+            var matchNullsForUpsert = arguments.matchNulls;
+            var sql = withWrappingContext( function() {
+                return getGrammar().compileUpsert(
+                    this,
+                    columns,
+                    newInsertBindings,
+                    updateArray,
+                    updateForUpsert,
+                    targetForUpsert,
+                    hasSourceForUpsert ? sourceForUpsert : javacast( "null", "" ),
+                    deleteUnmatchedForUpsert,
+                    matchNullsForUpsert
+                );
+            } );
+        } catch ( any e ) {
+            executor.restoreCommonTableState( this, commonTableState );
+            variables.bindings = originalBindings;
+            rethrow;
         }
-
-        columns.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-        updateArray.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-        arguments.target.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-
-        var updateForUpsert = arguments.update;
-        var targetForUpsert = arguments.target;
-        var hasSourceForUpsert = !isNull( arguments.source );
-        if ( hasSourceForUpsert ) {
-            var sourceForUpsert = arguments.source;
-        }
-        var deleteUnmatchedForUpsert = arguments.deleteUnmatched;
-        var matchNullsForUpsert = arguments.matchNulls;
-        var sql = withWrappingContext( function() {
-            return getGrammar().compileUpsert(
-                this,
-                columns,
-                newInsertBindings,
-                updateArray,
-                updateForUpsert,
-                targetForUpsert,
-                hasSourceForUpsert ? sourceForUpsert : javacast( "null", "" ),
-                deleteUnmatchedForUpsert,
-                matchNullsForUpsert
-            );
-        } );
 
         if ( toSql ) {
             return sql;

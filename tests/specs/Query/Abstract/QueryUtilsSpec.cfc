@@ -487,6 +487,12 @@ component extends="testbox.system.BaseSpec" {
                 expect( utils.extractBinding( smallerDecimal, variables.mockGrammar ).scale ).toBe( 8 );
             } );
 
+            it( "preserves significant zeroes in scientific notation scale", function() {
+                var decimal = createObject( "java", "java.math.BigDecimal" ).init( "1.00E-7" );
+
+                expect( utils.extractBinding( decimal, variables.mockGrammar ).scale ).toBe( 9 );
+            } );
+
             it( "does not set a scale for integers", function() {
                 var binding = utils.extractBinding(
                     { "value": 3.14159, "cfsqltype": "INTEGER" },

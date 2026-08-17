@@ -1055,6 +1055,10 @@ component singleton displayname="QueryUtils" accessors="true" {
             return 0;
         }
 
+        if ( isInstanceOf( arguments.binding.value, "java.math.BigDecimal" ) ) {
+            return max( 0, arguments.binding.value.scale() );
+        }
+
         var numString = arguments.binding.value.toString();
         var exponentPosition = findNoCase( "E", numString );
         var exponent = exponentPosition > 0

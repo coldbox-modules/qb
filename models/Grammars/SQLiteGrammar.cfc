@@ -208,14 +208,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             var rowLimitClause = trim(
                 "#compileLimitValue( query, query.getLimitValue() )# #compileOffsetValue( query, query.getOffsetValue() )#"
             );
-            var trailingClauses = [ returningClause, compileOrders( query, query.getOrders() ), rowLimitClause ]
-                .map( function( clause ) {
+            var trailingClauses = arrayMap(
+                [ returningClause, compileOrders( query, query.getOrders() ), rowLimitClause ],
+                function( clause ) {
                     return trim( clause );
-                } )
-                .filter( function( clause ) {
+                }
+            );
+            trailingClauses = arrayFilter( trailingClauses, function( clause ) {
                     return clause != "";
-                } )
-                .toList( " " );
+                } );
+            trailingClauses = arrayToList( trailingClauses, " " );
 
             if ( joins.isEmpty() ) {
                 return trim(

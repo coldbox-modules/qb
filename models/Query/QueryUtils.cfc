@@ -536,7 +536,8 @@ component singleton displayname="QueryUtils" accessors="true" {
             return "NULL";
         }
 
-        switch ( arguments.sqltype ) {
+        var normalizedSqlType = reReplaceNoCase( trim( arguments.sqltype ), "^cf_sql_", "" );
+        switch ( normalizedSqlType ) {
             case "INTEGER":
             case "NUMERIC":
             case "DECIMAL":

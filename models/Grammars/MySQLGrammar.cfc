@@ -325,7 +325,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                             "FROM",
                             wrapQueryTable( query ),
                             hasJoins ? compileJoins( query, query.getJoins() ) : "",
-                            compileWheres( query, query.getWheres() )
+                            compileWheres( query, query.getWheres() ),
+                            hasJoins ? "" : compileOrders( query, query.getOrders() ),
+                            hasJoins ? "" : compileLimitValue( query, query.getLimitValue() )
                         ],
                         function( sql ) {
                             return sql != "";

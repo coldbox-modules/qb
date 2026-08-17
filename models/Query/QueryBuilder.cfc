@@ -2430,6 +2430,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return  PaginationCollector
      */
     public any function paginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
+        arguments.page = arguments.page > 0 ? arguments.page : 1;
         var totalRecords = getCountForPagination( options = options );
         var results = forPage( page, maxRows ).get( options = options );
         return getPaginationCollector().generateWithResults(
@@ -2452,6 +2453,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return  PaginationCollector
      */
     public any function simplePaginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
+        arguments.page = arguments.page > 0 ? arguments.page : 1;
         var shouldReturnAllRows = shouldMaxRowsOverrideToAll( arguments.maxRows );
         var paginationQuery = forPage( arguments.page, arguments.maxRows );
         if ( !shouldReturnAllRows ) {

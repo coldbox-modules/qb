@@ -2864,18 +2864,20 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
     public QueryBuilder function returning( required any columns ) {
-        variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
-        variables.returning = variables.returning.map( function( column ) {
+        var returningColumns = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
+        returningColumns = returningColumns.map( function( column ) {
             return mapToColumnType( listLast( applyColumnFormatter( column ), "." ) );
         } );
+        variables.returning = returningColumns;
         return this;
     }
 
     public QueryBuilder function returningRaw( required any columns ) {
-        variables.returning = isArray( arguments.columns ) ? arguments.columns : [ arguments.columns ];
-        variables.returning = variables.returning.map( function( column ) {
+        var returningColumns = isArray( arguments.columns ) ? arguments.columns : [ arguments.columns ];
+        returningColumns = returningColumns.map( function( column ) {
             return mapToColumnType( new Expression( column ) );
         } );
+        variables.returning = returningColumns;
         return this;
     }
 

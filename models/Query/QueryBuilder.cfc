@@ -4011,7 +4011,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
     private any function withWrappingContext( required function callback ) {
-        return getGrammar().withShouldWrapValuesContext( getShouldWrapValues(), arguments.callback );
+        var grammar = getGrammar();
+        grammar.pushShouldWrapValuesContext( getShouldWrapValues() );
+        try {
+            return arguments.callback();
+        } finally {
+            grammar.popShouldWrapValuesContext();
+        }
     }
 
     /**

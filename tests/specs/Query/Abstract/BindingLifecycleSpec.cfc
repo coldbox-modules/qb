@@ -228,6 +228,28 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getRawBindings().update ).toHaveLength( 1 );
                 expect( builder.getRawBindings().update[ 1 ].value ).toBe( "first" );
             } );
+
+            it( "replaces insert bindings when reusing a builder", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                builder.insert( values = { "name": "first" }, toSQL = true );
+                builder.insert( values = { "name": "second" }, toSQL = true );
+
+                expect( builder.getRawBindings().insert ).toHaveLength( 1 );
+                expect( builder.getRawBindings().insert[ 1 ].value ).toBe( "second" );
+            } );
+
+            it( "preserves insert bindings when replacement validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+                builder.insert( values = { "name": "first" }, toSQL = true );
+
+                expect( function() {
+                    builder.insert( values = { "name": { "unexpected": "value" } }, toSQL = true );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getRawBindings().insert ).toHaveLength( 1 );
+                expect( builder.getRawBindings().insert[ 1 ].value ).toBe( "first" );
+            } );
         } );
     }
 

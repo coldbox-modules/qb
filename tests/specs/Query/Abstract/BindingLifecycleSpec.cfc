@@ -46,6 +46,100 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getRawBindings().having[ 1 ].value ).toBe( "" );
                 expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" HAVING ""score"" = ?" );
             } );
+
+            it( "does not retain basic predicate state when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                expect( function() {
+                    builder.where( "id", "=", { unexpected: "value" } );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getWheres() ).toBeEmpty();
+                expect( builder.getRawBindings().where ).toBeEmpty();
+            } );
+
+            it( "does not retain IN predicate state when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                expect( function() {
+                    builder.whereIn( "id", [ 1, { unexpected: "value" } ] );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getWheres() ).toBeEmpty();
+                expect( builder.getRawBindings().where ).toBeEmpty();
+            } );
+
+            it( "does not retain BETWEEN bindings when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                expect( function() {
+                    builder.whereBetween( "id", 1, { unexpected: "value" } );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getWheres() ).toBeEmpty();
+                expect( builder.getRawBindings().where ).toBeEmpty();
+            } );
+
+            it( "does not retain HAVING state when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                expect( function() {
+                    builder.having( "score", ">", { unexpected: "value" } );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getHavings() ).toBeEmpty();
+                expect( builder.getRawBindings().having ).toBeEmpty();
+            } );
+
+            it( "does not retain raw HAVING state when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                expect( function() {
+                    builder.having( builder.raw( "COUNT(*) > ?", [ { unexpected: "value" } ] ) );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getHavings() ).toBeEmpty();
+                expect( builder.getRawBindings().having ).toBeEmpty();
+            } );
+
+            it( "does not retain JSON length state when binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                expect( function() {
+                    builder.whereJsonLength( "profile->languages", "=", { unexpected: "value" } );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getWheres() ).toBeEmpty();
+                expect( builder.getRawBindings().where ).toBeEmpty();
+            } );
+
+            it( "restores aggregate state when aggregate binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).orderBy( "name" );
+
+                expect( function() {
+                    builder.sum( builder.raw( "?", [ { unexpected: "value" } ] ) );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getAggregate() ).toBeEmpty();
+                expect( builder.getOrders() ).toHaveLength( 1 );
+                expect( builder.getRawBindings().aggregate ).toBeEmpty();
+            } );
+
+            it( "does not retain joins when raw table binding validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" );
+
+                expect( function() {
+                    builder.join(
+                        builder.raw( "accounts ?", [ { unexpected: "value" } ] ),
+                        "users.id",
+                        "=",
+                        "accounts.user_id"
+                    );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getJoins() ).toBeEmpty();
+                expect( builder.getRawBindings().join ).toBeEmpty();
+            } );
         } );
     }
 

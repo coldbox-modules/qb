@@ -231,28 +231,33 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 );
             }
 
-            var firstJoin = joins[ 1 ];
-            var whereStatement = replace(
-                compileWheres( query, query.getWheres() ),
-                "WHERE",
-                "AND",
-                "one"
+            var updateQuery = arguments.query;
+            var joinedTables = joins
+                .map( function( join ) {
+                    return wrapTable( join.getTable() );
+                } )
+                .toList( ", " );
+            var predicates = joins
+                .map( function( join ) {
+                    return trim( removeLeadingFilterKeyword( compileWheres( updateQuery, join.getWheres() ) ) );
+                } )
+                .filter( function( predicate ) {
+                    return predicate != "";
+                } );
+            var queryPredicate = trim(
+                removeLeadingFilterKeyword( compileWheres( arguments.query, query.getWheres() ) )
             );
-            updateStatement &= " FROM #wrapTable( firstJoin.getTable() )# #compileWheres( arguments.query, firstJoin.getWheres() )#";
-
-            if ( joins.len() <= 1 ) {
-                return trim(
-                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & whereStatement & returningClause
-                );
+            if ( queryPredicate != "" ) {
+                predicates.append( queryPredicate );
             }
 
-            var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );
+            updateStatement &= " FROM #joinedTables#";
+            if ( !predicates.isEmpty() ) {
+                updateStatement &= " WHERE #predicates.toList( " AND " )#";
+            }
 
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & compileJoins(
-                    arguments.query,
-                    restJoins
-                ) & " " & whereStatement & returningClause
+                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

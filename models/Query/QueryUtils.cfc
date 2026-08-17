@@ -94,6 +94,14 @@ component singleton displayname="QueryUtils" accessors="true" {
             binding = { value: normalizeSqlValue( value ) };
         }
 
+        if (
+            !structKeyExists( binding, "value" ) &&
+            structKeyExists( binding, "null" ) &&
+            binding.null
+        ) {
+            binding.value = "";
+        }
+
         if ( structKeyExists( binding, "sqltype" ) && !structKeyExists( binding, "cfsqltype" ) ) {
             param binding.cfsqltype = binding.sqltype;
         }

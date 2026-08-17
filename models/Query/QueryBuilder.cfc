@@ -2611,12 +2611,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             } );
         } );
 
+        var newInsertBindings = [];
         newBindings.each( function( bindingsArray ) {
             bindingsArray.each( function( binding ) {
                 if ( getUtils().isNotExpression( binding ) ) {
-                    addBindings( binding, "insert" );
+                    newInsertBindings.append( binding );
                 } else {
-                    addExpressionBindings( binding, "insert" );
+                    newInsertBindings.append( extractExpressionBindings( binding ), true );
                 }
             } );
         } );
@@ -2629,6 +2630,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             return getGrammar().compileInsert( this, columns, newBindings );
         } );
 
+        variables.bindings.insert = newInsertBindings;
         clearBindings( except = "insert" );
 
         if ( toSql ) {

@@ -84,22 +84,18 @@ component {
      * Attaches a cross join to the supplied builder.
      */
     public QueryBuilder function crossJoin( required QueryBuilder builder, required any table ) {
-        return attachJoin(
-            arguments.builder,
-            newJoin( builder = arguments.builder, type = "cross", table = arguments.table )
-        );
+        var join = newJoin( builder = arguments.builder, type = "cross", table = arguments.table );
+        if ( arguments.builder.getPreventDuplicateJoins() && containsJoin( arguments.builder, join ) ) {
+            return arguments.builder;
+        }
+        return attachJoin( arguments.builder, join );
     }
 
     /**
      * Attaches a raw cross join while preserving its expression for grammar compilation.
      */
     public QueryBuilder function crossJoinRaw( required QueryBuilder builder, required string table ) {
-        arguments.builder
-            .getJoins()
-            .append(
-                newJoin( builder = arguments.builder, type = "cross", table = arguments.builder.raw( arguments.table ) )
-            );
-        return arguments.builder;
+        return crossJoin( arguments.builder, arguments.builder.raw( arguments.table ) );
     }
 
     /**
@@ -239,8 +235,13 @@ component {
                 arguments.input.getBindings()
             );
 
+            var joinCount = arguments.builder.getJoins().len();
             var result = crossJoin( arguments.builder, table );
-            arguments.builder.setGrammarCompiledJoin( true );
+            if ( arguments.builder.getJoins().len() > joinCount ) {
+                arguments.builder.setGrammarCompiledJoin( true );
+            } else {
+                executor.restoreCommonTableState( arguments.builder, commonTableState );
+            }
             return result;
         } catch ( any e ) {
             executor.restoreCommonTableState( arguments.builder, commonTableState );

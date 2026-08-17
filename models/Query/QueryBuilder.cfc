@@ -2676,42 +2676,54 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             throw( type = "InvalidSQLType", message = "Please pass structs with at least one column to insertBulk." );
         }
 
-        clearBindings();
-
-        var safeChunkSize = arguments.values.len();
-        if ( !getGrammar().supportsBulkInsert() && getGrammar().parameterLimit > 0 ) {
-            safeChunkSize = max( 1, floor( getGrammar().parameterLimit / columnCount ) );
-        }
-        if ( arguments.chunkSize > 0 ) {
-            safeChunkSize = min( safeChunkSize, arguments.chunkSize );
+        var originalBindings = {};
+        for ( var bindingType in variables.bindings ) {
+            originalBindings[ bindingType ] = variables.bindings[ bindingType ].isEmpty()
+             ? []
+             : arraySlice( variables.bindings[ bindingType ], 1 );
         }
 
-        var results = [];
-        for ( var offset = 1; offset <= arguments.values.len(); offset += safeChunkSize ) {
-            var batchSize = min( safeChunkSize, arguments.values.len() - offset + 1 );
-            var batch = arguments.values.slice( offset, batchSize );
+        try {
+            clearBindings();
 
-            if ( getGrammar().supportsBulkInsert() ) {
-                var bulkInsert = getGrammar().prepareBulkInsert( this, batch, arguments.sqlTypes );
-                addBindings( [ bulkInsert.binding ], "insert" );
-                var sql = withWrappingContext( function() {
-                    return getGrammar().compileBulkInsert( this, bulkInsert.columns );
-                } );
-                if ( arguments.toSql ) {
-                    results.append( sql );
-                } else {
-                    results.append( runQuery( sql, arguments.options, "result" ) );
-                    clearBindings( only = [ "insert" ] );
-                }
-            } else {
-                var batchQuery = getCollaborator( "QueryExecutor" ).prepareInternalExecutionBuilder( this, clone() );
-                results.append(
-                    batchQuery.insert( values = batch, options = arguments.options, toSql = arguments.toSql )
-                );
+            var safeChunkSize = arguments.values.len();
+            if ( !getGrammar().supportsBulkInsert() && getGrammar().parameterLimit > 0 ) {
+                safeChunkSize = max( 1, floor( getGrammar().parameterLimit / columnCount ) );
             }
-        }
+            if ( arguments.chunkSize > 0 ) {
+                safeChunkSize = min( safeChunkSize, arguments.chunkSize );
+            }
 
-        return results;
+            var results = [];
+            for ( var offset = 1; offset <= arguments.values.len(); offset += safeChunkSize ) {
+                var batchSize = min( safeChunkSize, arguments.values.len() - offset + 1 );
+                var batch = arguments.values.slice( offset, batchSize );
+
+                if ( getGrammar().supportsBulkInsert() ) {
+                    var bulkInsert = getGrammar().prepareBulkInsert( this, batch, arguments.sqlTypes );
+                    addBindings( [ bulkInsert.binding ], "insert" );
+                    var sql = withWrappingContext( function() {
+                        return getGrammar().compileBulkInsert( this, bulkInsert.columns );
+                    } );
+                    if ( arguments.toSql ) {
+                        results.append( sql );
+                    } else {
+                        results.append( runQuery( sql, arguments.options, "result" ) );
+                        clearBindings( only = [ "insert" ] );
+                    }
+                } else {
+                    var batchQuery = getCollaborator( "QueryExecutor" ).prepareInternalExecutionBuilder( this, clone() );
+                    results.append(
+                        batchQuery.insert( values = batch, options = arguments.options, toSql = arguments.toSql )
+                    );
+                }
+            }
+
+            return results;
+        } catch ( any e ) {
+            variables.bindings = originalBindings;
+            rethrow;
+        }
     }
 
     /**

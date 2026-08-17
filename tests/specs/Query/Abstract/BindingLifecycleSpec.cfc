@@ -344,6 +344,18 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getRawBindings().where[ 1 ].value ).toBe( 42 );
                 expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""tenant_id"" = ?" );
             } );
+
+            it( "preserves existing bindings when bulk-insert validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).where( "tenant_id", 42 );
+
+                expect( function() {
+                    builder.insertBulk( values = [ { "email": { "unexpected": "value" } } ], toSQL = true );
+                } ).toThrow( type = "QBInvalidQueryParam" );
+
+                expect( builder.getRawBindings().where ).toHaveLength( 1 );
+                expect( builder.getRawBindings().where[ 1 ].value ).toBe( 42 );
+                expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""tenant_id"" = ?" );
+            } );
         } );
     }
 

@@ -506,11 +506,11 @@ component singleton displayname="QueryUtils" accessors="true" {
 
         if ( isStruct( value ) ) {
             if ( structKeyExists( value, "cfsqltype" ) ) {
-                return value.cfsqltype;
+                return normalizeSqlType( value.cfsqltype );
             }
 
             if ( structKeyExists( value, "sqltype" ) ) {
-                return value.sqltype;
+                return normalizeSqlType( value.sqltype );
             }
 
             return structKeyExists( value, "value" ) ? inferSqlType( value.value, grammar ) : "VARCHAR";
@@ -536,7 +536,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             return "NULL";
         }
 
-        var normalizedSqlType = reReplaceNoCase( trim( arguments.sqltype ), "^cf_sql_", "" );
+        var normalizedSqlType = normalizeSqlType( arguments.sqltype );
         if (
             listFindNoCase( "BOOLEAN,OTHER", normalizedSqlType ) &&
             checkIsActuallyBoolean( arguments.value )
@@ -581,6 +581,10 @@ component singleton displayname="QueryUtils" accessors="true" {
                     "all"
                 ) & "'";
         }
+    }
+
+    private string function normalizeSqlType( required string sqltype ) {
+        return reReplaceNoCase( trim( arguments.sqltype ), "^cf_sql_", "" ).uCase();
     }
 
     /**
@@ -879,7 +883,7 @@ component singleton displayname="QueryUtils" accessors="true" {
 
     private string function deriveNumericSqlType( required numeric value ) {
         var isInteger = reFind( "^-?\d+$", arguments.value ) > 0;
-        return isInteger ? variables.integerSqlType : variables.decimalSqlType;
+        return normalizeSqlType( isInteger ? variables.integerSqlType : variables.decimalSqlType );
     }
 
     /**

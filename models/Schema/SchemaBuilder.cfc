@@ -587,9 +587,13 @@ component accessors="true" {
         }
         var dropOptions = arguments.options;
         var dropSchema = arguments.schema;
-        var statements = getGrammar().withShouldWrapValuesContext( getShouldWrapValues(), function() {
-            return getGrammar().compileDropAllObjects( dropOptions, dropSchema, this );
-        } );
+        var grammar = getGrammar();
+        grammar.pushShouldWrapValuesContext( getShouldWrapValues() );
+        try {
+            var statements = grammar.compileDropAllObjects( dropOptions, dropSchema, this );
+        } finally {
+            grammar.popShouldWrapValuesContext();
+        }
         if ( arguments.execute ) {
             statements.each( function( statement ) {
                 getGrammar().runQuery(

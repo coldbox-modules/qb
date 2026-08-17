@@ -537,6 +537,12 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         var normalizedSqlType = reReplaceNoCase( trim( arguments.sqltype ), "^cf_sql_", "" );
+        if (
+            listFindNoCase( "BOOLEAN,OTHER", normalizedSqlType ) &&
+            checkIsActuallyBoolean( arguments.value )
+        ) {
+            return arguments.value ? "TRUE" : "FALSE";
+        }
         switch ( normalizedSqlType ) {
             case "INTEGER":
             case "NUMERIC":

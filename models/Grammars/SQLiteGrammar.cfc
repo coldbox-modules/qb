@@ -574,6 +574,17 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileAddColumn( blueprint, commandParameters ) {
+        if (
+            !getUtils().isExpression( arguments.commandParameters.column ) &&
+            structKeyExists( arguments.commandParameters.column, "getAutoIncrement" ) &&
+            arguments.commandParameters.column.getAutoIncrement()
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQLite does not support adding auto-incrementing primary-key columns to existing tables."
+            );
+        }
+
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {

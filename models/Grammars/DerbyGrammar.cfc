@@ -372,7 +372,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     function wrapValue( required any value ) {
-        if ( !variables.shouldWrapValues ) {
+        if ( !getShouldWrapValues() ) {
             return arguments.value;
         }
 
@@ -627,7 +627,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function typeEnum( column ) {
         blueprint.appendIndex(
             type = "check",
-            name = "enum_#blueprint.getTable()#_#column.getName()#",
+            name = "enum_#listLast( blueprint.getTable(), "." )#_#column.getName()#",
             columns = column
         );
         return "VARCHAR(255)";

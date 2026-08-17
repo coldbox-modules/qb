@@ -74,6 +74,7 @@ component displayname="Grammar" accessors="true" singleton {
         variables.tableAliasOperator = " AS ";
         variables.cteColumnsRequireParentheses = false;
         variables.shouldWrapValues = true;
+        variables.shouldWrapValuesContext = createObject( "java", "java.lang.ThreadLocal" ).init();
         // These are overwritten by WireBox, if it exists.
         variables.interceptorService = {
             "processState": function() {
@@ -1633,7 +1634,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     function wrapValue( required any value ) {
-        if ( !variables.shouldWrapValues ) {
+        if ( !getShouldWrapValues() ) {
             return arguments.value;
         }
 
@@ -2501,6 +2502,10 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function getShouldWrapValues() {
+        var context = variables.shouldWrapValuesContext.get();
+        if ( !isNull( context ) && !context.isEmpty() ) {
+            return context.last();
+        }
         if ( isNull( variables.shouldWrapValues ) ) {
             throw( type = "InvalidState", message = "The shouldWrapValues property has not been set." );
         }
@@ -2511,8 +2516,38 @@ component displayname="Grammar" accessors="true" singleton {
         if ( isNull( arguments.shouldWrap ) ) {
             throw( type = "InvalidState", message = "The shouldWrapValues property has not been set." );
         }
-        variables.shouldWrapValues = arguments.shouldWrap;
+        var context = variables.shouldWrapValuesContext.get();
+        if ( !isNull( context ) && !context.isEmpty() ) {
+            context[ context.len() ] = arguments.shouldWrap;
+        } else {
+            variables.shouldWrapValues = arguments.shouldWrap;
+        }
         return this;
+    }
+
+    /**
+     * Runs a compiler callback with a wrapping preference isolated to the current thread.
+     * Nested compiler calls restore the previous preference when they complete.
+     *
+     * @shouldWrap The wrapping preference, or null to use the current grammar preference.
+     * @callback   The compiler callback to run.
+     */
+    public any function withShouldWrapValuesContext( any shouldWrap, required function callback ) {
+        var context = variables.shouldWrapValuesContext.get();
+        if ( isNull( context ) ) {
+            context = [];
+            variables.shouldWrapValuesContext.set( context );
+        }
+
+        context.append( isNull( arguments.shouldWrap ) ? getShouldWrapValues() : arguments.shouldWrap );
+        try {
+            return arguments.callback();
+        } finally {
+            context.deleteAt( context.len() );
+            if ( context.isEmpty() ) {
+                variables.shouldWrapValuesContext.remove();
+            }
+        }
     }
 
 }

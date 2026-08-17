@@ -100,6 +100,9 @@ component {
     public QueryBuilder function cloneBuilder( required QueryBuilder builder ) {
         var clonedQuery = arguments.builder.newQuery();
         copyQueryState( arguments.builder, clonedQuery );
+        if ( arguments.builder.isPretending() ) {
+            clonedQuery.pretend();
+        }
         return clonedQuery;
     }
 

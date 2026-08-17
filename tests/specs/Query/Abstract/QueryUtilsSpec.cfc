@@ -696,6 +696,35 @@ component extends="testbox.system.BaseSpec" {
 
                 expect( first.isEqualTo( second ) ).toBeTrue();
             } );
+
+            it( "distinguishes table aliases", function() {
+                var first = new qb.models.Query.QueryBuilder().from( "users AS first_user" );
+                var second = new qb.models.Query.QueryBuilder().from( "users AS second_user" );
+
+                expect( first.isEqualTo( second ) ).toBeFalse();
+            } );
+
+            it( "distinguishes recursive common table expressions", function() {
+                var recursive = new qb.models.Query.QueryBuilder().withRecursive( "numbers", function( q ) {
+                    q.select( "id" ).from( "numbers" );
+                } );
+                var nonRecursive = new qb.models.Query.QueryBuilder().with( "numbers", function( q ) {
+                    q.select( "id" ).from( "numbers" );
+                } );
+
+                expect( recursive.isEqualTo( nonRecursive ) ).toBeFalse();
+            } );
+
+            it( "compares raw expressions without throwing", function() {
+                var first = new qb.models.Query.QueryBuilder().selectRaw( "? AS id", [ 1 ] );
+                var equivalent = new qb.models.Query.QueryBuilder().selectRaw( "? AS id", [ 1 ] );
+                var differentBinding = new qb.models.Query.QueryBuilder().selectRaw( "? AS id", [ 2 ] );
+                var differentSql = new qb.models.Query.QueryBuilder().selectRaw( "? AS user_id", [ 1 ] );
+
+                expect( first.isEqualTo( equivalent ) ).toBeTrue();
+                expect( first.isEqualTo( differentBinding ) ).toBeFalse();
+                expect( first.isEqualTo( differentSql ) ).toBeFalse();
+            } );
         } );
 
         describe( "aggregate state", function() {

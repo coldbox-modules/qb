@@ -62,6 +62,28 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                     "CREATE TABLE ""tenant"".""users"" (""status"" ""tenant"".""status"" NOT NULL DEFAULT 'active')"
                 ] );
             } );
+
+            it( "keeps generated constraint names unqualified and qualifies foreign targets", function() {
+                var statements = getBuilder()
+                    .setDefaultSchema( "app" )
+                    .create(
+                        "accounts",
+                        function( table ) {
+                            table.integer( "id" ).primaryKey();
+                            table
+                                .integer( "owner_id" )
+                                .references( "id" )
+                                .onTable( "users" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [
+                    "CREATE TABLE ""app"".""accounts"" (""id"" INTEGER NOT NULL, ""owner_id"" INTEGER NOT NULL, CONSTRAINT ""pk_accounts_id"" PRIMARY KEY (""id""), CONSTRAINT ""fk_accounts_owner_id"" FOREIGN KEY (""owner_id"") REFERENCES ""app"".""users"" (""id"") ON UPDATE NO ACTION ON DELETE NO ACTION)"
+                ] );
+            } );
         } );
     }
 

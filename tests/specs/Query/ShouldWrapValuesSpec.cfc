@@ -96,6 +96,41 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.newQuery().getShouldWrapValues() ).toBeFalse();
                 expect( builder.clone().toSQL() ).toBe( "SELECT id FROM users" );
             } );
+
+            it( "isolates per-query wrapping overrides during concurrent compilation", function() {
+                var grammar = new tests.resources.ConcurrentWrappingGrammar();
+                var unwrappedBuilder = new qb.models.Query.QueryBuilder( grammar )
+                    .withoutWrappingValues()
+                    .select( "unwrapped_column" )
+                    .from( "users" );
+                var wrappedBuilder = new qb.models.Query.QueryBuilder( grammar )
+                    .withWrappingValues()
+                    .select( "wrapped_column" )
+                    .from( "users" );
+                var unwrappedThreadName = "unwrappedCompilation#replace( createUUID(), "-", "", "all" )#";
+                var wrappedThreadName = "wrappedCompilation#replace( createUUID(), "-", "", "all" )#";
+                var compilationResults = createObject( "java", "java.util.concurrent.ConcurrentHashMap" ).init();
+
+                thread name=unwrappedThreadName action="run" builder=unwrappedBuilder results=compilationResults {
+                    attributes.results.put( "unwrapped", attributes.builder.toSQL() );
+                }
+                thread name=wrappedThreadName action="run" builder=wrappedBuilder results=compilationResults {
+                    attributes.results.put( "wrapped", attributes.builder.toSQL() );
+                }
+                thread action="join" name="#unwrappedThreadName#,#wrappedThreadName#" timeout="10000";
+
+                if (
+                    cfthread[ unwrappedThreadName ].status != "COMPLETED" ||
+                    cfthread[ wrappedThreadName ].status != "COMPLETED"
+                ) {
+                    throw(
+                        message = "Concurrent compilation did not complete",
+                        detail = serializeJSON( { "unwrapped": cfthread[ unwrappedThreadName ], "wrapped": cfthread[ wrappedThreadName ] } )
+                    );
+                }
+                expect( compilationResults.get( "unwrapped" ) ).toBe( "SELECT unwrapped_column FROM users" );
+                expect( compilationResults.get( "wrapped" ) ).toBe( "SELECT ""wrapped_column"" FROM ""users""" );
+            } );
         } );
 
         describe( "SQL literal escaping", function() {

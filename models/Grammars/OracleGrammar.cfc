@@ -87,7 +87,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      */
     public any function runQuery( sql, bindings, options ) {
         var result = super.runQuery( argumentCollection = arguments );
-        if ( isQuery( result ) && result.recordCount > 0 ) {
+        if (
+            isQuery( result ) &&
+            findNoCase( "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (", arguments.sql ) > 0
+        ) {
             return utils.queryRemoveColumns( result, "QB_RN" );
         }
         return result;

@@ -2731,38 +2731,53 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         struct options = {},
         boolean toSql = false
     ) {
-        if ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) {
-            var callback = arguments.source;
-            arguments.source = newQuery();
-            callback( arguments.source );
+        var originalBindings = {};
+        for ( var bindingType in variables.bindings ) {
+            originalBindings[ bindingType ] = variables.bindings[ bindingType ].isEmpty()
+             ? []
+             : arraySlice( variables.bindings[ bindingType ], 1 );
         }
-        arguments.source = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.source );
+        var executor = getCollaborator( "QueryExecutor" );
+        var commonTableState = executor.captureCommonTableState( this );
 
-        clearBindings( except = [ "commonTables" ] );
+        try {
+            if ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) {
+                var callback = arguments.source;
+                arguments.source = newQuery();
+                callback( arguments.source );
+            }
+            arguments.source = executor.snapshotBuilder( this, arguments.source );
 
-        if ( isNull( arguments.columns ) ) {
-            arguments.columns = arguments.source
-                .getColumns()
-                .map( function( column ) {
-                    return getGrammar().extractAlias( mapToColumnType( column ) );
-                } );
+            clearBindings( except = [ "commonTables" ] );
+
+            if ( isNull( arguments.columns ) ) {
+                arguments.columns = arguments.source
+                    .getColumns()
+                    .map( function( column ) {
+                        return getGrammar().extractAlias( mapToColumnType( column ) );
+                    } );
+            }
+
+            var formattedColumns = arguments.columns.map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
+            } );
+
+            addBindingsFromBuilder( arguments.source );
+
+            formattedColumns.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
+            } );
+
+            var sourceQuery = arguments.source;
+            var sql = withWrappingContext( function() {
+                return getGrammar().compileInsertUsing( this, formattedColumns, sourceQuery );
+            } );
+        } catch ( any e ) {
+            executor.restoreCommonTableState( this, commonTableState );
+            variables.bindings = originalBindings;
+            rethrow;
         }
-
-        var formattedColumns = arguments.columns.map( function( column ) {
-            var formatted = listLast( applyColumnFormatter( column ), "." );
-            return { "original": column, "formatted": formatted };
-        } );
-
-        addBindingsFromBuilder( arguments.source );
-
-        formattedColumns.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-
-        var sourceQuery = arguments.source;
-        var sql = withWrappingContext( function() {
-            return getGrammar().compileInsertUsing( this, formattedColumns, sourceQuery );
-        } );
 
         if ( toSql ) {
             return sql;

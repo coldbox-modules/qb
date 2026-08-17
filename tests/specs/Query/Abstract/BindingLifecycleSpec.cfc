@@ -328,6 +328,22 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getRawBindings().where[ 1 ].value ).toBe( 42 );
                 expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""tenant_id"" = ?" );
             } );
+
+            it( "preserves existing bindings when insert-using validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().from( "users" ).where( "tenant_id", 42 );
+                var source = builder
+                    .newQuery()
+                    .from( "pending_users" )
+                    .select( "email" );
+
+                expect( function() {
+                    builder.insertUsing( source = source, columns = [ { "unexpected": "value" } ], toSQL = true );
+                } ).toThrow();
+
+                expect( builder.getRawBindings().where ).toHaveLength( 1 );
+                expect( builder.getRawBindings().where[ 1 ].value ).toBe( 42 );
+                expect( builder.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""tenant_id"" = ?" );
+            } );
         } );
     }
 

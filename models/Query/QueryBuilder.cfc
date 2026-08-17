@@ -2754,9 +2754,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var source = arguments.source;
+        var sourceQuery = arguments.source;
         var sql = withWrappingContext( function() {
-            return getGrammar().compileInsertUsing( this, formattedColumns, source );
+            return getGrammar().compileInsertUsing( this, formattedColumns, sourceQuery );
         } );
 
         if ( toSql ) {
@@ -3157,18 +3157,25 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var upsertArguments = arguments;
+        var updateForUpsert = arguments.update;
+        var targetForUpsert = arguments.target;
+        var hasSourceForUpsert = !isNull( arguments.source );
+        if ( hasSourceForUpsert ) {
+            var sourceForUpsert = arguments.source;
+        }
+        var deleteUnmatchedForUpsert = arguments.deleteUnmatched;
+        var matchNullsForUpsert = arguments.matchNulls;
         var sql = withWrappingContext( function() {
             return getGrammar().compileUpsert(
                 this,
                 columns,
                 newInsertBindings,
                 updateArray,
-                upsertArguments.update,
-                upsertArguments.target,
-                isNull( upsertArguments.source ) ? javacast( "null", "" ) : upsertArguments.source,
-                upsertArguments.deleteUnmatched,
-                upsertArguments.matchNulls
+                updateForUpsert,
+                targetForUpsert,
+                hasSourceForUpsert ? sourceForUpsert : javacast( "null", "" ),
+                deleteUnmatchedForUpsert,
+                matchNullsForUpsert
             );
         } );
 

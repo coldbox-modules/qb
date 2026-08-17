@@ -3806,9 +3806,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         struct options = {}
     ) {
         return withReturnFormat( "query", function() {
-            select( column );
             take( 1 );
-            var result = get( options = options );
+            var result = get( columns = column, options = options );
             if ( result.recordCount <= 0 ) {
                 if ( throwWhenNotFound ) {
                     throw(
@@ -3857,8 +3856,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      */
     public array function values( required any column, struct options = {} ) {
         return withReturnFormat( "query", function() {
-            select( column );
-            var result = get( options = options );
+            var result = get( columns = column, options = options );
             var columnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
                 result
             )[ 1 ].name;

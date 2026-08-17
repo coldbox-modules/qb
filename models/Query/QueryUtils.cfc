@@ -895,7 +895,14 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         return isDate( arguments.value ) && arrayContainsNoCase(
-            [ "OleDateTime", "DateTimeImpl", "DateTime" ],
+            [
+                "Date",
+                "DateTime",
+                "DateTimeImpl",
+                "OleDateTime",
+                "Time",
+                "Timestamp"
+            ],
             className
         );
     }

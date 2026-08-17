@@ -428,6 +428,19 @@ component extends="testbox.system.BaseSpec" {
                 ).toBe( "SELECT q'[isn't ? -- /* a placeholder */]' AS marker FROM users WHERE id = 42" );
             } );
 
+            it( "preserves question marks in nested PostgreSQL block comments", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT 1 /* outer ? /* inner ? */ still outer ? */ WHERE id = ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.PostgresGrammar()
+                    )
+                ).toBe( "SELECT 1 /* outer ? /* inner ? */ still outer ? */ WHERE id = 42" );
+            } );
+
             it( "rejects bindings without matching placeholders", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
 

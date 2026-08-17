@@ -292,7 +292,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " DELETE FROM #wrapQueryTable( query )# #compileWheres( query, query.getWheres() )##returningClause#"
+                compileCommonTables( query, query.getCommonTables() ) & " DELETE FROM #wrapQueryTable( query )# #compileWheres( query, query.getWheres() )##returningClause# #compileOrders( query, query.getOrders() )# #compileLimitValue( query, query.getLimitValue() )# #compileOffsetValue( query, query.getOffsetValue() )#"
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {

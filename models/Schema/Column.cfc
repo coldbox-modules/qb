@@ -165,7 +165,7 @@ component accessors="true" {
      * @returns   The TableIndex instance created.
      */
     public TableIndex function primaryKey( string indexName ) {
-        param arguments.indexName = "pk_#getBlueprint().getTable()#_#getName()#";
+        param arguments.indexName = "pk_#listLast( getBlueprint().getTable(), "." )#_#getName()#";
         return getBlueprint().appendIndex( type = "primary", columns = getName(), name = arguments.indexName );
     }
 
@@ -183,7 +183,7 @@ component accessors="true" {
             type = "foreign",
             columns = [ column ],
             foreignKey = [ getName() ],
-            name = "fk_#getBlueprint().getTable()#_#getName()#"
+            name = "fk_#listLast( getBlueprint().getTable(), "." )#_#getName()#"
         );
     }
 

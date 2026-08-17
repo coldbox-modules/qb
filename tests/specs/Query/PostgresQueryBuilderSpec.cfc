@@ -72,6 +72,29 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
                 expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ false, 42 ] );
             } );
         } );
+
+        describe( "PostgreSQL source upserts", function() {
+            it( "falls back to insert using when the update list is explicitly empty", function() {
+                var source = getBuilder()
+                    .select( [ "id", "email" ] )
+                    .from( "incoming_users" )
+                    .where( "active", true );
+
+                var destination = getBuilder().from( "users" );
+                var sql = destination.upsert(
+                    source = source,
+                    values = [ "id", "email" ],
+                    target = [ "id" ],
+                    update = [],
+                    toSql = true
+                );
+
+                expect( sql ).toBeWithCase(
+                    "INSERT INTO ""users"" (""id"", ""email"") SELECT ""id"", ""email"" FROM ""incoming_users"" WHERE ""active"" = ?"
+                );
+                expect( getTestBindings( destination ) ).toBe( [ true ] );
+            } );
+        } );
     }
 
     function selectAllColumns() {

@@ -1577,6 +1577,12 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            it( "preserves pretend mode when cloning a builder", function() {
+                var builder = getBuilder().pretend();
+
+                expect( builder.clone().isPretending() ).toBeTrue();
+            } );
+
             it( "carries a resolved struct return formatter to new queries and clones", function() {
                 var registry = new qb.models.Query.ReturnFormatterRegistry();
                 registry.registerReturnFormatter( "structFormatter", function() {

@@ -2897,34 +2897,42 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             return compareNoCase( a.formatted, b.formatted );
         } );
 
-        for ( var column in updateArray ) {
-            var value = arguments.values[ column.original ];
-            if ( isCustomFunction( value ) || isClosure( value ) ) {
-                var subselect = newQuery();
-                value( subselect );
-                arguments.values[ column.original ] = getCollaborator( "QueryExecutor" ).snapshotBuilder(
-                    this,
-                    subselect
-                );
-                addBindings( arguments.values[ column.original ].getBindings(), "update" );
-            } else if ( getUtils().isBuilder( value ) ) {
-                arguments.values[ column.original ] = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, value );
-                addBindings( arguments.values[ column.original ].getBindings(), "update" );
-            } else if ( getUtils().isExpression( value ) ) {
-                addExpressionBindings( value, "update" );
-            } else {
-                addBindings( getUtils().extractBinding( value, variables.grammar ), "update" );
+        var newUpdateBindings = [];
+        var executor = getCollaborator( "QueryExecutor" );
+        var commonTableState = executor.captureCommonTableState( this );
+        var sql = "";
+        try {
+            for ( var column in updateArray ) {
+                var value = arguments.values[ column.original ];
+                if ( isCustomFunction( value ) || isClosure( value ) ) {
+                    var subselect = newQuery();
+                    value( subselect );
+                    arguments.values[ column.original ] = executor.snapshotBuilder( this, subselect );
+                    newUpdateBindings.append( arguments.values[ column.original ].getBindings(), true );
+                } else if ( getUtils().isBuilder( value ) ) {
+                    arguments.values[ column.original ] = executor.snapshotBuilder( this, value );
+                    newUpdateBindings.append( arguments.values[ column.original ].getBindings(), true );
+                } else if ( getUtils().isExpression( value ) ) {
+                    newUpdateBindings.append( extractExpressionBindings( value ), true );
+                } else {
+                    newUpdateBindings.append( getUtils().extractBinding( value, variables.grammar ) );
+                }
             }
+
+            updateArray.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
+            } );
+
+            var updateValues = arguments.values;
+            sql = withWrappingContext( function() {
+                return getGrammar().compileUpdate( this, updateArray, updateValues );
+            } );
+        } catch ( any e ) {
+            executor.restoreCommonTableState( this, commonTableState );
+            rethrow;
         }
 
-        updateArray.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-
-        var updateValues = arguments.values;
-        var sql = withWrappingContext( function() {
-            return getGrammar().compileUpdate( this, updateArray, updateValues );
-        } );
+        variables.bindings.update = newUpdateBindings;
 
         if ( toSql ) {
             return sql;

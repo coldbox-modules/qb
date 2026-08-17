@@ -84,7 +84,14 @@ component {
         var type = arguments.negate ? "notIn" : "in";
         var typedColumn = toColumnType( arguments.builder, arguments.column );
         var bindings = arguments.values.isEmpty() ? [] : arguments.builder.extractColumnBindings( [ typedColumn ] );
-        for ( var value in arguments.values ) {
+        for ( var valueIndex = 1; valueIndex <= arguments.values.len(); valueIndex++ ) {
+            if ( !arrayIsDefined( arguments.values, valueIndex ) || isNull( arguments.values[ valueIndex ] ) ) {
+                bindings.append(
+                    arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
+                );
+                continue;
+            }
+            var value = arguments.values[ valueIndex ];
             if ( arguments.builder.getUtils().isExpression( value ) ) {
                 bindings.append( arguments.builder.extractExpressionBindings( value ), true );
             } else {

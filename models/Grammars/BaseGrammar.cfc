@@ -710,11 +710,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereIn( required QueryBuilder query, required struct where ) {
-        var placeholderString = where.values
-            .map( function( value ) {
-                return variables.utils.isExpression( value ) ? value.getSql() : "?";
-            } )
-            .toList( ", " );
+        var placeholderString = compileWhereInPlaceholders( where.values );
         if ( placeholderString == "" ) {
             return "0 = 1";
         }
@@ -730,15 +726,27 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereNotIn( required QueryBuilder query, required struct where ) {
-        var placeholderString = where.values
-            .map( function( value ) {
-                return variables.utils.isExpression( value ) ? value.getSql() : "?";
-            } )
-            .toList( ", " );
+        var placeholderString = compileWhereInPlaceholders( where.values );
         if ( placeholderString == "" ) {
             return "1 = 1";
         }
         return "#wrapColumn( where.column )# NOT IN (#placeholderString#)";
+    }
+
+    /**
+     * Compiles placeholders for IN values while preserving sparse and null array positions.
+     */
+    private string function compileWhereInPlaceholders( required array values ) {
+        var placeholders = [];
+        for ( var valueIndex = 1; valueIndex <= arguments.values.len(); valueIndex++ ) {
+            if ( !arrayIsDefined( arguments.values, valueIndex ) || isNull( arguments.values[ valueIndex ] ) ) {
+                placeholders.append( "?" );
+                continue;
+            }
+            var value = arguments.values[ valueIndex ];
+            placeholders.append( variables.utils.isExpression( value ) ? value.getSql() : "?" );
+        }
+        return placeholders.toList( ", " );
     }
 
     /**

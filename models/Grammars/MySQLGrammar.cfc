@@ -321,14 +321,24 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 message = "This grammar does not support DELETE actions with a RETURNING clause."
             );
         }
+        var hasJoins = !arguments.query.getJoins().isEmpty();
+        if (
+            hasJoins && (
+                !arguments.query.getOrders().isEmpty() ||
+                !isNull( arguments.query.getLimitValue() )
+            )
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "MySQL does not support ORDER BY or LIMIT on multi-table DELETE statements."
+            );
+        }
 
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
-
-            var hasJoins = !arguments.query.getJoins().isEmpty();
 
             return trim(
                 arrayToList(

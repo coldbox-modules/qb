@@ -117,6 +117,15 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Returns the concrete grammar used for dialect-specific behavior.
+     * Concrete grammars resolve to themselves while proxy grammars may override
+     * this method to expose their discovered grammar.
+     */
+    public any function getResolvedGrammar() {
+        return this;
+    }
+
+    /**
      * Returns the binding groups in the order they appear in an UPDATE statement.
      */
     public array function getUpdateBindingOrder( required QueryBuilder query ) {

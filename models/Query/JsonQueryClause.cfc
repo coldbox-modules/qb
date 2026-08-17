@@ -64,6 +64,21 @@ component {
     ) {
         var containsPath = jsonPath( builder = arguments.builder, column = arguments.column, path = arguments.path );
         containsPath.value.nullValue = arguments.valueDefinition.isNull;
+        var binding = {};
+        if ( arguments.valueDefinition.isNull ) {
+            var preparedNullValue = arguments.builder.getGrammar().prepareJsonContainsBinding();
+            binding = isNull( preparedNullValue )
+             ? arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
+             : arguments.builder.getUtils().extractBinding( preparedNullValue, arguments.builder.getGrammar() );
+        } else {
+            binding = arguments.builder
+                .getUtils()
+                .extractBinding(
+                    arguments.builder.getGrammar().prepareJsonContainsBinding( arguments.valueDefinition.value ),
+                    arguments.builder.getGrammar()
+                );
+        }
+
         arguments.builder
             .getWheres()
             .append( {
@@ -72,26 +87,7 @@ component {
                 combinator: arguments.combinator,
                 negate: arguments.negate
             } );
-
-        if ( arguments.valueDefinition.isNull ) {
-            var preparedNullValue = arguments.builder.getGrammar().prepareJsonContainsBinding();
-            arguments.builder.addBindings(
-                isNull( preparedNullValue )
-                 ? arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
-                 : arguments.builder.getUtils().extractBinding( preparedNullValue, arguments.builder.getGrammar() ),
-                "where"
-            );
-        } else {
-            arguments.builder.addBindings(
-                arguments.builder
-                    .getUtils()
-                    .extractBinding(
-                        arguments.builder.getGrammar().prepareJsonContainsBinding( arguments.valueDefinition.value ),
-                        arguments.builder.getGrammar()
-                    ),
-                "where"
-            );
-        }
+        arguments.builder.addBindings( binding, "where" );
         return arguments.builder;
     }
 

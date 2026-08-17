@@ -302,6 +302,23 @@ component extends="testbox.system.BaseSpec" {
                 ).toBe( "SELECT * FROM records WHERE payload ? 'name'" );
             } );
 
+            it( "uses the resolved grammar when replacing bindings", function() {
+                var binding = utils.extractBinding( "name", variables.mockGrammar );
+                var postgresGrammar = new qb.models.Grammars.PostgresGrammar();
+                var autoDiscover = getMockBox()
+                    .createMock( "qb.models.Grammars.AutoDiscover" )
+                    .$( "autoDiscoverGrammar", postgresGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT * FROM records WHERE payload ? ?",
+                        [ binding ],
+                        true,
+                        autoDiscover
+                    )
+                ).toBe( "SELECT * FROM records WHERE payload ? 'name'" );
+            } );
+
             it( "preserves question marks in MySQL hash comments", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
 
@@ -383,6 +400,20 @@ component extends="testbox.system.BaseSpec" {
                 ).toBe( "SELECT 'isn''t ?' AS marker FROM users WHERE id = 42" );
             } );
 
+            it( "treats backslashes as ordinary characters in PostgreSQL string literals", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+                var slash = chr( 92 );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT 'C:#slash#' AS path FROM users WHERE id = ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.PostgresGrammar()
+                    )
+                ).toBe( "SELECT 'C:#slash#' AS path FROM users WHERE id = 42" );
+            } );
+
             it( "preserves question marks in Oracle alternative quoted literals", function() {
                 var binding = utils.extractBinding( 42, variables.mockGrammar );
                 var oracleGrammar = new qb.models.Grammars.OracleGrammar( utils );
@@ -446,6 +477,14 @@ component extends="testbox.system.BaseSpec" {
                 expect( binding.scale ).toBe( 5 );
                 expect( binding.list ).toBe( false );
                 expect( binding.null ).toBe( false );
+            } );
+
+            it( "calculates scale for scientific notation", function() {
+                var smallDecimal = createObject( "java", "java.math.BigDecimal" ).init( "1.23E-4" );
+                var smallerDecimal = createObject( "java", "java.math.BigDecimal" ).init( "1.0E-7" );
+
+                expect( utils.extractBinding( smallDecimal, variables.mockGrammar ).scale ).toBe( 6 );
+                expect( utils.extractBinding( smallerDecimal, variables.mockGrammar ).scale ).toBe( 8 );
             } );
 
             it( "does not set a scale for integers", function() {

@@ -254,6 +254,22 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1", options: {} } );
                 } );
 
+                it( "applies the column formatter once when retrieving a value", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [ { name: "foo" } ] );
+                    builder.$( "runQuery", expectedQuery );
+
+                    var result = builder
+                        .setColumnFormatter( ( column ) => "some_table.#column#" )
+                        .from( "users" )
+                        .value( "name" );
+
+                    expect( result ).toBe( "foo" );
+                    expect( builder.$callLog().runQuery[ 1 ].sql ).toBe(
+                        "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1"
+                    );
+                } );
+
                 it( "returns the defaultValue when calling value with an empty query", function() {
                     var builder = getBuilder();
                     var expectedQuery = queryNew( "name", "varchar", [] );
@@ -413,6 +429,22 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""some_table"".""name"" FROM ""users""", options: {} } );
+                } );
+
+                it( "applies the column formatter once when retrieving values", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [ { name: "foo" }, { name: "bar" } ] );
+                    builder.$( "runQuery", expectedQuery );
+
+                    var result = builder
+                        .setColumnFormatter( ( column ) => "some_table.#column#" )
+                        .from( "users" )
+                        .values( "name" );
+
+                    expect( result ).toBe( [ "foo", "bar" ] );
+                    expect( builder.$callLog().runQuery[ 1 ].sql ).toBe(
+                        "SELECT ""some_table"".""name"" FROM ""users"""
+                    );
                 } );
 
                 it( "can call values with a raw expression", function() {
@@ -725,6 +757,15 @@ component extends="testbox.system.BaseSpec" {
 
         describe( "aggregate functions", function() {
             describe( "count", function() {
+                it( "applies the column formatter to aggregate columns", function() {
+                    var sql = getBuilder()
+                        .setColumnFormatter( ( column ) => column == "*" ? column : "users.#column#" )
+                        .from( "users" )
+                        .count( column = "id", toSQL = true );
+
+                    expect( sql ).toBe( "SELECT COALESCE(COUNT(""users"".""id""), 0) AS ""aggregate"" FROM ""users""" );
+                } );
+
                 it( "can count all the records on a table", function() {
                     var builder = getBuilder();
                     var expectedCount = 1;
@@ -1905,6 +1946,25 @@ component extends="testbox.system.BaseSpec" {
                     );
 
                 expect( sql ).toBe( [ "INSERT INTO ""users"" (""email"") VALUES (?), (?)" ] );
+            } );
+        } );
+
+        describe( "resolved grammar behavior", function() {
+            it( "hoists SQL Server common tables through auto discovery", function() {
+                var sqlServerGrammar = new qb.models.Grammars.SqlServerGrammar();
+                var autoDiscover = getMockBox()
+                    .createMock( "qb.models.Grammars.AutoDiscover" )
+                    .$( "autoDiscoverGrammar", sqlServerGrammar );
+                var source = new qb.models.Query.QueryBuilder( grammar = autoDiscover );
+                var target = new qb.models.Query.QueryBuilder( grammar = autoDiscover );
+                source.setCommonTables( [ { name: "active_users" } ] );
+                source.getRawBindings().commonTables = [ { value: 1 } ];
+
+                new qb.models.Query.QueryExecutor().hoistNestedCommonTables( source, target );
+
+                expect( source.getCommonTables() ).toBeEmpty();
+                expect( target.getCommonTables() ).toBe( [ { name: "active_users" } ] );
+                expect( target.getRawBindings().commonTables ).toBe( [ { value: 1 } ] );
             } );
         } );
     }

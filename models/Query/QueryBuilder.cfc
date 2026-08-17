@@ -2412,6 +2412,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             return this;
         }
 
+        arguments.page = arguments.page > 0 ? arguments.page : 1;
         arguments.maxRows = arguments.maxRows > 0 ? arguments.maxRows : 0;
         this.offset( arguments.page * arguments.maxRows - arguments.maxRows );
         this.limit( arguments.maxRows );

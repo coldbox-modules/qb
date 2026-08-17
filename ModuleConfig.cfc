@@ -82,7 +82,8 @@ component {
         binder
             .map( alias = "SchemaBuilder@qb", force = true )
             .to( "qb.models.Schema.SchemaBuilder" )
-            .initArg( name = "grammar", ref = settings.defaultGrammar );
+            .initArg( name = "grammar", ref = settings.defaultGrammar )
+            .initArg( name = "defaultOptions", value = settings.defaultOptions );
 
         // Apply shouldWrapValues setting to the configured grammar singleton.
         // When defaultGrammar is AutoDiscover@qb, the setting is forwarded via

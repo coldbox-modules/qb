@@ -15,7 +15,7 @@ component extends="testbox.system.BaseSpec" {
                     options = { dbtype: "query" }
                 );
 
-                expect( queryColumnList( result ) ).toInclude( "QB_RN" );
+                expect( listToArray( lCase( result.columnList ) ) ).toInclude( "qb_rn" );
                 expect( result.QB_RN[ 1 ] ).toBe( 7 );
             } );
         } );

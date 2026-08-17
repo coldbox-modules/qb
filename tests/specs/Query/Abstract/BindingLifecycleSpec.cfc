@@ -289,6 +289,28 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.getRawBindings().orderBy ).toHaveLength( 1 );
                 expect( builder.getRawBindings().orderBy[ 1 ].value ).toBe( "active" );
             } );
+
+            it( "preserves returning columns when replacement validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().returning( "id" );
+
+                expect( function() {
+                    builder.returning( [ { "unexpected": "value" } ] );
+                } ).toThrow();
+
+                expect( builder.getReturning() ).toHaveLength( 1 );
+                expect( builder.getReturning()[ 1 ].value ).toBe( "id" );
+            } );
+
+            it( "preserves raw returning columns when replacement validation fails", function() {
+                var builder = new qb.models.Query.QueryBuilder().returningRaw( "id" );
+
+                expect( function() {
+                    builder.returningRaw( [ { "unexpected": "value" } ] );
+                } ).toThrow();
+
+                expect( builder.getReturning() ).toHaveLength( 1 );
+                expect( builder.getReturning()[ 1 ].value.getSQL() ).toBe( "id" );
+            } );
         } );
     }
 

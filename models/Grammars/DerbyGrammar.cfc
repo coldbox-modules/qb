@@ -21,24 +21,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     ];
 
     /**
-     * Runs a query through `queryExecute`.
-     * This function exists so that platform-specific grammars can override it if needed.
-     *
-     * @sql The sql string to execute.
-     * @bindings The bindings to apply to the query.
-     * @options Any options to pass to `queryExecute`. Default: {}.
-     *
-     * @return any
-     */
-    public any function runQuery( sql, bindings, options ) {
-        var result = super.runQuery( argumentCollection = arguments );
-        if ( isQuery( result ) && result.recordCount > 0 ) {
-            return utils.queryRemoveColumns( result, "QB_RN" );
-        }
-        return result;
-    }
-
-    /**
      * Compiles the lock portion of a sql statement.
      *
      * @query The Builder instance.

@@ -584,6 +584,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 message = "SQLite does not support adding auto-incrementing primary-key columns to existing tables."
             );
         }
+        if (
+            !getUtils().isExpression( arguments.commandParameters.column ) &&
+            structKeyExists( arguments.commandParameters.column, "getIsUnique" ) &&
+            arguments.commandParameters.column.getIsUnique()
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQLite does not support adding columns with inline UNIQUE constraints to existing tables."
+            );
+        }
 
         try {
             var originalShouldWrapValues = getShouldWrapValues();

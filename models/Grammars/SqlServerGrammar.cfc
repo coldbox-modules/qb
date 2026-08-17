@@ -658,6 +658,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
             var hasJoins = !arguments.query.getJoins().isEmpty();
             var hasAlias = arguments.query.getAlias() != "";
+            var topClause = isNull( arguments.query.getLimitValue() )
+             ? ""
+             : "TOP (#arguments.query.getLimitValue()#)";
 
             if ( !hasJoins && !hasAlias ) {
                 return trim(
@@ -665,7 +668,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                         arrayFilter(
                             [
                                 compileCommonTables( query, query.getCommonTables() ),
-                                "DELETE FROM",
+                                "DELETE",
+                                topClause,
+                                "FROM",
                                 wrapQueryTable( query ),
                                 returningClause,
                                 compileWheres( query, query.getWheres() )
@@ -685,6 +690,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                         [
                             compileCommonTables( query, query.getCommonTables() ),
                             "DELETE",
+                            topClause,
                             hasAlias
                              ? wrapAlias( getTablePrefix() & query.getAlias() )
                              : wrapTable( query.getTableName(), false ),

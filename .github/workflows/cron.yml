@@ -38,6 +38,7 @@ jobs:
       - name: Install dependencies
         run: |
           box install
+          git apply .github/patches/testbox-full-null.patch
 
       - name: Start server
         env:

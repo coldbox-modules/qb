@@ -37,16 +37,16 @@ component singleton {
 
     public AutoDiscover function setShouldWrapValues( required boolean shouldWrapValues ) {
         variables.shouldWrapValues = arguments.shouldWrapValues;
-        if ( !isNull( variables.grammar ) ) {
+        if ( structKeyExists( variables, "grammar" ) && !isNull( variables.grammar ) ) {
             variables.grammar.setShouldWrapValues( arguments.shouldWrapValues );
         }
         return this;
     }
 
     public any function getResolvedGrammar() {
-        if ( isNull( variables.grammar ) || !structKeyExists( variables, "grammar" ) ) {
+        if ( !structKeyExists( variables, "grammar" ) || isNull( variables.grammar ) ) {
             variables.grammar = autoDiscoverGrammar();
-            if ( !isNull( variables.shouldWrapValues ) ) {
+            if ( structKeyExists( variables, "shouldWrapValues" ) && !isNull( variables.shouldWrapValues ) ) {
                 variables.grammar.setShouldWrapValues( variables.shouldWrapValues );
             }
         }

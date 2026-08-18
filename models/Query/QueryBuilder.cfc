@@ -4281,10 +4281,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
          * forward on the method call to the parent query.
          */
         if (
-            !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, "populateQuery" ) && structKeyExists(
+            structKeyExists( variables, "parentQuery" ) && !isNull( variables.parentQuery ) && structKeyExists(
                 variables.parentQuery,
-                missingMethodName
-            )
+                "populateQuery"
+            ) && structKeyExists( variables.parentQuery, missingMethodName )
         ) {
             return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
         }
@@ -4377,7 +4377,12 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
          * If a parent query has been set, populate it with this query
          * and then forward on the method call to the parent query.
          */
-        if ( !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, "populateQuery" ) ) {
+        if (
+            structKeyExists( variables, "parentQuery" ) && !isNull( variables.parentQuery ) && structKeyExists(
+                variables.parentQuery,
+                "populateQuery"
+            )
+        ) {
             return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
         }
 

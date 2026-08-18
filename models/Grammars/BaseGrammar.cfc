@@ -193,9 +193,11 @@ component displayname="Grammar" accessors="true" singleton {
         if ( !isNull( arguments.postProcessHook ) ) {
             arguments.postProcessHook( data );
         }
-        return arguments.returnObject == "query" ? ( isNull( q ) ? javacast( "null", "" ) : q ) : {
+        return arguments.returnObject == "query" ? (
+            !structKeyExists( data, "query" ) || isNull( data.query ) ? javacast( "null", "" ) : data.query
+        ) : {
             result: data.result,
-            query: ( isNull( q ) ? javacast( "null", "" ) : q )
+            query: ( !structKeyExists( data, "query" ) || isNull( data.query ) ? javacast( "null", "" ) : data.query )
         };
     }
 

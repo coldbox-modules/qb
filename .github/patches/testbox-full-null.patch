@@ -1,13 +1,12 @@
 diff --git a/testbox/system/coverage/CoverageService.cfc b/testbox/system/coverage/CoverageService.cfc
 --- a/testbox/system/coverage/CoverageService.cfc
 +++ b/testbox/system/coverage/CoverageService.cfc
-@@ -172,8 +172,8 @@ component accessors="true" {
- 			}
- 		}
- 
+@@ -175 +175 @@
 -		if ( isNull( opts.coverageTresholds ) ) {
 +		if ( !structKeyExists( opts, "coverageTresholds" ) || isNull( opts.coverageTresholds ) ) {
- 			opts.coverageTresholds = {};
- 		}
- 		if ( isNull( opts.coverageTresholds.good ) ) {
- 			opts.coverageTresholds.good = 85;
+@@ -178 +178 @@
+-		if ( isNull( opts.coverageTresholds.good ) ) {
++		if ( !structKeyExists( opts.coverageTresholds, "good" ) || isNull( opts.coverageTresholds.good ) ) {
+@@ -181 +181 @@
+-		if ( isNull( opts.coverageTresholds.bad ) ) {
++		if ( !structKeyExists( opts.coverageTresholds, "bad" ) || isNull( opts.coverageTresholds.bad ) ) {

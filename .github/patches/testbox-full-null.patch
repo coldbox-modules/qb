@@ -61,3 +61,9 @@ diff --git a/testbox/system/runners/BDDRunner.cfc b/testbox/system/runners/BDDRu
 @@ -159 +159 @@
 -						isNull( thisSuite ) ? {} : thisSuite
 +						!structKeyExists( local, "thisSuite" ) || isNull( local.thisSuite ) ? {} : local.thisSuite
+diff --git a/testbox/system/runners/BaseRunner.cfc b/testbox/system/runners/BaseRunner.cfc
+--- a/testbox/system/runners/BaseRunner.cfc
++++ b/testbox/system/runners/BaseRunner.cfc
+@@ -275 +275 @@
+-		if ( isNull( md.skip ) ) {
++		if ( !md.keyExists( "skip" ) || isNull( md.skip ) ) {

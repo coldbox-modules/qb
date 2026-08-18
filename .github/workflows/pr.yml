@@ -25,8 +25,10 @@ jobs:
         include:
           - cfengine: "adobe@be"
             experimental: true
+            fullNull: "true"
           - cfengine: "boxlang@be"
             experimental: true
+            fullNull: "true"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7

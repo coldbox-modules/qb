@@ -61,7 +61,8 @@ jobs:
       GA_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v7
+        # CommandBox Semantic Release uses JGit, which cannot consume checkout v7's external credentials file.
+        uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
 
@@ -79,7 +80,8 @@ jobs:
           box install commandbox-semantic-release@^3.0.0
           box config set endpoints.forgebox.APIToken=${{ secrets.FORGEBOX_TOKEN }}
           box config set modules.commandbox-semantic-release.targetBranch=main
-          box config set modules.commandbox-semantic-release.plugins='{ "VerifyConditions": "GitHubActionsConditionsVerifier@commandbox-semantic-release", "FetchLastRelease": "ForgeBoxReleaseFetcher@commandbox-semantic-release", "RetrieveCommits": "JGitCommitsRetriever@commandbox-semantic-release", "ParseCommit": "ConventionalChangelogParser@commandbox-semantic-release", "FilterCommits": "DefaultCommitFilterer@commandbox-semantic-release", "AnalyzeCommits": "DefaultCommitAnalyzer@commandbox-semantic-release", "VerifyRelease": "NullReleaseVerifier@commandbox-semantic-release", "GenerateNotes": "GitHubMarkdownNotesGenerator@commandbox-semantic-release", "UpdateChangelog": "FileAppendChangelogUpdater@commandbox-semantic-release", "CommitArtifacts": "GitHubArtifactsCommitter@commandbox-semantic-release", "PublishRelease": "ForgeBoxReleasePublisher@commandbox-semantic-release", "PublicizeRelease": "GitHubReleasePublicizer@commandbox-semantic-release" }'
+          # Module plugin settings use flattened plugins-* keys.
+          box config set modules.commandbox-semantic-release.plugins-CommitArtifacts=NullArtifactsCommitter@commandbox-semantic-release
 
       - name: Run Semantic Release
         env:

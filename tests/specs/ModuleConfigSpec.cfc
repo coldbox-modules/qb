@@ -9,6 +9,17 @@ component extends="testbox.system.BaseSpec" {
 
                 expect( moduleConfig.$getProperty( "settings", "variables" ) ).notToHaveKey( "numericSQLType" );
             } );
+
+            it( "exposes separate integer SQL type settings", function() {
+                var moduleConfig = prepareMock( new qb.ModuleConfig() );
+
+                moduleConfig.configure();
+
+                var settings = moduleConfig.$getProperty( "settings", "variables" );
+                expect( settings.integerSQLType ).toBe( "INTEGER" );
+                expect( settings.bigIntegerSQLType ).toBe( "BIGINT" );
+                expect( settings.decimalSQLType ).toBe( "DECIMAL" );
+            } );
         } );
     }
 

@@ -17,11 +17,13 @@ component extends="testbox.system.BaseSpec" {
             it( "normalizes configured numeric SQL types", function() {
                 var utils = new qb.models.Query.QueryUtils(
                     integerSqlType = "cf_sql_bigint",
+                    bigIntegerSqlType = "cf_sql_numeric",
                     decimalSqlType = "cf_sql_numeric"
                 );
                 var grammar = new qb.models.Grammars.BaseGrammar( utils );
 
                 expect( utils.inferSqlType( 18, grammar ) ).toBe( "BIGINT" );
+                expect( utils.inferSqlType( javacast( "long", "2147483648" ), grammar ) ).toBe( "NUMERIC" );
                 expect( utils.inferSqlType( 18.5, grammar ) ).toBe( "NUMERIC" );
             } );
 

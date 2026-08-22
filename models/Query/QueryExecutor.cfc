@@ -109,7 +109,14 @@ component {
     /**
      * Clones a child builder and hoists statement-level CTEs when needed.
      */
-    public QueryBuilder function snapshotBuilder( required QueryBuilder owner, required QueryBuilder builder ) {
+    public QueryBuilder function snapshotBuilder( required QueryBuilder owner, required any builder ) {
+        if (
+            !isInstanceOf( arguments.builder, "qb.models.Query.QueryBuilder" ) &&
+            isStruct( arguments.builder ) &&
+            structKeyExists( arguments.builder, "retrieveQuery" )
+        ) {
+            arguments.builder = arguments.builder.retrieveQuery();
+        }
         var snapshot = cloneBuilder( arguments.builder );
         var hoistTarget = arguments.owner.isJoin() ? arguments.owner.getJoiningQuery() : arguments.owner;
         hoistNestedCommonTables( snapshot, hoistTarget );

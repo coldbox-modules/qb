@@ -1,5 +1,26 @@
 component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "Derby drop all objects", function() {
+            it( "discovers and qualifies tables in the requested schema", function() {
+                var schema = getBuilder();
+                variables.mockGrammar.$(
+                    "runQuery",
+                    queryNew(
+                        "table_name,table_schema",
+                        "varchar,varchar",
+                        [ { table_name: "users", table_schema: "tenant" } ]
+                    )
+                );
+
+                expect( schema.dropAllObjects( {}, false, "tenant" ) ).toBe( [ "DROP TABLE ""tenant"".""users""" ] );
+                expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ] ).toBe( [ "tenant" ] );
+            } );
+        } );
+    }
+
     function emptyTable() {
         return [ "CREATE TABLE ""users"" ()" ];
     }
@@ -90,7 +111,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TABLE ""employees"" (""tshirt_size"" VARCHAR(255) NOT NULL, CONSTRAINT ""enum_employees_tshirt_size"" CHECK (""tshirt_size"" IN ('S', 'M', 'L', 'XL', 'XXL')))"
+            "CREATE TABLE ""employees"" (""tshirt_size"" VARCHAR(255) NOT NULL, CONSTRAINT ""enum_employees_tshirt_size"" CHECK (""tshirt_size"" IN ('S''s', 'M', 'L', 'XL', 'XXL')))"
         ];
     }
 
@@ -346,7 +367,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function comment() {
         return [
             "CREATE TABLE ""users"" (""active"" BOOLEAN NOT NULL)",
-            "COMMENT ON COLUMN ""users"".""active"" IS 'This is a comment'"
+            "COMMENT ON COLUMN ""users"".""active"" IS 'Pete''s comment'"
         ];
     }
 
@@ -363,7 +384,15 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function defaultForString() {
-        return [ "CREATE TABLE ""users"" (""country"" VARCHAR(255) NOT NULL DEFAULT 'USA')" ];
+        return [ "CREATE TABLE ""users"" (""country"" VARCHAR(255) NOT NULL DEFAULT 'O''Brien')" ];
+    }
+
+    function defaultForEmptyString() {
+        return [ "CREATE TABLE ""users"" (""nickname"" VARCHAR(255) NOT NULL DEFAULT '')" ];
+    }
+
+    function defaultForUnicodeString() {
+        return [ "CREATE TABLE ""users"" (""nickname"" VARCHAR(255) NOT NULL DEFAULT 'O''Brien')" ];
     }
 
     function timestampWithCurrent() {
@@ -552,6 +581,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function addTimestamps() {
+        return [
+            "ALTER TABLE ""users"" ADD COLUMN ""createdDate"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE ""users"" ADD COLUMN ""modifiedDate"" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        ];
+    }
+
     function addMultiple() {
         return [
             "ALTER TABLE ""users"" ADD COLUMN ""tshirt_size"" VARCHAR(255) NOT NULL",
@@ -598,7 +634,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function hasTableInSchema() {
         return [
-            "SELECT 1 FROM ""sys"".""systables"" AS ""t"" JOIN ""sys"".""sysschemas"" AS ""s"" ON ""t"".""schemaid"" = ""s"".""schemaid"" WHERE ""t"".""tablename"" = ? AND ""s"".""schemanname"" = ?"
+            "SELECT 1 FROM ""sys"".""systables"" AS ""t"" JOIN ""sys"".""sysschemas"" AS ""s"" ON ""t"".""schemaid"" = ""s"".""schemaid"" WHERE ""t"".""tablename"" = ? AND ""s"".""schemaname"" = ?"
         ];
     }
 
@@ -610,7 +646,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function hasColumnInSchema() {
         return [
-            "SELECT 1 FROM ""sys"".""syscolumns"" AS ""c"" JOIN ""sys"".""systables"" AS ""t"" ON ""c"".""referenceid"" = ""t"".""tableid"" JOIN ""sys"".""sysschemas"" AS ""s"" ON ""t"".""schemaid"" = ""s"".""schemaid"" WHERE ""t"".""tablename"" = ? AND ""c"".""columnname"" = ? AND ""s"".""schemanname"" = ?"
+            "SELECT 1 FROM ""sys"".""syscolumns"" AS ""c"" JOIN ""sys"".""systables"" AS ""t"" ON ""c"".""referenceid"" = ""t"".""tableid"" JOIN ""sys"".""sysschemas"" AS ""s"" ON ""t"".""schemaid"" = ""s"".""schemaid"" WHERE ""t"".""tablename"" = ? AND ""c"".""columnname"" = ? AND ""s"".""schemaname"" = ?"
         ];
     }
 

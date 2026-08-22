@@ -1,0 +1,69 @@
+diff --git a/testbox/system/coverage/CoverageService.cfc b/testbox/system/coverage/CoverageService.cfc
+--- a/testbox/system/coverage/CoverageService.cfc
++++ b/testbox/system/coverage/CoverageService.cfc
+@@ -175 +175 @@
+-		if ( isNull( opts.coverageTresholds ) ) {
++		if ( !structKeyExists( opts, "coverageTresholds" ) || isNull( opts.coverageTresholds ) ) {
+@@ -178 +178 @@
+-		if ( isNull( opts.coverageTresholds.good ) ) {
++		if ( !structKeyExists( opts.coverageTresholds, "good" ) || isNull( opts.coverageTresholds.good ) ) {
+@@ -181 +181 @@
+-		if ( isNull( opts.coverageTresholds.bad ) ) {
++		if ( !structKeyExists( opts.coverageTresholds, "bad" ) || isNull( opts.coverageTresholds.bad ) ) {
+diff --git a/testbox/system/TestBox.cfc b/testbox/system/TestBox.cfc
+--- a/testbox/system/TestBox.cfc
++++ b/testbox/system/TestBox.cfc
+@@ -408 +408 @@
+-		if ( !isNull( url.testBundles ) ) {
++		if ( structKeyExists( url, "testBundles" ) && !isNull( url.testBundles ) ) {
+@@ -411 +411 @@
+-		if ( !isNull( url.testSuites ) ) {
++		if ( structKeyExists( url, "testSuites" ) && !isNull( url.testSuites ) ) {
+@@ -414 +414 @@
+-		if ( !isNull( url.testSpecs ) ) {
++		if ( structKeyExists( url, "testSpecs" ) && !isNull( url.testSpecs ) ) {
+@@ -417 +417 @@
+-		if ( !isNull( url.testMethod ) ) {
++		if ( structKeyExists( url, "testMethod" ) && !isNull( url.testMethod ) ) {
+@@ -259 +259 @@
+-		if ( isNull( variables.env ) ) {
++		if ( !structKeyExists( variables, "env" ) || isNull( variables.env ) ) {
+diff --git a/testbox/system/util/Util.cfc b/testbox/system/util/Util.cfc
+--- a/testbox/system/util/Util.cfc
++++ b/testbox/system/util/Util.cfc
+@@ -203 +203 @@
+-		if ( isNull( variables.engineMappingHelper ) ) {
++		if ( !structKeyExists( variables, "engineMappingHelper" ) || isNull( variables.engineMappingHelper ) ) {
+diff --git a/testbox/system/util/Env.cfc b/testbox/system/util/Env.cfc
+--- a/testbox/system/util/Env.cfc
++++ b/testbox/system/util/Env.cfc
+@@ -87 +87 @@
+-		if ( isNull( variables.javaSystem ) ) {
++		if ( !structKeyExists( variables, "javaSystem" ) || isNull( variables.javaSystem ) ) {
+diff --git a/testbox/system/BaseSpec.cfc b/testbox/system/BaseSpec.cfc
+--- a/testbox/system/BaseSpec.cfc
++++ b/testbox/system/BaseSpec.cfc
+@@ -1627 +1627 @@
+-		if ( isNull( variables.$cbMockData ) ) {
++		if ( !structKeyExists( variables, "$cbMockData" ) || isNull( variables.$cbMockData ) ) {
+@@ -1640 +1640 @@
+-		if ( isNull( variables.$utility ) ) {
++		if ( !structKeyExists( variables, "$utility" ) || isNull( variables.$utility ) ) {
+@@ -1653 +1653 @@
+-		if ( isNull( variables.$env ) ) {
++		if ( !structKeyExists( variables, "$env" ) || isNull( variables.$env ) ) {
+@@ -1668 +1668 @@
+-		if ( isNull( this.$mockbox ) ) {
++		if ( !structKeyExists( this, "$mockbox" ) || isNull( this.$mockbox ) ) {
+diff --git a/testbox/system/runners/BDDRunner.cfc b/testbox/system/runners/BDDRunner.cfc
+--- a/testbox/system/runners/BDDRunner.cfc
++++ b/testbox/system/runners/BDDRunner.cfc
+@@ -159 +159 @@
+-						isNull( thisSuite ) ? {} : thisSuite
++						!structKeyExists( local, "thisSuite" ) || isNull( local.thisSuite ) ? {} : local.thisSuite
+diff --git a/testbox/system/runners/BaseRunner.cfc b/testbox/system/runners/BaseRunner.cfc
+--- a/testbox/system/runners/BaseRunner.cfc
++++ b/testbox/system/runners/BaseRunner.cfc
+@@ -275 +275 @@
+-		if ( isNull( md.skip ) ) {
++		if ( !md.keyExists( "skip" ) || isNull( md.skip ) ) {

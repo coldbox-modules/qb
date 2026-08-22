@@ -92,6 +92,35 @@ component extends="testbox.system.BaseSpec" {
                     builder.get( "name" );
                     expect( builder.getColumns().map( ( c ) => c.value ) ).toBe( [ "id" ] );
                 } );
+
+                it( "preserves original columns when executing a get with columns throws", function() {
+                    var builder = getMockBox()
+                        .createMock( "qb.models.Query.QueryBuilder" )
+                        .init(
+                            grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                            validateQueryExecuteReturnType = true
+                        );
+                    builder.select( "id" ).from( "users" );
+
+                    expect( function() {
+                        builder.get( columns = "name", options = { "returntype": "array" } );
+                    } ).toThrow( type = "InvalidQueryExecuteOption" );
+
+                    expect( builder.getColumns().map( ( column ) => column.value ) ).toBe( [ "id" ] );
+                } );
+
+                it( "does not execute temporary get columns with stale select bindings", function() {
+                    var builder = new qb.models.Query.QueryBuilder()
+                        .pretend()
+                        .selectRaw( "CASE WHEN id = ? THEN name END AS selectedName", [ 10 ] )
+                        .from( "users" );
+
+                    builder.get( columns = "name" );
+
+                    expect( builder.getQueryLog()[ 1 ].sql ).toBe( "SELECT ""name"" FROM ""users""" );
+                    expect( builder.getQueryLog()[ 1 ].bindings ).toBeEmpty();
+                    expect( getTestBindings( builder ) ).toBe( [ 10 ] );
+                } );
             } );
 
             describe( "first", function() {
@@ -223,6 +252,22 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1", options: {} } );
+                } );
+
+                it( "applies the column formatter once when retrieving a value", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [ { name: "foo" } ] );
+                    builder.$( "runQuery", expectedQuery );
+
+                    var result = builder
+                        .setColumnFormatter( ( column ) => "some_table.#column#" )
+                        .from( "users" )
+                        .value( "name" );
+
+                    expect( result ).toBe( "foo" );
+                    expect( builder.$callLog().runQuery[ 1 ].sql ).toBe(
+                        "SELECT ""some_table"".""name"" FROM ""users"" LIMIT 1"
+                    );
                 } );
 
                 it( "returns the defaultValue when calling value with an empty query", function() {
@@ -386,6 +431,22 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT ""some_table"".""name"" FROM ""users""", options: {} } );
                 } );
 
+                it( "applies the column formatter once when retrieving values", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "name", "varchar", [ { name: "foo" }, { name: "bar" } ] );
+                    builder.$( "runQuery", expectedQuery );
+
+                    var result = builder
+                        .setColumnFormatter( ( column ) => "some_table.#column#" )
+                        .from( "users" )
+                        .values( "name" );
+
+                    expect( result ).toBe( [ "foo", "bar" ] );
+                    expect( builder.$callLog().runQuery[ 1 ].sql ).toBe(
+                        "SELECT ""some_table"".""name"" FROM ""users"""
+                    );
+                } );
+
                 it( "can call values with a raw expression", function() {
                     var builder = getBuilder();
                     var expectedQuery = queryNew(
@@ -478,6 +539,17 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "chunk", function() {
+                it( "rejects non-positive chunk sizes", function() {
+                    for ( var max in [ 0, -1 ] ) {
+                        expect( function() {
+                            getBuilder()
+                                .from( "users" )
+                                .chunk( max, function() {
+                                } );
+                        } ).toThrow( type = "InvalidChunkSize" );
+                    }
+                } );
+
                 it( "can chunk a query into smaller sections", function() {
                     var builder = getBuilder();
                     var expectedQuery100 = queryNew( "name", "varchar" );
@@ -685,6 +757,15 @@ component extends="testbox.system.BaseSpec" {
 
         describe( "aggregate functions", function() {
             describe( "count", function() {
+                it( "applies the column formatter to aggregate columns", function() {
+                    var sql = getBuilder()
+                        .setColumnFormatter( ( column ) => column == "*" ? column : "users.#column#" )
+                        .from( "users" )
+                        .count( column = "id", toSQL = true );
+
+                    expect( sql ).toBe( "SELECT COALESCE(COUNT(""users"".""id""), 0) AS ""aggregate"" FROM ""users""" );
+                } );
+
                 it( "can count all the records on a table", function() {
                     var builder = getBuilder();
                     var expectedCount = 1;
@@ -702,6 +783,31 @@ component extends="testbox.system.BaseSpec" {
                     expect( runQueryLog ).toBeArray();
                     expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                     expect( runQueryLog[ 1 ] ).toBe( { sql: "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""", options: {} } );
+                } );
+
+                it( "does not execute aggregates with bindings from removed orders", function() {
+                    var executions = [];
+                    var grammar = new qb.models.Grammars.BaseGrammar();
+                    grammar.setInterceptorService( {
+                        processState: function( state, data ) {
+                            if ( arguments.state == "preQBExecute" ) {
+                                executions.append( arguments.data );
+                            }
+                        }
+                    } );
+                    var builder = new qb.models.Query.QueryBuilder( grammar = grammar )
+                        .pretend()
+                        .from( "users" )
+                        .orderByRaw( "CASE WHEN id = ? THEN 0 ELSE 1 END", [ 10 ] );
+
+                    try {
+                        builder.count();
+                    } catch ( any ignored ) {
+                    }
+
+                    expect( executions ).toHaveLength( 1 );
+                    expect( executions[ 1 ].sql ).toBe( "SELECT COALESCE(COUNT(*), 0) AS ""aggregate"" FROM ""users""" );
+                    expect( executions[ 1 ].bindings ).toBeEmpty();
                 } );
 
                 it( "can count a specific column", function() {
@@ -787,6 +893,27 @@ component extends="testbox.system.BaseSpec" {
                     builder.from( "users" ).count();
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
+                } );
+
+                it( "restores aggregate query state when execution throws", function() {
+                    var builder = getMockBox()
+                        .createMock( "qb.models.Query.QueryBuilder" )
+                        .init(
+                            grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                            validateQueryExecuteReturnType = true
+                        );
+                    builder
+                        .select( "id" )
+                        .from( "users" )
+                        .orderBy( "name" );
+
+                    expect( function() {
+                        builder.count( options = { "returntype": "array" } );
+                    } ).toThrow( type = "InvalidQueryExecuteOption" );
+
+                    expect( builder.getAggregate() ).toBeEmpty();
+                    expect( builder.getColumns().map( ( column ) => column.value ) ).toBe( [ "id" ] );
+                    expect( builder.getOrders() ).toBe( [ { "column": { "type": "simple", "value": "name" }, "direction": "asc" } ] );
                 } );
 
                 it( "correctly orders a distinct count", function() {
@@ -885,8 +1012,9 @@ component extends="testbox.system.BaseSpec" {
 
                 it( "can return the max date of a table", function() {
                     var builder = getBuilder();
-                    var expectedMax = now();
-                    var expectedQuery = queryNew( "aggregate", "timestamp", [ { aggregate: expectedMax } ] );
+                    var maxDate = now();
+                    var expectedQuery = queryNew( "aggregate", "timestamp", [ { aggregate: maxDate } ] );
+                    var expectedMax = expectedQuery.aggregate;
                     builder
                         .$( "runQuery" )
                         .$args( sql = "SELECT MAX(""login_date"") AS ""aggregate"" FROM ""users""", options = {} )
@@ -1054,6 +1182,23 @@ component extends="testbox.system.BaseSpec" {
 
                     expect( builder.getAggregate() ).toBeEmpty( "Aggregate should have been cleared after running" );
                 } );
+
+                it( "passes bindings carried by aggregate expressions to the grammar", function() {
+                    var builder = getBuilder();
+                    var expectedQuery = queryNew( "aggregate", "integer", [ { aggregate: 42 } ] );
+                    builder.getGrammar().$( "runQuery", expectedQuery );
+
+                    var result = builder
+                        .from( "users" )
+                        .sum( builder.raw( "CASE WHEN active = ? THEN amount ELSE 0 END", [ 1 ] ) );
+
+                    expect( result ).toBe( 42 );
+                    expect(
+                        builder.getGrammar().$callLog().runQuery[ 1 ].bindings.map( function( binding ) {
+                            return binding.value;
+                        } )
+                    ).toBe( [ 1 ] );
+                } );
             } );
 
             describe( "exists", function() {
@@ -1087,6 +1232,18 @@ component extends="testbox.system.BaseSpec" {
                         .where( "active", 1 )
                         .exists( toSQL = true );
                     expect( sql ).toBe( "SELECT CASE WHEN EXISTS (SELECT * FROM ""users"" WHERE ""active"" = ? LIMIT 1) THEN 1 ELSE 0 END AS aggregate" );
+                } );
+
+                it( "restores the original limit when exists compilation fails", function() {
+                    var builder = getBuilder()
+                        .from( "users" )
+                        .limit( 5 )
+                        .whereJsonExists( "profile->name" );
+
+                    expect( function() {
+                        builder.exists( toSQL = true );
+                    } ).toThrow( type = "UnsupportedOperation" );
+                    expect( builder.getLimitValue() ).toBe( 5 );
                 } );
             } );
 
@@ -1287,6 +1444,329 @@ component extends="testbox.system.BaseSpec" {
                 expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
                 expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"" FROM ""users""" );
             } );
+
+            it( "can return a struct of structs", function() {
+                var builder = getBuilder();
+                builder.setReturnFormat( "struct", { "columnKey": "name" } );
+                var data = [ { "id": 1, "name": "jane" }, { "id": 2, "name": "john" } ];
+                var expectedQuery = queryNew( "id,name", "integer,varchar", data );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"", ""name"" FROM ""users""", options = { "result": "local.result" } )
+                    .$results( expectedQuery );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"", ""name"" FROM ""users""", options = {} )
+                    .$results( expectedQuery );
+
+                var results = builder
+                    .select( [ "id", "name" ] )
+                    .from( "users" )
+                    .get();
+
+                expect( results ).toBe( { "jane": data[ 1 ], "john": data[ 2 ] } );
+                var runQueryLog = builder.$callLog().runQuery;
+                expect( runQueryLog ).toBeArray();
+                expect( runQueryLog ).toHaveLength( 1, "runQuery should have been called once" );
+                expect( runQueryLog[ 1 ].sql ).toBe( "SELECT ""id"", ""name"" FROM ""users""" );
+            } );
+
+            it( "can return a struct of structs using withReturnFormat", function() {
+                var builder = getBuilder();
+                var data = [ { "id": 1, "name": "jane" }, { "id": 2, "name": "john" } ];
+                var expectedQuery = queryNew( "id,name", "integer,varchar", data );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"", ""name"" FROM ""users""", options = { "result": "local.result" } )
+                    .$results( expectedQuery );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"", ""name"" FROM ""users""", options = {} )
+                    .$results( expectedQuery );
+
+                var results = builder.withReturnFormat(
+                    "struct",
+                    function() {
+                        return builder
+                            .select( [ "id", "name" ] )
+                            .from( "users" )
+                            .get();
+                    },
+                    { "columnKey": "name" }
+                );
+
+                expect( results ).toBe( { "jane": data[ 1 ], "john": data[ 2 ] } );
+            } );
+
+            it( "restores the return formatter when withReturnFormat throws", function() {
+                var builder = getBuilder();
+                var originalReturnFormat = builder.getReturnFormat();
+
+                expect( function() {
+                    builder.withReturnFormat( "query", function() {
+                        throw( type = "ExpectedReturnFormatException" );
+                    } );
+                } ).toThrow( type = "ExpectedReturnFormatException" );
+
+                expect( builder.getReturnFormat() ).toBe( originalReturnFormat );
+            } );
+
+            it( "uses the last row when struct return format keys are duplicated", function() {
+                var builder = getBuilder();
+                builder.setReturnFormat( "struct", { "columnKey": "name" } );
+                var data = [ { "id": 1, "name": "jane" }, { "id": 2, "name": "jane" } ];
+                var expectedQuery = queryNew( "id,name", "integer,varchar", data );
+                builder.$( "runQuery", expectedQuery );
+
+                var results = builder
+                    .select( [ "id", "name" ] )
+                    .from( "users" )
+                    .get();
+
+                expect( results ).toBe( { "jane": data[ 2 ] } );
+            } );
+
+            it( "can use custom registered return formatters", function() {
+                var registry = new qb.models.Query.ReturnFormatterRegistry();
+                registry.registerReturnFormatter(
+                    "firstId",
+                    function( options ) {
+                        return function( q ) {
+                            return options.prefix & q.id[ 1 ];
+                        };
+                    },
+                    { "prefix": "user-" }
+                );
+                var builder = getMockBox()
+                    .createMock( "qb.models.Query.QueryBuilder" )
+                    .init(
+                        grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                        returnFormatterRegistry = registry
+                    );
+                builder.setReturnFormat( "firstId", { "prefix": "account-" } );
+                var expectedQuery = queryNew( "id", "integer", [ { "id": 1 } ] );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = { "result": "local.result" } )
+                    .$results( expectedQuery );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
+                    .$results( expectedQuery );
+
+                var results = builder
+                    .select( "id" )
+                    .from( "users" )
+                    .get();
+
+                expect( results ).toBe( "account-1" );
+            } );
+
+            it( "carries return formatter settings to new queries and clones", function() {
+                var registry = new qb.models.Query.ReturnFormatterRegistry();
+                registry.registerReturnFormatter( "firstId", function( options ) {
+                    return function( q ) {
+                        return q.id[ 1 ];
+                    };
+                } );
+                var builder = getMockBox()
+                    .createMock( "qb.models.Query.QueryBuilder" )
+                    .init(
+                        grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                        returnFormatterRegistry = registry,
+                        validateQueryExecuteReturnType = true,
+                        collectQueryLog = false
+                    );
+
+                var newBuilder = builder.newQuery();
+                var clonedBuilder = builder.clone();
+
+                expect( newBuilder.getReturnFormatterRegistry() ).toBe( registry );
+                expect( newBuilder.getValidateQueryExecuteReturnType() ).toBeTrue();
+                expect( newBuilder.getCollectQueryLog() ).toBeFalse();
+                newBuilder.setReturnFormat( "firstId" );
+
+                expect( clonedBuilder.getReturnFormatterRegistry() ).toBe( registry );
+                expect( clonedBuilder.getValidateQueryExecuteReturnType() ).toBeTrue();
+                expect( clonedBuilder.getCollectQueryLog() ).toBeFalse();
+                clonedBuilder.setReturnFormat( "firstId" );
+            } );
+
+            it( "carries behavioral settings to new queries and clones", function() {
+                var sqlCommenter = {
+                    "appendSqlComments": function( sql ) {
+                        return sql;
+                    }
+                };
+                var shouldMaxRowsOverrideToAll = function( maxRows ) {
+                    return maxRows == 99;
+                };
+                var builder = getMockBox()
+                    .createMock( "qb.models.Query.QueryBuilder" )
+                    .init(
+                        grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                        preventDuplicateJoins = true,
+                        sqlCommenter = sqlCommenter,
+                        shouldMaxRowsOverrideToAll = shouldMaxRowsOverrideToAll
+                    );
+
+                var derivedBuilders = [ builder.newQuery(), builder.clone() ];
+                derivedBuilders.each( function( derivedBuilder ) {
+                    expect( derivedBuilder.getPreventDuplicateJoins() ).toBeTrue();
+                    $assert.isSameInstance( sqlCommenter, derivedBuilder.getSqlCommenter() );
+                    $assert.isSameInstance( shouldMaxRowsOverrideToAll, derivedBuilder.getShouldMaxRowsOverrideToAll() );
+                } );
+            } );
+
+            it( "preserves pretend mode when cloning a builder", function() {
+                var builder = getBuilder().pretend();
+
+                expect( builder.clone().isPretending() ).toBeTrue();
+            } );
+
+            it( "carries a resolved struct return formatter to new queries and clones", function() {
+                var registry = new qb.models.Query.ReturnFormatterRegistry();
+                registry.registerReturnFormatter( "structFormatter", function() {
+                    return {
+                        "format": function( q ) {
+                            return q;
+                        }
+                    };
+                } );
+                var builder = getMockBox()
+                    .createMock( "qb.models.Query.QueryBuilder" )
+                    .init(
+                        grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                        returnFormatterRegistry = registry
+                    )
+                    .setReturnFormat( "structFormatter" );
+
+                var returnFormat = builder.getReturnFormat();
+                $assert.isSameInstance( returnFormat, builder.newQuery().getReturnFormat() );
+                $assert.isSameInstance( returnFormat, builder.clone().getReturnFormat() );
+            } );
+
+            it( "carries a resolved component return formatter to new queries and clones", function() {
+                var builder = getBuilder().setReturnFormat( "struct", { "columnKey": "id" } );
+
+                expect( builder.newQuery().getReturnFormat() ).toBe( builder.getReturnFormat() );
+                expect( builder.clone().getReturnFormat() ).toBe( builder.getReturnFormat() );
+            } );
+
+            it( "creates a default return formatter registry when none is passed", function() {
+                var builder = getBuilder();
+                builder.setReturnFormat( "none" );
+                var expectedQuery = queryNew( "id", "integer", [ { "id": 1 } ] );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = { "result": "local.result" } )
+                    .$results( expectedQuery );
+                builder
+                    .$( "runQuery" )
+                    .$args( sql = "SELECT ""id"" FROM ""users""", options = {} )
+                    .$results( expectedQuery );
+
+                expect(
+                    builder
+                        .select( "id" )
+                        .from( "users" )
+                        .get()
+                ).toBe( expectedQuery );
+            } );
+
+            it( "throws from the struct formatter at runtime if columnKey is missing", function() {
+                var builder = getBuilder();
+                builder.setReturnFormat( "struct" );
+                var expectedQuery = queryNew( "id,name", "integer,varchar", [ { "id": 1, "name": "jane" } ] );
+                builder.$( "runQuery", expectedQuery );
+
+                expect( function() {
+                    builder
+                        .select( [ "id", "name" ] )
+                        .from( "users" )
+                        .get();
+                } ).toThrow( type = "MissingColumnKey" );
+            } );
+
+            it( "throws from the struct formatter at runtime if the columnKey column is missing", function() {
+                var builder = getBuilder();
+                builder.setReturnFormat( "struct", { "columnKey": "name" } );
+                var expectedQuery = queryNew( "id", "integer", [ { "id": 1 } ] );
+                builder.$( "runQuery", expectedQuery );
+
+                expect( function() {
+                    builder
+                        .select( "id" )
+                        .from( "users" )
+                        .get();
+                } ).toThrow( type = "MissingColumnKey" );
+            } );
+
+            it( "can strip native queryExecute returntype options", function() {
+                var builder = getBuilder();
+                builder.setReturnFormat( "query" );
+                var expectedQuery = queryNew( "id", "integer", [ { "id": 1 } ] );
+                builder
+                    .getGrammar()
+                    .$( "runQuery" )
+                    .$results( expectedQuery );
+
+                var results = builder
+                    .select( "id" )
+                    .from( "users" )
+                    .get( options = { "returntype": "array", "columnkey": "id", "columnKey": "id" } );
+
+                expect( results ).toBe( expectedQuery );
+                expect( builder.getGrammar().$callLog().runQuery[ 1 ].options ).toBe( {} );
+            } );
+
+            it( "does not mutate per-query options while preparing them for execution", function() {
+                var options = { "returntype": "array", "columnkey": "id", "timeout": 5 };
+                var originalOptions = duplicate( options );
+
+                new qb.models.Query.QueryBuilder( new qb.models.Grammars.BaseGrammar() )
+                    .pretend()
+                    .from( "users" )
+                    .get( options = options );
+
+                expect( options ).toBe( originalOptions );
+            } );
+
+            it( "can strip native queryExecute returntype options from default options without mutating them", function() {
+                var builder = getBuilder();
+                builder.mergeDefaultOptions( { "returntype": "array", "columnkey": "id", "columnKey": "id" } );
+                builder.setReturnFormat( "query" );
+                var expectedQuery = queryNew( "id", "integer", [ { "id": 1 } ] );
+                builder
+                    .getGrammar()
+                    .$( "runQuery" )
+                    .$results( expectedQuery );
+
+                var results = builder
+                    .select( "id" )
+                    .from( "users" )
+                    .get();
+
+                expect( results ).toBe( expectedQuery );
+                expect( builder.getGrammar().$callLog().runQuery[ 1 ].options ).toBe( {} );
+                expect( builder.getDefaultOptions() ).toBe( { "returntype": "array", "columnkey": "id", "columnKey": "id" } );
+            } );
+
+            it( "can validate native queryExecute returntype options", function() {
+                var builder = getMockBox()
+                    .createMock( "qb.models.Query.QueryBuilder" )
+                    .init(
+                        grammar = getMockBox().createMock( "qb.models.Grammars.BaseGrammar" ).init(),
+                        validateQueryExecuteReturnType = true
+                    );
+
+                expect( function() {
+                    builder
+                        .select( "id" )
+                        .from( "users" )
+                        .get( options = { "returntype": "array" } );
+                } ).toThrow( type = "InvalidQueryExecuteOption" );
+            } );
         } );
 
         describe( "compiling the same builder multiple times", function() {
@@ -1296,6 +1776,195 @@ component extends="testbox.system.BaseSpec" {
                 var sql = builder.toSql();
                 var sqlAgain = builder.toSql();
                 expect( sql ).toBe( sqlAgain );
+            } );
+        } );
+
+        describe( "write input immutability", function() {
+            it( "does not merge configured update values into the caller's struct", function() {
+                var values = { "name": "Jane" };
+                var originalValues = duplicate( values );
+                var builder = new qb.models.Query.QueryBuilder( new qb.models.Grammars.BaseGrammar() )
+                    .from( "users" )
+                    .addUpdate( { "active": true } );
+
+                builder.update( values = values, toSql = true );
+
+                expect( values ).toBe( originalValues );
+            } );
+        } );
+
+        describe( "bulk inserts", function() {
+            it( "includes columns introduced by later insert rows", function() {
+                var builder = getBuilder().from( "users" );
+
+                var sql = builder.insert(
+                    values = [ { "id": 1 }, { "email": "two@example.com", "id": 2 } ],
+                    toSql = true
+                );
+
+                expect( sql ).toBe( "INSERT INTO ""users"" (""email"", ""id"") VALUES (?, ?), (?, ?)" );
+                expect( builder.getBindings() ).toHaveLength( 4 );
+                expect( builder.getBindings()[ 1 ].null ).toBeTrue();
+                expect( builder.getBindings()[ 2 ].value ).toBe( 1 );
+                expect( builder.getBindings()[ 3 ].value ).toBe( "two@example.com" );
+                expect( builder.getBindings()[ 4 ].value ).toBe( 2 );
+            } );
+
+            it( "includes columns introduced by later upsert rows", function() {
+                var builder = new qb.models.Query.QueryBuilder( new qb.models.Grammars.PostgresGrammar() ).from( "users" );
+
+                var sql = builder.upsert(
+                    values = [ { "id": 1 }, { "email": "two@example.com", "id": 2 } ],
+                    target = "id",
+                    update = [ "email" ],
+                    toSql = true
+                );
+
+                expect( sql ).toBe(
+                    "INSERT INTO ""users"" (""email"", ""id"") VALUES (?, ?), (?, ?) ON CONFLICT (""id"") DO UPDATE SET ""email"" = EXCLUDED.""email"""
+                );
+                expect( builder.getBindings() ).toHaveLength( 4 );
+                expect( builder.getBindings()[ 1 ].null ).toBeTrue();
+                expect( builder.getBindings()[ 2 ].value ).toBe( 1 );
+                expect( builder.getBindings()[ 3 ].value ).toBe( "two@example.com" );
+                expect( builder.getBindings()[ 4 ].value ).toBe( 2 );
+            } );
+
+            it( "keeps all source bindings before explicit upsert update bindings", function() {
+                var grammar = new qb.models.Grammars.PostgresGrammar();
+                var source = new qb.models.Query.QueryBuilder( grammar )
+                    .selectRaw( "? AS id", [ 1 ] )
+                    .unionAll( ( query ) => query.selectRaw( "? AS id", [ 2 ] ) );
+                var builder = new qb.models.Query.QueryBuilder( grammar ).from( "users" );
+
+                builder.upsert(
+                    values = [ "id" ],
+                    target = [ "id" ],
+                    update = { "id": 3 },
+                    source = source,
+                    toSql = true
+                );
+
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, 2, 3 ] );
+            } );
+
+            it( "includes columns introduced by later native bulk insert rows", function() {
+                var grammar = new qb.models.Grammars.SqlServerGrammar();
+                var builder = new qb.models.Query.QueryBuilder( grammar ).from( "users" );
+
+                var prepared = grammar.prepareBulkInsert(
+                    builder,
+                    [ { "id": 1 }, { "email": "two@example.com", "id": 2 } ],
+                    {}
+                );
+
+                expect( prepared.columns.map( ( column ) => column.original ) ).toBe( [ "email", "id" ] );
+                expect( deserializeJSON( prepared.binding.value ) ).toBe( [ { "email": javacast( "null", "" ), "id": 1 }, { "email": "two@example.com", "id": 2 } ] );
+            } );
+
+            it( "does not include unrelated builder bindings in native bulk inserts", function() {
+                var grammar = getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init();
+                grammar.$( "runQuery", {} );
+                var builder = new qb.models.Query.QueryBuilder( grammar )
+                    .fromRaw( "users", [ "unused-from" ] )
+                    .where( "active", 1 );
+
+                builder.insertBulk( [ { "email": "one@example.com" } ] );
+
+                expect( grammar.$callLog().runQuery[ 1 ].bindings ).toHaveLength( 1 );
+                expect( deserializeJSON( grammar.$callLog().runQuery[ 1 ].bindings[ 1 ].value ) ).toBe( [ { "email": "one@example.com" } ] );
+            } );
+
+            it( "inserts values in explicit batches", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .insertBulk(
+                        values = [
+                            { "email": "one@example.com" },
+                            { "email": "two@example.com" },
+                            { "email": "three@example.com" }
+                        ],
+                        chunkSize = 2,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [ "INSERT INTO ""users"" (""email"") VALUES (?), (?)", "INSERT INTO ""users"" (""email"") VALUES (?)" ] );
+            } );
+
+            it( "caps batches using the grammar parameter limit", function() {
+                var builder = getBuilder();
+                builder.getGrammar().parameterLimit = 4;
+
+                var sql = builder
+                    .from( "users" )
+                    .insertBulk(
+                        values = [
+                            { "email": "one@example.com", "name": "One" },
+                            { "email": "two@example.com", "name": "Two" },
+                            { "email": "three@example.com", "name": "Three" }
+                        ],
+                        chunkSize = 100,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO ""users"" (""email"", ""name"") VALUES (?, ?), (?, ?)",
+                    "INSERT INTO ""users"" (""email"", ""name"") VALUES (?, ?)"
+                ] );
+            } );
+
+            it( "treats a zero grammar parameter limit as unlimited", function() {
+                var builder = getBuilder();
+                builder.getGrammar().parameterLimit = 0;
+
+                var sql = builder
+                    .from( "users" )
+                    .insertBulk(
+                        values = [
+                            { "email": "one@example.com" },
+                            { "email": "two@example.com" },
+                            { "email": "three@example.com" }
+                        ],
+                        chunkSize = 100,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [ "INSERT INTO ""users"" (""email"") VALUES (?), (?), (?)" ] );
+            } );
+
+            it( "returns an empty array for no values", function() {
+                expect( getBuilder().from( "users" ).insertBulk( values = [], toSql = true ) ).toBe( [] );
+            } );
+
+            it( "uses a non-positive chunk size to insert all rows", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .insertBulk(
+                        values = [ { "email": "one@example.com" }, { "email": "two@example.com" } ],
+                        chunkSize = -1,
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [ "INSERT INTO ""users"" (""email"") VALUES (?), (?)" ] );
+            } );
+        } );
+
+        describe( "resolved grammar behavior", function() {
+            it( "hoists SQL Server common tables through auto discovery", function() {
+                var sqlServerGrammar = new qb.models.Grammars.SqlServerGrammar();
+                var autoDiscover = getMockBox()
+                    .createMock( "qb.models.Grammars.AutoDiscover" )
+                    .$( "autoDiscoverGrammar", sqlServerGrammar );
+                var source = new qb.models.Query.QueryBuilder( grammar = autoDiscover );
+                var target = new qb.models.Query.QueryBuilder( grammar = autoDiscover );
+                source.setCommonTables( [ { name: "active_users" } ] );
+                source.getRawBindings().commonTables = [ { value: 1 } ];
+
+                new qb.models.Query.QueryExecutor().hoistNestedCommonTables( source, target );
+
+                expect( source.getCommonTables() ).toBeEmpty();
+                expect( target.getCommonTables() ).toBe( [ { name: "active_users" } ] );
+                expect( target.getRawBindings().commonTables ).toBe( [ { value: 1 } ] );
             } );
         } );
     }

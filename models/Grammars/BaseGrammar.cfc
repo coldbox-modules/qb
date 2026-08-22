@@ -33,6 +33,12 @@ component displayname="Grammar" accessors="true" singleton {
     property name="tableAliasOperator" type="string" default=" AS ";
 
     /**
+     * The maximum number of parameters supported in a single statement.
+     * A value of zero indicates no grammar-specific limit.
+     */
+    this.parameterLimit = 0;
+
+    /**
      * The different components of a select statement in the order of compilation.
      */
     variables.selectComponents = [
@@ -60,12 +66,15 @@ component displayname="Grammar" accessors="true" singleton {
      * @return qb.models.Grammars.BaseGrammar
      */
     public BaseGrammar function init( qb.models.Query.QueryUtils utils ) {
-        param arguments.utils = new qb.models.Query.QueryUtils();
+        if ( isNull( arguments.utils ) ) {
+            arguments.utils = new qb.models.Query.QueryUtils();
+        }
         variables.utils = arguments.utils;
         variables.tablePrefix = "";
         variables.tableAliasOperator = " AS ";
         variables.cteColumnsRequireParentheses = false;
         variables.shouldWrapValues = true;
+        variables.shouldWrapValuesContext = createObject( "java", "java.lang.ThreadLocal" ).init();
         // These are overwritten by WireBox, if it exists.
         variables.interceptorService = {
             "processState": function() {
@@ -81,6 +90,56 @@ component displayname="Grammar" accessors="true" singleton {
             }
         };
         return this;
+    }
+
+    /**
+     * Returns the binding groups in the order they appear in a SELECT statement.
+     */
+    public array function getSelectBindingOrder( required QueryBuilder query ) {
+        if ( !arguments.query.getRawBindings().update.isEmpty() ) {
+            return getUpdateBindingOrder( arguments.query );
+        }
+
+        return [
+            "commonTables",
+            "update",
+            "insert",
+            "aggregate",
+            "select",
+            "from",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "union",
+            "orderBy"
+        ];
+    }
+
+    /**
+     * Returns the concrete grammar used for dialect-specific behavior.
+     * Concrete grammars resolve to themselves while proxy grammars may override
+     * this method to expose their discovered grammar.
+     */
+    public any function getResolvedGrammar() {
+        return this;
+    }
+
+    /**
+     * Returns the binding groups in the order they appear in an UPDATE statement.
+     */
+    public array function getUpdateBindingOrder( required QueryBuilder query ) {
+        return [
+            "commonTables",
+            "from",
+            "join",
+            "update",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
     }
 
     /**
@@ -108,7 +167,7 @@ component displayname="Grammar" accessors="true" singleton {
         var data = {
             "sql": arguments.sql,
             "bindings": arguments.bindings,
-            "options": arguments.options,
+            "options": structCopy( arguments.options ),
             "returnObject": arguments.returnObject,
             "pretend": arguments.pretend
         };
@@ -134,9 +193,11 @@ component displayname="Grammar" accessors="true" singleton {
         if ( !isNull( arguments.postProcessHook ) ) {
             arguments.postProcessHook( data );
         }
-        return arguments.returnObject == "query" ? ( isNull( q ) ? javacast( "null", "" ) : q ) : {
+        return arguments.returnObject == "query" ? (
+            !structKeyExists( data, "query" ) || isNull( data.query ) ? javacast( "null", "" ) : data.query
+        ) : {
             result: data.result,
-            query: ( isNull( q ) ? javacast( "null", "" ) : q )
+            query: ( !structKeyExists( data, "query" ) || isNull( data.query ) ? javacast( "null", "" ) : data.query )
         };
     }
 
@@ -174,17 +235,31 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function compileSelect( required QueryBuilder query ) {
+        if ( arguments.query.getValidateDuplicateSelectColumns() && arguments.query.getAggregate().isEmpty() ) {
+            arguments.query.getQueryValidator().validateUniqueSelectColumns( arguments.query.getColumns(), this );
+        }
+
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
+            var queryToCompile = arguments.query;
+            if ( !queryToCompile.getAggregate().isEmpty() && !queryToCompile.getUnions().isEmpty() ) {
+                var aggregate = queryToCompile.getAggregate();
+                var unionQuery = queryToCompile.clone().setAggregate( {} );
+                queryToCompile = queryToCompile
+                    .newQuery()
+                    .setAggregate( aggregate )
+                    .fromSub( "qb_aggregate_source", unionQuery );
+            }
+
             var sql = [];
 
             for ( var component in selectComponents ) {
                 var func = variables[ "compile#component#" ];
-                var args = { "query": query, "#component#": invoke( query, "get" & component ) };
+                var args = { "query": queryToCompile, "#component#": invoke( queryToCompile, "get" & component ) };
                 arrayAppend( sql, func( argumentCollection = args ) );
             }
 
@@ -292,11 +367,7 @@ component displayname="Grammar" accessors="true" singleton {
             return "";
         }
 
-        var fullTable = arguments.tableName;
-        if ( query.getAlias() != "" ) {
-            fullTable &= " #query.getAlias()#";
-        }
-        return "FROM " & wrapTable( fullTable );
+        return "FROM " & wrapQueryTable( arguments.query );
     }
 
     private string function compileForClause( required QueryBuilder query, any forClause ) {
@@ -443,7 +514,28 @@ component displayname="Grammar" accessors="true" singleton {
             placeholder = where.value.getSql();
         }
 
-        return trim( "#wrapColumn( where.column )# #uCase( where.operator )# #placeholder#" );
+        var column = where.column.type == "jsonPath"
+         ? compileJsonScalarComparison(
+            where.column.value,
+            isNull( where.value ) ? javacast( "null", "" ) : where.value
+        )
+         : wrapColumn( where.column );
+
+        return trim( "#column# #uCase( where.operator )# #placeholder#" );
+    }
+
+    private string function whereJsonContains( required QueryBuilder query, required struct where ) {
+        var predicate = compileJsonContains( where.path.value );
+        return where.negate ? "NOT (#predicate#)" : predicate;
+    }
+
+    private string function whereJsonExists( required QueryBuilder query, required struct where ) {
+        var predicate = compileJsonExists( where.path.value );
+        return where.negate ? "NOT (#predicate#)" : predicate;
+    }
+
+    private string function whereJsonLength( required QueryBuilder query, required struct where ) {
+        return "#compileJsonLength( where.path.value )# #uCase( where.operator )# ?";
     }
 
     /**
@@ -576,11 +668,15 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereBetween( required QueryBuilder query, required struct where ) {
-        var start = variables.utils.isExpression( where.start ) ? where.start.getSql() : (
-            isSimpleValue( where.start ) ? "?" : "(#compileSelect( where.start )#)"
+        var start = !where.keyExists( "start" ) || isNull( where.start ) ? "?" : (
+            variables.utils.isExpression( where.start ) ? where.start.getSql() : (
+                variables.utils.isBuilder( where.start ) ? "(#compileSelect( where.start )#)" : "?"
+            )
         );
-        var end = variables.utils.isExpression( where.end ) ? where.end.getSql() : (
-            isSimpleValue( where.end ) ? "?" : "(#compileSelect( where.end )#)"
+        var end = !where.keyExists( "end" ) || isNull( where.end ) ? "?" : (
+            variables.utils.isExpression( where.end ) ? where.end.getSql() : (
+                variables.utils.isBuilder( where.end ) ? "(#compileSelect( where.end )#)" : "?"
+            )
         );
         return "#wrapColumn( where.column )# BETWEEN #start# AND #end#";
     }
@@ -594,7 +690,17 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereNotBetween( required QueryBuilder query, required struct where ) {
-        return "#wrapColumn( where.column )# NOT BETWEEN ? AND ?";
+        var start = !where.keyExists( "start" ) || isNull( where.start ) ? "?" : (
+            variables.utils.isExpression( where.start ) ? where.start.getSql() : (
+                variables.utils.isBuilder( where.start ) ? "(#compileSelect( where.start )#)" : "?"
+            )
+        );
+        var end = !where.keyExists( "end" ) || isNull( where.end ) ? "?" : (
+            variables.utils.isExpression( where.end ) ? where.end.getSql() : (
+                variables.utils.isBuilder( where.end ) ? "(#compileSelect( where.end )#)" : "?"
+            )
+        );
+        return "#wrapColumn( where.column )# NOT BETWEEN #start# AND #end#";
     }
 
     /**
@@ -606,11 +712,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereIn( required QueryBuilder query, required struct where ) {
-        var placeholderString = where.values
-            .map( function( value ) {
-                return variables.utils.isExpression( value ) ? value.getSql() : "?";
-            } )
-            .toList( ", " );
+        var placeholderString = compileWhereInPlaceholders( where.values );
         if ( placeholderString == "" ) {
             return "0 = 1";
         }
@@ -626,15 +728,67 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function whereNotIn( required QueryBuilder query, required struct where ) {
-        var placeholderString = where.values
-            .map( function( value ) {
-                return variables.utils.isExpression( value ) ? value.getSql() : "?";
-            } )
-            .toList( ", " );
+        var placeholderString = compileWhereInPlaceholders( where.values );
         if ( placeholderString == "" ) {
             return "1 = 1";
         }
         return "#wrapColumn( where.column )# NOT IN (#placeholderString#)";
+    }
+
+    /**
+     * Compiles placeholders for IN values while preserving sparse and null array positions.
+     */
+    private string function compileWhereInPlaceholders( required array values ) {
+        var placeholders = [];
+        for ( var valueIndex = 1; valueIndex <= arguments.values.len(); valueIndex++ ) {
+            if ( !arrayIsDefined( arguments.values, valueIndex ) || isNull( arguments.values[ valueIndex ] ) ) {
+                placeholders.append( "?" );
+                continue;
+            }
+            var value = arguments.values[ valueIndex ];
+            placeholders.append( variables.utils.isExpression( value ) ? value.getSql() : "?" );
+        }
+        return placeholders.toList( ", " );
+    }
+
+    /**
+     * Compiles a bulk IN or NOT IN statement using one serialized binding.
+     *
+     * @query The Builder instance.
+     * @where The where clause to compile.
+     *
+     * @return string
+     */
+    private string function whereInBulk( required QueryBuilder query, required struct where ) {
+        if ( arguments.where.isEmpty ) {
+            return arguments.where.negate ? "1 = 1" : "0 = 1";
+        }
+
+        var operator = arguments.where.negate ? "NOT IN" : "IN";
+        return "#wrapColumn( arguments.where.column )# #operator# (#compileWhereInBulkValues( arguments.where.sqlType )#)";
+    }
+
+    /**
+     * Compiles the row-producing subquery for a bulk IN statement.
+     * Grammars with a native single-parameter strategy should override this method.
+     *
+     * @sqlType The database SQL type to use for each value.
+     *
+     * @return string
+     */
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support bulk IN statements." );
+    }
+
+    /**
+     * Maps an inferred CF SQL type to a database-native type for a bulk IN statement.
+     *
+     * @sqlType The inferred CF SQL type.
+     *
+     * @return string
+     */
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        return reReplaceNoCase( trim( arguments.sqlType ), "^CF_SQL_", "" ).uCase();
     }
 
     /**
@@ -704,7 +858,9 @@ component displayname="Grammar" accessors="true" singleton {
         if ( having.type == "raw" ) {
             return trim( "#having.combinator# #having.column.getSQL()#" );
         }
-        var placeholder = variables.utils.isExpression( having.value ) ? having.value.getSQL() : "?";
+        var placeholder = !isNull( having.value ) && variables.utils.isExpression( having.value )
+         ? having.value.getSQL()
+         : "?";
         return trim( "#having.combinator# #wrapColumn( having.column )# #having.operator# #placeholder#" );
     }
 
@@ -874,6 +1030,95 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Whether this grammar provides a native bulk insert strategy.
+     */
+    public boolean function supportsBulkInsert() {
+        return false;
+    }
+
+    /**
+     * Resolve the complete set of columns present across all rows in a multi-row insert.
+     *
+     * @values The rows to inspect.
+     *
+     * @return The unique column names in first-seen order.
+     */
+    public array function resolveInsertColumnNames( required array values ) {
+        var columnNames = [];
+        var seenColumns = {};
+
+        arguments.values.each( function( row ) {
+            if ( !isStruct( arguments.row ) ) {
+                throw( type = "InvalidSQLType", message = "Please pass an array of structs mapping columns to values" );
+            }
+
+            for ( var key in arguments.row ) {
+                if ( !seenColumns.keyExists( key ) ) {
+                    seenColumns[ key ] = true;
+                    columnNames.append( key );
+                }
+            }
+        } );
+
+        return columnNames;
+    }
+
+    /**
+     * Prepare values and column metadata for a grammar's native bulk insert compiler.
+     *
+     * @query The Builder instance.
+     * @values The rows to insert.
+     * @sqlTypes Explicit SQL types keyed by column name.
+     */
+    public struct function prepareBulkInsert( required any query, required array values, required struct sqlTypes ) {
+        var builder = arguments.query;
+        var columns = resolveInsertColumnNames( arguments.values ).map( function( column ) {
+            var formatted = listLast( builder.applyColumnFormatter( column ), "." );
+            return { "original": column, "formatted": { "type": "simple", "value": formatted } };
+        } );
+        columns.sort( ( a, b ) => compareNoCase( a.formatted.value, b.formatted.value ) );
+
+        arguments.values.each( function( row ) {
+            columns.each( function( column ) {
+                if (
+                    row.keyExists( column.original ) &&
+                    !isNull( row[ column.original ] ) &&
+                    getUtils().isExpression( row[ column.original ] )
+                ) {
+                    throw( type = "InvalidBulkValue", message = "Bulk insert values cannot contain SQL expressions." );
+                }
+            } );
+        } );
+
+        return prepareBulkInsertValues( arguments.values, columns, arguments.sqlTypes );
+    }
+
+    /**
+     * Prepare database-specific values and metadata for a native bulk insert.
+     *
+     * @values The rows to insert.
+     * @columns The normalized columns to insert.
+     * @sqlTypes Explicit SQL types keyed by column name.
+     */
+    public struct function prepareBulkInsertValues(
+        required array values,
+        required array columns,
+        required struct sqlTypes
+    ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support native bulk inserts." );
+    }
+
+    /**
+     * Compile a native bulk insert statement.
+     *
+     * @query The Builder instance.
+     * @columns The columns and resolved SQL types to insert.
+     */
+    public string function compileBulkInsert( required any query, required array columns ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support native bulk inserts." );
+    }
+
+    /**
      * Compile a Builder's query into an insert string ignoring duplicate key values.
      *
      * @qb The Builder instance.
@@ -897,6 +1142,29 @@ component displayname="Grammar" accessors="true" singleton {
             [],
             arguments.target
         );
+    }
+
+    /**
+     * Compiles the target-column comparisons for a MERGE-style upsert.
+     *
+     * @target The columns used to match source and target rows.
+     * @matchNulls Whether two NULL target values should be considered a match.
+     *
+     * @return The compiled match predicate.
+     */
+    public string function compileUpsertTargetConstraint( required array target, boolean matchNulls = false ) {
+        var shouldMatchNulls = arguments.matchNulls;
+        return arguments.target
+            .map( function( column ) {
+                var targetColumn = wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } );
+                var sourceColumn = wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } );
+                var equality = "#targetColumn# = #sourceColumn#";
+                if ( !shouldMatchNulls ) {
+                    return equality;
+                }
+                return "(#equality# OR (#targetColumn# IS NULL AND #sourceColumn# IS NULL))";
+            } )
+            .toList( " AND " );
     }
 
     /**
@@ -924,9 +1192,10 @@ component displayname="Grammar" accessors="true" singleton {
                     return wrapColumn( column.formatted );
                 } )
                 .toList( ", " );
+            var targetColumns = columnsString == "" ? "" : " (#columnsString#)";
 
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " INSERT INTO #wrapTable( arguments.query.getTableName() )# (#columnsString#) #compileSelect( arguments.source )#"
+                compileCommonTables( query, query.getCommonTables() ) & " INSERT INTO #wrapTable( arguments.query.getTableName() )##targetColumns# #compileSelect( arguments.source )#"
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -971,7 +1240,7 @@ component displayname="Grammar" accessors="true" singleton {
                 } )
                 .toList( ", " );
 
-            var updateStatement = "UPDATE #wrapTable( query.getTableName() )#";
+            var updateStatement = "UPDATE #wrapQueryTable( query )#";
 
             if ( !arguments.query.getJoins().isEmpty() ) {
                 updateStatement &= " " & compileJoins( arguments.query, arguments.query.getJoins() );
@@ -995,6 +1264,12 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function compileDelete( required QueryBuilder query ) {
+        if ( !arguments.query.getCommonTables().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support DELETE statements with Common Table Expressions."
+            );
+        }
         if ( !arguments.query.getReturning().isEmpty() ) {
             throw(
                 type = "UnsupportedOperation",
@@ -1015,7 +1290,7 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            return trim( "DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )#" );
+            return trim( "DELETE FROM #wrapQueryTable( query )# #compileWheres( query, query.getWheres() )#" );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -1045,13 +1320,6 @@ component displayname="Grammar" accessors="true" singleton {
             var aggString = "#uCase( aggregate.type )#(#shouldIncludeDistinct ? "DISTINCT " : ""##wrapColumn( aggregate.column )#)";
             if ( aggregate.keyExists( "defaultValue" ) && !isNull( aggregate.defaultValue ) ) {
                 aggString = "COALESCE(#aggString#, #aggregate.defaultValue#)";
-            }
-
-            if ( !query.getUnions().isEmpty() ) {
-                var clonedQuery = query.clone().setAggregate( {} );
-                query.reset();
-                query.setAggregate( arguments.aggregate );
-                query.fromSub( "qb_aggregate_source", clonedQuery );
             }
 
             return "SELECT #aggString# AS ""aggregate""";
@@ -1137,20 +1405,40 @@ component displayname="Grammar" accessors="true" singleton {
         return parts.table & getTableAliasOperator() & wrapAlias( getTablePrefix() & parts.alias );
     }
 
+    /**
+     * Wraps a builder's table together with its separately tracked alias.
+     *
+     * @query The query builder whose table should be wrapped.
+     * @includeAlias Whether to include the builder's table alias.
+     *
+     * @return string
+     */
+    public string function wrapQueryTable( required QueryBuilder query, boolean includeAlias = true ) {
+        var table = arguments.query.getTableName();
+        if (
+            arguments.includeAlias &&
+            !getUtils().isExpression( table ) &&
+            arguments.query.getAlias() != ""
+        ) {
+            table &= " #arguments.query.getAlias()#";
+        }
+        return wrapTable( table, arguments.includeAlias );
+    }
+
     public struct function explodeTable( required string table ) {
         var parts = { "alias": "", "table": trim( arguments.table ) };
 
         // Quick check to see if we should bother to use a regex to look for a table alias
-        if ( parts.table.find( " " ) ) {
+        if ( reFind( "\s", parts.table ) ) {
             var matches = reFindNoCase(
-                "(.*?)(?:\s(?:AS\s){0,1})([^\)]+)$",
+                "^(.+?)\s+(?:AS\s+)?(\S+)\s*$",
                 parts.table,
                 1,
                 true
             );
-            if ( matches.pos.len() >= 3 ) {
-                parts.alias = mid( parts.table, matches.pos[ 3 ], matches.len[ 3 ] );
-                parts.table = mid( parts.table, matches.pos[ 2 ], matches.len[ 2 ] );
+            if ( matches.pos.len() >= 3 && matches.pos[ 1 ] > 0 ) {
+                parts.alias = trim( mid( parts.table, matches.pos[ 3 ], matches.len[ 3 ] ) );
+                parts.table = trim( mid( parts.table, matches.pos[ 2 ], matches.len[ 2 ] ) );
             }
         }
 
@@ -1173,23 +1461,16 @@ component displayname="Grammar" accessors="true" singleton {
             return trim( wrapTable( "(#arguments.column.value.toSQL()#) AS #arguments.column.alias#" ) );
         }
 
-        arguments.column = trim( arguments.column.value );
-        var alias = "";
-        if ( arguments.column.findNoCase( " as " ) > 0 ) {
-            var matches = reFindNoCase(
-                "(.*)(?:\sAS\s)(.*)",
-                arguments.column,
-                1,
-                true
-            );
-            if ( matches.pos.len() >= 3 ) {
-                alias = mid( arguments.column, matches.pos[ 3 ], matches.len[ 3 ] );
-                arguments.column = mid( arguments.column, matches.pos[ 2 ], matches.len[ 2 ] );
-            }
-        } else if ( arguments.column.findNoCase( " " ) > 0 ) {
-            alias = listGetAt( arguments.column, 2, " " );
-            arguments.column = listGetAt( arguments.column, 1, " " );
+        if ( arguments.column.type == "jsonPath" ) {
+            var jsonSql = compileJsonScalar( arguments.column.value );
+            return arguments.column.keyExists( "alias" )
+             ? jsonSql & " AS " & wrapValue( arguments.column.alias )
+             : jsonSql;
         }
+
+        var columnParts = explodeColumnAlias( arguments.column.value );
+        arguments.column = columnParts.column;
+        var alias = columnParts.alias;
         arguments.column = arguments.column
             .listToArray( "." )
             .map( wrapValue )
@@ -1198,6 +1479,92 @@ component displayname="Grammar" accessors="true" singleton {
             return arguments.column;
         }
         return arguments.column & " AS " & wrapValue( alias );
+    }
+
+    /**
+     * Compiles scalar extraction for a JSON path.
+     */
+    public string function compileJsonScalar( required struct jsonPath ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support JSON paths" );
+    }
+
+    /**
+     * Compiles a JSON scalar used in a comparison. Grammars may cast the scalar
+     * based on the comparison value when their JSON extraction is text-only.
+     */
+    public string function compileJsonScalarComparison( required struct jsonPath, any value ) {
+        return compileJsonScalar( arguments.jsonPath );
+    }
+
+    /**
+     * Compiles a JSON containment predicate.
+     */
+    public string function compileJsonContains( required struct jsonPath ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support JSON containment" );
+    }
+
+    /**
+     * Compiles a JSON path existence predicate.
+     */
+    public string function compileJsonExists( required struct jsonPath ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support JSON path existence" );
+    }
+
+    /**
+     * Compiles JSON array length extraction.
+     */
+    public string function compileJsonLength( required struct jsonPath ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support JSON array lengths" );
+    }
+
+    /**
+     * Allows grammars to serialize containment bindings where required.
+     */
+    public any function prepareJsonContainsBinding( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return javacast( "null", "" );
+        }
+        if ( !isNull( arguments.value ) && !isSimpleValue( arguments.value ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar only supports scalar JSON containment values"
+            );
+        }
+        return arguments.value;
+    }
+
+    /**
+     * Wraps the relational column portion of a JSON expression.
+     */
+    public string function wrapJsonColumn( required struct jsonPath ) {
+        return wrapColumn( { type: "simple", value: arguments.jsonPath.column } );
+    }
+
+    /**
+     * Builds a portable SQL/JSON path literal.
+     */
+    public string function buildJsonPath( required array path ) {
+        var compiledPath = "$";
+        for ( var segment in arguments.path ) {
+            if ( getUtils().isActuallyNumeric( segment ) ) {
+                compiledPath &= "[#segment#]";
+            } else {
+                var escapedSegment = replace(
+                    segment,
+                    chr( 92 ),
+                    chr( 92 ) & chr( 92 ),
+                    "all"
+                );
+                escapedSegment = replace(
+                    escapedSegment,
+                    """",
+                    chr( 92 ) & """",
+                    "all"
+                );
+                compiledPath &= ".""#escapedSegment#""";
+            }
+        }
+        return replace( compiledPath, "'", "''", "all" );
     }
 
     /**
@@ -1210,26 +1577,73 @@ component displayname="Grammar" accessors="true" singleton {
     public string function extractAlias( required any column ) {
         if ( arguments.column.type == "raw" ) {
             arguments.column = trim( arguments.column.value.getSQL() );
+        } else if ( arguments.column.type == "jsonPath" ) {
+            if ( arguments.column.keyExists( "alias" ) ) {
+                return arguments.column.alias;
+            }
+            return arguments.column.value.path.isEmpty()
+             ? listLast( arguments.column.value.column, "." )
+             : arguments.column.value.path.last();
         } else {
             arguments.column = trim( arguments.column.value );
         }
 
-        var alias = "";
-        if ( arguments.column.findNoCase( " as " ) > 0 ) {
-            var matches = reFindNoCase(
-                "(.*)(?:\sAS\s)(.*)",
-                arguments.column,
+        var columnParts = explodeColumnAlias( arguments.column );
+        if ( columnParts.alias != "" ) {
+            return columnParts.alias;
+        }
+
+        return listLast( columnParts.column, "." );
+    }
+
+    /**
+     * Splits a column expression from a trailing explicit or implicit alias.
+     */
+    private struct function explodeColumnAlias( required string column ) {
+        var parts = { "alias": "", "column": trim( arguments.column ) };
+        var matches = reFindNoCase(
+            "^(.+?)\s+AS\s+(.+?)\s*$",
+            parts.column,
+            1,
+            true
+        );
+
+        if ( matches.pos.len() < 3 || matches.pos[ 1 ] == 0 ) {
+            matches = reFind(
+                "^(.+?)\s+([^\s]+)\s*$",
+                parts.column,
                 1,
                 true
             );
-            if ( matches.pos.len() >= 3 ) {
-                return mid( arguments.column, matches.pos[ 3 ], matches.len[ 3 ] );
-            }
-        } else if ( arguments.column.findNoCase( " " ) > 0 ) {
-            return listLast( arguments.column, " " );
         }
 
-        return listLast( arguments.column, "." );
+        if ( matches.pos.len() >= 3 && matches.pos[ 1 ] > 0 ) {
+            var alias = trim( mid( parts.column, matches.pos[ 3 ], matches.len[ 3 ] ) );
+            if ( isValidColumnAlias( alias ) ) {
+                parts.alias = alias;
+                parts.column = trim( mid( parts.column, matches.pos[ 2 ], matches.len[ 2 ] ) );
+            }
+        }
+
+        return parts;
+    }
+
+    /**
+     * Rejects parenthesized SQL fragments mistaken for trailing aliases.
+     */
+    private boolean function isValidColumnAlias( required string alias ) {
+        if ( len( arguments.alias ) >= 2 ) {
+            var firstCharacter = left( arguments.alias, 1 );
+            var lastCharacter = right( arguments.alias, 1 );
+            if (
+                ( firstCharacter == """" && lastCharacter == """" ) ||
+                ( firstCharacter == chr( 96 ) && lastCharacter == chr( 96 ) ) ||
+                ( firstCharacter == "[" && lastCharacter == "]" )
+            ) {
+                return true;
+            }
+        }
+        return !reFind( "[()]", arguments.alias );
     }
 
     /**
@@ -1240,7 +1654,7 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     function wrapValue( required any value ) {
-        if ( !variables.shouldWrapValues ) {
+        if ( !getShouldWrapValues() ) {
             return arguments.value;
         }
 
@@ -1252,9 +1666,17 @@ component displayname="Grammar" accessors="true" singleton {
             return arguments.value;
         }
 
-        arguments.value = reReplace( arguments.value, """", "", "all" );
+        var normalizedValue = toString( arguments.value );
+        if (
+            len( normalizedValue ) >= 2 &&
+            left( normalizedValue, 1 ) == """" &&
+            right( normalizedValue, 1 ) == """"
+        ) {
+            normalizedValue = mid( normalizedValue, 2, len( normalizedValue ) - 2 );
+        }
+        normalizedValue = replace( normalizedValue, """", """""", "all" );
 
-        return """#value#""";
+        return """#normalizedValue#""";
     }
 
     /**
@@ -1362,14 +1784,24 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function generateDefault( column ) {
-        if ( column.getDefaultValue() == "" ) {
+        if ( !column.getHasDefaultValue() ) {
             return "";
         }
         return "DEFAULT #wrapDefaultType( column )#";
     }
 
+    /**
+     * Determines whether a column's default is a textual SQL literal.
+     */
+    function shouldQuoteDefaultValue( required column ) {
+        return listFindNoCase(
+            "char,string,unicodeString,text,unicodeText,mediumText,unicodeMediumText,longText,unicodeLongText,GUID,UUID,enum",
+            arguments.column.getType()
+        ) > 0;
+    }
+
     function generateComment( column ) {
-        return column.getCommentValue() != "" ? "COMMENT '#column.getCommentValue()#'" : "";
+        return column.getCommentValue() != "" ? "COMMENT #quoteStringLiteral( column.getCommentValue() )#" : "";
     }
 
     function compileAddComment( blueprint, commandParameters ) {
@@ -1377,8 +1809,30 @@ component displayname="Grammar" accessors="true" singleton {
             "COMMENT ON COLUMN",
             wrapColumn( { "type": "simple", "value": commandParameters.table & "." & commandParameters.column.getName() } ),
             "IS",
-            "'" & commandParameters.column.getCommentValue() & "'"
+            quoteStringLiteral( commandParameters.column.getCommentValue() )
         ] );
+    }
+
+    /**
+     * Quotes a value for use as a SQL string literal in generated DDL.
+     */
+    public string function quoteStringLiteral( required any value ) {
+        return "'" & replace(
+            toString( arguments.value ),
+            "'",
+            "''",
+            "all"
+        ) & "'";
+    }
+
+    /**
+     * Places a standalone schema object in the same schema as its table.
+     */
+    public string function qualifyObjectNameForTable( required string table, required string objectName ) {
+        if ( listLen( arguments.table, "." ) == 1 ) {
+            return arguments.objectName;
+        }
+        return listDeleteAt( arguments.table, listLen( arguments.table, "." ), "." ) & "." & arguments.objectName;
     }
 
     /*=====  End of Blueprint: Create  ======*/
@@ -1452,21 +1906,19 @@ component displayname="Grammar" accessors="true" singleton {
     ========================================*/
 
     function compileAddColumn( blueprint, commandParameters ) {
+        var existingIndexes = blueprint.getIndexes();
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            var existingIndexes = blueprint.getIndexes();
             blueprint.setIndexes( [] );
 
             var body = concatenate(
                 [ compileCreateColumn( commandParameters.column, blueprint ), compileCreateIndexes( blueprint ) ],
                 ", "
             );
-
-            blueprint.setIndexes( existingIndexes );
 
             return concatenate( [
                 "ALTER TABLE",
@@ -1475,6 +1927,7 @@ component displayname="Grammar" accessors="true" singleton {
                 body
             ] );
         } finally {
+            blueprint.setIndexes( existingIndexes );
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
@@ -1728,7 +2181,7 @@ component displayname="Grammar" accessors="true" singleton {
         var values = column
             .getValues()
             .map( function( value ) {
-                return "'#value#'";
+                return quoteStringLiteral( value );
             } )
             .toList( ", " );
         return "ENUM(#values#)";
@@ -2023,7 +2476,7 @@ component displayname="Grammar" accessors="true" singleton {
         var values = column
             .getValues()
             .map( function( val ) {
-                return "'#val#'";
+                return quoteStringLiteral( val );
             } )
             .toList( ", " );
         return concatenate( [
@@ -2035,6 +2488,18 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /*=====  End of Index Types  ======*/
+
+    /**
+     * Prepares an identifier for use as a schema catalog lookup binding.
+     * Grammars with case-sensitive catalogs can override this method.
+     *
+     * @identifier The table, column, or schema identifier to prepare.
+     *
+     * @return The identifier value to bind to the catalog query.
+     */
+    public string function prepareSchemaIdentifierForLookup( required string identifier ) {
+        return arguments.identifier;
+    }
 
     function compileTableExists( tableName, schemaName = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ?";
@@ -2057,6 +2522,10 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function getShouldWrapValues() {
+        var context = variables.shouldWrapValuesContext.get();
+        if ( !isNull( context ) && !context.isEmpty() ) {
+            return context.last();
+        }
         if ( isNull( variables.shouldWrapValues ) ) {
             throw( type = "InvalidState", message = "The shouldWrapValues property has not been set." );
         }
@@ -2067,8 +2536,63 @@ component displayname="Grammar" accessors="true" singleton {
         if ( isNull( arguments.shouldWrap ) ) {
             throw( type = "InvalidState", message = "The shouldWrapValues property has not been set." );
         }
-        variables.shouldWrapValues = arguments.shouldWrap;
+        var context = variables.shouldWrapValuesContext.get();
+        if ( !isNull( context ) && !context.isEmpty() ) {
+            context[ context.len() ] = arguments.shouldWrap;
+        } else {
+            variables.shouldWrapValues = arguments.shouldWrap;
+        }
         return this;
+    }
+
+    /**
+     * Adds a wrapping preference isolated to the current thread.
+     * Each call must be paired with `popShouldWrapValuesContext`.
+     *
+     * @shouldWrap The wrapping preference, or null to use the current grammar preference.
+     */
+    public void function pushShouldWrapValuesContext( any shouldWrap ) {
+        var context = variables.shouldWrapValuesContext.get();
+        if ( isNull( context ) ) {
+            context = [];
+            variables.shouldWrapValuesContext.set( context );
+        }
+
+        context.append( isNull( arguments.shouldWrap ) ? getShouldWrapValues() : arguments.shouldWrap );
+        variables.shouldWrapValuesContext.set( context );
+    }
+
+    /**
+     * Removes the current thread's wrapping preference.
+     */
+    public void function popShouldWrapValuesContext() {
+        var context = variables.shouldWrapValuesContext.get();
+        if ( isNull( context ) || context.isEmpty() ) {
+            throw( type = "InvalidState", message = "There is no shouldWrapValues context to remove." );
+        }
+
+        context.deleteAt( context.len() );
+        if ( context.isEmpty() ) {
+            variables.shouldWrapValuesContext.remove();
+        } else {
+            variables.shouldWrapValuesContext.set( context );
+        }
+    }
+
+    /**
+     * Runs a compiler callback with a wrapping preference isolated to the current thread.
+     * Nested compiler calls restore the previous preference when they complete.
+     *
+     * @shouldWrap The wrapping preference, or null to use the current grammar preference.
+     * @callback   The compiler callback to run.
+     */
+    public any function withShouldWrapValuesContext( any shouldWrap, required function callback ) {
+        pushShouldWrapValuesContext( arguments.shouldWrap );
+        try {
+            return arguments.callback();
+        } finally {
+            popShouldWrapValuesContext();
+        }
     }
 
 }

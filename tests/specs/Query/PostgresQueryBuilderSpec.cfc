@@ -1,5 +1,102 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "PostgreSQL conflict returning clauses", function() {
+            it( "places returning after an upsert conflict clause exactly once", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .returning( "id" )
+                    .upsert(
+                        values = { "id": 1, "name": "Jane" },
+                        target = [ "id" ],
+                        update = [ "name" ],
+                        toSql = true
+                    );
+
+                expect( reMatchNoCase( "RETURNING", sql ) ).toHaveLength( 1 );
+                expect( findNoCase( "RETURNING", sql ) ).toBeGT( findNoCase( "ON CONFLICT", sql ) );
+            } );
+
+            it( "places returning after insert ignore conflict handling", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .returning( "id" )
+                    .insertIgnore( values = { "id": 1, "name": "Jane" }, toSql = true );
+
+                expect( reMatchNoCase( "RETURNING", sql ) ).toHaveLength( 1 );
+                expect( findNoCase( "RETURNING", sql ) ).toBeGT( findNoCase( "ON CONFLICT", sql ) );
+            } );
+        } );
+
+        describe( "PostgreSQL root JSON scalars", function() {
+            it( "extracts root JSON scalar values as text", function() {
+                var builder = getBuilder()
+                    .select( [ getBuilder().jsonPath( "payload" ) ] )
+                    .from( "records" )
+                    .where( getBuilder().jsonPath( "payload" ), "name" );
+
+                expect( builder.toSQL() ).toBeWithCase(
+                    "SELECT ""payload""#chr( 35 )#>>'{}' FROM ""records"" WHERE ""payload""#chr( 35 )#>>'{}' = ?"
+                );
+            } );
+        } );
+
+        describe( "PostgreSQL data modification CTEs", function() {
+            it( "compiles CTEs before update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", true );
+                    } )
+                    .from( "active_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ true, "changed", 42 ] );
+            } );
+
+            it( "compiles CTEs before delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", false );
+                    } )
+                    .from( "inactive_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.delete( toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ false, 42 ] );
+            } );
+        } );
+
+        describe( "PostgreSQL source upserts", function() {
+            it( "falls back to insert using when the update list is explicitly empty", function() {
+                var source = getBuilder()
+                    .select( [ "id", "email" ] )
+                    .from( "incoming_users" )
+                    .where( "active", true );
+
+                var destination = getBuilder().from( "users" );
+                var sql = destination.upsert(
+                    source = source,
+                    values = [ "id", "email" ],
+                    target = [ "id" ],
+                    update = [],
+                    toSql = true
+                );
+
+                expect( sql ).toBeWithCase(
+                    "INSERT INTO ""users"" (""id"", ""email"") SELECT ""id"", ""email"" FROM ""incoming_users"" WHERE ""active"" = ?"
+                );
+                expect( getTestBindings( destination ) ).toBe( [ true ] );
+            } );
+        } );
+    }
+
     function selectAllColumns() {
         return "SELECT * FROM ""users""";
     }
@@ -338,6 +435,70 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereInArrayOfQueryParamStructs() {
         return { sql: "SELECT * FROM ""users"" WHERE ""id"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
+    }
+
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""status"" IN (SELECT CAST(""value"" AS TEXT) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""externalId"" IN (SELECT CAST(""value"" AS TEXT) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""active"" IN (SELECT CAST(""value"" AS BOOLEAN) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[true,false]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS BIGINT) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS BIGINT) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""active"" = ? OR ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" NOT IN (SELECT CAST(""value"" AS INTEGER) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value""))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 1 = 1";
     }
 
     function orWhereIn() {
@@ -1025,6 +1186,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "INSERT INTO ""users"" (""username"", ""active"", ""createdDate"", ""modifiedDate"") SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ? ON CONFLICT (""username"") DO UPDATE SET ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
@@ -1091,6 +1256,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function deleteWithJoins() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function deleteWithJoinsAndAliases() {
         return { exception: "UnsupportedOperation" };
     }
 
@@ -1206,6 +1375,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return {
             "sql": "SELECT * FROM ""LeftTable"" AS ""lt"" LEFT JOIN ""RightTable"" AS ""rt"" ON ""rt"".""id"" = ""lt"".""id"" AND EXISTS (SELECT 1 FROM ""ExistsTable"" AS ""et"" WHERE ""et"".""id"" = ""lt"".""id"")",
             "bindings": []
+        };
+    }
+
+    function jsonScalarSelect() {
+        return "SELECT ""profile""->'contacts'->0->>'email' AS ""explicitName"", ""profile""->'contacts'->0->>'email' AS ""shortcutName"" FROM ""users""";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE CAST(""profile""->>'age' AS NUMERIC) >= ? AND CAST(""profile""->>'age' AS NUMERIC) < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
+            bindings: [ """en""", """en""" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM ""users"" WHERE ""profile""->'name' IS NOT NULL AND ""profile""->'name' IS NOT NULL";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ? AND JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ? ORDER BY ""profile""->>'name' ASC, ""profile""->>'name' DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? AND JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ? OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
+            bindings: [ serializeJSON( [ "en", "de" ] ), serializeJSON( [ "en", "de" ] ) ]
+        };
+    }
+
+    function jsonEmptyCompoundContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb",
+            bindings: [ serializeJSON( [] ) ]
+        };
+    }
+
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE (""profile""->'languages')::jsonb @> ?::jsonb AND (""profile""->'languages')::jsonb @> ?::jsonb",
+            bindings: [ "null", "null" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT ""profile""->>'0' AS ""explicitKey"", ""profile""->>0 AS ""shortcutIndex"" FROM ""users""";
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE NOT ((""profile""->'languages')::jsonb @> ?::jsonb) OR NOT ((""profile""->'languages')::jsonb @> ?::jsonb) OR (""profile""->'languages')::jsonb @> ?::jsonb AND NOT (""profile""->'nickname' IS NOT NULL) OR ""profile""->'name' IS NOT NULL OR NOT (""profile""->'timezone' IS NOT NULL) OR JSONB_ARRAY_LENGTH((""profile""->'languages')::jsonb) > ?",
+            bindings: [ """en""", """fr""", """de""", 1 ]
         };
     }
 

@@ -4,11 +4,92 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         super.run();
 
         describe( "Oracle Grammar-specific tests", function() {
+            it( "prefixes schema builder tables with the default schema", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                var statements = schema
+                    .create(
+                        "users",
+                        ( table ) => {
+                            table.string( "username" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSql();
+
+                expect( statements ).toBe( [ "CREATE TABLE ""APP"".""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL)" ] );
+            } );
+
+            it( "preserves explicitly qualified table names", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                var statements = schema
+                    .create(
+                        "audit.users",
+                        ( table ) => {
+                            table.string( "username" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSql();
+
+                expect( statements ).toBe( [ "CREATE TABLE ""AUDIT"".""USERS"" (""USERNAME"" VARCHAR2(255) NOT NULL)" ] );
+            } );
+
+            it( "prefixes generated sequences and triggers without including the schema in their names", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                var statements = schema
+                    .create(
+                        "users",
+                        ( table ) => {
+                            table.increments( "id" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSql();
+
+                expect( statements ).toBe( [
+                    "CREATE TABLE ""APP"".""USERS"" (""ID"" NUMBER(10, 0) NOT NULL, CONSTRAINT ""PK_USERS_ID"" PRIMARY KEY (""ID""))",
+                    "CREATE SEQUENCE ""APP"".""SEQ_USERS""",
+                    "CREATE OR REPLACE TRIGGER ""APP"".""TRG_USERS"" BEFORE INSERT ON ""APP"".""USERS"" FOR EACH ROW WHEN (NEW.""ID"" IS NULL) BEGIN SELECT ""APP"".""SEQ_USERS"".NEXTVAL INTO ::NEW.""ID"" FROM dual; END"
+                ] );
+            } );
+
+            it( "drops generated sequences and triggers from the default schema", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+
+                expect( schema.drop( "users", {}, false ).toSql() ).toBe( [
+                    "DROP TABLE ""APP"".""USERS""",
+                    "BEGIN EXECUTE IMMEDIATE 'DROP SEQUENCE ""APP"".""SEQ_USERS""'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -2289 THEN RAISE; END IF; END;",
+                    "BEGIN EXECUTE IMMEDIATE 'DROP TRIGGER ""APP"".""TRG_USERS""'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -4080 THEN RAISE; END IF; END;"
+                ] );
+            } );
+
+            it( "normalizes unquoted identifiers for existence checks", () => {
+                var schema = getBuilder().setDefaultSchema( "app" );
+                variables.mockGrammar.$( "runQuery", queryNew( "" ) );
+                schema.hasTable( "audit.users" );
+
+                var bindings = variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ];
+                expect( compare( bindings[ 1 ], "USERS" ) ).toBe( 0 );
+                expect( compare( bindings[ 2 ], "AUDIT" ) ).toBe( 0 );
+            } );
+
+            it( "preserves quoted identifier case for existence checks", () => {
+                var schema = getBuilder();
+                variables.mockGrammar.$( "runQuery", queryNew( "" ) );
+                schema.hasColumn( """audit"".""users""", """emailAddress""" );
+
+                var bindings = variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ];
+                expect( compare( bindings[ 1 ], "users" ) ).toBe( 0 );
+                expect( compare( bindings[ 2 ], "emailAddress" ) ).toBe( 0 );
+                expect( compare( bindings[ 3 ], "audit" ) ).toBe( 0 );
+            } );
+
             it( "attempts to drop sequences and triggers when dropping a table", () => {
                 try {
                     var schema = getBuilder();
-                    variables.mockGrammar.$( "hasSequence", true );
-                    variables.mockGrammar.$( "hasTrigger", true );
                     var statements = schema.drop( "users", {}, false );
                     if ( !isSimpleValue( statements ) ) {
                         statements = statements.toSql();
@@ -19,8 +100,8 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                     expect( statements ).toBeArray();
                     var expected = [
                         "DROP TABLE ""USERS""",
-                        "DROP SEQUENCE ""SEQ_USERS""",
-                        "DROP TRIGGER ""TRG_USERS"""
+                        "BEGIN EXECUTE IMMEDIATE 'DROP SEQUENCE ""SEQ_USERS""'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -2289 THEN RAISE; END IF; END;",
+                        "BEGIN EXECUTE IMMEDIATE 'DROP TRIGGER ""TRG_USERS""'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -4080 THEN RAISE; END IF; END;"
                     ];
                     expect( statements ).toHaveLength( arrayLen( expected ) );
                     for ( var i = 1; i <= expected.len(); i++ ) {
@@ -33,6 +114,15 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
                     }
                     rethrow;
                 }
+            } );
+
+            it( "scopes drop all objects to the requested schema", function() {
+                var statement = getBuilder().dropAllObjects( {}, false, "tenant's" )[ 1 ];
+
+                expect( statement ).toInclude( "FROM all_tables WHERE owner = 'TENANT''S'" );
+                expect( statement ).toInclude( "DROP TABLE ""TENANT''S"".""'" );
+                expect( statement ).toInclude( "FROM all_sequences WHERE sequence_owner = 'TENANT''S'" );
+                expect( statement ).toInclude( "DROP SEQUENCE ""TENANT''S"".""'" );
             } );
         } );
     }
@@ -135,7 +225,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TABLE ""EMPLOYEES"" (""TSHIRT_SIZE"" VARCHAR2(255) NOT NULL, CONSTRAINT ""ENUM_EMPLOYEES_TSHIRT_SIZE"" CHECK (""TSHIRT_SIZE"" IN ('S', 'M', 'L', 'XL', 'XXL')))"
+            "CREATE TABLE ""EMPLOYEES"" (""TSHIRT_SIZE"" VARCHAR2(255) NOT NULL, CONSTRAINT ""ENUM_EMPLOYEES_TSHIRT_SIZE"" CHECK (""TSHIRT_SIZE"" IN ('S''s', 'M', 'L', 'XL', 'XXL')))"
         ];
     }
 
@@ -398,7 +488,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     function comment() {
         return [
             "CREATE TABLE ""USERS"" (""ACTIVE"" NUMBER(1, 0) NOT NULL)",
-            "COMMENT ON COLUMN ""USERS"".""ACTIVE"" IS 'This is a comment'"
+            "COMMENT ON COLUMN ""USERS"".""ACTIVE"" IS 'Pete''s comment'"
         ];
     }
 
@@ -415,7 +505,15 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function defaultForString() {
-        return [ "CREATE TABLE ""USERS"" (""COUNTRY"" VARCHAR2(255) DEFAULT 'USA' NOT NULL)" ];
+        return [ "CREATE TABLE ""USERS"" (""COUNTRY"" VARCHAR2(255) DEFAULT 'O''Brien' NOT NULL)" ];
+    }
+
+    function defaultForEmptyString() {
+        return [ "CREATE TABLE ""USERS"" (""NICKNAME"" VARCHAR2(255) DEFAULT '' NOT NULL)" ];
+    }
+
+    function defaultForUnicodeString() {
+        return [ "CREATE TABLE ""USERS"" (""NICKNAME"" NVARCHAR2(255) DEFAULT 'O''Brien' NOT NULL)" ];
     }
 
     function timestampWithCurrent() {
@@ -609,6 +707,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function addTimestamps() {
+        return [
+            "ALTER TABLE ""USERS"" ADD ""CREATEDDATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL",
+            "ALTER TABLE ""USERS"" ADD ""MODIFIEDDATE"" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL"
+        ];
+    }
+
     function addMultiple() {
         return [
             "ALTER TABLE ""USERS"" ADD ""TSHIRT_SIZE"" VARCHAR2(255) NOT NULL",
@@ -632,7 +737,11 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function dropTable() {
-        return [ "DROP TABLE ""USERS""" ];
+        return [
+            "DROP TABLE ""USERS""",
+            "BEGIN EXECUTE IMMEDIATE 'DROP SEQUENCE ""SEQ_USERS""'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -2289 THEN RAISE; END IF; END;",
+            "BEGIN EXECUTE IMMEDIATE 'DROP TRIGGER ""TRG_USERS""'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -4080 THEN RAISE; END IF; END;"
+        ];
     }
 
     function truncateTable() {
@@ -640,7 +749,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function dropIfExists() {
-        return [ "DROP TABLE ""USERS""" ];
+        return dropTable();
     }
 
     function dropColumn() {
@@ -703,8 +812,6 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
             .init( utils ) : arguments.mockGrammar;
         var builder = getMockBox().createMock( "qb.models.Schema.SchemaBuilder" ).init( arguments.mockGrammar );
         variables.mockGrammar = arguments.mockGrammar;
-        variables.mockGrammar.$( "hasSequence", false );
-        variables.mockGrammar.$( "hasTrigger", false );
         return builder;
     }
 

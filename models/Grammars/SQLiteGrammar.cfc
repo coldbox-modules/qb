@@ -1,5 +1,60 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT CAST(""value"" AS #arguments.sqlType#) FROM JSON_EACH(?)";
+    }
+
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+            case "DATE":
+            case "TIME":
+            case "TIMESTAMP":
+                return "TEXT";
+            case "BIT":
+            case "BOOLEAN":
+            case "TINYINT":
+            case "SMALLINT":
+            case "INTEGER":
+            case "BIGINT":
+            case "OTHER":
+                return "INTEGER";
+            case "DECIMAL":
+            case "NUMERIC":
+            case "REAL":
+            case "FLOAT":
+            case "DOUBLE":
+                return "REAL";
+            default:
+                return normalizedType;
+        }
+    }
+
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return "JSON_EXTRACT(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        var path = buildJsonPath( arguments.jsonPath.path );
+        return "EXISTS (SELECT 1 FROM JSON_EACH(#wrapJsonColumn( arguments.jsonPath )#, '#path#') WHERE ""json_each"".""value"" IS ?)";
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        return "JSON_TYPE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#') IS NOT NULL";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "JSON_ARRAY_LENGTH(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
     /**
      * Creates a new SQLite Query Grammar.
      *
@@ -137,7 +192,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 } )
                 .toList( ", " );
 
-            var updateStatement = "UPDATE #wrapTable( query.getTableName() )# SET #updateList#";
+            var updateStatement = "UPDATE #wrapQueryTable( query )# SET #updateList#";
 
             var joins = arguments.query.getJoins();
 
@@ -145,39 +200,75 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 updateStatement = trim( "#updateStatement# #compileWheres( query, query.getWheres() )#" );
             }
 
-            updateStatement = trim( "#updateStatement# #compileLimitValue( query, query.getLimitValue() )#" );
-
             var returningColumns = arguments.query
                 .getReturning()
                 .map( wrapColumn )
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+            var rowLimitClause = trim(
+                "#compileLimitValue( query, query.getLimitValue() )# #compileOffsetValue( query, query.getOffsetValue() )#"
+            );
+            var trailingClauses = arrayMap( [ returningClause, compileOrders( query, query.getOrders() ), rowLimitClause ], function( clause ) {
+                return trim( clause );
+            } );
+            trailingClauses = arrayFilter( trailingClauses, function( clause ) {
+                return clause != "";
+            } );
+            trailingClauses = arrayToList( trailingClauses, " " );
 
             if ( joins.isEmpty() ) {
-                return updateStatement & returningClause;
+                return trim(
+                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & trailingClauses
+                );
             }
 
-            var firstJoin = joins[ 1 ];
-            var whereStatement = replace(
-                compileWheres( query, query.getWheres() ),
-                "WHERE",
-                "AND",
-                "one"
+            var updateQuery = arguments.query;
+            var joinedTables = joins
+                .map( function( join ) {
+                    return wrapTable( join.getTable() );
+                } )
+                .toList( ", " );
+            var predicates = joins
+                .map( function( join ) {
+                    return trim( removeLeadingFilterKeyword( compileWheres( updateQuery, join.getWheres() ) ) );
+                } )
+                .filter( function( predicate ) {
+                    return predicate != "";
+                } );
+            var queryPredicate = trim(
+                removeLeadingFilterKeyword( compileWheres( arguments.query, query.getWheres() ) )
             );
-            updateStatement &= " FROM #wrapTable( firstJoin.getTable() )# #compileWheres( arguments.query, firstJoin.getWheres() )#";
-
-            if ( joins.len() <= 1 ) {
-                return trim( updateStatement & " " & whereStatement & returningClause );
+            if ( queryPredicate != "" ) {
+                predicates.append( queryPredicate );
             }
 
-            var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );
+            updateStatement &= " FROM #joinedTables#";
+            if ( !predicates.isEmpty() ) {
+                updateStatement &= " WHERE #predicates.toList( " AND " )#";
+            }
 
-            return trim( "#updateStatement# #compileJoins( arguments.query, restJoins )# #whereStatement##returningClause#" );
+            return trim(
+                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & trailingClauses
+            );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    public array function getUpdateBindingOrder( required QueryBuilder query ) {
+        return [
+            "commonTables",
+            "from",
+            "update",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
     }
 
     /**
@@ -206,7 +297,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 .map( wrapColumn )
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
-            return trim( "DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )##returningClause#" );
+            return trim(
+                compileCommonTables( query, query.getCommonTables() ) & " DELETE FROM #wrapQueryTable( query )# #compileWheres( query, query.getWheres() )##returningClause# #compileOrders( query, query.getOrders() )# #compileLimitValue( query, query.getLimitValue() )# #compileOffsetValue( query, query.getOffsetValue() )#"
+            );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -222,8 +315,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required any updates,
         required array target,
         QueryBuilder source,
-        any deleteUnmatched = false
+        any deleteUnmatched = false,
+        boolean matchNulls = false
     ) {
+        if ( arguments.matchNulls ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support matching NULL target values during an upsert"
+            );
+        }
         if ( !isBoolean( arguments.deleteUnmatched ) || arguments.deleteUnmatched ) {
             throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
         }
@@ -234,7 +334,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.qb.getShouldWrapValues() );
             }
 
-            var insertString = isNull( arguments.source ) ? this.compileInsert(
+            var insertString = isNull( arguments.source ) ? super.compileInsert(
                 arguments.qb,
                 arguments.insertColumns,
                 arguments.values
@@ -293,12 +393,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     ===================================*/
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? 1 : 0;
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }
@@ -429,7 +529,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             var values = column
                 .getValues()
                 .map( function( value ) {
-                    return "'#value#'";
+                    return quoteStringLiteral( value );
                 } )
                 .toList( ", " );
             return "CHECK (#wrapColumn( { "type": "simple", "value": column.getName() } )# IN (#values#))";
@@ -440,7 +540,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function generateDefault( column ) {
         if (
-            column.getDefaultValue() == "" &&
+            !column.getHasDefaultValue() &&
             column.getType().findNoCase( "TIMESTAMP" ) > 0
         ) {
             if ( column.getIsNullable() ) {
@@ -473,6 +573,37 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileAddColumn( blueprint, commandParameters ) {
+        if (
+            !getUtils().isExpression( arguments.commandParameters.column ) &&
+            structKeyExists( arguments.commandParameters.column, "getAutoIncrement" ) &&
+            arguments.commandParameters.column.getAutoIncrement()
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQLite does not support adding auto-incrementing primary-key columns to existing tables."
+            );
+        }
+        if (
+            !getUtils().isExpression( arguments.commandParameters.column ) &&
+            structKeyExists( arguments.commandParameters.column, "getIsUnique" ) &&
+            arguments.commandParameters.column.getIsUnique()
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQLite does not support adding columns with inline UNIQUE constraints to existing tables."
+            );
+        }
+        if (
+            !getUtils().isExpression( arguments.commandParameters.column ) &&
+            structKeyExists( arguments.commandParameters.column, "getComputedType" ) &&
+            arguments.commandParameters.column.getComputedType() == "stored"
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQLite does not support adding stored generated columns to existing tables."
+            );
+        }
+
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
@@ -500,6 +631,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             var index = commandParameters.index;
+            if ( index.getType() != "unique" ) {
+                throw(
+                    type = "UnsupportedOperation",
+                    message = "SQLite only supports adding unique constraints to existing tables."
+                );
+            }
             var constraint = invoke(
                 this,
                 "index#index.getType()#",
@@ -527,7 +664,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "DROP INDEX #wrapValue( commandParameters.name )#";
+            var indexName = qualifyObjectNameForTable( blueprint.getTable(), commandParameters.name );
+            return "DROP INDEX #wrapTable( indexName )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -542,7 +680,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "DROP INDEX #wrapValue( commandParameters.name )#";
+            var indexName = qualifyObjectNameForTable( blueprint.getTable(), commandParameters.name );
+            return "DROP INDEX #wrapTable( indexName )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

@@ -49,11 +49,11 @@ component singleton {
      * @return  { "sql": string, "comments": struct }
      */
     public struct function parseCommentedSQL( required string sql ) {
-        var commentStartPosition = find( "/*", arguments.sql ) - 1;
+        var commentStartPosition = findSQLCommentPosition( arguments.sql );
         return {
-            "sql": left( arguments.sql, commentStartPosition - 1 ),
+            "sql": trim( left( arguments.sql, commentStartPosition - 1 ) ),
             "comments": parseCommentString(
-                mid( arguments.sql, commentStartPosition + 1, len( arguments.sql ) - commentStartPosition )
+                mid( arguments.sql, commentStartPosition, len( arguments.sql ) - commentStartPosition + 1 )
             )
         };
     }
@@ -87,7 +87,122 @@ component singleton {
      * @return  True if the SQL already contains a comment.
      */
     private boolean function containsSQLComment( required string sql ) {
-        return find( "--", arguments.sql ) > 0 || find( "/*", arguments.sql ) > 0;
+        return findSQLCommentPosition( arguments.sql ) > 0;
+    }
+
+    /**
+     * Finds the first SQL comment token outside of quoted strings and identifiers.
+     *
+     * @sql The SQL to inspect.
+     *
+     * @return The one-based comment position, or zero when no comment is present.
+     */
+    private numeric function findSQLCommentPosition( required string sql ) {
+        var position = 1;
+        var sqlLength = len( arguments.sql );
+        var quote = "";
+        var dollarQuoteDelimiter = "";
+        var oracleQuoteClosing = "";
+
+        while ( position <= sqlLength ) {
+            var character = mid( arguments.sql, position, 1 );
+            var nextCharacter = position < sqlLength ? mid( arguments.sql, position + 1, 1 ) : "";
+
+            if ( dollarQuoteDelimiter != "" ) {
+                if (
+                    mid( arguments.sql, position, len( dollarQuoteDelimiter ) ) ==
+                    dollarQuoteDelimiter
+                ) {
+                    position += len( dollarQuoteDelimiter );
+                    dollarQuoteDelimiter = "";
+                } else {
+                    position++;
+                }
+                continue;
+            }
+
+            if ( oracleQuoteClosing != "" ) {
+                if ( mid( arguments.sql, position, len( oracleQuoteClosing ) ) == oracleQuoteClosing ) {
+                    position += len( oracleQuoteClosing );
+                    oracleQuoteClosing = "";
+                } else {
+                    position++;
+                }
+                continue;
+            }
+
+            if ( quote != "" ) {
+                if ( quote == "[" ) {
+                    if ( character == "]" ) {
+                        if ( nextCharacter == "]" ) {
+                            position += 2;
+                            continue;
+                        }
+                        quote = "";
+                    }
+                } else if ( character == chr( 92 ) ) {
+                    position += 2;
+                    continue;
+                } else if ( character == quote ) {
+                    if ( nextCharacter == quote ) {
+                        position += 2;
+                        continue;
+                    }
+                    quote = "";
+                }
+                position++;
+                continue;
+            }
+
+            if ( character == "-" && nextCharacter == "-" ) {
+                return position;
+            }
+            if ( character == "/" && nextCharacter == "*" ) {
+                return position;
+            }
+            if ( character == "$" ) {
+                var dollarQuoteMatch = reFind(
+                    "^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$",
+                    mid( arguments.sql, position, sqlLength - position + 1 ),
+                    1,
+                    true
+                );
+                if ( dollarQuoteMatch.len[ 1 ] > 0 ) {
+                    var candidateDelimiter = mid( arguments.sql, position, dollarQuoteMatch.len[ 1 ] );
+                    if ( find( candidateDelimiter, arguments.sql, position + len( candidateDelimiter ) ) > 0 ) {
+                        dollarQuoteDelimiter = candidateDelimiter;
+                        position += len( dollarQuoteDelimiter );
+                        continue;
+                    }
+                }
+            }
+            if (
+                ( character == "q" || character == "Q" ) &&
+                nextCharacter == "'" &&
+                position + 2 <= sqlLength
+            ) {
+                var oracleQuoteOpening = mid( arguments.sql, position + 2, 1 );
+                var oracleQuotePairs = {
+                    "[": "]",
+                    "{": "}",
+                    "(": ")",
+                    "<": ">"
+                };
+                oracleQuoteClosing = (
+                    oracleQuotePairs.keyExists( oracleQuoteOpening )
+                     ? oracleQuotePairs[ oracleQuoteOpening ]
+                     : oracleQuoteOpening
+                ) & "'";
+                position += 3;
+                continue;
+            }
+            if ( character == "'" || character == """" || character == chr( 96 ) || character == "[" ) {
+                quote = character;
+            }
+            position++;
+        }
+
+        return 0;
     }
 
     /**

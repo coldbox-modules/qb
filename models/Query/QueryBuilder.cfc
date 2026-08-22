@@ -1,7 +1,7 @@
 /**
  * Query Builder for fluently creating SQL queries.
  */
-component displayname="QueryBuilder" accessors="true" {
+component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.JsonQueryBuilderSupport" {
 
     /**
      * The specific grammar that will compile the builder statements.
@@ -15,13 +15,17 @@ component displayname="QueryBuilder" accessors="true" {
     property name="utils";
 
     /**
-     * returnFormat callback
-     * If provided, the result of the callback is returned as the result of builder.
-     * Can optionally pass either "array" or "query"
-     * and the correct callback will be generated
+     * Resolved return formatter.
+     * If provided as a callback, its result is returned as the result of the builder.
+     * Named formatters are resolved through the return formatter registry.
      * @default "array"
      */
     property name="returnFormat";
+
+    /**
+     * Registry used to resolve named return formats.
+     */
+    property name="returnFormatterRegistry";
 
     /**
      * preventDuplicateJoins
@@ -37,6 +41,20 @@ component displayname="QueryBuilder" accessors="true" {
      * @default true
      */
     property name="validateOperatorsAndCombinators";
+
+    /**
+     * If true, QB validates that selected columns have unique output names.
+     * This validation is recommended in development and should be disabled in production.
+     * @default false
+     */
+    property name="validateDuplicateSelectColumns";
+
+    /**
+     * If true, QB throws when queryExecute returntype options are passed.
+     * If false, QB strips those options so return formatters always receive a query.
+     * @default false
+     */
+    property name="validateQueryExecuteReturnType";
 
     /**
      * paginationCollector
@@ -100,6 +118,12 @@ component displayname="QueryBuilder" accessors="true" {
      * @default true
      */
     property name="collectQueryLog" type="boolean";
+
+    /**
+     * Tracks whether this builder contains SQL compiled by its current grammar.
+     */
+    property name="grammarCompiledFrom" type="boolean";
+    property name="grammarCompiledJoin" type="boolean";
 
     /******************** Query Properties ********************/
 
@@ -220,53 +244,18 @@ component displayname="QueryBuilder" accessors="true" {
     this.isBuilder = true;
 
     /**
-     * The list of allowed operators in join and where statements.
-     */
-    variables.operators = [
-        "=",
-        "<",
-        ">",
-        "<=",
-        ">=",
-        "<>",
-        "!=",
-        "like",
-        "like binary",
-        "not like",
-        "between",
-        "ilike",
-        "&",
-        "|",
-        "^",
-        "<<",
-        ">>",
-        "rlike",
-        "regexp",
-        "not regexp",
-        "~",
-        "~*",
-        "!~",
-        "!~*",
-        "similar to",
-        "not similar to"
-    ];
-
-    /**
-     * The list of allowed combinators between statements.
-     */
-    variables.combinators = [ "AND", "OR" ];
-
-    /**
      * Object holding all of the different bindings.
      * Bindings are separated by the different clauses
      * so we can serialize them in the correct order.
      */
     variables.bindings = {
         "commonTables": [],
+        "aggregate": [],
         "select": [],
         "from": [],
         "join": [],
         "where": [],
+        "groupBy": [],
         "having": [],
         "orderBy": [],
         "union": [],
@@ -289,11 +278,18 @@ component displayname="QueryBuilder" accessors="true" {
      *                              Default: qb.models.Query.QueryUtils
      * @returnFormat                The closure (or string format shortcut) that modifies the query
      *                              and is eventually returned to the caller. Default: 'array'
+     * @returnFormatterRegistry     Registry used to resolve named return formatters.
      * @preventDuplicateJoins       Whether QB should ignore a .join() statement that matches an existing join
      *                              Default: false
      * @validateOperatorsAndCombinators
      *                              Whether QB validates operators/combinators before storing clauses.
      *                              Default: true
+     * @validateDuplicateSelectColumns
+     *                              Whether QB validates selected columns have unique output names.
+     *                              Recommended in development and disabled in production. Default: false
+     * @validateQueryExecuteReturnType
+     *                              Whether QB throws when queryExecute returntype options are passed.
+     *                              Default: false
      * @paginationCollector         The closure that processes the pagination result.
      *                              Default: cbpaginator.models.Pagination
      * @columnFormatter             The closure that modifies each column before being
@@ -315,21 +311,31 @@ component displayname="QueryBuilder" accessors="true" {
         grammar = new qb.models.Grammars.BaseGrammar(),
         utils = new qb.models.Query.QueryUtils(),
         returnFormat = "array",
+        returnFormatterRegistry,
         preventDuplicateJoins = false,
         validateOperatorsAndCombinators = true,
+        validateQueryExecuteReturnType = false,
         paginationCollector = new cbpaginator.models.Pagination(),
         columnFormatter,
         parentQuery,
         defaultOptions = {},
         sqlCommenter = new qb.models.SQLCommenter.NullSQLCommenter(),
         shouldMaxRowsOverrideToAll,
-        boolean collectQueryLog = true
+        boolean collectQueryLog = true,
+        boolean validateDuplicateSelectColumns = false
     ) {
+        variables.collaborators = {};
         variables.grammar = arguments.grammar;
         variables.utils = arguments.utils;
 
         setPreventDuplicateJoins( arguments.preventDuplicateJoins );
         setValidateOperatorsAndCombinators( arguments.validateOperatorsAndCombinators );
+        setValidateDuplicateSelectColumns( arguments.validateDuplicateSelectColumns );
+        setValidateQueryExecuteReturnType( arguments.validateQueryExecuteReturnType );
+        if ( isNull( arguments.returnFormatterRegistry ) ) {
+            arguments.returnFormatterRegistry = new qb.models.Query.ReturnFormatterRegistry( arguments.utils );
+        }
+        setReturnFormatterRegistry( arguments.returnFormatterRegistry );
         if ( isNull( arguments.columnFormatter ) ) {
             arguments.columnFormatter = function( column ) {
                 return column;
@@ -359,6 +365,66 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Updates operator and combinator validation and invalidates any validator
+     * created with the previous settings.
+     */
+    public QueryBuilder function setValidateOperatorsAndCombinators( required boolean state ) {
+        variables.validateOperatorsAndCombinators = arguments.state;
+        invalidateCollaborator( "QueryValidator" );
+        return this;
+    }
+
+    /**
+     * Updates duplicate select validation and invalidates any validator created
+     * with the previous settings.
+     */
+    public QueryBuilder function setValidateDuplicateSelectColumns( required boolean state ) {
+        variables.validateDuplicateSelectColumns = arguments.state;
+        invalidateCollaborator( "QueryValidator" );
+        return this;
+    }
+
+    /**
+     * Updates queryExecute return type validation and invalidates any validator
+     * created with the previous settings.
+     */
+    public QueryBuilder function setValidateQueryExecuteReturnType( required boolean state ) {
+        variables.validateQueryExecuteReturnType = arguments.state;
+        invalidateCollaborator( "QueryValidator" );
+        return this;
+    }
+
+    /**
+     * Resolves and caches an internal collaborator on first use.
+     */
+    package any function getCollaborator( required string name ) {
+        if ( !variables.collaborators.keyExists( arguments.name ) ) {
+            if ( arguments.name == "QueryValidator" ) {
+                variables.collaborators[ arguments.name ] = new qb.models.Query.QueryValidator(
+                    validateOperatorsAndCombinators = getValidateOperatorsAndCombinators(),
+                    validateDuplicateSelectColumns = getValidateDuplicateSelectColumns(),
+                    validateQueryExecuteReturnType = getValidateQueryExecuteReturnType()
+                );
+            } else {
+                variables.collaborators[ arguments.name ] = createObject(
+                    "component",
+                    "qb.models.Query.#arguments.name#"
+                );
+            }
+        }
+        return variables.collaborators[ arguments.name ];
+    }
+
+    /**
+     * Removes a cached collaborator after its configuration changes.
+     */
+    private void function invalidateCollaborator( required string name ) {
+        if ( variables.keyExists( "collaborators" ) ) {
+            variables.collaborators.delete( arguments.name );
+        }
+    }
+
+    /**
      * Sets up the default values for a new builder instance.
      *
      * @return void
@@ -368,6 +434,7 @@ component displayname="QueryBuilder" accessors="true" {
         variables.aggregate = {};
         variables.columns = [ { "type": "simple", "value": "*" } ];
         variables.tableName = "";
+        variables.forClause = javacast( "null", "" );
         variables.alias = "";
         variables.lockType = "none";
         variables.lockValue = "";
@@ -384,10 +451,12 @@ component displayname="QueryBuilder" accessors="true" {
         variables.updates = {};
         variables.bindings = {
             "commonTables": [],
+            "aggregate": [],
             "select": [],
             "from": [],
             "join": [],
             "where": [],
+            "groupBy": [],
             "having": [],
             "orderBy": [],
             "union": [],
@@ -398,6 +467,8 @@ component displayname="QueryBuilder" accessors="true" {
         variables.pretending = false;
         variables.queryLog = [];
         variables.shouldWrapValues = javacast( "null", "" );
+        variables.grammarCompiledFrom = false;
+        variables.grammarCompiledJoin = false;
     }
 
     /**
@@ -411,12 +482,50 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
+     * Returns whether this builder is collecting SQL instead of executing it.
+     * This bridge is public so collaborators can operate on QueryBuilder subclasses.
+     */
+    public boolean function isPretending() {
+        return variables.pretending;
+    }
+
+    /**
+     * Returns the lazily instantiated validator for collaborators operating on
+     * this builder or one of its subclasses.
+     */
+    public QueryValidator function getQueryValidator() {
+        return getCollaborator( "QueryValidator" );
+    }
+
+    /**
+     * Returns the lazily instantiated executor for collaborators operating on
+     * this builder or one of its subclasses.
+     */
+    public QueryExecutor function getQueryExecutor() {
+        return getCollaborator( "QueryExecutor" );
+    }
+
+    /**
+     * Returns the lazily instantiated predicate builder. It is cached separately
+     * because predicate validation remains the only general collaborator involved
+     * in a basic WHERE clause.
+     */
+    package PredicateClause function getPredicateClause() {
+        if ( !variables.keyExists( "predicateClause" ) ) {
+            variables.predicateClause = new qb.models.Query.PredicateClause();
+        }
+        return variables.predicateClause;
+    }
+
+    /**
      * Resets the query builder instance.
      *
      * @return QueryBuilder
      */
     public QueryBuilder function reset() {
+        var wasPretending = variables.pretending;
         setDefaultValues();
+        variables.pretending = wasPretending;
         return this;
     }
 
@@ -448,18 +557,48 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function select( any columns = "*" ) {
-        variables.columns = normalizeToArray( arguments.columns )
+        var newColumns = normalizeToArray( arguments.columns )
             .map( ( column ) => applyColumnFormatter( column ) )
             .map( ( column ) => mapToColumnType( column ) );
 
-        if ( variables.columns.isEmpty() ) {
-            variables.columns = [ { "type": "simple", "value": "*" } ];
+        if ( newColumns.isEmpty() ) {
+            newColumns = [ { "type": "simple", "value": "*" } ];
         }
+        var newBindings = extractColumnBindings( newColumns );
+        clearBindings( only = [ "select" ] );
+        variables.columns = newColumns;
+        addBindings( newBindings, "select" );
         return this;
     }
 
-    private struct function mapToColumnType( required any column ) {
+    /**
+     * Adds bindings carried by typed raw-expression and builder columns.
+     * This bridge is public so collaborators can operate on QueryBuilder subclasses.
+     */
+    public void function addColumnBindings( required array columns, required string type ) {
+        addBindings( extractColumnBindings( arguments.columns ), arguments.type );
+    }
+
+    /**
+     * Normalizes bindings carried by typed raw-expression and builder columns.
+     */
+    public array function extractColumnBindings( required array columns ) {
+        var bindings = [];
+        for ( var column in arguments.columns ) {
+            if ( column.type == "raw" ) {
+                bindings.append( extractExpressionBindings( column.value ), true );
+            } else if ( column.type == "builder" ) {
+                bindings.append( column.value.getBindings(), true );
+            }
+        }
+        return bindings;
+    }
+
+    public struct function mapToColumnType( required any column ) {
         if ( isSimpleValue( arguments.column ) ) {
+            if ( find( "->", arguments.column ) ) {
+                return jsonPath( column = arguments.column );
+            }
             return { "type": "simple", "value": arguments.column };
         } else if ( getUtils().isExpression( arguments.column ) ) {
             return { "type": "raw", "value": arguments.column };
@@ -481,6 +620,7 @@ component displayname="QueryBuilder" accessors="true" {
         }
     }
 
+
     /**
      * Adds a sub-select to the query.
      *
@@ -495,6 +635,7 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.query = newQuery();
             callback( arguments.query );
         }
+        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
         variables.columns.append( { "type": "builder", "value": arguments.query, "alias": arguments.alias } );
         addBindings( arguments.query.getBindings(), "select" );
         return this;
@@ -514,19 +655,24 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addSelect( required any columns ) {
+        var newColumns = normalizeToArray( arguments.columns )
+            .map( ( column ) => applyColumnFormatter( column ) )
+            .map( ( column ) => mapToColumnType( column ) );
+        var newBindings = extractColumnBindings( newColumns );
+        var selectedColumns = variables.columns.isEmpty() ? [] : arraySlice( variables.columns, 1 );
+
         if (
             variables.columns.isEmpty() ||
             (
                 variables.columns.len() == 1 && isSimpleValue( variables.columns[ 1 ].value ) && variables.columns[ 1 ].value == "*"
             )
         ) {
-            variables.columns = [];
+            selectedColumns = [];
         }
-        var newColumns = normalizeToArray( arguments.columns )
-            .map( ( column ) => applyColumnFormatter( column ) )
-            .map( ( column ) => mapToColumnType( column ) );
 
-        arrayAppend( variables.columns, newColumns, true );
+        arrayAppend( selectedColumns, newColumns, true );
+        variables.columns = selectedColumns;
+        addBindings( newBindings, "select" );
         return this;
     }
 
@@ -544,13 +690,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function selectRaw( required any expression, array bindings = [] ) {
-        for ( var sql in arrayWrap( arguments.expression ) ) {
-            addSelect( raw( sql ) );
-            if ( !arrayIsEmpty( arguments.bindings ) ) {
-                addBindings( arguments.bindings, "select" );
-            }
-        }
-        return this;
+        var expressions = arrayWrap( arguments.expression );
+        var rawBindings = arguments.bindings;
+        return addSelect( expressions.map( ( expression, index ) => raw( expression, index == 1 ? rawBindings : [] ) ) );
     }
 
     /**
@@ -578,7 +720,6 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function reselect( any columns = "*" ) {
-        clearSelect();
         return select( argumentCollection = arguments );
     }
 
@@ -597,8 +738,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function reselectRaw( required any expression, array bindings = [] ) {
-        clearSelect();
-        return selectRaw( argumentCollection = arguments );
+        var expressions = arrayWrap( arguments.expression );
+        var rawBindings = arguments.bindings;
+        return select( expressions.map( ( expression, index ) => raw( expression, index == 1 ? rawBindings : [] ) ) );
     }
 
     /********************************************************************************\
@@ -620,10 +762,19 @@ component displayname="QueryBuilder" accessors="true" {
             );
         }
 
+        var fromBindings = [];
+        if ( !isSimpleValue( arguments.from ) && getUtils().isExpression( arguments.from ) ) {
+            fromBindings = extractExpressionBindings( arguments.from );
+        }
+
+        clearBindings( only = [ "from" ] );
+        variables.grammarCompiledFrom = false;
+        variables.alias = "";
         if ( isSimpleValue( arguments.from ) ) {
             parseIntoTableAndAlias( arguments.from );
         } else {
             variables.tableName = arguments.from;
+            addBindings( fromBindings, "from" );
         }
 
         return this;
@@ -632,6 +783,7 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function clearFrom() {
         variables.tableName = "";
         variables.alias = "";
+        variables.grammarCompiledFrom = false;
         clearBindings( only = [ "from" ] );
         return this;
     }
@@ -642,10 +794,17 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     private void function parseIntoTableAndAlias( required string table ) {
-        var parts = arguments.table.split( "\s(?:[Aa][Ss]\s)?" );
-        variables.tableName = trim( parts[ 1 ] );
-        if ( arrayLen( parts ) > 1 ) {
-            variables.alias = trim( parts[ 2 ] );
+        var normalizedTable = trim( arguments.table );
+        var aliasMatch = reFindNoCase(
+            "^(.+?)\s+(?:AS\s+)?(\S+)\s*$",
+            normalizedTable,
+            1,
+            true
+        );
+        variables.tableName = normalizedTable;
+        if ( aliasMatch.pos.len() >= 3 && aliasMatch.pos[ 1 ] > 0 ) {
+            variables.tableName = trim( mid( normalizedTable, aliasMatch.pos[ 2 ], aliasMatch.len[ 2 ] ) );
+            variables.alias = trim( mid( normalizedTable, aliasMatch.pos[ 3 ], aliasMatch.len[ 3 ] ) );
         }
     }
 
@@ -663,262 +822,11 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     public void function renameAliases( required string oldAlias, required string newAlias ) {
-        renameAliasesInColumns( oldAlias, newAlias );
-        renameAliasesInJoins( oldAlias, newAlias );
-        renameAliasesInWheres( oldAlias, newAlias );
-        renameAliasesInGroups( oldAlias, newAlias );
-        renameAliasesInHavings( oldAlias, newAlias );
-        renameAliasesInOrders( oldAlias, newAlias );
-        return;
-    }
-
-    private void function renameAliasesInColumns( required string oldAlias, required string newAlias ) {
-        for ( var i = 1; i <= variables.columns.len(); i++ ) {
-            var column = variables.columns[ i ];
-            if ( column.type == "simple" ) {
-                variables.columns[ i ] = {
-                    "type": "simple",
-                    "value": swapAlias( column.value, arguments.oldAlias, arguments.newAlias )
-                };
-            } else if ( column.type == "builder" ) {
-                column.value.renameAliases( arguments.oldAlias, arguments.newAlias );
-            }
-        }
-    }
-
-    private void function renameAliasesInJoins( required string oldAlias, required string newAlias ) {
-        for ( var join in variables.joins ) {
-            join.renameAliases( arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasesInWheres( required string oldAlias, required string newAlias ) {
-        for ( var where in variables.wheres ) {
-            var renameWhereFunc = variables[ "renameAliasInWhere#where.type#" ];
-            renameWhereFunc( where, arguments.oldAlias, arguments.newAlias );
-        }
-    }
-
-    private void function renameAliasesInGroups( required string oldAlias, required string newAlias ) {
-        for ( var i = 1; i <= variables.groups.len(); i++ ) {
-            var column = variables.groups[ i ];
-            if ( column.type == "simple" ) {
-                variables.groups[ i ].value = swapAlias( column.value, arguments.oldAlias, arguments.newAlias );
-            }
-        }
-    }
-
-    private void function renameAliasesInHavings( required string oldAlias, required string newAlias ) {
-        for ( var having in variables.havings ) {
-            if ( structKeyExists( having, "column" ) ) {
-                if ( having.column.type == "simple" ) {
-                    having.column.value = swapAlias( having.column.value, arguments.oldAlias, arguments.newAlias );
-                }
-            }
-        }
-    }
-
-    private void function renameAliasesInOrders( required string oldAlias, required string newAlias ) {
-        for ( var order in variables.orders ) {
-            if ( order.direction != "raw" ) {
-                if ( order.column.type == "simple" ) {
-                    order.column.value = swapAlias( order.column.value, arguments.oldAlias, arguments.newAlias );
-                }
-            }
-        }
-    }
-
-    private void function renameAliasInWhereBasic(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private void function renameAliasInWhereColumn(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.where.first.type == "simple" ) {
-            arguments.where.first.value = swapAlias(
-                arguments.where.first.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-        if ( arguments.where.second.type == "simple" ) {
-            arguments.where.second.value = swapAlias(
-                arguments.where.second.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private void function renameAliasInWhereSub(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereIn(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private void function renameAliasInWhereNotIn(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private void function renameAliasInWhereRaw(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        return;
-    }
-
-    private void function renameAliasInWhereExists(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNotExists(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNested(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNull(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private void function renameAliasInWhereNotNull(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private void function renameAliasInWhereNullSub(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereNotNullSub(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        arguments.where.query.renameAliases( arguments.oldAlias, arguments.newAlias );
-    }
-
-    private void function renameAliasInWhereBetween(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private void function renameAliasInWhereNotBetween(
-        required struct where,
-        required string oldAlias,
-        required string newAlias
-    ) {
-        if ( arguments.where.column.type == "simple" ) {
-            arguments.where.column.value = swapAlias(
-                arguments.where.column.value,
-                arguments.oldAlias,
-                arguments.newAlias
-            );
-        }
-    }
-
-    private string function swapAlias( required string column, required string oldAlias, required string newAlias ) {
-        if ( startsWith( arguments.column, arguments.oldAlias ) ) {
-            return arguments.newAlias & "." & listLast( arguments.column, "." );
-        }
-        return arguments.column;
-    }
-
-    private boolean function startsWith( required string word, required string substring ) {
-        return left( arguments.word, len( arguments.substring ) ) == arguments.substring;
+        getCollaborator( "AliasRewriter" ).rewrite(
+            builder = this,
+            oldAlias = arguments.oldAlias,
+            newAlias = arguments.newAlias
+        );
     }
 
     /**
@@ -930,8 +838,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function table( required any table ) {
-        variables.tableName = arguments.table;
-        return this;
+        return from( arguments.table );
     }
 
     /**
@@ -944,17 +851,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function tableRaw( required string table, array bindings = [] ) {
-        // add the bindings required by the table
-        if ( !arrayIsEmpty( arguments.bindings ) ) {
-            addBindings(
-                arguments.bindings.map( function( value ) {
-                    return utils.extractBinding( value, variables.grammar );
-                } ),
-                "from"
-            );
-        }
-
-        return this.table( raw( arguments.table ) );
+        return this.table( raw( arguments.table, arguments.bindings ) );
     }
 
     /**
@@ -966,17 +863,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function fromRaw( required string from, array bindings = [] ) {
-        // add the bindings required by the table
-        if ( !arrayIsEmpty( arguments.bindings ) ) {
-            addBindings(
-                arguments.bindings.map( function( value ) {
-                    return utils.extractBinding( value, variables.grammar );
-                } ),
-                "from"
-            );
-        }
-
-        return this.from( raw( arguments.from ) );
+        return this.from( raw( arguments.from, arguments.bindings ) );
     }
 
     /**
@@ -988,18 +875,27 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function fromSub( required string alias, required any input ) {
-        // since we have a callback, we generate a new query object and pass it into the callback
-        if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
-            var subquery = newQuery();
-            arguments.input( subquery );
-            // replace the original query builder with the results of the sub-query
-            arguments.input = subquery;
+        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
+        try {
+            // since we have a callback, we generate a new query object and pass it into the callback
+            if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
+                var subquery = newQuery();
+                arguments.input( subquery );
+                // replace the original query builder with the results of the sub-query
+                arguments.input = subquery;
+            }
+
+            arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
+
+            // generate the derived table SQL
+            this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
+            variables.grammarCompiledFrom = true;
+            addBindings( arguments.input.getBindings(), "from" );
+            return this;
+        } catch ( any e ) {
+            getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
+            rethrow;
         }
-
-        addBindings( arguments.input.getBindings(), "from" );
-
-        // generate the derived table SQL
-        return this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
     }
 
     /*******************************************************************************\
@@ -1076,7 +972,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @returns qb.models.Query.JoinClause
      */
     public JoinClause function newJoin( required any table, string type = "inner" ) {
-        return new qb.models.Query.JoinClause( joiningQuery = this, type = arguments.type, table = arguments.table );
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).newJoin( argumentCollection = arguments );
     }
 
     /**
@@ -1105,56 +1002,8 @@ component displayname="QueryBuilder" accessors="true" {
         boolean where = false,
         boolean preventDuplicateJoins = this.getPreventDuplicateJoins()
     ) {
-        if ( getUtils().isBuilder( arguments.table ) ) {
-            if ( arguments.preventDuplicateJoins ) {
-                var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                    return existingJoin.isEqualTo( table );
-                } );
-
-                if ( hasThisJoin ) {
-                    return this;
-                }
-            }
-            variables.joins.append( arguments.table );
-            addBindings( arguments.table.getBindings(), "join" );
-            return this;
-        }
-
-        var join = new qb.models.Query.JoinClause( joiningQuery = this, type = arguments.type, table = arguments.table );
-
-        if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
-            first( join );
-            if ( arguments.preventDuplicateJoins ) {
-                var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                    return existingJoin.isEqualTo( join );
-                } );
-
-                if ( hasThisJoin ) {
-                    return this;
-                }
-            }
-            variables.joins.append( join );
-            addBindings( join.getBindings(), "join" );
-            return this;
-        }
-
-        var method = where ? "where" : "on";
-        arguments.column = arguments.first;
-        arguments.value = isNull( arguments.second ) ? javacast( "null", "" ) : arguments.second;
-        join = invoke( join, method, arguments );
-        if ( arguments.preventDuplicateJoins ) {
-            var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                return existingJoin.isEqualTo( join );
-            } );
-
-            if ( hasThisJoin ) {
-                return this;
-            }
-        }
-        variables.joins.append( join );
-        addBindings( join.getBindings(), "join" );
-
-        return this;
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).join( argumentCollection = arguments );
     }
 
     /**
@@ -1325,9 +1174,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoin( required any table ) {
-        variables.joins.append( new qb.models.Query.JoinClause( this, "cross", arguments.table ) );
-
-        return this;
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).crossJoin( argumentCollection = arguments );
     }
 
     /**
@@ -1424,12 +1272,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoinRaw( required string table ) {
-        // create the table reference
-        arguments.table = raw( arguments.table );
-
-        variables.joins.append( new qb.models.Query.JoinClause( this, "cross", arguments.table ) );
-
-        return this;
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).crossJoinRaw( argumentCollection = arguments );
     }
 
     /**
@@ -1458,74 +1302,13 @@ component displayname="QueryBuilder" accessors="true" {
         string type = "inner",
         boolean where = false
     ) {
-        // since we have a callback, we generate a new query object and pass it into the callback
-        if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
-            var subquery = newQuery();
-            arguments.input( subquery );
-            // replace the original query builder with the results of the sub-query
-            arguments.input = subquery;
-        }
-
-        // create the table reference
-        arguments.table = getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" );
-
-        // merge bindings
-        addBindings( arguments.input.getBindings(), "join" );
-
-        // remove the non-standard arguments
-        structDelete( arguments, "input" );
-        structDelete( arguments, "alias" );
-
-        return joinRaw( argumentCollection = arguments );
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).joinSub( argumentCollection = arguments );
     }
 
     private function outerOrCrossApply( required string name, required string type, required tableLikeSource ) {
-        if ( type != "outer apply" && type != "cross apply" && type != "lateral" ) {
-            throw(
-                type = "QBInvalidJoinType",
-                message = "Invalid join type: #arguments.type#. Valid types are [`outer apply`, `cross apply`, or `lateral`]"
-            );
-        }
-
-        var sourceIsBuilder = getUtils().isBuilder( arguments.tableLikeSource )
-        var sourceIsFunc = isClosure( arguments.tableLikeSource ) || isCustomFunction( arguments.tableLikeSource )
-
-        if ( !sourceIsBuilder && !sourceIsFunc ) {
-            throw(
-                type = "QBInvalidJoinSource",
-                message = "Invalid join source. Valid types are a QueryBuilder instance or a callback function that receives a new QueryBuilder instance."
-            );
-        }
-
-        if ( sourceIsFunc ) {
-            var subquery = newQuery();
-            arguments.tableLikeSource( subquery );
-            arguments.tableLikeSource = subquery;
-        }
-
-        var join = new qb.models.Query.JoinClause(
-            joiningQuery = this,
-            type = type,
-            table = arguments.name,
-            lateralRawExpression = arguments.tableLikeSource.toSQL()
-        );
-
-        if ( this.getPreventDuplicateJoins() ) {
-            var hasThisJoin = variables.joins.find( function( existingJoin ) {
-                return existingJoin.isEqualTo( join );
-            } );
-
-            if ( hasThisJoin ) {
-                // Do nothing, early return
-                // We have not mutated `this` in any way.
-                return this;
-            }
-        }
-
-        addBindings( tableLikeSource.getBindings(), "join" );
-        variables.joins.append( join );
-
-        return this;
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).applyJoin( argumentCollection = arguments );
     }
 
     public function outerApply( required string name, required any tableDef ) {
@@ -1605,23 +1388,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function crossJoinSub( required any alias, required any input ) {
-        // since we have a callback, we generate a new query object and pass it into the callback
-        if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
-            var subquery = newQuery();
-            arguments.input( subquery );
-            // replace the original query builder with the results of the sub-query
-            arguments.input = subquery;
-        }
-
-        // create the table reference
-        var table = raw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
-
-        // merge bindings
-        mergeBindings( arguments.input );
-
-        arrayAppend( variables.joins, new qb.models.Query.JoinClause( this, "cross", table ) );
-
-        return this;
+        arguments.builder = this;
+        return getCollaborator( "JoinClauseManager" ).crossJoinSub( argumentCollection = arguments );
     }
 
     /**
@@ -1713,8 +1481,9 @@ component displayname="QueryBuilder" accessors="true" {
             if (
                 variables.commonTables.some( function( cT, index ) {
                     return (
-                        !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ "index" ][ "COLUMNS" ] ) ||
-                        cT[ "NAME" ] != otherQB.getCommonTables()[ "index" ][ "NAME" ] ||
+                        !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ index ][ "COLUMNS" ] ) ||
+                        !getUtils().structCompare( cT[ "NAME" ], otherQB.getCommonTables()[ index ][ "NAME" ] ) ||
+                        cT[ "RECURSIVE" ] != otherQB.getCommonTables()[ index ][ "RECURSIVE" ] ||
                         !cT[ "QUERY" ].isEqualTo( otherQB.getCommonTables()[ index ][ "QUERY" ] )
                     );
                 } )
@@ -1747,9 +1516,11 @@ component displayname="QueryBuilder" accessors="true" {
         };
 
         if ( !isJoin() ) {
+            memento[ "alias" ] = variables.alias;
             if ( !isCustomFunction( variables.tableName ) ) {
                 if ( getUtils().isExpression( getTableName() ) ) {
                     memento[ "from" ] = getTableName().getSQL();
+                    memento[ "fromBindings" ] = getTableName().getBindings();
                 } else if ( getUtils().isBuilder( getTableName() ) ) {
                     memento[ "from" ] = getTableName().toSQL();
                 } else {
@@ -1758,9 +1529,12 @@ component displayname="QueryBuilder" accessors="true" {
             }
         } else {
             memento[ "type" ] = variables.type;
+            memento[ "lateralRawExpression" ] = getLateralRawExpression();
+            memento[ "lateralBindings" ] = getLateralBindings();
             if ( !isCustomFunction( getTable() ) ) {
                 if ( getUtils().isExpression( getTable() ) ) {
                     memento[ "table" ] = getTable().getSQL();
+                    memento[ "tableBindings" ] = getTable().getBindings();
                 } else if ( getUtils().isBuilder( getTable() ) ) {
                     memento[ "table" ] = getTable().toSQL();
                 } else {
@@ -1792,82 +1566,8 @@ component displayname="QueryBuilder" accessors="true" {
         value,
         string combinator = "and"
     ) {
-        if ( isClosure( arguments.column ) || isCustomFunction( arguments.column ) ) {
-            return whereNested( arguments.column, arguments.combinator );
-        }
-
-        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal combinator" );
-        }
-
-        if ( isNull( arguments.value ) && isInvalidOperator( arguments.operator ) ) {
-            arguments.value = arguments.operator;
-            arguments.operator = "=";
-        } else if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( arguments.operator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal operator" );
-        }
-
-        if (
-            !isNull( arguments.value ) && (
-                isClosure( arguments.value ) ||
-                isCustomFunction( arguments.value ) ||
-                getUtils().isBuilder( arguments.value )
-            )
-        ) {
-            return whereSub(
-                arguments.column,
-                arguments.operator,
-                arguments.value,
-                arguments.combinator
-            );
-        }
-
-        return whereBasic(
-            arguments.column,
-            arguments.operator,
-            isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
-            arguments.combinator
-        );
-    }
-
-    /**
-     * Adds a WHERE clause to the query.
-     *
-     * @column The name of the column with which to constrain the query. A closure can be passed to begin a nested where statement.
-     * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).  A value can be passed as the `operator` and the `value` left null as a shortcut for equals (e.g. where( "column", 1 ) == where( "column", "=", 1 ) ).
-     * @value The value with which to constrain the column.  An expression (`builder.raw()`) can be passed as well.
-     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-     *
-     * @return qb.models.Query.QueryBuilder
-     */
-    private QueryBuilder function whereBasic(
-        required any column,
-        required any operator,
-        any value,
-        string combinator = "and"
-    ) {
-        arrayAppend(
-            variables.wheres,
-            {
-                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-                operator: arguments.operator,
-                value: isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
-                combinator: arguments.combinator,
-                type: "basic"
-            }
-        );
-
-        if ( isNull( arguments.value ) || getUtils().isNotExpression( arguments.value ) ) {
-            addBindings(
-                utils.extractBinding(
-                    isNull( arguments.value ) ? javacast( "null", "" ) : arguments.value,
-                    variables.grammar
-                ),
-                "where"
-            );
-        }
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().where( argumentCollection = arguments );
     }
 
     /**
@@ -1884,38 +1584,6 @@ component displayname="QueryBuilder" accessors="true" {
     public QueryBuilder function andWhere( column, operator, value ) {
         arguments.combinator = "and";
         return where( argumentCollection = arguments );
-    }
-
-    /**
-     * Adds a where clause where the value is a subquery.
-     *
-     * @column The name of the column with which to constrain the query.
-     * @operator The operator to use for the constraint (i.e. "=", "<", ">=", etc.).
-     * @callback The closure that defines the subquery. A new query will be passed to the closure as the only argument.
-     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-     *
-     * @return qb.models.Query.QueryBuilder
-     */
-    private QueryBuilder function whereSub(
-        column,
-        operator,
-        query,
-        combinator = "and"
-    ) {
-        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
-            var callback = arguments.query;
-            arguments.query = newQuery();
-            callback( arguments.query );
-        }
-        variables.wheres.append( {
-            type: "sub",
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-            operator: arguments.operator,
-            query: arguments.query,
-            combinator: arguments.combinator
-        } );
-        addBindings( query.getBindings(), "where" );
-        return this;
     }
 
     /**
@@ -1948,68 +1616,51 @@ component displayname="QueryBuilder" accessors="true" {
         combinator = "and",
         negate = false
     ) {
-        if (
-            isClosure( values ) ||
-            isCustomFunction( values ) ||
-            getUtils().isBuilder( values )
-        ) {
-            arguments.query = arguments.values;
-            return whereInSub( argumentCollection = arguments );
-        }
-
-        arguments.values = normalizeToArray( arguments.values );
-
-        var type = negate ? "notIn" : "in";
-        variables.wheres.append( {
-            type: type,
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-            values: arguments.values,
-            combinator: arguments.combinator
-        } );
-
-        var bindings = values
-            .filter( utils.isNotExpression )
-            .map( function( value ) {
-                return utils.extractBinding( value, variables.grammar );
-            } );
-
-        addBindings( bindings, "where" );
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereIn( argumentCollection = arguments );
     }
 
     /**
-     * Adds a WHERE IN clause to the query using a subselect.  To call this using the public api, pass a closure to `whereIn` as the second argument (`values`).
+     * Adds a WHERE IN clause that serializes all values into one bound parameter.
+     * The active grammar determines how the parameter is expanded into rows.
      *
      * @column The name of the column with which to constrain the query.
-     * @callback A closure that will contain the subquery with which to constain this clause.
+     * @values The values to serialize into the single bound parameter.
+     * @sqlType The database SQL type to use for each expanded value. Inferred from the values when omitted.
      * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
      * @negate False for IN, True for NOT IN. Default: false.
      *
      * @return qb.models.Query.QueryBuilder
      */
-    private QueryBuilder function whereInSub(
-        column,
-        query,
-        combinator = "and",
-        negate = false
+    public QueryBuilder function whereInBulk(
+        required column,
+        required values,
+        any sqlType = javacast( "null", "" ),
+        string combinator = "and",
+        boolean negate = false
     ) {
-        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
-            var callback = arguments.query;
-            arguments.query = newQuery();
-            callback( arguments.query );
-        }
+        arguments.builder = this;
+        return getPredicateClause().whereInBulk( argumentCollection = arguments );
+    }
 
-        var type = negate ? "notInSub" : "inSub";
-        variables.wheres.append( {
-            type: type,
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-            query: arguments.query,
-            combinator: arguments.combinator
-        } );
-        addBindings( arguments.query.getBindings(), "where" );
-
-        return this;
+    /**
+     * Adds a WHERE NOT IN clause that serializes all values into one bound parameter.
+     *
+     * @column The name of the column with which to constrain the query.
+     * @values The values to serialize into the single bound parameter.
+     * @sqlType The database SQL type to use for each expanded value. Inferred from the values when omitted.
+     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
+     *
+     * @return qb.models.Query.QueryBuilder
+     */
+    public QueryBuilder function whereNotInBulk(
+        required column,
+        required values,
+        any sqlType = javacast( "null", "" ),
+        string combinator = "and"
+    ) {
+        arguments.negate = true;
+        return whereInBulk( argumentCollection = arguments );
     }
 
     /**
@@ -2036,14 +1687,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereRaw( required string sql, array whereBindings = [], string combinator = "and" ) {
-        addBindings(
-            whereBindings.map( function( binding ) {
-                return utils.extractBinding( binding, variables.grammar );
-            } ),
-            "where"
-        );
-        variables.wheres.append( { type: "raw", sql: sql, combinator: arguments.combinator } );
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereRaw( argumentCollection = arguments );
     }
 
     /**
@@ -2062,37 +1707,8 @@ component displayname="QueryBuilder" accessors="true" {
         second,
         string combinator = "and"
     ) {
-        if ( isNull( arguments.second ) ) {
-            arguments.second = arguments.operator;
-            arguments.operator = "=";
-        }
-
-        if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( operator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal operator" );
-        }
-
-        if (
-            isClosure( arguments.second ) ||
-            isCustomFunction( arguments.second ) ||
-            getUtils().isBuilder( arguments.second )
-        ) {
-            return whereSub(
-                arguments.first,
-                arguments.operator,
-                arguments.second,
-                arguments.combinator
-            );
-        }
-
-        variables.wheres.append( {
-            type: "column",
-            first: mapToColumnType( applyColumnFormatter( arguments.first ) ),
-            operator: arguments.operator,
-            second: mapToColumnType( applyColumnFormatter( arguments.second ) ),
-            combinator: arguments.combinator
-        } );
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereColumn( argumentCollection = arguments );
     }
 
     /**
@@ -2105,28 +1721,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereExists( query, combinator = "and", negate = false ) {
-        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
-            var callback = arguments.query;
-            arguments.query = newQuery();
-            callback( arguments.query );
-        }
-        return addWhereExistsQuery( arguments.query, arguments.combinator, arguments.negate );
-    }
-
-    /**
-     * Adds a WHERE EXISTS clause to the query.
-     *
-     * @query The EXISTS query to add as a constraint.
-     * @combinator The boolean combinator for the clause (e.g. "and" or "or"). Default: "and"
-     * @negate False for EXISTS, True for NOT EXISTS. Default: false.
-     *
-     * @return qb.models.Query.QueryBuilder
-     */
-    private QueryBuilder function addWhereExistsQuery( query, combinator = "and", negate = false ) {
-        var type = negate ? "notExists" : "exists";
-        variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
-        addBindings( query.getBindings(), "where" );
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereExists( argumentCollection = arguments );
     }
 
     /**
@@ -2152,9 +1748,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNested( required callback, combinator = "and" ) {
-        var query = forNestedWhere();
-        callback( query );
-        return addNestedWhereQuery( query, combinator );
+        arguments.builder = this;
+        return getPredicateClause().whereNested( argumentCollection = arguments );
     }
 
     /**
@@ -2166,11 +1761,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addNestedWhereQuery( required QueryBuilder query, string combinator = "and" ) {
-        if ( !query.getWheres().isEmpty() ) {
-            variables.wheres.append( { type: "nested", query: arguments.query, combinator: arguments.combinator } );
-            addBindings( query.getBindings(), "where" );
-        }
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().addNestedWhereQuery( argumentCollection = arguments );
     }
 
     /**
@@ -2179,8 +1771,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function forNestedWhere() {
-        var query = newQuery();
-        return query.from( getTableName() );
+        return getPredicateClause().forNestedWhere( this );
     }
 
     /**
@@ -2193,21 +1784,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNull( column, combinator = "and", negate = false ) {
-        if (
-            isClosure( arguments.column ) ||
-            isCustomFunction( arguments.column ) ||
-            getUtils().isBuilder( arguments.column )
-        ) {
-            return whereNullSub( arguments.column, arguments.combinator, arguments.negate );
-        }
-
-        var type = negate ? "notNull" : "null";
-        variables.wheres.append( {
-            type: type,
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-            combinator: arguments.combinator
-        } );
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereNull( argumentCollection = arguments );
     }
 
     /**
@@ -2220,16 +1798,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function whereNullSub( query, combinator = "and", negate = false ) {
-        if ( isClosure( arguments.query ) || isCustomFunction( arguments.query ) ) {
-            var callback = arguments.query;
-            arguments.query = newQuery();
-            callback( arguments.query );
-        }
-
-        var type = arguments.negate ? "notNullSub" : "nullSub";
-        variables.wheres.append( { type: type, query: arguments.query, combinator: arguments.combinator } );
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereNullSub( argumentCollection = arguments );
     }
 
     /**
@@ -2263,63 +1833,8 @@ component displayname="QueryBuilder" accessors="true" {
         combinator = "and",
         negate = false
     ) {
-        var type = negate ? "notBetween" : "between";
-
-        if ( isClosure( arguments.start ) || isCustomFunction( arguments.start ) ) {
-            var callback = arguments.start;
-            arguments.start = newQuery();
-            callback( arguments.start );
-        }
-
-        if ( isClosure( arguments.end ) || isCustomFunction( arguments.end ) ) {
-            var callback = arguments.end;
-            arguments.end = newQuery();
-            callback( arguments.end );
-        }
-
-        addBindings(
-            utils.isExpression( arguments.start ) ? arguments.start.getBindings() : utils.extractBinding(
-                arguments.start,
-                variables.grammar
-            ),
-            "where"
-        );
-        addBindings(
-            utils.isExpression( arguments.end ) ? arguments.end.getBindings() : utils.extractBinding(
-                arguments.end,
-                variables.grammar
-            ),
-            "where"
-        );
-
-        if (
-            isStruct( arguments.start ) && !structKeyExists( arguments.start, "isBuilder" ) && structKeyExists(
-                arguments.start,
-                "value"
-            )
-        ) {
-            arguments.start = arguments.start.value;
-        }
-
-        if (
-            isStruct( arguments.end ) && !structKeyExists( arguments.end, "isBuilder" ) && structKeyExists(
-                arguments.end,
-                "value"
-            )
-        ) {
-            arguments.end = arguments.end.value;
-        }
-
-        variables.wheres.append( {
-            type: type,
-            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-            start: arguments.start,
-            end: arguments.end,
-            combinator: arguments.combinator
-        } );
-
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().whereBetween( argumentCollection = arguments );
     }
 
     /**
@@ -2380,10 +1895,12 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function groupBy( required groups ) {
-        var groupBys = normalizeToArray( arguments.groups );
-        for ( var groupBy in groupBys ) {
-            variables.groups.append( mapToColumnType( applyColumnFormatter( groupBy ) ) );
-        }
+        var groupBys = normalizeToArray( arguments.groups )
+            .map( ( groupBy ) => applyColumnFormatter( groupBy ) )
+            .map( ( groupBy ) => mapToColumnType( groupBy ) );
+        var groupBindings = extractColumnBindings( groupBys );
+        variables.groups.append( groupBys, true );
+        addBindings( groupBindings, "groupBy" );
         return this;
     }
 
@@ -2403,64 +1920,8 @@ component displayname="QueryBuilder" accessors="true" {
         value,
         string combinator = "and"
     ) {
-        if ( this.getValidateOperatorsAndCombinators() && isInvalidCombinator( arguments.combinator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal combinator" );
-        }
-
-        if (
-            isNull( arguments.value ) &&
-            isNull( arguments.operator ) &&
-            getUtils().isExpression( arguments.column )
-        ) {
-            arrayAppend(
-                variables.havings,
-                { type: "raw", column: arguments.column, combinator: arguments.combinator }
-            );
-            addBindings(
-                arguments.column
-                    .getBindings()
-                    .map( function( binding ) {
-                        return utils.extractBinding( binding, variables.grammar );
-                    } ),
-                "having"
-            );
-            return this;
-        }
-
-        if ( isNull( arguments.value ) ) {
-            arguments.value = arguments.operator;
-            arguments.operator = "=";
-        } else if ( this.getValidateOperatorsAndCombinators() && isInvalidOperator( arguments.operator ) ) {
-            throw( type = "InvalidSQLType", message = "Illegal operator" );
-        }
-
-        arrayAppend(
-            variables.havings,
-            {
-                type: "normal",
-                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-                operator: arguments.operator,
-                value: arguments.value,
-                combinator: arguments.combinator
-            }
-        );
-
-        if ( getUtils().isExpression( arguments.column ) ) {
-            addBindings(
-                arguments.column
-                    .getBindings()
-                    .map( function( binding ) {
-                        return utils.extractBinding( binding, variables.grammar );
-                    } ),
-                "having"
-            );
-        }
-
-        if ( getUtils().isNotExpression( arguments.value ) ) {
-            addBindings( utils.extractBinding( arguments.value, variables.grammar ), "having" );
-        }
-
-        return this;
+        arguments.builder = this;
+        return getPredicateClause().having( argumentCollection = arguments );
     }
 
     /**
@@ -2536,6 +1997,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBy( required any column, string direction = "asc" ) {
+        getCollaborator( "QueryValidator" ).validateOrderDirection( arguments.direction );
+        arguments.direction = lCase( trim( arguments.direction ) );
         // We are trying to determine if a positional array of [ column, direction ]
         // was passed in.  This is the craziness that does that.
         if (
@@ -2557,8 +2020,20 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.column = listToArray( arguments.column );
         }
 
-        for ( var col in arrayWrap( arguments.column ) ) {
-            orderBySingle( col, arguments.direction );
+        var originalOrders = variables.orders.isEmpty() ? [] : arraySlice( variables.orders, 1 );
+        var originalOrderBindings = variables.bindings.orderBy.isEmpty()
+         ? []
+         : arraySlice( variables.bindings.orderBy, 1 );
+        var commonTableState = getCollaborator( "QueryExecutor" ).captureCommonTableState( this );
+        try {
+            for ( var col in arrayWrap( arguments.column ) ) {
+                orderBySingle( col, arguments.direction );
+            }
+        } catch ( any e ) {
+            variables.orders = originalOrders;
+            variables.bindings.orderBy = originalOrderBindings;
+            getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
+            rethrow;
         }
         return this;
     }
@@ -2583,15 +2058,9 @@ component displayname="QueryBuilder" accessors="true" {
         // check the value of the current iteration to determine what blend of column def they went with
         // ex: "DATE(created_at)" -- RAW expression
         if ( getUtils().isExpression( column ) ) {
+            var expressionBindings = extractExpressionBindings( column );
             variables.orders.append( { direction: "raw", column: column } );
-            addBindings(
-                column
-                    .getBindings()
-                    .map( function( value ) {
-                        return variables.utils.extractBinding( arguments.value, variables.grammar );
-                    } ),
-                "orderBy"
-            );
+            addBindings( expressionBindings, "orderBy" );
             return this;
         }
 
@@ -2618,7 +2087,9 @@ component displayname="QueryBuilder" accessors="true" {
         if ( isStruct( column ) && structKeyExists( column, "column" ) ) {
             // as long as the struct provided contains the column keyName then we can append it. If the direction column is omitted we will assume direction argument's value
             if ( getUtils().isExpression( column.column ) ) {
+                var expressionBindings = extractExpressionBindings( column.column );
                 variables.orders.append( { direction: "raw", column: column.column } );
+                addBindings( expressionBindings, "orderBy" );
             } else {
                 var dir = (
                     structKeyExists( column, "direction" ) && arrayFindNoCase( variables.directions, column.direction )
@@ -2722,15 +2193,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderByRaw( required any sql, array bindings = [] ) {
-        if ( !arrayIsEmpty( arguments.bindings ) ) {
-            addBindings(
-                arguments.bindings.map( function( value ) {
-                    return variables.utils.extractBinding( arguments.value, variables.grammar );
-                } ),
-                "orderBy"
-            );
-        }
-        return orderBy( new Expression( arguments.sql ) );
+        return orderBy( raw( arguments.sql, arguments.bindings ) );
     }
 
     /**
@@ -2742,11 +2205,15 @@ component displayname="QueryBuilder" accessors="true" {
      * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function orderBySub( required any query, string direction = "asc" ) {
+        getCollaborator( "QueryValidator" ).validateOrderDirection( arguments.direction );
+        arguments.direction = lCase( trim( arguments.direction ) );
         if ( !getUtils().isBuilder( arguments.query ) ) {
             var callback = arguments.query;
             arguments.query = newQuery();
             callback( arguments.query );
         }
+
+        arguments.query = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.query );
 
         variables.orders.append( { direction: arguments.direction, query: arguments.query } );
         addBindings( arguments.query.getBindings(), "orderBy" );
@@ -2790,8 +2257,16 @@ component displayname="QueryBuilder" accessors="true" {
      * @return    qb.models.Query.QueryBuilder
      */
     public QueryBuilder function reorder( required any column, string direction = "asc" ) {
-        clearOrders();
-        return orderBy( argumentCollection = arguments );
+        var originalOrders = variables.orders;
+        var originalOrderBindings = variables.bindings.orderBy;
+        try {
+            clearOrders();
+            return orderBy( argumentCollection = arguments );
+        } catch ( any e ) {
+            variables.orders = originalOrders;
+            variables.bindings.orderBy = originalOrderBindings;
+            rethrow;
+        }
     }
 
     /*******************************************************************************\
@@ -2814,6 +2289,7 @@ component displayname="QueryBuilder" accessors="true" {
             // replace the original query builder with the results of the sub-query
             arguments.input = subquery;
         }
+        arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
         // track the union statement
         variables.unions.append( { query: arguments.input, all: arguments.all } );
@@ -2862,6 +2338,7 @@ component displayname="QueryBuilder" accessors="true" {
             // replace the original query builder with the results of the sub-query
             arguments.input = subquery;
         }
+        arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
         // track the union statement
         arrayAppend(
@@ -2902,7 +2379,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function limit( required numeric value ) {
-        variables.limitValue = value;
+        variables.limitValue = arguments.value > 0 ? arguments.value : 0;
         return this;
     }
 
@@ -2926,7 +2403,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function offset( required numeric value ) {
-        variables.offsetValue = value;
+        variables.offsetValue = arguments.value > 0 ? arguments.value : 0;
         return this;
     }
 
@@ -2945,6 +2422,7 @@ component displayname="QueryBuilder" accessors="true" {
             return this;
         }
 
+        arguments.page = arguments.page > 0 ? arguments.page : 1;
         arguments.maxRows = arguments.maxRows > 0 ? arguments.maxRows : 0;
         this.offset( arguments.page * arguments.maxRows - arguments.maxRows );
         this.limit( arguments.maxRows );
@@ -2962,6 +2440,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return  PaginationCollector
      */
     public any function paginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
+        arguments.page = arguments.page > 0 ? arguments.page : 1;
         var totalRecords = getCountForPagination( options = options );
         var results = forPage( page, maxRows ).get( options = options );
         return getPaginationCollector().generateWithResults(
@@ -2984,12 +2463,29 @@ component displayname="QueryBuilder" accessors="true" {
      * @return  PaginationCollector
      */
     public any function simplePaginate( numeric page = 1, numeric maxRows = 25, struct options = {} ) {
-        var results = forPage( page, maxRows ).limit( maxRows + 1 ).get( options = options );
-        return getPaginationCollector().generateSimpleWithResults(
+        arguments.page = arguments.page > 0 ? arguments.page : 1;
+        var shouldReturnAllRows = shouldMaxRowsOverrideToAll( arguments.maxRows );
+        var paginationQuery = forPage( arguments.page, arguments.maxRows );
+        if ( !shouldReturnAllRows ) {
+            paginationQuery.limit( arguments.maxRows + 1 );
+        }
+        var results = paginationQuery.get( options = arguments.options );
+        var collectedResults = getPaginationCollector().generateSimpleWithResults(
             results = results,
             page = arguments.page,
-            maxRows = arguments.maxRows
+            maxRows = shouldReturnAllRows ? max( 1, results.len() ) : arguments.maxRows
         );
+        if (
+            shouldReturnAllRows &&
+            isStruct( collectedResults ) &&
+            collectedResults.keyExists( "pagination" ) &&
+            isStruct( collectedResults.pagination )
+        ) {
+            collectedResults.pagination.maxRows = 0;
+            collectedResults.pagination.offset = 0;
+            collectedResults.pagination.hasMore = false;
+        }
+        return collectedResults;
     }
 
     /**
@@ -3002,11 +2498,11 @@ component displayname="QueryBuilder" accessors="true" {
      */
     private numeric function getCountForPagination( struct options = {} ) {
         if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
-            var originalOrders = this.getOrders();
-            this.setOrders( [] );
-            var count = newQuery().fromSub( "aggregate_table", this ).count( options = arguments.options );
-            this.setOrders( originalOrders );
-            return count;
+            var countSource = clone().clearOrders();
+            return getCollaborator( "QueryExecutor" )
+                .prepareInternalExecutionBuilder( this, newQuery() )
+                .fromSub( "aggregate_table", countSource )
+                .count( options = arguments.options );
         }
         return count( options = arguments.options );
     }
@@ -3064,48 +2560,8 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function withScoping( required function callback ) {
-        var originalWhereCount = this.getWheres().len();
-        arguments.callback();
-        if ( this.getWheres().len() > originalWhereCount ) {
-            addNewWheresWithinGroup( originalWhereCount );
-        }
-        return this;
-    }
-
-    /**
-     * Adds a new nested where clause for the wheres added in a scope.
-     * It only does this when there is an OR combinator inside the scope.
-     *
-     * @originalWhereCount  The number of where clauses before the scope was added.
-     */
-    private void function addNewWheresWithinGroup( required numeric originalWhereCount ) {
-        var allWheres = this.getWheres();
-        this.setWheres( [] );
-
-        if ( arguments.originalWhereCount > 0 ) {
-            groupWhereSliceForScope( arraySlice( allWheres, 1, arguments.originalWhereCount ) );
-        }
-
-        groupWhereSliceForScope( arraySlice( allWheres, arguments.originalWhereCount + 1 ) );
-    }
-
-    /**
-     * Checks if a where slice needs to be grouped in parenthesis.
-     * It only does this when there is an OR combinator inside the scope.
-     *
-     * @whereSlice  The array of where clauses to maybe be grouped.
-     */
-    private void function groupWhereSliceForScope( required array whereSlice ) {
-        var hasOrCombinator = false;
-        for ( var where in arguments.whereSlice ) {
-            if ( compareNoCase( where.combinator, "OR" ) == 0 ) {
-                this.addNestedWhereQuery( this.forNestedWhere().setWheres( arguments.whereSlice ) );
-                return;
-            }
-        }
-        var newWheres = this.getWheres();
-        arrayAppend( newWheres, arguments.whereSlice, true );
-        this.setWheres( newWheres );
+        arguments.builder = this;
+        return getPredicateClause().withScoping( argumentCollection = arguments );
     }
 
     /**
@@ -3150,8 +2606,8 @@ component displayname="QueryBuilder" accessors="true" {
             arguments.values = [ arguments.values ];
         }
 
-        var columns = arguments.values[ 1 ]
-            .keyArray()
+        var columns = getGrammar()
+            .resolveInsertColumnNames( arguments.values )
             .map( function( column ) {
                 var formatted = listLast( applyColumnFormatter( column ), "." );
                 return { "original": column, "formatted": formatted };
@@ -3168,12 +2624,13 @@ component displayname="QueryBuilder" accessors="true" {
             } );
         } );
 
+        var newInsertBindings = [];
         newBindings.each( function( bindingsArray ) {
             bindingsArray.each( function( binding ) {
                 if ( getUtils().isNotExpression( binding ) ) {
-                    addBindings( binding, "insert" );
+                    newInsertBindings.append( binding );
                 } else {
-                    addBindings( binding, "insertRaw" );
+                    newInsertBindings.append( extractExpressionBindings( binding ), true );
                 }
             } );
         } );
@@ -3182,8 +2639,11 @@ component displayname="QueryBuilder" accessors="true" {
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var sql = getGrammar().compileInsert( this, columns, newBindings );
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileInsert( this, columns, newBindings );
+        } );
 
+        variables.bindings.insert = newInsertBindings;
         clearBindings( except = "insert" );
 
         if ( toSql ) {
@@ -3191,6 +2651,84 @@ component displayname="QueryBuilder" accessors="true" {
         }
 
         return runQuery( sql, arguments.options, "result" );
+    }
+
+    /**
+     * Inserts a large set of rows using a grammar's native bulk strategy when available,
+     * falling back to parameter-aware batches otherwise.
+     *
+     * @values An array of structs to insert in to the table.
+     * @sqlTypes SQL types keyed by column name. Types are inferred for columns not provided.
+     * @chunkSize The preferred number of rows per batch. A non-positive value uses all rows, subject to grammar parameter limits. Default: 0.
+     * @options Any options to pass to `queryExecute`. Default: {}.
+     * @toSql If true, returns the raw SQL strings instead of running the queries. Useful for debugging. Default: false.
+     *
+     * @return array
+     */
+    public array function insertBulk(
+        required array values,
+        struct sqlTypes = {},
+        numeric chunkSize = 0,
+        struct options = {},
+        boolean toSql = false
+    ) {
+        if ( arguments.values.isEmpty() ) {
+            return [];
+        }
+
+        var columnCount = getGrammar().resolveInsertColumnNames( arguments.values ).len();
+        if ( columnCount == 0 ) {
+            throw( type = "InvalidSQLType", message = "Please pass structs with at least one column to insertBulk." );
+        }
+
+        var originalBindings = {};
+        for ( var bindingType in variables.bindings ) {
+            originalBindings[ bindingType ] = variables.bindings[ bindingType ].isEmpty()
+             ? []
+             : arraySlice( variables.bindings[ bindingType ], 1 );
+        }
+
+        try {
+            clearBindings();
+
+            var safeChunkSize = arguments.values.len();
+            if ( !getGrammar().supportsBulkInsert() && getGrammar().parameterLimit > 0 ) {
+                safeChunkSize = max( 1, floor( getGrammar().parameterLimit / columnCount ) );
+            }
+            if ( arguments.chunkSize > 0 ) {
+                safeChunkSize = min( safeChunkSize, arguments.chunkSize );
+            }
+
+            var results = [];
+            for ( var offset = 1; offset <= arguments.values.len(); offset += safeChunkSize ) {
+                var batchSize = min( safeChunkSize, arguments.values.len() - offset + 1 );
+                var batch = arguments.values.slice( offset, batchSize );
+
+                if ( getGrammar().supportsBulkInsert() ) {
+                    var bulkInsert = getGrammar().prepareBulkInsert( this, batch, arguments.sqlTypes );
+                    addBindings( [ bulkInsert.binding ], "insert" );
+                    var sql = withWrappingContext( function() {
+                        return getGrammar().compileBulkInsert( this, bulkInsert.columns );
+                    } );
+                    if ( arguments.toSql ) {
+                        results.append( sql );
+                    } else {
+                        results.append( runQuery( sql, arguments.options, "result" ) );
+                        clearBindings( only = [ "insert" ] );
+                    }
+                } else {
+                    var batchQuery = getCollaborator( "QueryExecutor" ).prepareInternalExecutionBuilder( this, clone() );
+                    results.append(
+                        batchQuery.insert( values = batch, options = arguments.options, toSql = arguments.toSql )
+                    );
+                }
+            }
+
+            return results;
+        } catch ( any e ) {
+            variables.bindings = originalBindings;
+            rethrow;
+        }
     }
 
     /**
@@ -3210,32 +2748,56 @@ component displayname="QueryBuilder" accessors="true" {
         struct options = {},
         boolean toSql = false
     ) {
-        if ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) {
-            var callback = arguments.source;
-            arguments.source = newQuery();
-            callback( arguments.source );
+        var originalBindings = {};
+        for ( var bindingType in variables.bindings ) {
+            originalBindings[ bindingType ] = variables.bindings[ bindingType ].isEmpty()
+             ? []
+             : arraySlice( variables.bindings[ bindingType ], 1 );
         }
+        var executor = getCollaborator( "QueryExecutor" );
+        var commonTableState = executor.captureCommonTableState( this );
 
-        if ( isNull( arguments.columns ) ) {
-            arguments.columns = arguments.source
-                .getColumns()
-                .map( function( column ) {
-                    return getGrammar().extractAlias( mapToColumnType( column ) );
-                } );
+        try {
+            if ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) {
+                var callback = arguments.source;
+                arguments.source = newQuery();
+                callback( arguments.source );
+            }
+            arguments.source = executor.snapshotBuilder( this, arguments.source );
+
+            clearBindings( except = [ "commonTables" ] );
+
+            if ( isNull( arguments.columns ) ) {
+                arguments.columns = arguments.source
+                    .getColumns()
+                    .map( function( column ) {
+                        return getGrammar().extractAlias( mapToColumnType( column ) );
+                    } );
+                if ( arguments.columns.len() == 1 && arguments.columns[ 1 ] == "*" ) {
+                    arguments.columns = [];
+                }
+            }
+
+            var formattedColumns = arguments.columns.map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
+            } );
+
+            addBindingsFromBuilder( arguments.source );
+
+            formattedColumns.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
+            } );
+
+            var sourceQuery = arguments.source;
+            var sql = withWrappingContext( function() {
+                return getGrammar().compileInsertUsing( this, formattedColumns, sourceQuery );
+            } );
+        } catch ( any e ) {
+            executor.restoreCommonTableState( this, commonTableState );
+            variables.bindings = originalBindings;
+            rethrow;
         }
-
-        var formattedColumns = arguments.columns.map( function( column ) {
-            var formatted = listLast( applyColumnFormatter( column ), "." );
-            return { "original": column, "formatted": formatted };
-        } );
-
-        addBindingsFromBuilder( arguments.source );
-
-        formattedColumns.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-
-        var sql = getGrammar().compileInsertUsing( this, formattedColumns, arguments.source );
 
         if ( toSql ) {
             return sql;
@@ -3275,8 +2837,8 @@ component displayname="QueryBuilder" accessors="true" {
             values = [ values ];
         }
 
-        var columns = arguments.values[ 1 ]
-            .keyArray()
+        var columns = getGrammar()
+            .resolveInsertColumnNames( arguments.values )
             .map( function( column ) {
                 var formatted = listLast( applyColumnFormatter( column ), "." );
                 return { "original": column, "formatted": formatted };
@@ -3293,12 +2855,13 @@ component displayname="QueryBuilder" accessors="true" {
             } );
         } );
 
+        var newInsertBindings = [];
         newBindings.each( function( bindingsArray ) {
             bindingsArray.each( function( binding ) {
                 if ( getUtils().isNotExpression( binding ) ) {
-                    addBindings( binding, "insert" );
+                    newInsertBindings.append( binding );
                 } else {
-                    addBindings( binding, "insertRaw" );
+                    newInsertBindings.append( extractExpressionBindings( binding ), true );
                 }
             } );
         } );
@@ -3315,13 +2878,17 @@ component displayname="QueryBuilder" accessors="true" {
             c.formatted = mapToColumnType( c.formatted );
         } );
 
-        var sql = getGrammar().compileInsertIgnore(
-            this,
-            columns,
-            arguments.target,
-            newBindings
-        );
+        var targetColumns = arguments.target;
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileInsertIgnore(
+                this,
+                columns,
+                targetColumns,
+                newBindings
+            );
+        } );
 
+        variables.bindings.insert = newInsertBindings;
         clearBindings( except = "insert" );
 
         if ( toSql ) {
@@ -3332,18 +2899,20 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     public QueryBuilder function returning( required any columns ) {
-        variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
-        variables.returning = variables.returning.map( function( column ) {
+        var returningColumns = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
+        returningColumns = returningColumns.map( function( column ) {
             return mapToColumnType( listLast( applyColumnFormatter( column ), "." ) );
         } );
+        variables.returning = returningColumns;
         return this;
     }
 
     public QueryBuilder function returningRaw( required any columns ) {
-        variables.returning = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
-        variables.returning = variables.returning.map( function( column ) {
+        var returningColumns = isArray( arguments.columns ) ? arguments.columns : [ arguments.columns ];
+        returningColumns = returningColumns.map( function( column ) {
             return mapToColumnType( new Expression( column ) );
         } );
+        variables.returning = returningColumns;
         return this;
     }
 
@@ -3364,6 +2933,7 @@ component displayname="QueryBuilder" accessors="true" {
      * @return query
      */
     public any function update( struct values = {}, struct options = {}, boolean toSql = false ) {
+        arguments.values = structCopy( arguments.values );
         structAppend( arguments.values, variables.updates, false );
         var updateArray = arguments.values
             .keyArray()
@@ -3376,32 +2946,53 @@ component displayname="QueryBuilder" accessors="true" {
             return compareNoCase( a.formatted, b.formatted );
         } );
 
-        for ( var column in updateArray ) {
-            var value = arguments.values[ column.original ];
-            if ( isCustomFunction( value ) || isClosure( value ) ) {
-                var subselect = newQuery();
-                value( subselect );
-                arguments.values[ column.original ] = subselect;
-                addBindings( subselect.getBindings(), "update" );
-            } else if ( getUtils().isBuilder( value ) ) {
-                arguments.values[ column.original ] = value;
-                addBindings( value.getBindings(), "update" );
-            } else if ( !getUtils().isExpression( value ) ) {
-                addBindings( getUtils().extractBinding( value, variables.grammar ), "update" );
+        var newUpdateBindings = [];
+        var executor = getCollaborator( "QueryExecutor" );
+        var commonTableState = executor.captureCommonTableState( this );
+        var sql = "";
+        try {
+            for ( var column in updateArray ) {
+                var value = arguments.values[ column.original ];
+                if ( isCustomFunction( value ) || isClosure( value ) ) {
+                    var subselect = newQuery();
+                    value( subselect );
+                    arguments.values[ column.original ] = executor.snapshotBuilder( this, subselect );
+                    newUpdateBindings.append( arguments.values[ column.original ].getBindings(), true );
+                } else if ( getUtils().isBuilder( value ) ) {
+                    arguments.values[ column.original ] = executor.snapshotBuilder( this, value );
+                    newUpdateBindings.append( arguments.values[ column.original ].getBindings(), true );
+                } else if ( getUtils().isExpression( value ) ) {
+                    newUpdateBindings.append( extractExpressionBindings( value ), true );
+                } else {
+                    newUpdateBindings.append( getUtils().extractBinding( value, variables.grammar ) );
+                }
             }
+
+            updateArray.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
+            } );
+
+            var updateValues = arguments.values;
+            sql = withWrappingContext( function() {
+                return getGrammar().compileUpdate( this, updateArray, updateValues );
+            } );
+        } catch ( any e ) {
+            executor.restoreCommonTableState( this, commonTableState );
+            rethrow;
         }
 
-        updateArray.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-
-        var sql = getGrammar().compileUpdate( this, updateArray, arguments.values );
+        variables.bindings.update = newUpdateBindings;
 
         if ( toSql ) {
             return sql;
         }
 
-        return runQuery( sql, arguments.options, "result" );
+        return runQuery(
+            sql,
+            arguments.options,
+            "result",
+            getBindings( order = getGrammar().getUpdateBindingOrder( this ) )
+        );
     }
 
     /**
@@ -3436,6 +3027,20 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
 
+    /**
+     * Inserts rows that do not exist and updates rows matching the target columns.
+     *
+     * @values The values to insert or the columns selected by the source query.
+     * @target The columns used to determine whether a row already exists.
+     * @update The columns or explicit values to update when a row matches.
+     * @source An optional query builder or callback used as the source rows.
+     * @deleteUnmatched Whether to delete target rows missing from the source, or a callback constraining those deletes.
+     * @options Options passed to `queryExecute`.
+     * @toSql Whether to return SQL instead of executing the query.
+     * @matchNulls Whether two NULL target values should be considered a match. Supported by MERGE grammars.
+     *
+     * @return The query result, compiled SQL, or nothing when no values are provided.
+     */
     public any function upsert(
         required any values,
         required any target,
@@ -3443,159 +3048,203 @@ component displayname="QueryBuilder" accessors="true" {
         any source,
         any deleteUnmatched = false,
         struct options = {},
-        boolean toSql = false
+        boolean toSql = false,
+        boolean matchNulls = false
     ) {
         if ( arguments.values.isEmpty() ) {
             return;
         }
 
-        if ( !isNull( arguments.source ) && ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) ) {
-            var callback = arguments.source;
-            arguments.source = newQuery();
-            callback( arguments.source );
+        var originalBindings = {};
+        for ( var bindingType in variables.bindings ) {
+            originalBindings[ bindingType ] = variables.bindings[ bindingType ].isEmpty()
+             ? []
+             : arraySlice( variables.bindings[ bindingType ], 1 );
         }
+        var executor = getCollaborator( "QueryExecutor" );
+        var commonTableState = executor.captureCommonTableState( this );
 
-        if ( !isNull( arguments.source ) ) {
-            addBindingsFromBuilder( arguments.source );
-        }
+        try {
+            clearBindings( except = [ "commonTables" ] );
 
-        if ( !isArray( arguments.values ) ) {
-            if ( !isStruct( arguments.values ) ) {
-                throw(
-                    type = "InvalidSQLType",
-                    message = "Please pass a struct or an array of structs mapping columns to values"
-                );
+            if ( !isNull( arguments.source ) && ( isClosure( arguments.source ) || isCustomFunction( arguments.source ) ) ) {
+                var callback = arguments.source;
+                arguments.source = newQuery();
+                callback( arguments.source );
             }
-            arguments.values = arrayWrap( arguments.values );
-        }
 
-        if ( !isNull( arguments.update ) && arguments.update.isEmpty() ) {
-            return this.insert( values = arguments.values, options = arguments.options, toSql = arguments.toSql );
-        }
+            if ( !isNull( arguments.source ) ) {
+                arguments.source = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.source );
+                addBindings( arguments.source.getBindings(), "insert" );
+            }
 
-        arguments.target = arrayWrap( arguments.target ).map( function( column ) {
-            var formatted = listLast( applyColumnFormatter( column ), "." );
-            return { "original": column, "formatted": formatted };
-        } );
+            if ( !isArray( arguments.values ) ) {
+                if ( !isStruct( arguments.values ) ) {
+                    throw(
+                        type = "InvalidSQLType",
+                        message = "Please pass a struct or an array of structs mapping columns to values"
+                    );
+                }
+                arguments.values = arrayWrap( arguments.values );
+            }
 
-        var columns = [];
-        if ( isStruct( arguments.values[ 1 ] ) ) {
-            columns = arguments.values[ 1 ].keyArray();
-        } else {
-            columns = arguments.values;
-        }
-        columns = columns.map( function( column ) {
-            var formatted = listLast( applyColumnFormatter( column ), "." );
-            return { "original": column, "formatted": formatted };
-        } );
-        if ( isStruct( arguments.values[ 1 ] ) ) {
-            columns.sort( function( a, b ) {
+            if ( !isNull( arguments.update ) && arguments.update.isEmpty() ) {
+                if ( !isNull( arguments.source ) ) {
+                    return this.insertUsing(
+                        columns = arguments.values,
+                        source = arguments.source,
+                        options = arguments.options,
+                        toSql = arguments.toSql
+                    );
+                }
+                return this.insert( values = arguments.values, options = arguments.options, toSql = arguments.toSql );
+            }
+
+            arguments.target = arrayWrap( arguments.target ).map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
+            } );
+
+            var columns = [];
+            if ( isStruct( arguments.values[ 1 ] ) ) {
+                columns = getGrammar().resolveInsertColumnNames( arguments.values );
+            } else {
+                columns = arguments.values;
+            }
+            columns = columns.map( function( column ) {
+                var formatted = listLast( applyColumnFormatter( column ), "." );
+                return { "original": column, "formatted": formatted };
+            } );
+            if ( isStruct( arguments.values[ 1 ] ) ) {
+                columns.sort( function( a, b ) {
+                    return compareNoCase( a.formatted, b.formatted );
+                } );
+            }
+
+            var updateArray = [];
+            if ( isNull( arguments.update ) ) {
+                arguments.update = columns;
+            } else {
+                if ( isArray( arguments.update ) ) {
+                    arguments.update = arguments.update.map( function( column ) {
+                        var formatted = listLast( applyColumnFormatter( column ), "." );
+                        return { "original": column, "formatted": formatted };
+                    } );
+                }
+            }
+
+            if ( isArray( arguments.update ) ) {
+                updateArray = arguments.update;
+            } else {
+                updateArray = arguments.update
+                    .keyArray()
+                    .map( function( column ) {
+                        var formatted = listLast( applyColumnFormatter( column ), "." );
+                        return { original: column, formatted: formatted };
+                    } );
+            }
+
+            updateArray.sort( function( a, b ) {
                 return compareNoCase( a.formatted, b.formatted );
             } );
-        }
 
-        var updateArray = [];
-        if ( isNull( arguments.update ) ) {
-            arguments.update = columns;
-        } else {
-            if ( isArray( arguments.update ) ) {
-                arguments.update = arguments.update.map( function( column ) {
-                    var formatted = listLast( applyColumnFormatter( column ), "." );
-                    return { "original": column, "formatted": formatted };
+            var newInsertBindings = [];
+            if ( isStruct( arguments.values[ 1 ] ) ) {
+                newInsertBindings = arguments.values.map( function( value ) {
+                    return columns.map( function( column ) {
+                        return getUtils().extractBinding(
+                            value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
+                            variables.grammar
+                        );
+                    } );
                 } );
             }
-        }
 
-        if ( isArray( arguments.update ) ) {
-            updateArray = arguments.update;
-        } else {
-            updateArray = arguments.update
-                .keyArray()
-                .map( function( column ) {
-                    var formatted = listLast( applyColumnFormatter( column ), "." );
-                    return { original: column, formatted: formatted };
-                } );
-        }
-
-        updateArray.sort( function( a, b ) {
-            return compareNoCase( a.formatted, b.formatted );
-        } );
-
-        var newInsertBindings = [];
-        if ( isStruct( arguments.values[ 1 ] ) ) {
-            newInsertBindings = arguments.values.map( function( value ) {
-                return columns.map( function( column ) {
-                    return getUtils().extractBinding(
-                        value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
-                        variables.grammar
-                    );
+            newInsertBindings.each( function( bindingsArray ) {
+                bindingsArray.each( function( binding ) {
+                    if ( getUtils().isNotExpression( binding ) ) {
+                        addBindings( binding, "insert" );
+                    } else {
+                        addExpressionBindings( binding, "insert" );
+                    }
                 } );
             } );
-        }
 
-        newInsertBindings.each( function( bindingsArray ) {
-            bindingsArray.each( function( binding ) {
-                if ( getUtils().isNotExpression( binding ) ) {
-                    addBindings( binding, "insert" );
-                } else {
-                    addBindings( binding, "insertRaw" );
-                }
+            if ( isStruct( arguments.update ) ) {
+                var updates = arguments.update;
+                updateArray.each( function( column ) {
+                    if (
+                        isNull( updates[ column.original ] ) ||
+                        getUtils().isNotExpression( updates[ column.original ] )
+                    ) {
+                        addBindings(
+                            getUtils().extractBinding(
+                                isNull( updates[ column.original ] ) ? javacast( "null", "" ) : updates[ column.original ],
+                                variables.grammar
+                            ),
+                            "insert"
+                        );
+                    } else {
+                        addExpressionBindings( updates[ column.original ], "insert" );
+                    }
+                } );
+            }
+
+            if ( isClosure( arguments.deleteUnmatched ) || isCustomFunction( arguments.deleteUnmatched ) ) {
+                var deleteRestrictions = newQuery().setColumnFormatter( ( column ) => {
+                    if ( listLen( column, "." ) > 1 ) {
+                        return column;
+                    }
+                    return "qb_target.#column#";
+                } );
+                arguments.deleteUnmatched( deleteRestrictions );
+                arguments.deleteUnmatched = deleteRestrictions;
+            }
+
+            if ( getUtils().isBuilder( arguments.deleteUnmatched ) ) {
+                arguments.deleteUnmatched = getCollaborator( "QueryExecutor" ).snapshotBuilder(
+                    this,
+                    arguments.deleteUnmatched
+                );
+                addBindings( arguments.deleteUnmatched.getBindings(), "insert" );
+            }
+
+            columns.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
             } );
-        } );
-
-        if ( isStruct( arguments.update ) ) {
-            var updates = arguments.update;
-            updateArray.each( function( column ) {
-                if (
-                    isNull( updates[ column.original ] ) ||
-                    getUtils().isNotExpression( updates[ column.original ] )
-                ) {
-                    addBindings(
-                        getUtils().extractBinding(
-                            isNull( updates[ column.original ] ) ? javacast( "null", "" ) : updates[ column.original ],
-                            variables.grammar
-                        ),
-                        "where"
-                    );
-                }
+            updateArray.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
             } );
-        }
-
-        if ( isClosure( arguments.deleteUnmatched ) || isCustomFunction( arguments.deleteUnmatched ) ) {
-            var deleteRestrictions = newQuery().setColumnFormatter( ( column ) => {
-                if ( listLen( column, "." ) > 1 ) {
-                    return column;
-                }
-                return "qb_target.#column#";
+            arguments.target.each( ( c ) => {
+                c.formatted = mapToColumnType( c.formatted );
             } );
-            arguments.deleteUnmatched( deleteRestrictions );
-            arguments.deleteUnmatched = deleteRestrictions;
+
+            var updateForUpsert = arguments.update;
+            var targetForUpsert = arguments.target;
+            var hasSourceForUpsert = !isNull( arguments.source );
+            if ( hasSourceForUpsert ) {
+                var sourceForUpsert = arguments.source;
+            }
+            var deleteUnmatchedForUpsert = arguments.deleteUnmatched;
+            var matchNullsForUpsert = arguments.matchNulls;
+            var sql = withWrappingContext( function() {
+                return getGrammar().compileUpsert(
+                    this,
+                    columns,
+                    newInsertBindings,
+                    updateArray,
+                    updateForUpsert,
+                    targetForUpsert,
+                    hasSourceForUpsert ? sourceForUpsert : javacast( "null", "" ),
+                    deleteUnmatchedForUpsert,
+                    matchNullsForUpsert
+                );
+            } );
+        } catch ( any e ) {
+            executor.restoreCommonTableState( this, commonTableState );
+            variables.bindings = originalBindings;
+            rethrow;
         }
-
-        if ( getUtils().isBuilder( arguments.deleteUnmatched ) ) {
-            addBindingsFromBuilder( arguments.deleteUnmatched );
-        }
-
-        columns.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-        updateArray.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-        arguments.target.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-
-        var sql = getGrammar().compileUpsert(
-            this,
-            columns,
-            newInsertBindings,
-            updateArray,
-            arguments.update,
-            arguments.target,
-            isNull( arguments.source ) ? javacast( "null", "" ) : arguments.source,
-            arguments.deleteUnmatched
-        );
 
         if ( toSql ) {
             return sql;
@@ -3627,7 +3276,9 @@ component displayname="QueryBuilder" accessors="true" {
             where( arguments.idColumnName, "=", arguments.id );
         }
 
-        var sql = getGrammar().compileDelete( this );
+        var sql = withWrappingContext( function() {
+            return getGrammar().compileDelete( this );
+        } );
 
         if ( toSql ) {
             return sql;
@@ -3647,24 +3298,13 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return array of bindings
      */
-    public array function getBindings( array except = [] ) {
-        var bindingOrder = arrayFilter(
-            [
-                "commonTables",
-                "update",
-                "insert",
-                "select",
-                "from",
-                "join",
-                "where",
-                "having",
-                "orderBy",
-                "union"
-            ],
-            function( type ) {
-                return !arrayContainsNoCase( except, type );
-            }
-        );
+    public array function getBindings( array except = [], array order = [] ) {
+        if ( arguments.order.isEmpty() ) {
+            arguments.order = getGrammar().getSelectBindingOrder( this );
+        }
+        var bindingOrder = arrayFilter( arguments.order, function( type ) {
+            return !arrayContainsNoCase( except, type );
+        } );
 
         var flatBindings = [];
         for ( var key in bindingOrder ) {
@@ -3694,16 +3334,7 @@ component displayname="QueryBuilder" accessors="true" {
         arguments.only = isArray( arguments.only ) ? arguments.only : [ arguments.only ];
         arguments.except = isArray( arguments.except ) ? arguments.except : [ arguments.except ];
         if ( arguments.only.isEmpty() ) {
-            arguments.only = [
-                "commonTables",
-                "update",
-                "insert",
-                "select",
-                "join",
-                "where",
-                "orderBy",
-                "union"
-            ];
+            arguments.only = variables.bindings.keyArray();
         }
 
         for ( var bindingType in arguments.only ) {
@@ -3730,6 +3361,34 @@ component displayname="QueryBuilder" accessors="true" {
 
         variables.bindings[ type ].append( newBindings, true );
 
+        return this;
+    }
+
+    /**
+     * Normalizes the bindings carried by an Expression for query execution.
+     */
+    public array function extractExpressionBindings( required any expression ) {
+        var expressionBindings = arguments.expression.getBindings();
+        var extractedBindings = [];
+        if ( !expressionBindings.isEmpty() ) {
+            arrayResize( extractedBindings, expressionBindings.len() );
+        }
+        for ( var bindingIndex = 1; bindingIndex <= expressionBindings.len(); bindingIndex++ ) {
+            extractedBindings[ bindingIndex ] = !arrayIsDefined( expressionBindings, bindingIndex ) || isNull(
+                expressionBindings[ bindingIndex ]
+            ) ? utils.extractBinding( grammar = variables.grammar ) : utils.extractBinding(
+                expressionBindings[ bindingIndex ],
+                variables.grammar
+            );
+        }
+        return extractedBindings;
+    }
+
+    /**
+     * Adds normalized bindings carried by an Expression to a binding group.
+     */
+    public QueryBuilder function addExpressionBindings( required any expression, required string type ) {
+        addBindings( extractExpressionBindings( arguments.expression ), arguments.type );
         return this;
     }
 
@@ -3922,26 +3581,31 @@ component displayname="QueryBuilder" accessors="true" {
         boolean toSQL = false,
         any showBindings = false
     ) {
-        return withAggregate(
-            {
+        return getCollaborator( "QueryExecutor" ).withAggregate(
+            builder = this,
+            aggregate = {
                 type: type,
-                column: mapToColumnType( arguments.column ),
+                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
                 defaultValue: isNull( arguments.defaultValue ) ? javacast( "null", "" ) : arguments.defaultValue
             },
-            function() {
+            callback = function() {
                 return withReturnFormat( "query", function() {
-                    return withColumns( column, function() {
-                        if ( toSQL ) {
-                            return this.toSQL( showBindings = showBindings );
-                        }
+                    return getCollaborator( "QueryExecutor" ).withColumns(
+                        builder = this,
+                        columns = column,
+                        callback = function() {
+                            if ( toSQL ) {
+                                return this.toSQL( showBindings = showBindings );
+                            }
 
-                        var result = get( options = options );
-                        if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
-                            return defaultValue;
-                        } else {
-                            return result.aggregate;
+                            var result = get( options = options );
+                            if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
+                                return defaultValue;
+                            } else {
+                                return result.aggregate;
+                            }
                         }
-                    } );
+                    );
                 } );
             }
         );
@@ -3955,19 +3619,24 @@ component displayname="QueryBuilder" accessors="true" {
      * @return      boolean
      */
     public any function exists( struct options = {}, boolean toSQL = false ) {
-        var originalLimit = this.getLimitValue();
-        this.setLimitValue( 1 );
-        var existsQuery = newQuery()
-            .clearFrom()
-            .selectRaw(
-                "CASE WHEN EXISTS (#getGrammar().compileSelect( this )#) THEN 1 ELSE 0 END AS aggregate",
-                this.getBindings()
-            );
-        this.setLimitValue( isNull( originalLimit ) ? javacast( "null", "" ) : originalLimit );
-        return arguments.toSQL ? existsQuery.toSQL() : existsQuery
-            .setReturnFormat( "query" )
-            .get( options = arguments.options )
-            .aggregate == 1;
+        var existsSource = clone().setLimitValue( 1 );
+        var existsQuery = getCollaborator( "QueryExecutor" )
+            .prepareInternalExecutionBuilder( this, newQuery() )
+            .clearFrom();
+        getCollaborator( "QueryExecutor" ).hoistNestedCommonTables( existsSource, existsQuery );
+        var existsSql = withWrappingContext( function() {
+            return getGrammar().compileSelect( existsSource );
+        } );
+        existsQuery.selectRaw(
+            "CASE WHEN EXISTS (#existsSql#) THEN 1 ELSE 0 END AS aggregate",
+            existsSource.getBindings()
+        );
+        if ( arguments.toSQL ) {
+            return existsQuery.toSQL();
+        }
+
+        var result = existsQuery.setReturnFormat( "query" ).get( options = arguments.options );
+        return result.recordCount > 0 && result.aggregate == 1;
     }
 
     /**
@@ -4025,8 +3694,12 @@ component displayname="QueryBuilder" accessors="true" {
         if ( !isNull( arguments.columns ) ) {
             select( arguments.columns );
         }
-        var result = run( sql = this.toSql(), options = arguments.options );
-        select( originalColumns );
+        var result = javacast( "null", "" );
+        try {
+            result = run( sql = this.toSql(), options = arguments.options );
+        } finally {
+            select( originalColumns );
+        }
         return isNull( result ) ? javacast( "null", "" ) : result;
     }
 
@@ -4148,10 +3821,8 @@ component displayname="QueryBuilder" accessors="true" {
         struct options = {}
     ) {
         return withReturnFormat( "query", function() {
-            var formattedColumn = applyColumnFormatter( column );
-            select( formattedColumn );
             take( 1 );
-            var result = get( options = options );
+            var result = get( columns = column, options = options );
             if ( result.recordCount <= 0 ) {
                 if ( throwWhenNotFound ) {
                     throw(
@@ -4200,9 +3871,7 @@ component displayname="QueryBuilder" accessors="true" {
      */
     public array function values( required any column, struct options = {} ) {
         return withReturnFormat( "query", function() {
-            var formattedColumn = applyColumnFormatter( column );
-            select( formattedColumn );
-            var result = get( options = options );
+            var result = get( columns = column, options = options );
             var columnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
                 result
             )[ 1 ].name;
@@ -4252,6 +3921,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return   qb.models.Query.QueryBuilder
      */
     public QueryBuilder function chunk( required numeric max, required callback, struct options = {} ) {
+        if ( arguments.max <= 0 ) {
+            throw( type = "InvalidChunkSize", message = "Chunk size must be greater than zero." );
+        }
         var count = getCountForPagination( options = options );
         for ( var i = 1; i <= count; i += max ) {
             var shouldContinue = callback(
@@ -4296,73 +3968,33 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Execute a query and convert it to the proper return format.
-     *
-     * @sql         The sql string to execute.
-     * @options     Any options to pass to `queryExecute`. Default: {}.
-     *
-     * @return      any
+     * Delegates select execution to the lazily instantiated executor.
      */
     private any function run( required string sql, struct options = {} ) {
-        var q = runQuery( argumentCollection = arguments );
-
-        if ( isNull( q ) ) {
-            return;
-        }
-
-        if ( isQuery( q ) ) {
-            return returnFormat( q );
-        }
-
-        if ( isArray( q ) ) {
-            return returnFormat( q );
-        }
-
-        if ( !q.keyExists( "result" ) || !q.keyExists( "query" ) ) {
-            return returnFormat( q );
-        }
-
-        return { result: q.result, query: returnFormat( q.query ) };
+        return getCollaborator( "QueryExecutor" ).run( this, arguments.sql, arguments.options );
     }
 
     /**
-     * Run a query through the specified grammar then clear all bindings.
-     *
-     * @sql          The sql string to execute.
-     * @options      Any options to pass to `queryExecute`. Default: {}.
-     * @returnObject The return object that running the query should return.
-     *               Can be either `query` or `result`. Default: `query`.
-     *
-     * @return       any
+     * Delegates grammar execution while preserving the builder's established
+     * test seam and supporting collaborators operating on subclasses.
      */
-    private any function runQuery( required string sql, struct options = {}, string returnObject = "query" ) {
-        structAppend( arguments.options, getDefaultOptions(), false );
-        var bindings = getBindings( except = getAggregate().isEmpty() ? [] : [ "select" ] );
-
-        var result = grammar.runQuery(
-            sql = variables.sqlCommenter.appendSqlComments(
-                sql = sql,
-                datasource = arguments.options.keyExists( "datasource" ) && !isNull( arguments.options.datasource ) ? arguments.options.datasource : javacast(
-                    "null",
-                    ""
-                ),
-                bindings = bindings
-            ),
-            bindings = bindings,
-            options = arguments.options,
-            returnObject = returnObject,
-            pretend = variables.pretending,
-            postProcessHook = function( data ) {
-                if ( this.getCollectQueryLog() ) {
-                    variables.queryLog.append( data );
-                }
-            }
-        );
-
-        if ( !isNull( result ) ) {
-            return result;
+    public any function runQuery(
+        required string sql,
+        struct options = {},
+        string returnObject = "query",
+        array bindings
+    ) {
+        var bindingsDefinition = { provided: !isNull( arguments.bindings ) };
+        if ( bindingsDefinition.provided ) {
+            bindingsDefinition.value = arguments.bindings;
         }
-        return;
+        return getCollaborator( "QueryExecutor" ).runQuery(
+            builder = this,
+            sql = arguments.sql,
+            options = arguments.options,
+            returnObject = arguments.returnObject,
+            bindingsDefinition = bindingsDefinition
+        );
     }
 
     /*******************************************************************************\
@@ -4385,15 +4017,31 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function newQuery() {
-        return new qb.models.Query.QueryBuilder(
+        var query = new qb.models.Query.QueryBuilder(
             grammar = getGrammar(),
             utils = getUtils(),
             returnFormat = getReturnFormat(),
+            returnFormatterRegistry = getReturnFormatterRegistry(),
+            preventDuplicateJoins = getPreventDuplicateJoins(),
+            validateOperatorsAndCombinators = getValidateOperatorsAndCombinators(),
             paginationCollector = isNull( variables.paginationCollector ) ? javacast( "null", "" ) : variables.paginationCollector,
             columnFormatter = isNull( getColumnFormatter() ) ? javacast( "null", "" ) : getColumnFormatter(),
             parentQuery = isNull( getParentQuery() ) ? javacast( "null", "" ) : getParentQuery(),
-            defaultOptions = getDefaultOptions()
+            defaultOptions = getDefaultOptions(),
+            sqlCommenter = getSqlCommenter(),
+            shouldMaxRowsOverrideToAll = getShouldMaxRowsOverrideToAll(),
+            validateDuplicateSelectColumns = getValidateDuplicateSelectColumns(),
+            validateQueryExecuteReturnType = getValidateQueryExecuteReturnType(),
+            collectQueryLog = getCollectQueryLog()
         );
+        if ( !isNull( getShouldWrapValues() ) ) {
+            if ( getShouldWrapValues() ) {
+                query.withWrappingValues();
+            } else {
+                query.withoutWrappingValues();
+            }
+        }
+        return query;
     }
 
     /**
@@ -4402,29 +4050,9 @@ component displayname="QueryBuilder" accessors="true" {
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function clone() {
-        var clonedQuery = newQuery();
-        clonedQuery.setDistinct( this.getDistinct() );
-        var newAggregate = {};
-        for ( var key in this.getAggregate() ) {
-            newAggregate[ key ] = this.getAggregate()[ key ];
-        }
-        clonedQuery.setAggregate( newAggregate );
-        clonedQuery.setColumns( this.getColumns().isEmpty() ? [] : arraySlice( this.getColumns(), 1 ) );
-        clonedQuery.setTableName( this.getTableName() );
-        clonedQuery.setAlias( this.getAlias() );
-        clonedQuery.setJoins( this.getJoins().isEmpty() ? [] : arraySlice( this.getJoins(), 1 ) );
-        clonedQuery.setWheres( this.getWheres().isEmpty() ? [] : arraySlice( this.getWheres(), 1 ) );
-        clonedQuery.setGroups( this.getGroups().isEmpty() ? [] : arraySlice( this.getGroups(), 1 ) );
-        clonedQuery.setHavings( this.getHavings().isEmpty() ? [] : arraySlice( this.getHavings(), 1 ) );
-        clonedQuery.setUnions( this.getUnions().isEmpty() ? [] : arraySlice( this.getUnions(), 1 ) );
-        clonedQuery.setOrders( this.getOrders().isEmpty() ? [] : arraySlice( this.getOrders(), 1 ) );
-        clonedQuery.setCommonTables( this.getCommonTables().isEmpty() ? [] : arraySlice( this.getCommonTables(), 1 ) );
-        clonedQuery.setLimitValue( this.getLimitValue() );
-        clonedQuery.setOffsetValue( this.getOffsetValue() );
-        clonedQuery.setReturning( this.getReturning().isEmpty() ? [] : arraySlice( this.getReturning(), 1 ) );
-        clonedQuery.mergeBindings( this );
-        return clonedQuery;
+        return getCollaborator( "QueryExecutor" ).cloneBuilder( this );
     }
+
 
     /**
      * Wrap up any sql in an Expression.
@@ -4454,19 +4082,43 @@ component displayname="QueryBuilder" accessors="true" {
         );
     }
 
+    private any function withWrappingContext( required function callback ) {
+        var grammar = getGrammar();
+        grammar.pushShouldWrapValuesContext( getShouldWrapValues() );
+        try {
+            return arguments.callback();
+        } finally {
+            grammar.popShouldWrapValuesContext();
+        }
+    }
+
     /**
      * Returns the Builder compiled to grammar-specific sql.
      *
      * @return string
      */
     public string function toSQL( any showBindings = false ) {
-        var sql = grammar.compileSelect( this );
+        if ( getValidateDuplicateSelectColumns() && getAggregate().isEmpty() ) {
+            getCollaborator( "QueryValidator" ).validateUniqueSelectColumns( getColumns(), getGrammar() );
+        }
+        var sql = withWrappingContext( function() {
+            return grammar.compileSelect( this );
+        } );
 
         if ( isBoolean( arguments.showBindings ) && arguments.showBindings == false ) {
             return sql;
         }
 
-        return getUtils().replaceBindings( sql, getBindings(), arguments.showBindings == "inline" );
+        var aggregateBindingExclusions = getAggregate().isEmpty()
+         ? []
+         : ( getUnions().isEmpty() ? [ "select", "orderBy" ] : [ "orderBy" ] );
+        var bindings = getBindings( except = aggregateBindingExclusions );
+        return getUtils().replaceBindings(
+            sql,
+            bindings,
+            arguments.showBindings == "inline",
+            getGrammar()
+        );
     }
 
     /**
@@ -4508,31 +4160,28 @@ component displayname="QueryBuilder" accessors="true" {
 
     /**
      * Sets the return format for the query.
-     * The return format can be a simple string like "query" to return queries or "array" to return an array of structs.
-     * Alternative, the return format can be a closure.  The closure is passed the query as the only argument.  The result of the closure is returned as the result of the query.
+     * The format can be a registered formatter name such as "array", "query", "none", or "struct".
+     * Alternatively, the format can be a closure. The closure receives the query as its only argument,
+     * and its result is returned as the result of the builder.
      *
-     * @format "query", "array", or a closure.
+     * @format A registered formatter name or closure.
+     * @options Options passed to named return formatter factories.
      *
      * @return qb.models.Query.QueryBuilder
      */
-    public QueryBuilder function setReturnFormat( required any format ) {
-        structDelete( variables.defaultOptions, "returntype" );
+    public QueryBuilder function setReturnFormat( required any format, struct options = {} ) {
         if ( isClosure( arguments.format ) || isCustomFunction( arguments.format ) ) {
             variables.returnFormat = format;
-        } else if ( arguments.format == "array" ) {
-            variables.returnFormat = function( q ) {
-                return getUtils().queryToArrayOfStructs( q );
-            };
-        } else if ( arguments.format == "query" ) {
-            variables.returnFormat = function( q ) {
-                return q;
-            };
-        } else if ( arguments.format == "none" ) {
-            variables.returnFormat = function( q ) {
-                return q;
-            };
+        } else if (
+            ( isStruct( arguments.format ) || isObject( arguments.format ) ) &&
+            structKeyExists( arguments.format, "format" )
+        ) {
+            variables.returnFormat = arguments.format;
         } else {
-            throw( type = "InvalidFormat", message = "The format passed to Builder is invalid." );
+            variables.returnFormat = getReturnFormatterRegistry().getReturnFormatter(
+                arguments.format,
+                arguments.options
+            );
         }
 
         return this;
@@ -4556,56 +4205,21 @@ component displayname="QueryBuilder" accessors="true" {
     /**
      * Runs the code inside the callback with the return format specified and then sets the return format back to its original value.
      *
-     * @returnFormat "query", "array", or a closure.
+     * @returnFormat A registered formatter name or closure.
      * @callback The code to execute with the given return format.
+     * @options Options passed to named return formatter factories.
      *
      * @return any
      */
-    public any function withReturnFormat( required any returnFormat, required any callback ) {
+    public any function withReturnFormat( required any returnFormat, required any callback, struct options = {} ) {
         var originalReturnFormat = getReturnFormat();
-        setReturnFormat( arguments.returnFormat );
-        var result = callback();
-        setReturnFormat( originalReturnFormat );
-        return result;
-    }
-
-    /**
-     * Runs the code inside the callback with the given columns selected and then sets the columns back to its original value.
-     *
-     * @columns A single column, a list or columns (comma-separated), or an array of columns.
-     * @callback The code to execute with the given columns.
-     *
-     * @return any
-     */
-    private any function withColumns( required any columns, required any callback ) {
-        var originalColumns = [ { "type": "simple", "value": "*" } ];
-        if ( getUnions().isEmpty() ) {
-            originalColumns = getColumns();
-            select( arguments.columns );
+        setReturnFormat( arguments.returnFormat, arguments.options );
+        var result = javacast( "null", "" );
+        try {
+            result = callback();
+        } finally {
+            variables.returnFormat = originalReturnFormat;
         }
-        var result = callback();
-        if ( getUnions().isEmpty() ) {
-            select( originalColumns );
-        }
-        return result;
-    }
-
-    /**
-     * Runs the code inside the callback with the given aggregate in place and then sets the aggregate back to its original value.
-     *
-     * @aggregate he aggregate option and column to execute. (e.g. `{ type = "count", column = "*" }`).
-     * @callback The code to execute with the given aggregate.
-     *
-     * @return any
-     */
-    private any function withAggregate( required struct aggregate, required any callback ) {
-        var originalAggregate = getAggregate();
-        var originalOrders = getOrders();
-        setAggregate( arguments.aggregate );
-        setOrders( [] );
-        var result = callback();
-        setAggregate( originalAggregate );
-        setOrders( originalOrders );
         return result;
     }
 
@@ -4614,7 +4228,7 @@ component displayname="QueryBuilder" accessors="true" {
      *
      * @return array
      */
-    private array function normalizeToArray( required listOrArray ) {
+    public array function normalizeToArray( required listOrArray ) {
         if ( isArray( arguments.listOrArray ) ) {
             return arguments.listOrArray;
         }
@@ -4628,7 +4242,7 @@ component displayname="QueryBuilder" accessors="true" {
                 return trim( item );
             } );
         } catch ( any e ) {
-            return arguments.listOrArray;
+            return [ arguments.listOrArray ];
         }
     }
 
@@ -4655,36 +4269,6 @@ component displayname="QueryBuilder" accessors="true" {
     }
 
     /**
-     * Checks if an operator is an invalid sql operator (according to qb).
-     *
-     * @operator The operator to check.
-     *
-     * @return boolean
-     */
-    private boolean function isInvalidOperator( required any operator ) {
-        if ( isNull( arguments.operator ) ) {
-            return true;
-        }
-
-        if ( !isSimpleValue( arguments.operator ) ) {
-            return true;
-        }
-
-        return !arrayContains( variables.operators, lCase( arguments.operator ) );
-    }
-
-    /**
-     * Checks if a combinator is an invalid sql combinator (according to qb).
-     *
-     * @combinator The combinator to check.
-     *
-     * @return boolean
-     */
-    private boolean function isInvalidCombinator( required string combinator ) {
-        return !arrayContains( variables.combinators, uCase( arguments.combinator ) );
-    }
-
-    /**
      * onMissingMethod serves the following purpose for Builder:
      *
      * `andWhere...` and `orWhere...` methods for all real `where...` methods
@@ -4705,10 +4289,10 @@ component displayname="QueryBuilder" accessors="true" {
          * forward on the method call to the parent query.
          */
         if (
-            !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, "populateQuery" ) && structKeyExists(
+            structKeyExists( variables, "parentQuery" ) && !isNull( variables.parentQuery ) && structKeyExists(
                 variables.parentQuery,
-                missingMethodName
-            )
+                "populateQuery"
+            ) && structKeyExists( variables.parentQuery, missingMethodName )
         ) {
             return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
         }
@@ -4801,7 +4385,12 @@ component displayname="QueryBuilder" accessors="true" {
          * If a parent query has been set, populate it with this query
          * and then forward on the method call to the parent query.
          */
-        if ( !isNull( variables.parentQuery ) && structKeyExists( variables.parentQuery, "populateQuery" ) ) {
+        if (
+            structKeyExists( variables, "parentQuery" ) && !isNull( variables.parentQuery ) && structKeyExists(
+                variables.parentQuery,
+                "populateQuery"
+            )
+        ) {
             return invoke( variables.parentQuery.populateQuery( this ), missingMethodName, missingMethodArguments );
         }
 
@@ -4816,7 +4405,11 @@ component displayname="QueryBuilder" accessors="true" {
      * @returns  The formatted column.
      */
     function applyColumnFormatter( column ) {
-        return isSimpleValue( column ) ? variables.columnFormatter( column ) : column;
+        if ( !isSimpleValue( arguments.column ) ) {
+            return arguments.column;
+        }
+        // Arrow paths are normalized later so only the relational column is formatted.
+        return find( "->", arguments.column ) ? arguments.column : variables.columnFormatter( arguments.column );
     }
 
     public QueryBuilder function setGrammar( required grammar ) {
@@ -4825,6 +4418,13 @@ component displayname="QueryBuilder" accessors="true" {
                 type = "QBSetGrammarWithBindingsError",
                 message = "You cannot switch grammars after adding bindings.  Please set the grammar before adding bindings.",
                 detail = "The easiest way to fix this error is to set the grammar before any other actions on the query builder."
+            );
+        }
+        if ( variables.grammarCompiledFrom || variables.grammarCompiledJoin ) {
+            throw(
+                type = "QBSetGrammarAfterCompilationError",
+                message = "You cannot switch grammars after adding a grammar-compiled subquery.",
+                detail = "Set the grammar before adding derived tables, subquery joins, or lateral joins."
             );
         }
         variables.grammar = arguments.grammar;

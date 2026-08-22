@@ -1,5 +1,173 @@
 component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "SQL Server column modifications", function() {
+            it( "replaces a default constraint when modifying a column", function() {
+                testCase(
+                    function( schema ) {
+                        return schema.alter(
+                            "mars_in_wash_sales",
+                            function( table ) {
+                                table.modifyColumn( "shares", table.smallinteger( "shares" ).default( -999 ) );
+                            },
+                            {},
+                            false
+                        );
+                    },
+                    [
+                        "DECLARE @objectId INT = OBJECT_ID(N'[mars_in_wash_sales]'), @constraintName SYSNAME, @schemaName SYSNAME, @tableName SYSNAME; SELECT @constraintName = [dc].[name], @schemaName = OBJECT_SCHEMA_NAME([dc].[parent_object_id]), @tableName = OBJECT_NAME([dc].[parent_object_id]) FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = @objectId AND [c].[name] = N'shares'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE ' + QUOTENAME(@schemaName) + N'.' + QUOTENAME(@tableName) + N' DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
+                        "ALTER TABLE [mars_in_wash_sales] ALTER COLUMN [shares] SMALLINT NOT NULL",
+                        "ALTER TABLE [mars_in_wash_sales] ADD CONSTRAINT [df_mars_in_wash_sales_shares] DEFAULT -999 FOR [shares]"
+                    ]
+                );
+            } );
+
+            it( "does not interpolate caller-provided identifiers into dynamic SQL", function() {
+                testCase(
+                    function( schema ) {
+                        return schema.alter(
+                            "odd]name'",
+                            function( table ) {
+                                table.modifyColumn( "sha]res'", table.smallinteger( "sha]res'" ).default( -999 ) );
+                            },
+                            {},
+                            false
+                        );
+                    },
+                    [
+                        "DECLARE @objectId INT = OBJECT_ID(N'[odd]]name'']'), @constraintName SYSNAME, @schemaName SYSNAME, @tableName SYSNAME; SELECT @constraintName = [dc].[name], @schemaName = OBJECT_SCHEMA_NAME([dc].[parent_object_id]), @tableName = OBJECT_NAME([dc].[parent_object_id]) FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = @objectId AND [c].[name] = N'sha]res'''; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE ' + QUOTENAME(@schemaName) + N'.' + QUOTENAME(@tableName) + N' DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
+                        "ALTER TABLE [odd]]name'] ALTER COLUMN [sha]]res'] SMALLINT NOT NULL",
+                        "ALTER TABLE [odd]]name'] ADD CONSTRAINT [df_odd]]name'_sha]]res'] DEFAULT -999 FOR [sha]]res']"
+                    ]
+                );
+            } );
+
+            it( "keeps generated default constraint names unqualified", function() {
+                var statements = getBuilder()
+                    .setDefaultSchema( "app" )
+                    .create(
+                        "accounts",
+                        function( table ) {
+                            table.boolean( "active" ).default( true );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [ "CREATE TABLE [app].[accounts] ([active] BIT NOT NULL CONSTRAINT [df_accounts_active] DEFAULT 1)" ] );
+            } );
+        } );
+
+        describe( "SQL Server rename literals", function() {
+            it( "escapes apostrophes in object names", function() {
+                var statements = getBuilder().rename( "worker's", "employee's", {}, false ).toSQL();
+
+                expect( statements ).toBe( [ "EXEC sp_rename N'worker''s', N'employee''s'" ] );
+            } );
+        } );
+
+        describe( "SQL Server drop all objects", function() {
+            it( "scopes foreign keys and qualifies tables in the requested schema", function() {
+                var schema = getBuilder();
+                variables.mockGrammar.$(
+                    "runQuery",
+                    queryNew(
+                        "table_name,table_schema",
+                        "varchar,varchar",
+                        [ { table_name: "users", table_schema: "tenant" } ]
+                    )
+                );
+
+                var statements = schema.dropAllObjects( {}, false, "tenant" );
+
+                expect( statements[ 1 ] ).toInclude( "QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id))" );
+                expect( statements[ 1 ] ).toInclude( "WHERE OBJECT_SCHEMA_NAME(parent_object_id) = N'tenant'" );
+                expect( statements[ 2 ] ).toBeWithCase( "DROP TABLE [tenant].[users]" );
+                expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 1 ] ).toInclude(
+                    "WHERE [table_schema] = ? AND [table_type] = 'BASE TABLE'"
+                );
+            } );
+        } );
+
+        describe( "SQL Server CTE-backed schema queries", function() {
+            it( "creates a table from a projection without a FROM clause", function() {
+                var statements = getBuilder()
+                    .createAs(
+                        "answer",
+                        function( query ) {
+                            query.selectRaw( "42 AS value" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [ "SELECT 42 AS value INTO [answer]" ] );
+            } );
+
+            it( "creates views with a statement-level common table expression", function() {
+                var statements = getBuilder()
+                    .createView(
+                        "active_users",
+                        function( query ) {
+                            query
+                                .with( "filtered_users", function( cte ) {
+                                    cte.from( "users" ).where( "active", 1 );
+                                } )
+                                .from( "filtered_users" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [
+                    "CREATE VIEW [active_users] AS WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * FROM [filtered_users]"
+                ] );
+            } );
+
+            it( "adds SELECT INTO to the outer query after a common table expression", function() {
+                var statements = getBuilder()
+                    .createAs(
+                        "active_users",
+                        function( query ) {
+                            query
+                                .with( "filtered_users", function( cte ) {
+                                    cte.from( "users" ).where( "active", 1 );
+                                } )
+                                .from( "filtered_users" );
+                        },
+                        {},
+                        false
+                    )
+                    .toSQL();
+
+                expect( statements ).toBe( [
+                    ";WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * INTO [active_users] FROM [filtered_users]"
+                ] );
+            } );
+        } );
+
+        describe( "SQL Server view execution", function() {
+            it( "only binds the CREATE statement when altering a view", function() {
+                var schema = getBuilder();
+                schema.getGrammar().$( "runQuery", {} );
+
+                schema.alterView( "active_users", function( query ) {
+                    query.from( "users" ).where( "active", 1 );
+                } );
+
+                var calls = schema.getGrammar().$callLog().runQuery;
+                expect( calls ).toHaveLength( 2 );
+                expect( calls[ 1 ][ 2 ] ).toBeEmpty();
+                expect( calls[ 2 ][ 2 ].map( ( binding ) => binding.value ) ).toBe( [ 1 ] );
+            } );
+        } );
+    }
+
     function emptyTable() {
         return [ "CREATE TABLE [users] ()" ];
     }
@@ -88,7 +256,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function enum() {
         return [
-            "CREATE TABLE [employees] ([tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_employees_tshirt_size] CHECK ([tshirt_size] IN ('S', 'M', 'L', 'XL', 'XXL')))"
+            "CREATE TABLE [employees] ([tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_employees_tshirt_size] CHECK ([tshirt_size] IN ('S''s', 'M', 'L', 'XL', 'XXL')))"
         ];
     }
 
@@ -361,7 +529,19 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function defaultForString() {
-        return [ "CREATE TABLE [users] ([country] VARCHAR(255) NOT NULL CONSTRAINT [df_users_country] DEFAULT 'USA')" ];
+        return [
+            "CREATE TABLE [users] ([country] VARCHAR(255) NOT NULL CONSTRAINT [df_users_country] DEFAULT 'O''Brien')"
+        ];
+    }
+
+    function defaultForEmptyString() {
+        return [ "CREATE TABLE [users] ([nickname] VARCHAR(255) NOT NULL CONSTRAINT [df_users_nickname] DEFAULT '')" ];
+    }
+
+    function defaultForUnicodeString() {
+        return [
+            "CREATE TABLE [users] ([nickname] NVARCHAR(255) NOT NULL CONSTRAINT [df_users_nickname] DEFAULT 'O''Brien')"
+        ];
     }
 
     function nullable() {
@@ -406,7 +586,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function renameConstraint() {
-        return [ "EXEC sp_rename [unq_users_first_name_last_name], [unq_users_full_name]" ];
+        return [ "EXEC sp_rename N'unq_users_first_name_last_name', N'unq_users_full_name'" ];
     }
 
     function dropConstraintFromName() {
@@ -508,17 +688,17 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function renameTable() {
-        return [ "EXEC sp_rename [workers], [employees]" ];
+        return [ "EXEC sp_rename N'workers', N'employees'" ];
     }
 
     function renameColumn() {
-        return [ "EXEC sp_rename [users.name], [username], [COLUMN]" ];
+        return [ "EXEC sp_rename N'users.name', N'username', N'COLUMN'" ];
     }
 
     function renameMultipleColumns() {
         return [
-            "EXEC sp_rename [users.name], [username], [COLUMN]",
-            "EXEC sp_rename [users.purchase_date], [purchased_at], [COLUMN]"
+            "EXEC sp_rename N'users.name', N'username', N'COLUMN'",
+            "EXEC sp_rename N'users.purchase_date', N'purchased_at', N'COLUMN'"
         ];
     }
 
@@ -539,6 +719,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         ];
     }
 
+    function addTimestamps() {
+        return [
+            "ALTER TABLE [users] ADD [createdDate] DATETIME2 NOT NULL CONSTRAINT [df_users_createdDate] DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE [users] ADD [modifiedDate] DATETIME2 NOT NULL CONSTRAINT [df_users_modifiedDate] DEFAULT CURRENT_TIMESTAMP"
+        ];
+    }
+
     function addMultiple() {
         return [
             "ALTER TABLE [users] ADD [tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_users_tshirt_size] CHECK ([tshirt_size] IN ('S', 'M', 'L', 'XL', 'XXL'))",
@@ -550,7 +737,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
         return [
             "ALTER TABLE [users] DROP COLUMN [is_active]",
             "ALTER TABLE [users] ADD [tshirt_size] NVARCHAR(255) NOT NULL, CONSTRAINT [enum_users_tshirt_size] CHECK ([tshirt_size] IN ('S', 'M', 'L', 'XL', 'XXL'))",
-            "EXEC sp_rename [users.name], [username], [COLUMN]",
+            "EXEC sp_rename N'users.name', N'username', N'COLUMN'",
             "ALTER TABLE [users] ALTER COLUMN [purchase_date] DATETIME2",
             "ALTER TABLE [users] ADD CONSTRAINT [unq_users_username] UNIQUE ([username])",
             "ALTER TABLE [users] ADD CONSTRAINT [unq_users_email] UNIQUE ([email])",

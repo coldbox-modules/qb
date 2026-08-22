@@ -1,5 +1,542 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "SQL Server JSON validation", function() {
+            it( "does not retain a predicate when compound containment is unsupported", function() {
+                var builder = getBuilder().from( "users" );
+
+                expect( function() {
+                    builder.whereJsonContains( "profile->languages", [ "en", "de" ] );
+                } ).toThrow( type = "UnsupportedOperation" );
+
+                expect( builder.getWheres() ).toBeEmpty();
+                expect( builder.getRawBindings().where ).toBeEmpty();
+            } );
+        } );
+
+        describe( "SQL Server bulk inserts", function() {
+            it( "inserts all rows from one JSON parameter", function() {
+                var builder = getBuilder();
+                var sql = builder
+                    .from( "users" )
+                    .insertBulk( values = [ { "id": 1, "name": "One" }, { "id": 2, "name": "Two" } ], toSql = true );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [users] ([id], [name]) SELECT [id], [name] FROM OPENJSON(?) WITH ([id] INTEGER '$.""id""', [name] NVARCHAR(MAX) '$.""name""')"
+                ] );
+                expect( builder.getBindings() ).toHaveLength( 1 );
+                expect( deserializeJSON( builder.getBindings()[ 1 ].value ) ).toBe( [ { "id": 1, "name": "One" }, { "id": 2, "name": "Two" } ] );
+            } );
+
+            it( "supports explicit SQL types", function() {
+                var builder = getBuilder();
+                var sql = builder
+                    .from( "measurements" )
+                    .insertBulk(
+                        values = [ { "reading": 1.5 } ],
+                        sqlTypes = { "reading": "DECIMAL(10, 2)" },
+                        toSql = true
+                    );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [measurements] ([reading]) SELECT [reading] FROM OPENJSON(?) WITH ([reading] DECIMAL(10, 2) '$.""reading""')"
+                ] );
+            } );
+
+            it( "infers bulk SQL types from negative and nullable values", function() {
+                var insertValues = [ { "reading": -1 }, { "reading": javacast( "null", "" ) } ];
+                var insertBuilder = getBuilder().from( "measurements" );
+                var insertSql = insertBuilder.insertBulk( values = insertValues, toSql = true );
+                var whereSql = getBuilder()
+                    .from( "measurements" )
+                    .whereInBulk( "reading", [ -1, javacast( "null", "" ), 2 ] )
+                    .toSQL();
+
+                expect( insertSql[ 1 ] ).toInclude( "[reading] INTEGER" );
+                expect( whereSql ).toInclude( "WITH ([value] INTEGER '$')" );
+            } );
+
+            it( "escapes apostrophes in bulk insert JSON paths", function() {
+                var sql = getBuilder()
+                    .from( "records" )
+                    .insertBulk( values = [ { "author's_note": "value" } ], toSql = true );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [records] ([author's_note]) SELECT [author's_note] FROM OPENJSON(?) WITH ([author's_note] NVARCHAR(MAX) '$.""author''s_note""')"
+                ] );
+            } );
+
+            it( "applies returning columns to bulk inserts", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .returning( "id" )
+                    .insertBulk( values = [ { "name": "One" } ], toSql = true );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [users] ([name]) OUTPUT INSERTED.[id] SELECT [name] FROM OPENJSON(?) WITH ([name] NVARCHAR(MAX) '$.""name""')"
+                ] );
+            } );
+
+            it( "applies raw returning expressions to bulk inserts", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .returningRaw( "INSERTED.id AS insertedId" )
+                    .insertBulk( values = [ { "name": "One" } ], toSql = true );
+
+                expect( sql ).toBe( [
+                    "INSERT INTO [users] ([name]) OUTPUT INSERTED.id AS insertedId SELECT [name] FROM OPENJSON(?) WITH ([name] NVARCHAR(MAX) '$.""name""')"
+                ] );
+            } );
+
+            it( "applies raw returning expressions to regular inserts and upserts", function() {
+                var insertSql = getBuilder()
+                    .from( "users" )
+                    .returningRaw( "INSERTED.id AS insertedId" )
+                    .insert( values = { "name": "One" }, toSql = true );
+                var upsertSql = getBuilder()
+                    .from( "users" )
+                    .returningRaw( "INSERTED.id AS insertedId" )
+                    .upsert(
+                        values = [ { "id": 1, "name": "One" } ],
+                        target = [ "id" ],
+                        update = [ "name" ],
+                        toSql = true
+                    );
+
+                expect( insertSql ).toInclude( "OUTPUT INSERTED.id AS insertedId" );
+                expect( upsertSql ).toInclude( "OUTPUT INSERTED.id AS insertedId" );
+            } );
+        } );
+
+        describe( "SQL Server ordered unions", function() {
+            it( "can limit independently ordered union branches", function() {
+                var sql = getBuilder()
+                    .select( "*" )
+                    .fromSub( "t", function( q ) {
+                        q.select( "id, name, modifiedDate" )
+                            .selectRaw( "'Page' AS typeName" )
+                            .from( "page" )
+                            .orderBy( "modifiedDate", "DESC" )
+                            .limit( 5 )
+                            .unionAll( function( q ) {
+                                q.select( "id, name, modifiedDate" )
+                                    .selectRaw( "'Document' AS typeName" )
+                                    .from( "document" )
+                                    .orderBy( "modifiedDate", "DESC" )
+                                    .limit( 5 );
+                            } );
+                    } )
+                    .limit( 5 )
+                    .orderBy( "modifiedDate", "DESC" )
+                    .toSql();
+
+                expect( sql ).toBe(
+                    "SELECT TOP (5) * FROM (SELECT * FROM (SELECT TOP (5) [id], [name], [modifiedDate], 'Page' AS typeName FROM [page] ORDER BY [modifiedDate] DESC) AS [qb_union_0] UNION ALL SELECT * FROM (SELECT TOP (5) [id], [name], [modifiedDate], 'Document' AS typeName FROM [document] ORDER BY [modifiedDate] DESC) AS [qb_union_1]) AS [t] ORDER BY [modifiedDate] DESC"
+                );
+            } );
+
+            it( "can limit an ordered union branch without ordering the root branch", function() {
+                var sql = getBuilder()
+                    .select( "id" )
+                    .from( "users" )
+                    .unionAll( function( q ) {
+                        q.select( "id" )
+                            .from( "archivedUsers" )
+                            .orderByDesc( "id" )
+                            .limit( 5 );
+                    } )
+                    .toSQL();
+
+                expect( sql ).toBe(
+                    "SELECT * FROM (SELECT [id] FROM [users]) AS [qb_union_0] UNION ALL SELECT * FROM (SELECT TOP (5) [id] FROM [archivedUsers] ORDER BY [id] DESC) AS [qb_union_1]"
+                );
+            } );
+
+            it( "keeps root order bindings before independently ordered union branches", function() {
+                var builder = getBuilder()
+                    .select( "id" )
+                    .from( "users" )
+                    .where( "status", "current" )
+                    .orderByRaw( "CASE WHEN id = ? THEN 0 ELSE 1 END", [ 10 ] )
+                    .unionAll( function( unionQuery ) {
+                        unionQuery
+                            .select( "id" )
+                            .from( "archivedUsers" )
+                            .where( "status", "archived" )
+                            .orderByRaw( "CASE WHEN id = ? THEN 0 ELSE 1 END", [ 20 ] )
+                            .limit( 5 );
+                    } );
+
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ "current", 10, "archived", 20 ] );
+            } );
+        } );
+
+        describe( "SQL Server data modification CTEs", function() {
+            it( "compiles CTEs before update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toMatch( "^;?WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed", 42 ] );
+            } );
+
+            it( "compiles CTEs before delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 0 );
+                    } )
+                    .from( "inactive_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.delete( toSQL = true );
+
+                expect( sql ).toMatch( "^;?WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 0, 42 ] );
+            } );
+        } );
+
+        describe( "SQL Server aliased data modifications", function() {
+            it( "declares the target alias for updates without joins", function() {
+                var sql = getBuilder()
+                    .from( "users AS u" )
+                    .where( "u.id", 42 )
+                    .update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toBe( "UPDATE [u] SET [name] = ? FROM [users] AS [u] WHERE [u].[id] = ?" );
+            } );
+
+            it( "declares the target alias for deletes without joins", function() {
+                var sql = getBuilder()
+                    .from( "users AS u" )
+                    .where( "u.id", 42 )
+                    .delete( toSQL = true );
+
+                expect( sql ).toBe( "DELETE [u] FROM [users] AS [u] WHERE [u].[id] = ?" );
+            } );
+
+            it( "uses the prefixed target alias for updates", function() {
+                var builder = getBuilder();
+                builder.getGrammar().setTablePrefix( "prefix_" );
+
+                var sql = builder
+                    .from( "users AS u" )
+                    .where( "id", 42 )
+                    .update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toBe(
+                    "UPDATE [prefix_u] SET [name] = ? FROM [prefix_users] AS [prefix_u] WHERE [id] = ?"
+                );
+            } );
+
+            it( "uses the prefixed target alias for deletes", function() {
+                var builder = getBuilder();
+                builder.getGrammar().setTablePrefix( "prefix_" );
+
+                var sql = builder
+                    .from( "users AS u" )
+                    .where( "id", 42 )
+                    .delete( toSQL = true );
+
+                expect( sql ).toBe( "DELETE [prefix_u] FROM [prefix_users] AS [prefix_u] WHERE [id] = ?" );
+            } );
+
+            it( "places returning columns before the source table for aliased deletes", function() {
+                var sql = getBuilder()
+                    .from( "users AS u" )
+                    .where( "u.id", 42 )
+                    .returning( "id" )
+                    .delete( toSQL = true );
+
+                expect( sql ).toBe( "DELETE [u] OUTPUT DELETED.[id] FROM [users] AS [u] WHERE [u].[id] = ?" );
+            } );
+
+            it( "places returning columns before the source table for joined deletes", function() {
+                var sql = getBuilder()
+                    .from( "users AS u" )
+                    .join( "warnings AS w", "u.id", "w.userId" )
+                    .returning( "id" )
+                    .delete( toSQL = true );
+
+                expect( sql ).toBe(
+                    "DELETE [u] OUTPUT DELETED.[id] FROM [users] AS [u] INNER JOIN [warnings] AS [w] ON [u].[id] = [w].[userId]"
+                );
+            } );
+        } );
+
+        describe( "SQL Server nested CTE queries", function() {
+            it( "hoists common table expressions outside the EXISTS subquery", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" )
+                    .where( "id", 42 );
+
+                expect( builder.exists( toSQL = true ) ).toBe(
+                    ";WITH [active_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT CASE WHEN EXISTS (SELECT TOP (1) * FROM [active_users] WHERE [id] = ?) THEN 1 ELSE 0 END AS aggregate"
+                );
+            } );
+
+            it( "hoists common table expressions outside derived tables", function() {
+                var builder = getBuilder().fromSub( "active_users", function( source ) {
+                    source
+                        .with( "filtered_users", function( cte ) {
+                            cte.from( "users" ).where( "active", 1 );
+                        } )
+                        .from( "filtered_users" )
+                        .where( "id", 42 );
+                } );
+
+                expect( builder.toSQL() ).toBe(
+                    ";WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * FROM (SELECT * FROM [filtered_users] WHERE [id] = ?) AS [active_users]"
+                );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, 42 ] );
+            } );
+
+            it( "rolls back hoisted CTEs when derived table compilation fails", function() {
+                var builder = getBuilder().from( "accounts" );
+
+                expect( function() {
+                    builder.fromSub( "active_users", function( source ) {
+                        source
+                            .with( "filtered_users", function( cte ) {
+                                cte.from( "users" ).where( "active", 1 );
+                            } )
+                            .from( "filtered_users" )
+                            .unionAll( function( archived ) {
+                                archived.from( "archived_users" ).orderBy( "id" );
+                            } );
+                    } );
+                } ).toThrow( type = "OrderByNotAllowed" );
+
+                expect( builder.getCommonTables() ).toBeEmpty();
+                expect( builder.getRawBindings().commonTables ).toBeEmpty();
+                expect( builder.toSQL() ).toBe( "SELECT * FROM [accounts]" );
+            } );
+
+            it( "hoists common table expressions outside predicate subqueries", function() {
+                var builder = getBuilder()
+                    .from( "accounts" )
+                    .whereExists( function( source ) {
+                        source
+                            .with( "active_users", function( cte ) {
+                                cte.from( "users" ).where( "active", 1 );
+                            } )
+                            .from( "active_users" )
+                            .whereColumn( "active_users.id", "accounts.userId" );
+                    } );
+
+                expect( builder.toSQL() ).toBe(
+                    ";WITH [active_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * FROM [accounts] WHERE EXISTS (SELECT * FROM [active_users] WHERE [active_users].[id] = [accounts].[userId])"
+                );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1 ] );
+            } );
+
+            it( "hoists common table expressions outside derived joins", function() {
+                var builder = getBuilder()
+                    .from( "accounts" )
+                    .joinSub(
+                        "active_users",
+                        function( source ) {
+                            source
+                                .with( "filtered_users", function( cte ) {
+                                    cte.from( "users" ).where( "active", 1 );
+                                } )
+                                .from( "filtered_users" );
+                        },
+                        "accounts.userId",
+                        "=",
+                        "active_users.id"
+                    );
+
+                expect( builder.toSQL() ).toBe(
+                    ";WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * FROM [accounts] INNER JOIN (SELECT * FROM [filtered_users]) AS [active_users] ON [accounts].[userId] = [active_users].[id]"
+                );
+            } );
+
+            it( "rolls back hoisted CTEs when a derived join is deduplicated", function() {
+                var builder = getBuilder().setPreventDuplicateJoins( true ).from( "accounts" );
+                var addActiveUsers = function() {
+                    builder.joinSub(
+                        "active_users",
+                        function( source ) {
+                            source
+                                .with( "filtered_users", function( cte ) {
+                                    cte.from( "users" ).where( "active", 1 );
+                                } )
+                                .from( "filtered_users" );
+                        },
+                        "accounts.userId",
+                        "=",
+                        "active_users.id"
+                    );
+                };
+
+                addActiveUsers();
+                addActiveUsers();
+
+                expect( builder.getCommonTables() ).toHaveLength( 1 );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1 ] );
+            } );
+
+            it( "hoists common table expressions outside cross joins", function() {
+                var builder = getBuilder()
+                    .from( "accounts" )
+                    .crossJoinSub( "active_users", function( source ) {
+                        source
+                            .with( "filtered_users", function( cte ) {
+                                cte.from( "users" ).where( "active", 1 );
+                            } )
+                            .from( "filtered_users" );
+                    } );
+
+                expect( builder.toSQL() ).toBe(
+                    ";WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * FROM [accounts] CROSS JOIN (SELECT * FROM [filtered_users]) AS [active_users]"
+                );
+            } );
+
+            it( "hoists common table expressions outside APPLY sources", function() {
+                var builder = getBuilder()
+                    .from( "accounts" )
+                    .crossApply( "active_users", function( source ) {
+                        source
+                            .with( "filtered_users", function( cte ) {
+                                cte.from( "users" ).where( "active", 1 );
+                            } )
+                            .from( "filtered_users" );
+                    } );
+
+                expect( builder.toSQL() ).toBe(
+                    ";WITH [filtered_users] AS (SELECT * FROM [users] WHERE [active] = ?) SELECT * FROM [accounts] CROSS APPLY (SELECT * FROM [filtered_users]) AS [active_users]"
+                );
+            } );
+
+            it( "rolls back hoisted CTEs when APPLY source compilation fails", function() {
+                var builder = getBuilder().from( "accounts" );
+
+                expect( function() {
+                    builder.crossApply( "active_users", function( source ) {
+                        source
+                            .with( "filtered_users", function( cte ) {
+                                cte.from( "users" ).where( "active", 1 );
+                            } )
+                            .from( "filtered_users" )
+                            .unionAll( function( archived ) {
+                                archived.from( "archived_users" ).orderBy( "id" );
+                            } );
+                    } );
+                } ).toThrow( type = "OrderByNotAllowed" );
+
+                expect( builder.getCommonTables() ).toBeEmpty();
+                expect( builder.getRawBindings().commonTables ).toBeEmpty();
+                expect( builder.toSQL() ).toBe( "SELECT * FROM [accounts]" );
+            } );
+
+            it( "hoists common table expressions outside insert sources", function() {
+                var builder = getBuilder().from( "archived_users" );
+                var sql = builder.insertUsing(
+                    columns = [ "id" ],
+                    source = function( source ) {
+                        source
+                            .with( "active_users", function( cte ) {
+                                cte.from( "users" ).where( "active", 1 );
+                            } )
+                            .select( "id" )
+                            .from( "active_users" );
+                    },
+                    toSQL = true
+                );
+
+                expect( sql ).toBe(
+                    ";WITH [active_users] AS (SELECT * FROM [users] WHERE [active] = ?) INSERT INTO [archived_users] ([id]) SELECT [id] FROM [active_users]"
+                );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1 ] );
+            } );
+
+            it( "hoists common table expressions outside upsert sources", function() {
+                var builder = getBuilder().from( "users" );
+                var sql = builder.upsert(
+                    values = [ "id", "name" ],
+                    target = [ "id" ],
+                    update = [ "name" ],
+                    source = function( source ) {
+                        source
+                            .with( "incoming_users", function( cte ) {
+                                cte.from( "staged_users" ).where( "active", 1 );
+                            } )
+                            .select( "id, name" )
+                            .from( "incoming_users" );
+                    },
+                    toSQL = true
+                );
+
+                expect( sql ).toStartWith(
+                    ";WITH [incoming_users] AS (SELECT * FROM [staged_users] WHERE [active] = ?) MERGE [users] AS [qb_target] USING (SELECT [id], [name] FROM [incoming_users]) AS [qb_src]"
+                );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1 ] );
+            } );
+
+            it( "hoists common table expressions outside scalar update subqueries", function() {
+                var builder = getBuilder().from( "users" );
+                var sql = builder.update(
+                    values = {
+                        status: function( source ) {
+                            source
+                                .with( "latest_status", function( cte ) {
+                                    cte.from( "statuses" ).where( "active", 1 );
+                                } )
+                                .select( "name" )
+                                .from( "latest_status" )
+                                .limit( 1 );
+                        }
+                    },
+                    toSQL = true
+                );
+
+                expect( sql ).toBe(
+                    ";WITH [latest_status] AS (SELECT * FROM [statuses] WHERE [active] = ?) UPDATE [users] SET [STATUS] = (SELECT TOP (1) [name] FROM [latest_status])"
+                );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1 ] );
+            } );
+
+            it( "hoists common table expressions from upsert delete restrictions", function() {
+                var builder = getBuilder().from( "users" );
+                var sql = builder.upsert(
+                    values = { id: 42, name: "Jane" },
+                    target = [ "id" ],
+                    update = [ "name" ],
+                    deleteUnmatched = function( restrictions ) {
+                        restrictions.whereExists( function( source ) {
+                            source
+                                .with( "protected_users", function( cte ) {
+                                    cte.from( "user_flags" ).where( "user_flags.protected", 1 );
+                                } )
+                                .from( "protected_users" )
+                                .whereColumn( "protected_users.userId", "qb_target.id" );
+                        } );
+                    },
+                    toSQL = true
+                );
+
+                expect( sql ).toStartWith(
+                    ";WITH [protected_users] AS (SELECT * FROM [user_flags] WHERE [user_flags].[protected] = ?) MERGE [users] AS [qb_target]"
+                );
+                expect( sql ).toInclude(
+                    "WHEN NOT MATCHED BY SOURCE AND EXISTS (SELECT * FROM [protected_users] WHERE [protected_users].[userId] = [qb_target].[id]) THEN DELETE"
+                );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, 42, "Jane" ] );
+            } );
+        } );
+    }
+
     function selectAllColumns() {
         return "SELECT * FROM [users]";
     }
@@ -332,6 +869,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereInArrayOfQueryParamStructs() {
         return { sql: "SELECT * FROM [users] WHERE [id] IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
+    }
+
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [id] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] INTEGER '$'))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [status] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] NVARCHAR(MAX) '$'))",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [externalId] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] NVARCHAR(MAX) '$'))",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [active] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] BIT '$'))",
+            bindings: [ "[1,0]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [id] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] BIGINT '$'))",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [id] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] BIGINT '$'))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function bulkTimestampSqlType() {
+        return "DATETIME2";
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [active] = ? OR [id] IN (SELECT [value] FROM OPENJSON(?) WITH ([value] INTEGER '$'))",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM [users] WHERE [id] NOT IN (SELECT [value] FROM OPENJSON(?) WITH ([value] INTEGER '$'))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM [users] WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM [users] WHERE 1 = 1";
     }
 
     function orWhereIn() {
@@ -1007,6 +1612,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return {
+            sql: "MERGE [records] AS [qb_target] USING (VALUES (?, ?, ?), (?, ?, ?)) AS [qb_src] ([a], [b], [c]) ON ([qb_target].[a] = [qb_src].[a] OR ([qb_target].[a] IS NULL AND [qb_src].[a] IS NULL)) AND ([qb_target].[b] = [qb_src].[b] OR ([qb_target].[b] IS NULL AND [qb_src].[b] IS NULL)) WHEN MATCHED THEN UPDATE SET [c] = [qb_src].[c] WHEN NOT MATCHED BY TARGET THEN INSERT ([a], [b], [c]) VALUES ([a], [b], [c]);",
+            bindings: [
+                1,
+                "NULL",
+                "first",
+                2,
+                "value",
+                "second"
+            ]
+        };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "MERGE [users] AS [qb_target] USING (SELECT [username], [active], [createdDate], [modifiedDate] FROM [activeDirectoryUsers] WHERE [active] = ?) AS [qb_src] ON [qb_target].[username] = [qb_src].[username] WHEN MATCHED THEN UPDATE SET [active] = [qb_src].[active], [modifiedDate] = [qb_src].[modifiedDate] WHEN NOT MATCHED BY TARGET THEN INSERT ([username], [active], [createdDate], [modifiedDate]) VALUES ([username], [active], [createdDate], [modifiedDate]);",
@@ -1091,6 +1710,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     function deleteWithJoins() {
         return {
             sql: "DELETE [users] FROM [users] INNER JOIN [warnings] ON [users].[id] = [warnings].[userId]",
+            bindings: []
+        };
+    }
+
+    function deleteWithJoinsAndAliases() {
+        return {
+            sql: "DELETE [u] FROM [users] AS [u] INNER JOIN [warnings] AS [w] ON [u].[id] = [w].[userId]",
             bindings: []
         };
     }
@@ -1220,6 +1846,68 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.SqlServerGrammar" ).init( variables.utils );
         var builder = getMockBox().createMock( "qb.models.Query.QueryBuilder" ).init( grammar );
         return builder;
+    }
+
+    function jsonScalarSelect() {
+        return "SELECT JSON_VALUE([profile], '$.""contacts""[0].""email""') AS [explicitName], JSON_VALUE([profile], '$.""contacts""[0].""email""') AS [shortcutName] FROM [users]";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM [users] WHERE JSON_VALUE([profile], '$.""age""') >= ? AND JSON_VALUE([profile], '$.""age""') < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM [users] WHERE ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""')) AND ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))",
+            bindings: [ "en", "en" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM [users] WHERE 'name' IN (SELECT [key] FROM OPENJSON([profile])) AND 'name' IN (SELECT [key] FROM OPENJSON([profile]))";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM [users] WHERE (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ? AND (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ? ORDER BY JSON_VALUE([profile], '$.""name""') ASC, JSON_VALUE([profile], '$.""name""') DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM [users] WHERE (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? AND (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ? OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonEmptyCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM [users] WHERE EXISTS (SELECT 1 FROM OPENJSON([profile], '$.""languages""') WHERE [type] = 0 AND ? IS NULL) AND EXISTS (SELECT 1 FROM OPENJSON([profile], '$.""languages""') WHERE [type] = 0 AND ? IS NULL)",
+            bindings: [ "NULL", "NULL" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT JSON_VALUE([profile], '$.""0""') AS [explicitKey], JSON_VALUE([profile], '$[0]') AS [shortcutIndex] FROM [users]";
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM [users] WHERE NOT (? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))) OR NOT (? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""'))) OR ? IN (SELECT [value] FROM OPENJSON([profile], '$.""languages""')) AND NOT ('nickname' IN (SELECT [key] FROM OPENJSON([profile]))) OR 'name' IN (SELECT [key] FROM OPENJSON([profile])) OR NOT ('timezone' IN (SELECT [key] FROM OPENJSON([profile]))) OR (SELECT COUNT(*) FROM OPENJSON([profile], '$.""languages""')) > ?",
+            bindings: [ "en", "fr", "de", 1 ]
+        };
     }
 
     function aggregateExists() {

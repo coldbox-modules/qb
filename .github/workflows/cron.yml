@@ -15,8 +15,6 @@ jobs:
         experimental: [ false ]
         fullNull: ["true", "false"]
         include:
-          - cfengine: "lucee@be"
-            experimental: true
           - cfengine: "adobe@be"
             experimental: true
           - cfengine: "boxlang@be"
@@ -40,8 +38,11 @@ jobs:
       - name: Install dependencies
         run: |
           box install
+          git apply --unidiff-zero .github/patches/testbox-full-null.patch
 
       - name: Start server
+        env:
+          FULL_NULL: ${{matrix.fullNull}}
         run: |
           box server start serverConfigFile="server-${{ matrix.cfengine }}.json" --noSaveSettings --debug
           curl http://127.0.0.1:60298
@@ -50,4 +51,4 @@ jobs:
         env:
           FULL_NULL: ${{matrix.fullNull}}
         continue-on-error: ${{ matrix.experimental }}
-        run: box testbox run
+        run: box testbox run reporter=mintext

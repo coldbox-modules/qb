@@ -50,6 +50,11 @@ component accessors="true" {
     property name="defaultValue" default="";
 
     /**
+     * Whether a default value was explicitly assigned.
+     */
+    property name="hasDefaultValue" default="false";
+
+    /**
      * A comment for the column.
      */
     property name="commentValue" default="";
@@ -87,6 +92,7 @@ component accessors="true" {
         variables.values = [];
         variables.computedType = "none";
         variables.computedDefinition = "";
+        variables.hasDefaultValue = false;
         return this;
     }
 
@@ -127,6 +133,20 @@ component accessors="true" {
     }
 
     /**
+     * Assigns a default value and records that the value was explicitly set.
+     * This distinguishes an empty-string default from a column with no default.
+     *
+     * @defaultValue The default value.
+     *
+     * @returns The Column instance.
+     */
+    public Column function setDefaultValue( required string defaultValue ) {
+        variables.defaultValue = arguments.defaultValue;
+        variables.hasDefaultValue = true;
+        return this;
+    }
+
+    /**
      * Sets the column to allow null values.
      *
      * @returns The Column instance.
@@ -145,7 +165,7 @@ component accessors="true" {
      * @returns   The TableIndex instance created.
      */
     public TableIndex function primaryKey( string indexName ) {
-        param arguments.indexName = "pk_#getBlueprint().getTable()#_#getName()#";
+        param arguments.indexName = "pk_#listLast( getBlueprint().getTable(), "." )#_#getName()#";
         return getBlueprint().appendIndex( type = "primary", columns = getName(), name = arguments.indexName );
     }
 
@@ -163,7 +183,7 @@ component accessors="true" {
             type = "foreign",
             columns = [ column ],
             foreignKey = [ getName() ],
-            name = "fk_#getBlueprint().getTable()#_#getName()#"
+            name = "fk_#listLast( getBlueprint().getTable(), "." )#_#getName()#"
         );
     }
 

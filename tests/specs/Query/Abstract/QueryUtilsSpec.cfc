@@ -10,6 +10,15 @@ component extends="testbox.system.BaseSpec" {
     }
 
     function run() {
+        describe( "null type predicates", function() {
+            it( "classifies null values without throwing", function() {
+                expect( utils.isExpression( javacast( "null", "" ) ) ).toBeFalse();
+                expect( utils.isNotExpression( javacast( "null", "" ) ) ).toBeTrue();
+                expect( utils.isBuilder( javacast( "null", "" ) ) ).toBeFalse();
+                expect( utils.isNotBuilder( javacast( "null", "" ) ) ).toBeTrue();
+            } );
+        } );
+
         describe( "inferSqlType()", function() {
             it( "maintains the passed in cfsqltype if provided", () => {
                 var binding = utils.extractBinding( { "value": 1, "cfsqltype": "BIT" }, variables.mockGrammar );
@@ -28,8 +37,35 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "numbers", function() {
+                it( "recognizes byte values as integers", function() {
+                    expect( utils.inferSqlType( javacast( "byte", 7 ), variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
                 it( "integers", function() {
                     expect( utils.inferSqlType( 100, variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
+                it( "negative integers", function() {
+                    expect( utils.inferSqlType( -100, variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
+                it( "uses integers through the signed 32-bit boundaries", function() {
+                    expect( utils.inferSqlType( javacast( "long", "2147483647" ), variables.mockGrammar ) ).toBe(
+                        "INTEGER"
+                    );
+                    expect( utils.inferSqlType( javacast( "long", "-2147483648" ), variables.mockGrammar ) ).toBe(
+                        "INTEGER"
+                    );
+                } );
+
+                it( "uses big integers outside the signed 32-bit boundaries", function() {
+                    expect( utils.inferSqlType( javacast( "long", "2147483648" ), variables.mockGrammar ) ).toBe(
+                        "BIGINT"
+                    );
+                    expect( utils.inferSqlType( javacast( "long", "-2147483649" ), variables.mockGrammar ) ).toBe(
+                        "BIGINT"
+                    );
+                    expect( utils.inferSqlType( javacast( "long", "348060777867223040" ), variables.mockGrammar ) ).toBe( "BIGINT" );
                 } );
 
                 it( "decimals", function() {
@@ -43,6 +79,13 @@ component extends="testbox.system.BaseSpec" {
 
             it( "dates", function() {
                 expect( utils.inferSqlType( now(), variables.mockGrammar ) ).toBe( "TIMESTAMP" );
+            } );
+
+            it( "recognizes Java date values as timestamps", function() {
+                var javaDate = createObject( "java", "java.util.Date" ).init();
+
+                expect( isDate( javaDate ) ).toBeTrue();
+                expect( utils.inferSqlType( javaDate, variables.mockGrammar ) ).toBe( "TIMESTAMP" );
             } );
 
             it( "empty strings as null", () => {
@@ -73,6 +116,18 @@ component extends="testbox.system.BaseSpec" {
                 expect(
                     utils.publicCalculateNumberOfDecimalDigits( { "value": javacast( "null", "" ), "cfsqltype": "DECIMAL", "null": true } )
                 ).toBe( 0 );
+            } );
+
+            it( "does not format null temporal query parameters", function() {
+                var temporalTypes = [ "DATE", "TIME", "TIMESTAMP" ];
+                temporalTypes.each( function( sqlType ) {
+                    var queryParam = { "value": javacast( "null", "" ), "cfsqltype": sqlType, "null": true };
+                    var binding = utils.extractBinding( queryParam, variables.mockGrammar );
+
+                    expect( binding.null ).toBeTrue();
+                    expect( binding.cfsqltype ).toBe( sqlType );
+                    expect( utils.replaceBindings( "SELECT ?", [ binding ] ) ).toInclude( """null"":true" );
+                } );
             } );
 
             describe( "boolean", () => {
@@ -172,6 +227,60 @@ component extends="testbox.system.BaseSpec" {
                     expect( utils.inferSqlType( [ 1, 2 ], variables.mockGrammar ) ).toBe( "INTEGER" );
                 } );
 
+                it( "infers matching negative and positive integers as integers", function() {
+                    expect( utils.inferSqlType( [ -1, 2 ], variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
+                it( "ignores null members when inferring an array type", function() {
+                    expect( utils.inferSqlType( [ 1, javacast( "null", "" ) ], variables.mockGrammar ) ).toBe( "INTEGER" );
+                    expect(
+                        utils.inferSqlType(
+                            [
+                                utils.extractBinding( 1, variables.mockGrammar ),
+                                utils.extractBinding( javacast( "null", "" ), variables.mockGrammar )
+                            ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "INTEGER" );
+                } );
+
+                it( "defaults all-null arrays to VARCHAR", function() {
+                    expect(
+                        utils.inferSqlType( [ javacast( "null", "" ), javacast( "null", "" ) ], variables.mockGrammar )
+                    ).toBe( "VARCHAR" );
+                } );
+
+                it( "uses matching cfsqltypes from query parameter structs", function() {
+                    expect(
+                        utils.inferSqlType(
+                            [ { value: 1, cfsqltype: "BIGINT" }, { value: 2, cfsqltype: "BIGINT" } ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "BIGINT" );
+                } );
+
+                it( "uses matching sqltypes from query parameter structs", function() {
+                    expect(
+                        utils.inferSqlType(
+                            [ { value: 1, sqltype: "BIGINT" }, { value: 2, sqltype: "BIGINT" } ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "BIGINT" );
+                } );
+
+                it( "infers values from untyped query parameter structs", function() {
+                    expect( utils.inferSqlType( [ { value: 1 }, { value: 2 } ], variables.mockGrammar ) ).toBe( "INTEGER" );
+                } );
+
+                it( "defaults to VARCHAR when query parameter struct types differ", function() {
+                    expect(
+                        utils.inferSqlType(
+                            [ { value: 1, cfsqltype: "INTEGER" }, { value: 2, cfsqltype: "BIGINT" } ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "VARCHAR" );
+                } );
+
                 it( "but defaults to VARCHAR if they are different", function() {
                     expect(
                         utils.inferSqlType(
@@ -188,7 +297,199 @@ component extends="testbox.system.BaseSpec" {
             } );
         } );
 
+        describe( "isSubQuery()", function() {
+            it( "recognizes aliases separated by repeated whitespace", function() {
+                expect( utils.isSubQuery( "(SELECT id FROM users)   AS   activeUsers" ) ).toBeTrue();
+            } );
+        } );
+
+        describe( "replaceBindings()", function() {
+            it( "only replaces parameter placeholders in executable SQL", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+                var sql = "SELECT '?' AS single_quoted, ""why?"" AS double_quoted, #chr( 96 )#why?#chr( 96 )# AS backticked, $$?$$ AS dollar_quoted -- ?#chr( 10 )#FROM users WHERE id = ? /* ? */";
+
+                expect( utils.replaceBindings( sql, [ binding ], true ) ).toBe(
+                    "SELECT '?' AS single_quoted, ""why?"" AS double_quoted, #chr( 96 )#why?#chr( 96 )# AS backticked, $$?$$ AS dollar_quoted -- ?#chr( 10 )#FROM users WHERE id = 42 /* ? */"
+                );
+            } );
+
+            it( "replaces placeholders inside PostgreSQL array constructors", function() {
+                var binding = utils.extractBinding( "name", variables.mockGrammar );
+
+                expect( utils.replaceBindings( "SELECT ARRAY[?]", [ binding ], true ) ).toBe( "SELECT ARRAY['name']" );
+            } );
+
+            it( "preserves PostgreSQL question mark operators", function() {
+                var binding = utils.extractBinding( "name", variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT * FROM records WHERE payload ? ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.PostgresGrammar()
+                    )
+                ).toBe( "SELECT * FROM records WHERE payload ? 'name'" );
+            } );
+
+            it( "uses the resolved grammar when replacing bindings", function() {
+                var binding = utils.extractBinding( "name", variables.mockGrammar );
+                var postgresGrammar = new qb.models.Grammars.PostgresGrammar();
+                var autoDiscover = getMockBox()
+                    .createMock( "qb.models.Grammars.AutoDiscover" )
+                    .$( "autoDiscoverGrammar", postgresGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT * FROM records WHERE payload ? ?",
+                        [ binding ],
+                        true,
+                        autoDiscover
+                    )
+                ).toBe( "SELECT * FROM records WHERE payload ? 'name'" );
+            } );
+
+            it( "preserves question marks in MySQL hash comments", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT * FROM records WHERE id = ? ## why?#chr( 10 )#",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.MySQLGrammar()
+                    )
+                ).toBe( "SELECT * FROM records WHERE id = 42 ## why?#chr( 10 )#" );
+            } );
+
+            it( "replaces question marks after MySQL double minus operators", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT 10--? AS result",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.MySQLGrammar()
+                    )
+                ).toBe( "SELECT 10--42 AS result" );
+            } );
+
+            it( "does not treat MySQL dollar-delimited identifiers as PostgreSQL dollar quotes", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT $tag$, ? FROM records",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.MySQLGrammar()
+                    )
+                ).toBe( "SELECT $tag$, 42 FROM records" );
+            } );
+
+            it( "requires a closing delimiter before treating generic SQL as dollar quoted", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect( utils.replaceBindings( "SELECT $tag$, ? FROM records", [ binding ], true ) ).toBe(
+                    "SELECT $tag$, 42 FROM records"
+                );
+            } );
+
+            it( "preserves question marks in SQL Server bracketed identifiers", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT [why?] FROM records WHERE id = ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.SqlServerGrammar()
+                    )
+                ).toBe( "SELECT [why?] FROM records WHERE id = 42" );
+            } );
+
+            it( "preserves question marks in SQLite bracketed identifiers", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT [why?] FROM records WHERE id = ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.SQLiteGrammar()
+                    )
+                ).toBe( "SELECT [why?] FROM records WHERE id = 42" );
+            } );
+
+            it( "preserves question marks in escaped string literals", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings( "SELECT 'isn''t ?' AS marker FROM users WHERE id = ?", [ binding ], true )
+                ).toBe( "SELECT 'isn''t ?' AS marker FROM users WHERE id = 42" );
+            } );
+
+            it( "treats backslashes as ordinary characters in PostgreSQL string literals", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+                var slash = chr( 92 );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT 'C:#slash#' AS path FROM users WHERE id = ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.PostgresGrammar()
+                    )
+                ).toBe( "SELECT 'C:#slash#' AS path FROM users WHERE id = 42" );
+            } );
+
+            it( "preserves question marks in Oracle alternative quoted literals", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+                var oracleGrammar = new qb.models.Grammars.OracleGrammar( utils );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT q'[isn't ? -- /* a placeholder */]' AS marker FROM users WHERE id = ?",
+                        [ binding ],
+                        true,
+                        oracleGrammar
+                    )
+                ).toBe( "SELECT q'[isn't ? -- /* a placeholder */]' AS marker FROM users WHERE id = 42" );
+            } );
+
+            it( "preserves question marks in nested PostgreSQL block comments", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect(
+                    utils.replaceBindings(
+                        "SELECT 1 /* outer ? /* inner ? */ still outer ? */ WHERE id = ?",
+                        [ binding ],
+                        true,
+                        new qb.models.Grammars.PostgresGrammar()
+                    )
+                ).toBe( "SELECT 1 /* outer ? /* inner ? */ still outer ? */ WHERE id = 42" );
+            } );
+
+            it( "rejects bindings without matching placeholders", function() {
+                var binding = utils.extractBinding( 42, variables.mockGrammar );
+
+                expect( function() {
+                    utils.replaceBindings( "SELECT 1", [ binding ], true );
+                } ).toThrow( type = "BindingMismatch" );
+            } );
+        } );
+
         describe( "extractBinding()", function() {
+            it( "does not mutate query parameter structs supplied by callers", function() {
+                var queryParam = { "value": 42, "cfsqltype": "INTEGER" };
+                var originalQueryParam = duplicate( queryParam );
+
+                utils.extractBinding( queryParam, variables.mockGrammar );
+
+                expect( queryParam ).toBe( originalQueryParam );
+            } );
+
             it( "includes sensible defaults", function() {
                 var datetime = parseDateTime( "05/10/2016" );
                 var binding = utils.extractBinding( datetime, variables.mockGrammar );
@@ -219,6 +520,20 @@ component extends="testbox.system.BaseSpec" {
                 expect( binding.scale ).toBe( 5 );
                 expect( binding.list ).toBe( false );
                 expect( binding.null ).toBe( false );
+            } );
+
+            it( "calculates scale for scientific notation", function() {
+                var smallDecimal = createObject( "java", "java.math.BigDecimal" ).init( "1.23E-4" );
+                var smallerDecimal = createObject( "java", "java.math.BigDecimal" ).init( "1.0E-7" );
+
+                expect( utils.extractBinding( smallDecimal, variables.mockGrammar ).scale ).toBe( 6 );
+                expect( utils.extractBinding( smallerDecimal, variables.mockGrammar ).scale ).toBe( 8 );
+            } );
+
+            it( "preserves significant zeroes in scientific notation scale", function() {
+                var decimal = createObject( "java", "java.math.BigDecimal" ).init( "1.00E-7" );
+
+                expect( utils.extractBinding( decimal, variables.mockGrammar ).scale ).toBe( 9 );
             } );
 
             it( "does not set a scale for integers", function() {
@@ -379,6 +694,143 @@ component extends="testbox.system.BaseSpec" {
                     .orderByDesc( "qux.blah" );
                 var queryTwo = queryOne.clone();
                 expect( queryTwo.toSql( showBindings = "inline" ) ).toBe( queryOne.toSql( showBindings = "inline" ) );
+            } );
+
+            it( "preserves null predicate types as strings", function() {
+                var cloned = new qb.models.Query.QueryBuilder()
+                    .from( "users" )
+                    .whereNull( "deletedAt" )
+                    .clone();
+
+                expect( cloned.getWheres()[ 1 ].type ).toBe( "null" );
+                expect( cloned.toSQL() ).toBe( "SELECT * FROM ""users"" WHERE ""deletedAt"" IS NULL" );
+            } );
+
+            it( "does not share mutable query clauses with the original", function() {
+                var original = new qb.models.Query.QueryBuilder()
+                    .from( "users AS u" )
+                    .select( "u.id" )
+                    .where( "u.active", 1 )
+                    .where( function( q ) {
+                        q.where( "u.status", "active" );
+                    } )
+                    .join( "profiles AS p", "p.userId", "u.id" )
+                    .groupBy( "u.id" )
+                    .orderBy( "u.name" );
+                var originalSql = original.toSQL();
+
+                original.clone().withAlias( "member" );
+
+                expect( original.toSQL() ).toBe( originalSql );
+            } );
+
+            it( "preserves all query state in a clone", function() {
+                var original = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.SqlServerGrammar() )
+                    .from( "users" )
+                    .forRaw( "JSON PATH" )
+                    .noLock()
+                    .addUpdate( { "active": 1 } );
+                var cloned = original.clone();
+
+                expect( cloned.toSQL() ).toBe( original.toSQL() );
+                expect( cloned.getUpdates() ).toBe( original.getUpdates() );
+            } );
+        } );
+
+        describe( "reset()", function() {
+            it( "clears a SQL Server FOR clause", function() {
+                var builder = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.SqlServerGrammar() )
+                    .from( "users" )
+                    .forRaw( "JSON PATH" )
+                    .reset()
+                    .from( "accounts" );
+
+                expect( builder.toSQL() ).toBe( "SELECT * FROM [accounts]" );
+            } );
+        } );
+
+        describe( "null-aware comparisons", function() {
+            it( "compares null array elements without throwing", function() {
+                var left = [ javacast( "null", "" ) ];
+                var right = [ javacast( "null", "" ) ];
+
+                expect( utils.arrayCompare( left, right ) ).toBeTrue();
+                expect( utils.arrayCompare( left, [ "value" ] ) ).toBeFalse();
+                expect( utils.arrayCompare( [ "value" ], right ) ).toBeFalse();
+            } );
+
+            it( "compares null struct values symmetrically when full null support is enabled", function() {
+                var fullNull = createObject( "java", "java.lang.System" ).getEnv( "FULL_NULL" );
+                if ( isNull( fullNull ) || !fullNull ) {
+                    return;
+                }
+
+                expect(
+                    utils.structCompare( { "value": javacast( "null", "" ) }, { "value": javacast( "null", "" ) } )
+                ).toBeTrue();
+                expect( utils.structCompare( { "value": javacast( "null", "" ) }, { "value": "present" } ) ).toBeFalse();
+                expect( utils.structCompare( { "value": "present" }, { "value": javacast( "null", "" ) } ) ).toBeFalse();
+            } );
+        } );
+
+        describe( "isEqualTo()", function() {
+            it( "compares equivalent common table expressions", function() {
+                var first = new qb.models.Query.QueryBuilder().with( "active_users", function( q ) {
+                    q.from( "users" ).where( "active", 1 );
+                } );
+                var second = new qb.models.Query.QueryBuilder().with( "active_users", function( q ) {
+                    q.from( "users" ).where( "active", 1 );
+                } );
+
+                expect( first.isEqualTo( second ) ).toBeTrue();
+            } );
+
+            it( "distinguishes table aliases", function() {
+                var first = new qb.models.Query.QueryBuilder().from( "users AS first_user" );
+                var second = new qb.models.Query.QueryBuilder().from( "users AS second_user" );
+
+                expect( first.isEqualTo( second ) ).toBeFalse();
+            } );
+
+            it( "distinguishes recursive common table expressions", function() {
+                var recursive = new qb.models.Query.QueryBuilder().withRecursive( "numbers", function( q ) {
+                    q.select( "id" ).from( "numbers" );
+                } );
+                var nonRecursive = new qb.models.Query.QueryBuilder().with( "numbers", function( q ) {
+                    q.select( "id" ).from( "numbers" );
+                } );
+
+                expect( recursive.isEqualTo( nonRecursive ) ).toBeFalse();
+            } );
+
+            it( "compares raw expressions without throwing", function() {
+                var first = new qb.models.Query.QueryBuilder().selectRaw( "? AS id", [ 1 ] );
+                var equivalent = new qb.models.Query.QueryBuilder().selectRaw( "? AS id", [ 1 ] );
+                var differentBinding = new qb.models.Query.QueryBuilder().selectRaw( "? AS id", [ 2 ] );
+                var differentSql = new qb.models.Query.QueryBuilder().selectRaw( "? AS user_id", [ 1 ] );
+
+                expect( first.isEqualTo( equivalent ) ).toBeTrue();
+                expect( first.isEqualTo( differentBinding ) ).toBeFalse();
+                expect( first.isEqualTo( differentSql ) ).toBeFalse();
+            } );
+        } );
+
+        describe( "aggregate state", function() {
+            it( "does not mutate a union query while compiling an aggregate", function() {
+                var builder = new qb.models.Query.QueryBuilder()
+                    .select( "name" )
+                    .from( "users" )
+                    .where( "id", 1 )
+                    .union( function( q ) {
+                        q.select( "name" )
+                            .from( "users" )
+                            .where( "id", 2 );
+                    } );
+                var originalSql = builder.toSQL();
+
+                builder.count( toSQL = true );
+
+                expect( builder.toSQL() ).toBe( originalSql );
             } );
         } );
     }

@@ -109,6 +109,32 @@ component extends="testbox.system.BaseSpec" {
                 expect( clause.combinator ).toBe( "and" );
             } );
 
+            it( "distinguishes lateral joins with different source SQL", function() {
+                query.setPreventDuplicateJoins( true );
+
+                query.crossApply( "source", function( builder ) {
+                    builder.from( "orders" );
+                } );
+                query.crossApply( "source", function( builder ) {
+                    builder.from( "payments" );
+                } );
+
+                expect( query.getJoins() ).toHaveLength( 2 );
+            } );
+
+            it( "distinguishes lateral joins with different source bindings", function() {
+                query.setPreventDuplicateJoins( true );
+
+                query.crossApply( "source", function( builder ) {
+                    builder.from( "orders" ).where( "status", "open" );
+                } );
+                query.crossApply( "source", function( builder ) {
+                    builder.from( "orders" ).where( "status", "closed" );
+                } );
+
+                expect( query.getJoins() ).toHaveLength( 2 );
+            } );
+
             it( "can use a callback to specify advanced join clauses", function() {
                 query.join( "second", function( join ) {
                     join.on( "first.id", "=", "second.first_id" ).on( "first.locale", "=", "second.locale" );

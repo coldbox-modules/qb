@@ -1,5 +1,65 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" #arguments.sqlType# PATH '$')) ""QB_BULK_VALUES""";
+    }
+
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+                return "VARCHAR2(4000)";
+            case "TINYINT":
+            case "SMALLINT":
+            case "INTEGER":
+                return "NUMBER";
+            case "BIGINT":
+                return "NUMBER(19, 0)";
+            case "DECIMAL":
+            case "NUMERIC":
+            case "BIT":
+            case "BOOLEAN":
+                return "NUMBER";
+            default:
+                return normalizedType;
+        }
+    }
+
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return "JSON_VALUE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        return "JSON_EXISTS(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#[*]?(@ == $value)' PASSING ? AS ""value"")";
+    }
+
+    public any function prepareJsonContainsBinding( any value ) {
+        if ( isNull( arguments.value ) ) {
+            return {
+                "value": "",
+                "null": true,
+                "cfsqltype": "NUMERIC",
+                "sqltype": "NUMERIC"
+            };
+        }
+        return super.prepareJsonContainsBinding( arguments.value );
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        return "JSON_EXISTS(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "JSON_VALUE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#.size()' RETURNING NUMBER)";
+    }
+
     /**
      * Creates a new Oracle Query Grammar.
      *
@@ -27,7 +87,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      */
     public any function runQuery( sql, bindings, options ) {
         var result = super.runQuery( argumentCollection = arguments );
-        if ( isQuery( result ) && result.recordCount > 0 ) {
+        if (
+            isQuery( result ) &&
+            findNoCase( "SELECT * FROM (SELECT results.*, ROWNUM AS ""QB_RN"" FROM (", arguments.sql ) > 0
+        ) {
             return utils.queryRemoveColumns( result, "QB_RN" );
         }
         return result;
@@ -188,6 +251,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array columns,
         required struct updateMap
     ) {
+        if ( !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getOffsetValue() ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "Oracle does not support direct ORDER BY or OFFSET clauses on UPDATE statements."
+            );
+        }
+        if ( !query.getCommonTables().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support UPDATE statements with Common Table Expressions."
+            );
+        }
         if ( !query.getJoins().isEmpty() ) {
             throw(
                 type = "UnsupportedOperation",
@@ -195,6 +270,20 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             );
         }
         return super.compileUpdate( argumentCollection = arguments );
+    }
+
+    public string function compileDelete( required QueryBuilder query ) {
+        if (
+            !arguments.query.getOrders().isEmpty() ||
+            !isNull( arguments.query.getLimitValue() ) ||
+            !isNull( arguments.query.getOffsetValue() )
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "Oracle does not support direct ORDER BY, LIMIT, or OFFSET clauses on DELETE statements."
+            );
+        }
+        return super.compileDelete( arguments.query );
     }
 
     public string function compileUpsert(
@@ -205,7 +294,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required any updates,
         required array target,
         QueryBuilder source,
-        any deleteUnmatched = false
+        any deleteUnmatched = false,
+        boolean matchNulls = false
     ) {
         if ( !isBoolean( arguments.deleteUnmatched ) || arguments.deleteUnmatched ) {
             throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
@@ -249,11 +339,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                     .toList( " UNION ALL " );
             }
 
-            var constraintString = arguments.target
-                .map( function( column ) {
-                    return "#wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
-                } )
-                .toList( " AND " );
+            var constraintString = compileUpsertTargetConstraint( arguments.target, arguments.matchNulls );
 
             var updateList = "";
             if ( isArray( arguments.updates ) ) {
@@ -348,19 +434,23 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     function wrapValue( required any value ) {
-        if ( !variables.shouldWrapValues ) {
+        if ( !getShouldWrapValues() ) {
             return arguments.value;
         }
 
-        if (
-            len( arguments.value ) == 0 ||
-            arguments.value == "*" ||
-            left( arguments.value, 1 ) == """"
-        ) {
+        if ( len( arguments.value ) == 0 || arguments.value == "*" ) {
             return arguments.value;
         }
 
-        return """#uCase( arguments.value )#""";
+        var normalizedValue = toString( arguments.value );
+        var isQuoted = len( normalizedValue ) >= 2 && left( normalizedValue, 1 ) == """" && right( normalizedValue, 1 ) == """";
+        if ( isQuoted ) {
+            normalizedValue = mid( normalizedValue, 2, len( normalizedValue ) - 2 );
+        } else {
+            normalizedValue = uCase( normalizedValue );
+        }
+        normalizedValue = replace( normalizedValue, """", """""", "all" );
+        return """#normalizedValue#""";
     }
 
     function compileCreateColumn( column, blueprint ) {
@@ -431,13 +521,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileAddColumn( blueprint, commandParameters ) {
+        var originalIndexes = blueprint.getIndexes();
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            var originalIndexes = blueprint.getIndexes();
             blueprint.setIndexes( [] );
 
             var body = concatenate( [ compileCreateColumn( commandParameters.column, blueprint ) ], ", " );
@@ -446,8 +536,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 blueprint.addConstraint( index );
             }
 
-            blueprint.setIndexes( originalIndexes );
-
             return concatenate( [
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
@@ -455,6 +543,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 body
             ] );
         } finally {
+            blueprint.setIndexes( originalIndexes );
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
@@ -560,15 +649,23 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return "";
         }
 
-        var table = uCase( blueprint.getTable() );
+        var qualifiedTable = uCase( blueprint.getTable() );
+        var table = listLast( qualifiedTable, "." );
+        var schema = listLen( qualifiedTable, "." ) > 1 ? listDeleteAt(
+            qualifiedTable,
+            listLen( qualifiedTable, "." ),
+            "."
+        ) : "";
         var columnName = uCase( column.getName() );
         var sequenceName = "SEQ_#table#";
         var triggerName = "TRG_#table#";
-        blueprint.addCommand( "raw", { "sql": "CREATE SEQUENCE ""#sequenceName#""" } );
+        var qualifiedSequenceName = schema == "" ? sequenceName : "#schema#.#sequenceName#";
+        var qualifiedTriggerName = schema == "" ? triggerName : "#schema#.#triggerName#";
+        blueprint.addCommand( "raw", { "sql": "CREATE SEQUENCE #wrapTable( qualifiedSequenceName )#" } );
         blueprint.addCommand(
             "raw",
             {
-                "sql": "CREATE OR REPLACE TRIGGER ""#triggerName#"" BEFORE INSERT ON ""#table#"" FOR EACH ROW WHEN (NEW.""#columnName#"" IS NULL) BEGIN SELECT ""#sequenceName#"".NEXTVAL INTO ::NEW.""#columnName#"" FROM dual; END"
+                "sql": "CREATE OR REPLACE TRIGGER #wrapTable( qualifiedTriggerName )# BEFORE INSERT ON #wrapTable( qualifiedTable )# FOR EACH ROW WHEN (NEW.#wrapColumn( { "type": "simple", "value": columnName } )# IS NULL) BEGIN SELECT #wrapTable( qualifiedSequenceName )#.NEXTVAL INTO ::NEW.#wrapColumn( { "type": "simple", "value": columnName } )# FROM dual; END"
             }
         );
         return "";
@@ -589,12 +686,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? 1 : 0;
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }
@@ -632,7 +729,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function typeEnum( column ) {
         blueprint.appendIndex(
             type = "check",
-            name = "enum_#blueprint.getTable()#_#column.getName()#",
+            name = "enum_#listLast( blueprint.getTable(), "." )#_#column.getName()#",
             columns = column
         );
         return "VARCHAR2(255)";
@@ -764,6 +861,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "";
     }
 
+    public string function prepareSchemaIdentifierForLookup( required string identifier ) {
+        var normalizedIdentifier = trim( arguments.identifier );
+        if (
+            len( normalizedIdentifier ) >= 2 &&
+            left( normalizedIdentifier, 1 ) == """" &&
+            right( normalizedIdentifier, 1 ) == """"
+        ) {
+            return mid( normalizedIdentifier, 2, len( normalizedIdentifier ) - 2 );
+        }
+        return uCase( normalizedIdentifier );
+    }
+
     function compileTableExists( tableName, schemaName = "" ) {
         var sql = "SELECT 1 FROM #wrapTable( "all_tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_name" } )# = ?";
         if ( schemaName != "" ) {
@@ -789,15 +898,33 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             var statements = [ "DROP TABLE #wrapTable( arguments.blueprint.getTable() )#" ];
 
-            var sequenceName = "SEQ_#uCase( arguments.blueprint.getTable() )#";
-            if ( hasSequence( arguments.blueprint, sequenceName ) ) {
-                statements.append( "DROP SEQUENCE #wrapTable( sequenceName )#" );
-            }
+            var table = uCase( listLast( arguments.blueprint.getTable(), "." ) );
+            var schema = listLen( arguments.blueprint.getTable(), "." ) > 1 ? listDeleteAt(
+                arguments.blueprint.getTable(),
+                listLen( arguments.blueprint.getTable(), "." ),
+                "."
+            ) : "";
+            var sequenceName = "SEQ_#table#";
+            var qualifiedSequenceName = wrapTable( schema == "" ? sequenceName : "#schema#.#sequenceName#" );
+            statements.append(
+                "BEGIN EXECUTE IMMEDIATE 'DROP SEQUENCE #replace(
+                    qualifiedSequenceName,
+                    "'",
+                    "''",
+                    "all"
+                )#'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -2289 THEN RAISE; END IF; END;"
+            );
 
-            var triggerName = "TRG_#uCase( arguments.blueprint.getTable() )#";
-            if ( hasTrigger( arguments.blueprint, triggerName ) ) {
-                statements.append( "DROP TRIGGER #wrapTable( triggerName )#" );
-            }
+            var triggerName = "TRG_#table#";
+            var qualifiedTriggerName = wrapTable( schema == "" ? triggerName : "#schema#.#triggerName#" );
+            statements.append(
+                "BEGIN EXECUTE IMMEDIATE 'DROP TRIGGER #replace(
+                    qualifiedTriggerName,
+                    "'",
+                    "''",
+                    "all"
+                )#'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -4080 THEN RAISE; END IF; END;"
+            );
 
             return statements;
         } finally {
@@ -807,36 +934,34 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
     }
 
-    private boolean function hasSequence( required Blueprint blueprint, required string sequenceName ) {
-        var sql = "SELECT 1 FROM #wrapTable( "all_sequences" )# WHERE #wrapColumn( { "type": "simple", "value": "sequence_name" } )# = ?";
-        var params = [ arguments.sequenceName ];
-        if ( arguments.blueprint.getDefaultSchema() != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "owner" } )# = ?";
-            params.append( arguments.blueprint.getDefaultSchema() );
-        }
-        var result = queryExecute( sql, params, arguments.blueprint.getQueryOptions() );
-        return result.recordCount > 0;
-    }
-
-    private boolean function hasTrigger( required Blueprint blueprint, required string triggerName ) {
-        var sql = "SELECT 1 FROM #wrapTable( "all_triggers" )# WHERE #wrapColumn( { "type": "simple", "value": "trigger_name" } )# = ?";
-        var params = [ arguments.triggerName ];
-        if ( arguments.blueprint.getDefaultSchema() != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "owner" } )# = ?";
-            params.append( arguments.blueprint.getDefaultSchema() );
-        }
-        var result = queryExecute( sql, params, arguments.blueprint.getQueryOptions() );
-        return result.recordCount > 0;
-    }
-
     function compileDropAllObjects( required struct options, string schema = "", SchemaBuilder sb ) {
+        var tableCatalog = "user_tables";
+        var sequenceCatalog = "user_sequences";
+        var tablePredicate = "";
+        var sequencePredicate = "";
+        var qualifiedPrefix = "";
+        if ( arguments.schema != "" ) {
+            var schemaLookup = prepareSchemaIdentifierForLookup( arguments.schema );
+            var escapedSchemaLookup = replace( schemaLookup, "'", "''", "all" );
+            tableCatalog = "all_tables";
+            sequenceCatalog = "all_sequences";
+            tablePredicate = " WHERE owner = '#escapedSchemaLookup#'";
+            sequencePredicate = " WHERE sequence_owner = '#escapedSchemaLookup#'";
+            qualifiedPrefix = replace(
+                wrapValue( schemaLookup ),
+                "'",
+                "''",
+                "all"
+            ) & ".";
+        }
+
         return [
             "BEGIN
-            FOR c IN (SELECT table_name FROM user_tables) LOOP
-            EXECUTE IMMEDIATE ('DROP TABLE ""' || c.table_name || '"" CASCADE CONSTRAINTS');
+            FOR c IN (SELECT table_name FROM #tableCatalog##tablePredicate#) LOOP
+            EXECUTE IMMEDIATE ('DROP TABLE #qualifiedPrefix#""' || REPLACE(c.table_name, '""', '""""') || '"" CASCADE CONSTRAINTS');
             END LOOP;
-            FOR s IN (SELECT sequence_name FROM user_sequences) LOOP
-            EXECUTE IMMEDIATE ('DROP SEQUENCE ' || s.sequence_name);
+            FOR s IN (SELECT sequence_name FROM #sequenceCatalog##sequencePredicate#) LOOP
+            EXECUTE IMMEDIATE ('DROP SEQUENCE #qualifiedPrefix#""' || REPLACE(s.sequence_name, '""', '""""') || '""');
             END LOOP;
             END;"
         ];

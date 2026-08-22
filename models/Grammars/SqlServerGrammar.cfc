@@ -1,5 +1,254 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
+    public boolean function supportsBulkInsert() {
+        return true;
+    }
+
+    public struct function prepareBulkInsertValues(
+        required array values,
+        required array columns,
+        required struct sqlTypes
+    ) {
+        var grammar = this;
+        var normalizedColumns = arguments.columns;
+        var serializedValues = arguments.values.map( function( row ) {
+            var serializedRow = {};
+            normalizedColumns.each( function( column ) {
+                if ( !row.keyExists( column.original ) || isNull( row[ column.original ] ) ) {
+                    serializedRow[ column.original ] = javacast( "null", "" );
+                    return;
+                }
+                var binding = getUtils().extractBinding( row[ column.original ], grammar );
+                serializedRow[ column.original ] = binding.null ? javacast( "null", "" ) : binding.value;
+            } );
+            return serializedRow;
+        } );
+
+        var bulkValues = arguments.values;
+        var explicitSqlTypes = arguments.sqlTypes;
+        normalizedColumns.each( function( column ) {
+            var columnValues = bulkValues.map( function( row ) {
+                return row.keyExists( column.original ) ? row[ column.original ] : javacast( "null", "" );
+            } );
+            var sqlType = explicitSqlTypes.keyExists( column.original )
+             ? explicitSqlTypes[ column.original ]
+             : resolveWhereInBulkSqlType( getUtils().inferSqlType( columnValues, grammar ) );
+            sqlType = trim( sqlType );
+            if (
+                sqlType == "" ||
+                !reFindNoCase(
+                    "^[a-z][a-z0-9_]*(?:\s+[a-z][a-z0-9_]*)*(?:\s*\(\s*(?:max|\d+)(?:\s*,\s*\d+)?\s*\))?$",
+                    sqlType
+                )
+            ) {
+                throw( type = "InvalidSQLType", message = "Invalid SQL type [#sqlType#] for a bulk insert." );
+            }
+            column.bulkSqlType = sqlType;
+        } );
+
+        return {
+            "columns": normalizedColumns,
+            "binding": getUtils().extractBinding(
+                { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
+                grammar
+            )
+        };
+    }
+
+    public string function compileBulkInsert( required any query, required array columns ) {
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.query.getShouldWrapValues() );
+            }
+
+            var columnsString = arguments.columns.map( ( column ) => wrapColumn( column.formatted ) ).toList( ", " );
+            var returningColumns = arguments.query
+                .getReturning()
+                .map( function( column ) {
+                    if ( column.type == "raw" ) {
+                        return trim( column.value.getSQL() );
+                    }
+                    if ( listLen( column.value, "." ) > 1 ) {
+                        return column.value;
+                    }
+                    return "INSERTED." & wrapColumn( column );
+                } )
+                .toList( ", " );
+            var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
+            var withColumns = arguments.columns
+                .map( function( column ) {
+                    var escapedPath = replace(
+                        replace( column.original, "\", "\\", "all" ),
+                        """",
+                        "\""",
+                        "all"
+                    );
+                    escapedPath = replace( escapedPath, "'", "''", "all" );
+                    return "#wrapColumn( column.formatted )# #column.bulkSqlType# '$.""#escapedPath#""'";
+                } )
+                .toList( ", " );
+
+            return "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#)#returningClause# SELECT #columnsString# FROM OPENJSON(?) WITH (#withColumns#)";
+        } finally {
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT [value] FROM OPENJSON(?) WITH ([value] #arguments.sqlType# '$')";
+    }
+
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+                return "NVARCHAR(MAX)";
+            case "TIMESTAMP":
+                return "DATETIME2";
+            case "BOOLEAN":
+                return "BIT";
+            default:
+                return normalizedType;
+        }
+    }
+
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return "JSON_VALUE(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#')";
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        if ( arguments.jsonPath.keyExists( "nullValue" ) && arguments.jsonPath.nullValue ) {
+            return "EXISTS (SELECT 1 FROM OPENJSON(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#') WHERE [type] = 0 AND ? IS NULL)";
+        }
+        return "? IN (SELECT [value] FROM OPENJSON(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        if ( arguments.jsonPath.path.isEmpty() ) {
+            return "#wrapJsonColumn( arguments.jsonPath )# IS NOT NULL";
+        }
+        var path = duplicate( arguments.jsonPath.path );
+        var key = path.pop();
+        var openJson = path.isEmpty()
+         ? "OPENJSON(#wrapJsonColumn( arguments.jsonPath )#)"
+         : "OPENJSON(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( path )#')";
+        return "'#replace( key, "'", "''", "all" )#' IN (SELECT [key] FROM #openJson#)";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "(SELECT COUNT(*) FROM OPENJSON(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path )#'))";
+    }
+
+    /**
+     * Compile independently ordered and limited UNION branches as derived queries.
+     * SQL Server requires this shape for ORDER BY to determine each branch's TOP rows.
+     */
+    public string function compileSelect( required QueryBuilder query ) {
+        if ( !shouldCompileOrderedUnionBranches( arguments.query ) ) {
+            return super.compileSelect( arguments.query );
+        }
+
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.query.getShouldWrapValues() );
+            }
+
+            var commonTables = arguments.query.getCommonTables();
+            var rootQuery = arguments.query.clone();
+            var unions = rootQuery.getUnions();
+            rootQuery.setUnions( [] );
+            rootQuery.setCommonTables( [] );
+
+            var sql = [
+                commonTables.isEmpty() ? "" : compileCommonTables( arguments.query, commonTables ),
+                "SELECT * FROM (#super.compileSelect( rootQuery )#) AS #wrapValue( "qb_union_0" )#"
+            ];
+
+            unions.each( function( union, index ) {
+                if ( union.query.getOrders().len() && !isLimitedQuery( union.query ) ) {
+                    throw(
+                        type = "OrderByNotAllowed",
+                        message = "The ORDER BY clause is not allowed in a UNION statement.",
+                        detail = "SQL Server only allows an ORDER BY clause in a UNION branch when TOP, OFFSET, or FETCH limits that branch."
+                    );
+                }
+
+                var unionOperator = union.all ? "UNION ALL" : "UNION";
+                sql.append(
+                    "#unionOperator# SELECT * FROM (#compileSelect( union.query )#) AS #wrapValue( "qb_union_#index#" )#"
+                );
+            } );
+
+            return trim( concatenate( sql ) );
+        } finally {
+            if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
+    }
+
+    private boolean function shouldCompileOrderedUnionBranches( required QueryBuilder query ) {
+        if ( arguments.query.getUnions().isEmpty() ) {
+            return false;
+        }
+
+        return arguments.query.getUnions().some( ( union ) => union.query.getOrders().len() );
+    }
+
+    public array function getSelectBindingOrder( required QueryBuilder query ) {
+        if ( !shouldCompileOrderedUnionBranches( arguments.query ) ) {
+            return super.getSelectBindingOrder( arguments.query );
+        }
+
+        return [
+            "commonTables",
+            "update",
+            "insert",
+            "aggregate",
+            "select",
+            "from",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
+    }
+
+    public array function getUpdateBindingOrder( required QueryBuilder query ) {
+        return [
+            "commonTables",
+            "from",
+            "update",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
+    }
+
+    private boolean function isOrderedLimitedQuery( required QueryBuilder query ) {
+        return arguments.query.getOrders().len() && isLimitedQuery( arguments.query );
+    }
+
+    private boolean function isLimitedQuery( required QueryBuilder query ) {
+        return !isNull( arguments.query.getLimitValue() ) || !isNull( arguments.query.getOffsetValue() );
+    }
+
     /**
      * The parameter limit for SQL Server grammar.
      */
@@ -75,7 +324,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .getReturning()
                 .map( function( column ) {
                     if ( column.type == "raw" ) {
-                        return trim( column.getSQL() );
+                        return trim( column.value.getSQL() );
                     }
                     if ( listLen( column.value, "." ) > 1 ) {
                         return column.value;
@@ -279,7 +528,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
      * @return string
      */
     function wrapValue( required any value ) {
-        if ( !variables.shouldWrapValues ) {
+        if ( !getShouldWrapValues() ) {
             return arguments.value;
         }
 
@@ -287,7 +536,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             return value;
         }
 
-        arguments.value = reReplace( arguments.value, """", "", "all" );
+        if ( len( arguments.value ) >= 2 && left( arguments.value, 1 ) == """" && right( arguments.value, 1 ) == """" ) {
+            arguments.value = mid( arguments.value, 2, len( arguments.value ) - 2 );
+        }
+        arguments.value = replace( arguments.value, "]", "]]", "all" );
 
         return "[#value#]";
     }
@@ -301,6 +553,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
      * @return string
      */
     public string function compileUpdate( required query, required array columns, required struct updateMap ) {
+        if ( !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getOffsetValue() ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQL Server does not support direct ORDER BY or OFFSET clauses on UPDATE statements."
+            );
+        }
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -321,7 +579,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .toList( ", " );
 
             var updateTable = "";
-            if ( !getUtils().isExpression( query.getTableName() ) ) {
+            if ( arguments.query.getAlias() != "" ) {
+                updateTable = wrapAlias( getTablePrefix() & arguments.query.getAlias() );
+            } else if ( !getUtils().isExpression( query.getTableName() ) ) {
                 var parts = explodeTable( query.getTableName() );
                 updateTable = parts.alias.len() ? wrapAlias( parts.alias ) : wrapTable( parts.table );
             } else {
@@ -349,15 +609,23 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
 
-            if ( arguments.query.getJoins().isEmpty() ) {
-                return trim( updateStatement & returningClause & " " & compileWheres( query, query.getWheres() ) );
+            if ( arguments.query.getJoins().isEmpty() && arguments.query.getAlias() == "" ) {
+                return trim(
+                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause & " " & compileWheres(
+                        query,
+                        query.getWheres()
+                    )
+                );
             }
 
             return trim(
-                updateStatement & returningClause & " FROM #wrapTable( query.getTableName() )# " & compileJoins(
-                    arguments.query,
-                    arguments.query.getJoins()
-                ) & " " & compileWheres( query, query.getWheres() )
+                concatenate( [
+                    compileCommonTables( query, query.getCommonTables() ),
+                    updateStatement & returningClause,
+                    "FROM #wrapQueryTable( query )#",
+                    compileJoins( arguments.query, arguments.query.getJoins() ),
+                    compileWheres( query, query.getWheres() )
+                ] )
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -374,6 +642,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
      * @return string
      */
     public string function compileDelete( required QueryBuilder query ) {
+        if ( !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getOffsetValue() ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "SQL Server does not support direct ORDER BY or OFFSET clauses on DELETE statements."
+            );
+        }
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -395,16 +669,46 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             var returningClause = returningColumns != "" ? "OUTPUT #returningColumns#" : "";
 
             var hasJoins = !arguments.query.getJoins().isEmpty();
+            var hasAlias = arguments.query.getAlias() != "";
+            var topClause = isNull( arguments.query.getLimitValue() )
+             ? ""
+             : "TOP (#arguments.query.getLimitValue()#)";
+
+            if ( !hasJoins && !hasAlias ) {
+                return trim(
+                    arrayToList(
+                        arrayFilter(
+                            [
+                                compileCommonTables( query, query.getCommonTables() ),
+                                "DELETE",
+                                topClause,
+                                "FROM",
+                                wrapQueryTable( query ),
+                                returningClause,
+                                compileWheres( query, query.getWheres() )
+                            ],
+                            function( sql ) {
+                                return sql != "";
+                            }
+                        ),
+                        " "
+                    )
+                );
+            }
 
             return trim(
                 arrayToList(
                     arrayFilter(
                         [
+                            compileCommonTables( query, query.getCommonTables() ),
                             "DELETE",
-                            hasJoins ? wrapTable( query.getTableName() ) : "",
-                            "FROM",
-                            wrapTable( query.getTableName() ),
+                            topClause,
+                            hasAlias
+                             ? wrapAlias( getTablePrefix() & query.getAlias() )
+                             : wrapTable( query.getTableName(), false ),
                             returningClause,
+                            "FROM",
+                            wrapQueryTable( query ),
                             hasJoins ? compileJoins( query, query.getJoins() ) : "",
                             compileWheres( query, query.getWheres() )
                         ],
@@ -430,7 +734,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         required any updates,
         required array target,
         QueryBuilder source,
-        any deleteUnmatched = false
+        any deleteUnmatched = false,
+        boolean matchNulls = false
     ) {
         try {
             var originalShouldWrapValues = getShouldWrapValues();
@@ -465,11 +770,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 sourceString = "(VALUES #placeholderString#) AS [qb_src] (#columnsString#)";
             }
 
-            var constraintString = arguments.target
-                .map( function( column ) {
-                    return "#wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
-                } )
-                .toList( " AND " );
+            var constraintString = compileUpsertTargetConstraint( arguments.target, arguments.matchNulls );
 
             var updateList = "";
             if ( isArray( arguments.updates ) ) {
@@ -514,7 +815,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .getReturning()
                 .map( function( column ) {
                     if ( column.type == "raw" ) {
-                        return trim( column.getSQL() );
+                        return trim( column.value.getSQL() );
                     }
                     if ( listLen( column.value, "." ) > 1 ) {
                         return column.value;
@@ -524,8 +825,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 .toList( ", " );
 
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
-
-            return "MERGE #wrapTable( arguments.qb.getTableName() )# AS [qb_target] USING #sourceString# ON #constraintString##updateStatement# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)#deleteStatement##returningClause#;";
+            return trim(
+                compileCommonTables( arguments.qb, arguments.qb.getCommonTables() ) &
+                " MERGE #wrapTable( arguments.qb.getTableName() )# AS [qb_target] USING #sourceString# ON #constraintString##updateStatement# WHEN NOT MATCHED BY TARGET THEN INSERT (#columnsString#) VALUES (#columnsString#)#deleteStatement##returningClause#;"
+            );
         } finally {
             if ( !isNull( arguments.qb.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -561,16 +864,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function generateDefault( column, blueprint ) {
-        return column.getDefaultValue() != "" ? "CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
+        return column.getHasDefaultValue() ? "CONSTRAINT #wrapValue( "df_#listLast( blueprint.getTable(), "." )#_#column.getName()#" )# DEFAULT #wrapDefaultType( column )#" : "";
     }
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? 1 : 0;
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }
@@ -578,6 +881,30 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
     function generateComment( column ) {
         return "";
+    }
+
+    function compileCreateView( blueprint, commandParameters ) {
+        var query = arguments.commandParameters[ "query" ];
+        if ( query.getCommonTables().isEmpty() ) {
+            return super.compileCreateView( argumentCollection = arguments );
+        }
+
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            var selectStatement = compileSelect( query );
+            if ( selectStatement.left( 1 ) == ";" ) {
+                selectStatement = mid( selectStatement, 2, selectStatement.len() - 1 );
+            }
+            return "CREATE VIEW #wrapTable( blueprint.getTable() )# AS #selectStatement#";
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
     }
 
     function compileCreateAs( blueprint, commandParameters ) {
@@ -588,17 +915,123 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             var query = commandParameters[ "query" ];
-            return replace(
-                compileSelect( query ),
-                "FROM",
-                "INTO #wrapTable( blueprint.getTable() )# FROM",
-                "one"
-            );
+            return insertIntoOuterSelect( compileSelect( query ), wrapTable( blueprint.getTable() ) );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    /**
+     * Inserts a SQL Server INTO clause after the outer query's select list.
+     * Tokens inside CTEs, subqueries, literals, identifiers, and comments are ignored.
+     */
+    private string function insertIntoOuterSelect( required string sql, required string table ) {
+        var position = 1;
+        var depth = 0;
+        var state = "sql";
+        var sqlLength = arguments.sql.len();
+        var hasOuterSelect = false;
+        var selectListBoundaries = [
+            " FROM ",
+            " UNION ",
+            " ORDER BY ",
+            " OFFSET ",
+            " FOR ",
+            " OPTION "
+        ];
+
+        while ( position <= sqlLength ) {
+            var character = arguments.sql.mid( position, 1 );
+            var nextCharacter = position < sqlLength ? arguments.sql.mid( position + 1, 1 ) : "";
+
+            if ( state == "lineComment" ) {
+                if ( character == chr( 10 ) || character == chr( 13 ) ) {
+                    state = "sql";
+                }
+                position++;
+                continue;
+            }
+            if ( state == "blockComment" ) {
+                if ( character == "*" && nextCharacter == "/" ) {
+                    position += 2;
+                    state = "sql";
+                } else {
+                    position++;
+                }
+                continue;
+            }
+            if ( state != "sql" ) {
+                var closingCharacter = state == "singleQuote" ? "'" : ( state == "doubleQuote" ? """" : "]" );
+                if ( character == closingCharacter ) {
+                    if ( nextCharacter == closingCharacter ) {
+                        position += 2;
+                    } else {
+                        position++;
+                        state = "sql";
+                    }
+                } else {
+                    position++;
+                }
+                continue;
+            }
+
+            if ( character == "-" && nextCharacter == "-" ) {
+                position += 2;
+                state = "lineComment";
+                continue;
+            }
+            if ( character == "/" && nextCharacter == "*" ) {
+                position += 2;
+                state = "blockComment";
+                continue;
+            }
+            if ( character == "'" || character == """" || character == "[" ) {
+                state = character == "'" ? "singleQuote" : ( character == """" ? "doubleQuote" : "bracketQuote" );
+                position++;
+                continue;
+            }
+            if ( character == "(" ) {
+                depth++;
+                position++;
+                continue;
+            }
+            if ( character == ")" ) {
+                depth = max( 0, depth - 1 );
+                position++;
+                continue;
+            }
+
+            if ( depth == 0 && !hasOuterSelect && position + 5 <= sqlLength ) {
+                var previousCharacter = position == 1 ? "" : arguments.sql.mid( position - 1, 1 );
+                var characterAfterSelect = position + 6 > sqlLength ? "" : arguments.sql.mid( position + 6, 1 );
+                hasOuterSelect = compareNoCase( arguments.sql.mid( position, 6 ), "SELECT" ) == 0 &&
+                ( previousCharacter == "" || previousCharacter == ";" || reFind( "\s", previousCharacter ) ) &&
+                ( characterAfterSelect == "" || reFind( "\s", characterAfterSelect ) );
+            }
+
+            if ( depth == 0 && hasOuterSelect ) {
+                for ( var boundary in selectListBoundaries ) {
+                    if (
+                        position + len( boundary ) - 1 <= sqlLength &&
+                        compareNoCase( arguments.sql.mid( position, len( boundary ) ), boundary ) == 0
+                    ) {
+                        return arguments.sql.left( position - 1 ) &
+                        " INTO #arguments.table#" &
+                        mid( arguments.sql, position, sqlLength - position + 1 );
+                    }
+                }
+            }
+
+            position++;
+        }
+
+        if ( hasOuterSelect ) {
+            return rTrim( arguments.sql ) & " INTO #arguments.table#";
+        }
+
+        throw( type = "InvalidCreateAsQuery", message = "SQL Server CREATE AS queries require an outer SELECT clause." );
     }
 
     function compileDropColumn( blueprint, commandParameters ) {
@@ -627,9 +1060,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                         " "
                     )
                 ];
-                if ( commandParameters.name.getDefaultValue() != "" ) {
+                if ( commandParameters.name.getHasDefaultValue() ) {
                     statements.prepend(
-                        "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( "df_#blueprint.getTable()#_#commandParameters.name.getName()#" )#"
+                        "ALTER TABLE #wrapTable( blueprint.getTable() )# DROP CONSTRAINT #wrapValue( "df_#listLast( blueprint.getTable(), "." )#_#commandParameters.name.getName()#" )#"
                     );
                 }
                 return statements;
@@ -648,7 +1081,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "EXEC sp_rename #wrapTable( blueprint.getTable() )#, #wrapTable( commandParameters.to )#";
+            return "EXEC sp_rename #quoteUnicodeStringLiteral( blueprint.getTable() )#, #quoteUnicodeStringLiteral( commandParameters.to )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -663,7 +1096,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "EXEC sp_rename #wrapValue( blueprint.getTable() & "." & commandParameters.from )#, #wrapColumn( { "type": "simple", "value": commandParameters.to.getName() } )#, [COLUMN]";
+            return "EXEC sp_rename #quoteUnicodeStringLiteral( blueprint.getTable() & "." & commandParameters.from )#, #quoteUnicodeStringLiteral( commandParameters.to.getName() )#, #quoteUnicodeStringLiteral( "COLUMN" )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -678,12 +1111,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return "EXEC sp_rename #wrapValue( commandParameters.from )#, #wrapValue( commandParameters.to )#";
+            return "EXEC sp_rename #quoteUnicodeStringLiteral( commandParameters.from )#, #quoteUnicodeStringLiteral( commandParameters.to )#";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    private string function quoteUnicodeStringLiteral( required string value ) {
+        return "N'" & replace( arguments.value, "'", "''", "all" ) & "'";
     }
 
     function compileDropConstraint( blueprint, commandParameters ) {
@@ -719,17 +1156,60 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     function compileModifyColumn( blueprint, commandParameters ) {
         try {
             var originalShouldWrapValues = getShouldWrapValues();
+            var originalDefaultValue = commandParameters.to.getDefaultValue();
+            var originalHasDefaultValue = commandParameters.to.getHasDefaultValue();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return concatenate( [
+            if ( !originalHasDefaultValue ) {
+                return concatenate( [
+                    "ALTER TABLE",
+                    wrapTable( blueprint.getTable() ),
+                    "ALTER COLUMN",
+                    compileCreateColumn( commandParameters.to, blueprint )
+                ] );
+            }
+
+            commandParameters.to.setDefaultValue( "" );
+            commandParameters.to.setHasDefaultValue( false );
+
+            var wrappedTable = wrapTable( blueprint.getTable(), false );
+            var wrappedColumn = wrapValue( commandParameters.to.getName() );
+            var escapedTable = replace( wrappedTable, "'", "''", "all" );
+            var escapedColumn = replace(
+                commandParameters.to.getName(),
+                "'",
+                "''",
+                "all"
+            );
+            var alterColumnSql = concatenate( [
                 "ALTER TABLE",
-                wrapTable( blueprint.getTable() ),
+                wrappedTable,
                 "ALTER COLUMN",
                 compileCreateColumn( commandParameters.to, blueprint )
             ] );
+
+            commandParameters.to.setDefaultValue( originalDefaultValue );
+            commandParameters.to.setHasDefaultValue( originalHasDefaultValue );
+
+            return [
+                "DECLARE @objectId INT = OBJECT_ID(N'#escapedTable#'), @constraintName SYSNAME, @schemaName SYSNAME, @tableName SYSNAME; SELECT @constraintName = [dc].[name], @schemaName = OBJECT_SCHEMA_NAME([dc].[parent_object_id]), @tableName = OBJECT_NAME([dc].[parent_object_id]) FROM [sys].[default_constraints] AS [dc] INNER JOIN [sys].[columns] AS [c] ON [c].[default_object_id] = [dc].[object_id] WHERE [dc].[parent_object_id] = @objectId AND [c].[name] = N'#escapedColumn#'; IF @constraintName IS NOT NULL EXEC(N'ALTER TABLE ' + QUOTENAME(@schemaName) + N'.' + QUOTENAME(@tableName) + N' DROP CONSTRAINT ' + QUOTENAME(@constraintName))",
+                alterColumnSql,
+                concatenate( [
+                    "ALTER TABLE",
+                    wrappedTable,
+                    "ADD CONSTRAINT",
+                    wrapValue( "df_#listLast( blueprint.getTable(), "." )#_#commandParameters.to.getName()#" ),
+                    "DEFAULT",
+                    wrapDefaultType( commandParameters.to ),
+                    "FOR",
+                    wrappedColumn
+                ] )
+            ];
         } finally {
+            commandParameters.to.setDefaultValue( originalDefaultValue );
+            commandParameters.to.setHasDefaultValue( originalHasDefaultValue );
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
@@ -737,16 +1217,17 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     }
 
     function getAllTableNames( options, schema = "" ) {
-        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )# FROM #wrapTable( "information_schema.tables" )#";
+        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )#, #wrapColumn( { "type": "simple", "value": "table_schema" } )# FROM #wrapTable( "information_schema.tables" )#";
         var args = [];
         if ( schema != "" ) {
             sql &= " WHERE #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
             args.append( schema );
         }
+        sql &= "#arguments.schema == "" ? " WHERE" : " AND"# #wrapColumn( { "type": "simple", "value": "table_type" } )# = 'BASE TABLE'";
         var tablesQuery = runQuery( sql, args, options, "query" );
         var tables = [];
         for ( var table in tablesQuery ) {
-            arrayAppend( tables, table[ "table_name" ] );
+            arrayAppend( tables, "#table[ "table_schema" ]#.#table[ "table_name" ]#" );
         }
         return tables;
     }
@@ -765,12 +1246,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 } ),
                 ", "
             );
+            var foreignKeySchemaFilter = arguments.schema == "" ? "" : " WHERE OBJECT_SCHEMA_NAME(parent_object_id) = #quoteUnicodeStringLiteral( arguments.schema )#";
             return arrayFilter(
                 [
                     "DECLARE @sql NVARCHAR(MAX) = N'';
-                SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_NAME(parent_object_id))
+                SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id))
                     + ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
-                FROM sys.foreign_keys;
+                FROM sys.foreign_keys#foreignKeySchemaFilter#;
 
                 EXEC sp_executesql @sql;",
                     arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#"
@@ -825,7 +1307,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
     function typeEnum( column, blueprint ) {
         blueprint.appendIndex(
             type = "check",
-            name = "enum_#blueprint.getTable()#_#column.getName()#",
+            name = "enum_#listLast( blueprint.getTable(), "." )#_#column.getName()#",
             columns = column
         );
         return "NVARCHAR(255)";

@@ -23,12 +23,12 @@ jobs:
         experimental: [ false ]
         fullNull: ["true", "false"]
         include:
-          - cfengine: "lucee@be"
-            experimental: true
           - cfengine: "adobe@be"
             experimental: true
+            fullNull: "true"
           - cfengine: "boxlang@be"
             experimental: true
+            fullNull: "true"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
@@ -48,8 +48,11 @@ jobs:
       - name: Install dependencies
         run: |
           box install
+          git apply --unidiff-zero .github/patches/testbox-full-null.patch
 
       - name: Start server
+        env:
+          FULL_NULL: ${{matrix.fullNull}}
         run: |
           box server start serverConfigFile="server-${{ matrix.cfengine }}.json" --noSaveSettings --debug
           curl http://127.0.0.1:60298
@@ -58,7 +61,7 @@ jobs:
         env:
           FULL_NULL: ${{matrix.fullNull}}
         continue-on-error: ${{ matrix.experimental }}
-        run: box testbox run
+        run: box testbox run reporter=mintext
 
   format:
     runs-on: ubuntu-latest
@@ -80,9 +83,4 @@ jobs:
         run: box install commandbox-cfformat
 
       - name: Run CFFormat
-        run: box run-script format
-
-      - name: Commit Format Changes
-        uses: stefanzweifel/git-auto-commit-action@v7.2.0
-        with:
-          commit_message: Apply cfformat changes
+        run: box run-script format:check

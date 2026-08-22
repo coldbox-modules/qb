@@ -1,5 +1,89 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileWhereInBulkValues( required string sqlType ) {
+        return "SELECT CAST(""value"" AS #arguments.sqlType#) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value"")";
+    }
+
+    public string function resolveWhereInBulkSqlType( required string sqlType ) {
+        var normalizedType = super.resolveWhereInBulkSqlType( arguments.sqlType );
+        switch ( normalizedType ) {
+            case "CHAR":
+            case "NCHAR":
+            case "VARCHAR":
+            case "NVARCHAR":
+            case "LONGVARCHAR":
+            case "LONGNVARCHAR":
+            case "CLOB":
+            case "NCLOB":
+                return "TEXT";
+            case "OTHER":
+            case "BIT":
+            case "TINYINT":
+                return "BOOLEAN";
+            default:
+                return normalizedType;
+        }
+    }
+
+    public string function compileJsonScalar( required struct jsonPath ) {
+        return compilePostgresJsonTraversal( arguments.jsonPath, true );
+    }
+
+    public string function compileJsonScalarComparison( required struct jsonPath, any value ) {
+        var scalar = compileJsonScalar( arguments.jsonPath );
+        if ( isNull( arguments.value ) ) {
+            return scalar;
+        }
+
+        var sqlType = getUtils().inferSqlType( arguments.value, this );
+        if ( listFindNoCase( "TINYINT,SMALLINT,INTEGER,BIGINT,DECIMAL,NUMERIC,REAL,FLOAT,DOUBLE", sqlType ) ) {
+            return "CAST(#scalar# AS NUMERIC)";
+        }
+        if ( listFindNoCase( "BIT,BOOLEAN,OTHER", sqlType ) ) {
+            return "CAST(#scalar# AS BOOLEAN)";
+        }
+        if ( listFindNoCase( "DATE,TIME,TIMESTAMP", sqlType ) ) {
+            return "CAST(#scalar# AS #sqlType#)";
+        }
+        return scalar;
+    }
+
+    public string function compileJsonContains( required struct jsonPath ) {
+        return "(#compilePostgresJsonTraversal( arguments.jsonPath, false )#)::jsonb @> ?::jsonb";
+    }
+
+    public string function compileJsonExists( required struct jsonPath ) {
+        return "#compilePostgresJsonTraversal( arguments.jsonPath, false )# IS NOT NULL";
+    }
+
+    public string function compileJsonLength( required struct jsonPath ) {
+        return "JSONB_ARRAY_LENGTH((#compilePostgresJsonTraversal( arguments.jsonPath, false )#)::jsonb)";
+    }
+
+    public any function prepareJsonContainsBinding( any value ) {
+        return isNull( arguments.value ) ? "null" : serializeJSON( arguments.value );
+    }
+
+    private string function compilePostgresJsonTraversal( required struct jsonPath, boolean scalar = false ) {
+        var sql = wrapJsonColumn( arguments.jsonPath );
+        var scalarExtraction = arguments.scalar;
+        var pathLength = arguments.jsonPath.path.len();
+        if ( scalarExtraction && pathLength == 0 ) {
+            return sql & chr( 35 ) & ">>'{}'";
+        }
+        arguments.jsonPath.path.each( function( segment, index ) {
+            var operator = scalarExtraction && index == pathLength ? "->>" : "->";
+            var pathSegment = getUtils().isActuallyNumeric( segment ) ? segment : "'" & replace(
+                segment,
+                "'",
+                "''",
+                "all"
+            ) & "'";
+            sql &= operator & pathSegment;
+        } );
+        return sql;
+    }
+
     /**
      * Creates a new Postgres Query Grammar.
      *
@@ -85,7 +169,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array target,
         required array values
     ) {
-        return compileInsert( arguments.qb, arguments.columns, arguments.values ) & " ON CONFLICT DO NOTHING";
+        var returningColumns = arguments.qb
+            .getReturning()
+            .map( wrapColumn )
+            .toList( ", " );
+        var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
+        return super.compileInsert( arguments.qb, arguments.columns, arguments.values ) & " ON CONFLICT DO NOTHING" & returningClause;
     }
 
     /**
@@ -101,6 +190,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array columns,
         required struct updateMap
     ) {
+        if ( !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getOffsetValue() ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "PostgreSQL does not support direct ORDER BY or OFFSET clauses on UPDATE statements."
+            );
+        }
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -120,7 +215,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 } )
                 .toList( ", " );
 
-            var updateStatement = "UPDATE #wrapTable( query.getTableName() )# SET #updateList#";
+            var updateStatement = "UPDATE #wrapQueryTable( query )# SET #updateList#";
 
             var joins = arguments.query.getJoins();
 
@@ -137,30 +232,58 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
 
             if ( joins.isEmpty() ) {
-                return updateStatement & returningClause;
+                return trim(
+                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause
+                );
             }
 
-            var firstJoin = joins[ 1 ];
-            var whereStatement = replace(
-                compileWheres( query, query.getWheres() ),
-                "WHERE",
-                "AND",
-                "one"
+            var updateQuery = arguments.query;
+            var joinedTables = joins
+                .map( function( join ) {
+                    return wrapTable( join.getTable() );
+                } )
+                .toList( ", " );
+            var predicates = joins
+                .map( function( join ) {
+                    return trim( removeLeadingFilterKeyword( compileWheres( updateQuery, join.getWheres() ) ) );
+                } )
+                .filter( function( predicate ) {
+                    return predicate != "";
+                } );
+            var queryPredicate = trim(
+                removeLeadingFilterKeyword( compileWheres( arguments.query, query.getWheres() ) )
             );
-            updateStatement &= " FROM #wrapTable( firstJoin.getTable() )# #compileWheres( arguments.query, firstJoin.getWheres() )#";
-
-            if ( joins.len() <= 1 ) {
-                return trim( updateStatement & " " & whereStatement & returningClause );
+            if ( queryPredicate != "" ) {
+                predicates.append( queryPredicate );
             }
 
-            var restJoins = joins.len() <= 1 ? [] : joins.slice( 2 );
+            updateStatement &= " FROM #joinedTables#";
+            if ( !predicates.isEmpty() ) {
+                updateStatement &= " WHERE #predicates.toList( " AND " )#";
+            }
 
-            return trim( "#updateStatement# #compileJoins( arguments.query, restJoins )# #whereStatement##returningClause#" );
+            return trim(
+                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & returningClause
+            );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    public array function getUpdateBindingOrder( required QueryBuilder query ) {
+        return [
+            "commonTables",
+            "from",
+            "update",
+            "join",
+            "where",
+            "groupBy",
+            "having",
+            "orderBy",
+            "union"
+        ];
     }
 
     /**
@@ -171,6 +294,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     public string function compileDelete( required QueryBuilder query ) {
+        if (
+            !arguments.query.getOrders().isEmpty() ||
+            !isNull( arguments.query.getLimitValue() ) ||
+            !isNull( arguments.query.getOffsetValue() )
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "PostgreSQL does not support direct ORDER BY, LIMIT, or OFFSET clauses on DELETE statements."
+            );
+        }
         if ( !arguments.query.getJoins().isEmpty() ) {
             throw(
                 type = "UnsupportedOperation",
@@ -189,7 +322,9 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 .map( wrapColumn )
                 .toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
-            return trim( "DELETE FROM #wrapTable( query.getTableName() )# #compileWheres( query, query.getWheres() )##returningClause#" );
+            return trim(
+                compileCommonTables( query, query.getCommonTables() ) & " DELETE FROM #wrapQueryTable( query )# #compileWheres( query, query.getWheres() )##returningClause#"
+            );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -205,8 +340,15 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required any updates,
         required array target,
         QueryBuilder source,
-        any deleteUnmatched = false
+        any deleteUnmatched = false,
+        boolean matchNulls = false
     ) {
+        if ( arguments.matchNulls ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support matching NULL target values during an upsert"
+            );
+        }
         if ( !isBoolean( arguments.deleteUnmatched ) || arguments.deleteUnmatched ) {
             throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
         }
@@ -217,7 +359,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.qb.getShouldWrapValues() );
             }
 
-            var insertString = isNull( arguments.source ) ? this.compileInsert(
+            var insertString = isNull( arguments.source ) ? super.compileInsert(
                 arguments.qb,
                 arguments.insertColumns,
                 arguments.values
@@ -340,6 +482,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function wrapDefaultType( column ) {
         var defaultValue = column.getDefaultValue();
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( defaultValue );
+        }
+
         // Normalize PostgreSQL cast shorthand (value::TYPE) so runtimes that
         // parse ":" for named params don't break schema DDL execution.
         var castPosition = 0;
@@ -360,9 +506,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         switch ( column.getType() ) {
             case "boolean":
                 return uCase( defaultValue );
-            case "char":
-            case "string":
-                return "'#defaultValue#'";
             default:
                 return defaultValue;
         }
@@ -485,7 +628,19 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileDropIndex( blueprint, commandParameters ) {
-        return "DROP INDEX #wrapValue( commandParameters.name )#";
+        try {
+            var originalShouldWrapValues = getShouldWrapValues();
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
+            }
+
+            var indexName = qualifyObjectNameForTable( blueprint.getTable(), commandParameters.name );
+            return "DROP INDEX #wrapTable( indexName )#";
+        } finally {
+            if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
+                setShouldWrapValues( originalShouldWrapValues );
+            }
+        }
     }
 
     function compileDropAllObjects( required struct options, string schema = "", SchemaBuilder sb ) {
@@ -513,16 +668,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function getAllTableNames( options, schema = "" ) {
-        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )# FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_schema" } )# = 'public'";
-        var args = [];
-        if ( schema != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ?";
-            args.append( schema );
-        }
+        var effectiveSchema = arguments.schema == "" ? "public" : arguments.schema;
+        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "table_name" } )# FROM #wrapTable( "information_schema.tables" )# WHERE #wrapColumn( { "type": "simple", "value": "table_schema" } )# = ? AND #wrapColumn( { "type": "simple", "value": "table_type" } )# = 'BASE TABLE'";
+        var args = [ effectiveSchema ];
         var tablesQuery = runQuery( sql, args, options, "query" );
         var tables = [];
         for ( var table in tablesQuery ) {
-            arrayAppend( tables, table[ "table_name" ] );
+            arrayAppend( tables, "#effectiveSchema#.#table[ "table_name" ]#" );
         }
         return tables;
     }
@@ -614,7 +766,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function typeEnum( column ) {
-        return column.getName();
+        var typeName = qualifyObjectNameForTable( column.getBlueprint().getTable(), column.getName() );
+        return wrapTable( typeName );
     }
 
     function typeFloat( column ) {
@@ -758,9 +911,10 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             var values = arrayMap( commandParameters.values, function( val ) {
-                return "'" & val & "'";
+                return quoteStringLiteral( val );
             } );
-            return "CREATE TYPE #wrapColumn( { "type": "simple", "value": commandParameters.name } )# AS ENUM (#arrayToList( values, ", " )#)";
+            var typeName = qualifyObjectNameForTable( blueprint.getTable(), commandParameters.name );
+            return "CREATE TYPE #wrapTable( typeName )# AS ENUM (#arrayToList( values, ", " )#)";
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

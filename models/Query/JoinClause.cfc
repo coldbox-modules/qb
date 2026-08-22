@@ -25,6 +25,12 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
     property name="lateralRawExpression" type="string";
 
     /**
+     * Bindings belonging to a lateral source. These participate in duplicate
+     * join comparison while the parent query owns the executable bindings.
+     */
+    property name="lateralBindings" type="array";
+
+    /**
      * Valid join types for join clauses.
      */
     variables.types = [
@@ -47,7 +53,8 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
      * @joiningQuery A reference to the query to which this join clause belongs.
      * @type The join type of this join clause.
      * @table The table to join.
-     * @crossApplySqlStringWithBindParams The already-`toSql`'d table expression for the {cross,outer}Apply case
+     * @lateralRawExpression The already-compiled table expression for a lateral join.
+     * @lateralBindings Bindings belonging to the lateral table expression.
      *
      * @return qb.models.Query.JoinClause
      */
@@ -55,7 +62,8 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
         required QueryBuilder joiningQuery,
         required string type,
         required any table,
-        string lateralRawExpression
+        string lateralRawExpression,
+        array lateralBindings = []
     ) {
         var typeIsValid = false;
         for ( var validType in variables.types ) {
@@ -73,9 +81,31 @@ component displayname="JoinClause" accessors="true" extends="qb.models.Query.Que
         variables.lateralRawExpression = isNull( arguments.lateralRawExpression )
          ? ""
          : arguments.lateralRawExpression;
+        variables.lateralBindings = arguments.lateralBindings;
 
-        super.init( joiningQuery.getGrammar(), joiningQuery.getUtils() );
-
+        super.init(
+            grammar = joiningQuery.getGrammar(),
+            utils = joiningQuery.getUtils(),
+            returnFormat = joiningQuery.getReturnFormat(),
+            returnFormatterRegistry = joiningQuery.getReturnFormatterRegistry(),
+            preventDuplicateJoins = joiningQuery.getPreventDuplicateJoins(),
+            validateOperatorsAndCombinators = joiningQuery.getValidateOperatorsAndCombinators(),
+            validateQueryExecuteReturnType = joiningQuery.getValidateQueryExecuteReturnType(),
+            paginationCollector = isNull( joiningQuery.getPaginationCollector() ) ? javacast( "null", "" ) : joiningQuery.getPaginationCollector(),
+            columnFormatter = isNull( joiningQuery.getColumnFormatter() ) ? javacast( "null", "" ) : joiningQuery.getColumnFormatter(),
+            defaultOptions = joiningQuery.getDefaultOptions(),
+            sqlCommenter = joiningQuery.getSqlCommenter(),
+            shouldMaxRowsOverrideToAll = joiningQuery.getShouldMaxRowsOverrideToAll(),
+            collectQueryLog = joiningQuery.getCollectQueryLog(),
+            validateDuplicateSelectColumns = joiningQuery.getValidateDuplicateSelectColumns()
+        );
+        if ( !isNull( joiningQuery.getShouldWrapValues() ) ) {
+            if ( joiningQuery.getShouldWrapValues() ) {
+                withWrappingValues();
+            } else {
+                withoutWrappingValues();
+            }
+        }
         return this;
     }
 

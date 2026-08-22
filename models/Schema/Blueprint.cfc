@@ -42,7 +42,7 @@ component accessors="true" {
 
     public Column function bigIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedBigInteger( argumentCollection = arguments );
     }
@@ -113,7 +113,7 @@ component accessors="true" {
 
     public Column function increments( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedInteger( argumentCollection = arguments );
     }
@@ -145,7 +145,7 @@ component accessors="true" {
 
     public Column function mediumIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedMediumInteger( argumentCollection = arguments );
     }
@@ -183,32 +183,46 @@ component accessors="true" {
     public Blueprint function morphs( required string name ) {
         var morphIdColumnName = arguments.name & "_id";
         var morphTypeColumnName = arguments.name & "_type";
-        unsignedInteger( morphIdColumnName );
-        string( morphTypeColumnName );
-        appendIndex(
+        var morphIdColumn = unsignedInteger( morphIdColumnName );
+        var morphTypeColumn = string( morphTypeColumnName );
+        var morphIndex = appendIndex(
             type = "basic",
             name = "#arguments.name#_index",
             columns = [ morphIdColumnName, morphTypeColumnName ]
         );
+        if ( !getCreating() ) {
+            addColumn( morphIdColumn );
+            addColumn( morphTypeColumn );
+            addIndex( morphIndex );
+        }
         return this;
     }
 
     public Blueprint function nullableMorphs( required string name ) {
         var morphIdColumnName = arguments.name & "_id";
         var morphTypeColumnName = arguments.name & "_type";
-        unsignedInteger( morphIdColumnName ).nullable();
-        string( morphTypeColumnName ).nullable();
-        appendIndex(
+        var morphIdColumn = unsignedInteger( morphIdColumnName ).nullable();
+        var morphTypeColumn = string( morphTypeColumnName ).nullable();
+        var morphIndex = appendIndex(
             type = "basic",
             name = "#arguments.name#_index",
             columns = [ morphIdColumnName, morphTypeColumnName ]
         );
+        if ( !getCreating() ) {
+            addColumn( morphIdColumn );
+            addColumn( morphTypeColumn );
+            addIndex( morphIndex );
+        }
         return this;
     }
 
     public Blueprint function nullableTimestamps() {
-        appendColumn( name = "createdDate", type = "timestamp", isNullable = true );
-        appendColumn( name = "modifiedDate", type = "timestamp", isNullable = true );
+        var createdDate = appendColumn( name = "createdDate", type = "timestamp", isNullable = true );
+        var modifiedDate = appendColumn( name = "modifiedDate", type = "timestamp", isNullable = true );
+        if ( !getCreating() ) {
+            addColumn( createdDate );
+            addColumn( modifiedDate );
+        }
         return this;
     }
 
@@ -230,7 +244,7 @@ component accessors="true" {
 
     public Column function smallIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedSmallInteger( argumentCollection = arguments );
     }
@@ -241,12 +255,18 @@ component accessors="true" {
     }
 
     public Blueprint function softDeletes() {
-        appendColumn( name = "deletedDate", type = "timestamp", isNullable = true );
+        var deletedDate = appendColumn( name = "deletedDate", type = "timestamp", isNullable = true );
+        if ( !getCreating() ) {
+            addColumn( deletedDate );
+        }
         return this;
     }
 
     public Blueprint function softDeletesTz() {
-        appendColumn( name = "deletedDate", type = "timestampTz", isNullable = true );
+        var deletedDate = appendColumn( name = "deletedDate", type = "timestampTz", isNullable = true );
+        if ( !getCreating() ) {
+            addColumn( deletedDate );
+        }
         return this;
     }
 
@@ -288,8 +308,14 @@ component accessors="true" {
     }
 
     public Blueprint function timestamps() {
-        appendColumn( name = "createdDate", type = "timestamp" ).withCurrent();
-        appendColumn( name = "modifiedDate", type = "timestamp" ).withCurrent();
+        var createdDate = appendColumn( name = "createdDate", type = "timestamp" ).withCurrent();
+        var modifiedDate = appendColumn( name = "modifiedDate", type = "timestamp" ).withCurrent();
+
+        if ( !getCreating() ) {
+            addColumn( createdDate );
+            addColumn( modifiedDate );
+        }
+
         return this;
     }
 
@@ -299,14 +325,18 @@ component accessors="true" {
     }
 
     public Blueprint function timestampsTz() {
-        appendColumn( name = "createdDate", type = "timestampTz" ).withCurrent();
-        appendColumn( name = "modifiedDate", type = "timestampTz" ).withCurrent();
+        var createdDate = appendColumn( name = "createdDate", type = "timestampTz" ).withCurrent();
+        var modifiedDate = appendColumn( name = "modifiedDate", type = "timestampTz" ).withCurrent();
+        if ( !getCreating() ) {
+            addColumn( createdDate );
+            addColumn( modifiedDate );
+        }
         return this;
     }
 
     public Column function tinyIncrements( required string name, string indexName ) {
         arguments.autoIncrement = true;
-        param arguments.indexName = "pk_#getTable()#_#name#";
+        param arguments.indexName = "pk_#getUnqualifiedTableName()#_#name#";
         appendIndex( type = "primary", columns = arguments.name, name = arguments.indexName );
         return unsignedTinyInteger( argumentCollection = arguments );
     }
@@ -365,7 +395,7 @@ component accessors="true" {
      */
     public TableIndex function foreignKey( required any columns, string name ) {
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "fk_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "fk_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         return appendIndex( type = "foreign", foreignKey = arguments.columns, name = arguments.name );
     }
 
@@ -380,7 +410,7 @@ component accessors="true" {
      */
     public TableIndex function index( required any columns, string name ) {
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "idx_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "idx_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         return appendIndex( type = "basic", columns = arguments.columns, name = arguments.name );
     }
 
@@ -395,7 +425,7 @@ component accessors="true" {
      */
     public TableIndex function primaryKey( required any columns, string name ) {
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "pk_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "pk_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         return appendIndex( type = "primary", columns = arguments.columns, name = arguments.name );
     }
 
@@ -410,7 +440,7 @@ component accessors="true" {
      */
     public TableIndex function unique( required any columns, string name ) {
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "unq_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "unq_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         return appendIndex( type = "unique", columns = arguments.columns, name = arguments.name );
     }
 
@@ -424,8 +454,11 @@ component accessors="true" {
      * @returns The created TableIndex instance.
      */
     public TableIndex function default( required string column, string name ) {
-        param arguments.name = "df_#getTable()#_#column#";
-        return createIndex( type = "default", columns = arguments.column, name = arguments.name );
+        throw(
+            type = "UnsupportedOperation",
+            message = "Named default constraints are not supported.",
+            detail = "Set a column default by chaining `.default( value )` from the column definition."
+        );
     }
 
 
@@ -473,7 +506,7 @@ component accessors="true" {
         }
 
         arguments.columns = arrayWrap( arguments.columns );
-        param arguments.name = "idx_#getTable()#_#arrayToList( columns, "_" )#";
+        param arguments.name = "idx_#getUnqualifiedTableName()#_#arrayToList( columns, "_" )#";
         addCommand(
             "addIndex",
             {
@@ -504,10 +537,10 @@ component accessors="true" {
 
     public Blueprint function renameConstraint( required any oldName, required any newName ) {
         if ( !isSimpleValue( arguments.oldName ) ) {
-            arguments.oldName = dropConstraint( arguments.oldName.getName() );
+            arguments.oldName = arguments.oldName.getName();
         }
         if ( !isSimpleValue( arguments.newName ) ) {
-            arguments.newName = dropConstraint( arguments.newName.getName() );
+            arguments.newName = arguments.newName.getName();
         }
         addCommand( "renameConstraint", { from: arguments.oldName, to: arguments.newName } );
         return this;
@@ -549,26 +582,43 @@ component accessors="true" {
     }
 
     public array function toSql() {
+        var originalCommands = variables.commands.map( ( command ) => command );
+        var originalIndexes = variables.indexes.map( ( index ) => index );
         var statements = [];
-        // we use a for loop here because we can potentially modify this array while looping over it.
-        for ( var i = 1; i <= variables.commands.len(); i++ ) {
-            var command = variables.commands[ i ];
-            var result = invoke(
-                getGrammar(),
-                "compile#command.getType()#",
-                { blueprint: this, commandParameters: command.getParameters() }
-            );
-            if ( isArray( result ) ) {
-                statements.append( result, true );
-            } else if ( isSimpleValue( result ) && result != "" ) {
-                statements.append( result );
+        try {
+            // we use a for loop here because we can potentially modify this array while looping over it.
+            for ( var i = 1; i <= variables.commands.len(); i++ ) {
+                var command = variables.commands[ i ];
+                var grammar = getGrammar();
+                grammar.pushShouldWrapValuesContext( getSchemaBuilder().getShouldWrapValues() );
+                try {
+                    var result = invoke(
+                        grammar,
+                        "compile#command.getType()#",
+                        { blueprint: this, commandParameters: command.getParameters() }
+                    );
+                } finally {
+                    grammar.popShouldWrapValuesContext();
+                }
+                if ( isArray( result ) ) {
+                    statements.append( result, true );
+                } else if ( isSimpleValue( result ) && result != "" ) {
+                    statements.append( result );
+                }
             }
+            return statements;
+        } finally {
+            setCommands( originalCommands );
+            setIndexes( originalIndexes );
         }
-        return statements;
     }
 
     private array function arrayWrap( required any value ) {
         return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+    }
+
+    private string function getUnqualifiedTableName() {
+        return listLast( getTable(), "." );
     }
 
     private numeric function clamp( required numeric lowerLimit, required numeric result, required numeric upperLimit ) {

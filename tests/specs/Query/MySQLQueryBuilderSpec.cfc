@@ -1,5 +1,67 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "MySQL update binding order", function() {
+            it( "binds join predicates before update values", function() {
+                var builder = getBuilder().pretend();
+
+                builder
+                    .table( "employees" )
+                    .join( "departments", function( join ) {
+                        join.on( "departments.id", "employees.departmentId" ).where( "departments.active", 1 );
+                    } )
+                    .update( values = { "departmentName": "changed" } );
+
+                expect( builder.getQueryLog()[ 1 ].bindings.map( ( binding ) => binding.value ) ).toBe( [ 1, "changed" ] );
+            } );
+
+            it( "returns bindings in update SQL order for manual execution", function() {
+                var builder = getBuilder();
+
+                builder
+                    .table( "employees" )
+                    .join( "departments", function( join ) {
+                        join.on( "departments.id", "employees.departmentId" ).where( "departments.active", 1 );
+                    } )
+                    .update( values = { "departmentName": "changed" }, toSQL = true );
+
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed" ] );
+            } );
+        } );
+
+        describe( "MySQL data modification CTEs", function() {
+            it( "compiles CTEs before update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed", 42 ] );
+            } );
+
+            it( "compiles CTEs before delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 0 );
+                    } )
+                    .from( "inactive_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.delete( toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 0, 42 ] );
+            } );
+        } );
+    }
+
     function selectAllColumns() {
         return "SELECT * FROM `users`";
     }
@@ -332,6 +394,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereInArrayOfQueryParamStructs() {
         return { sql: "SELECT * FROM `users` WHERE `id` IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
+    }
+
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `id` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` INTEGER PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `status` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` VARCHAR(4000) PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `externalId` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` VARCHAR(4000) PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `active` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` TINYINT PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,0]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `id` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` BIGINT PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `id` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` BIGINT PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function bulkTimestampSqlType() {
+        return "DATETIME(6)";
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `active` = ? OR `id` IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` INTEGER PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM `users` WHERE `id` NOT IN (SELECT `value` FROM JSON_TABLE(?, '$[*]' COLUMNS(`value` INTEGER PATH '$')) AS `qb_bulk_values`)",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM `users` WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM `users` WHERE 1 = 1";
     }
 
     function orWhereIn() {
@@ -988,6 +1118,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "INSERT INTO `users` (`username`, `active`, `createdDate`, `modifiedDate`) SELECT `username`, `active`, `createdDate`, `modifiedDate` FROM `activeDirectoryUsers` WHERE `active` = ? ON DUPLICATE KEY UPDATE `active` = VALUES(`active`), `modifiedDate` = VALUES(`modifiedDate`)",
@@ -1053,6 +1187,13 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     function deleteWithJoins() {
         return {
             sql: "DELETE `users` FROM `users` INNER JOIN `warnings` ON `users`.`id` = `warnings`.`userId`",
+            bindings: []
+        };
+    }
+
+    function deleteWithJoinsAndAliases() {
+        return {
+            sql: "DELETE `u` FROM `users` AS `u` INNER JOIN `warnings` AS `w` ON `u`.`id` = `w`.`userId`",
             bindings: []
         };
     }
@@ -1169,6 +1310,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return {
             "sql": "SELECT * FROM `LeftTable` AS `lt` LEFT JOIN `RightTable` AS `rt` ON `rt`.`id` = `lt`.`id` AND EXISTS (SELECT 1 FROM `ExistsTable` AS `et` WHERE `et`.`id` = `lt`.`id`)",
             "bindings": []
+        };
+    }
+
+    function jsonScalarSelect() {
+        return "SELECT JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""contacts""[0].""email""')) AS `explicitName`, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""contacts""[0].""email""')) AS `shortcutName` FROM `users`";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""age""')) >= ? AND JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""age""')) < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+            bindings: [ """en""", """en""" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM `users` WHERE IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0) AND IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0)";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_LENGTH(`profile`, '$.""languages""') > ? AND JSON_LENGTH(`profile`, '$.""languages""') > ? ORDER BY JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""name""')) ASC, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""name""')) DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_LENGTH(`profile`, '$.""languages""') = ? AND JSON_LENGTH(`profile`, '$.""languages""') = ? OR JSON_LENGTH(`profile`, '$.""languages""') = ? OR JSON_LENGTH(`profile`, '$.""languages""') = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+            bindings: [ serializeJSON( [ "en", "de" ] ), serializeJSON( [ "en", "de" ] ) ]
+        };
+    }
+
+    function jsonEmptyCompoundContains() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+            bindings: [ serializeJSON( [] ) ]
+        };
+    }
+
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM `users` WHERE JSON_CONTAINS(`profile`, ?, '$.""languages""') AND JSON_CONTAINS(`profile`, ?, '$.""languages""')",
+            bindings: [ "null", "null" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$.""0""')) AS `explicitKey`, JSON_UNQUOTE(JSON_EXTRACT(`profile`, '$[0]')) AS `shortcutIndex` FROM `users`";
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM `users` WHERE NOT (JSON_CONTAINS(`profile`, ?, '$.""languages""')) OR NOT (JSON_CONTAINS(`profile`, ?, '$.""languages""')) OR JSON_CONTAINS(`profile`, ?, '$.""languages""') AND NOT (IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""nickname""'), 0)) OR IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""name""'), 0) OR NOT (IFNULL(JSON_CONTAINS_PATH(`profile`, 'one', '$.""timezone""'), 0)) OR JSON_LENGTH(`profile`, '$.""languages""') > ?",
+            bindings: [ """en""", """fr""", """de""", 1 ]
         };
     }
 

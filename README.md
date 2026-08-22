@@ -71,6 +71,88 @@ q = queryExecute(
 
 qb enables you to explore new ways of organizing your code by letting you pass around a query builder object that will compile down to the right SQL without you having to keep track of the order, whitespace, or other SQL gotchas!
 
+## Bulk WHERE IN
+
+For large value collections, `whereInBulk` serializes the values into one bound parameter and lets the active grammar expand them into rows. This avoids database parameter limits without changing the behavior or performance of regular `whereIn` calls.
+
+```cfc
+query
+    .from( "users" )
+    .whereInBulk( "id", userIds )
+    .get();
+```
+
+qb infers a common type from the values and translates it to the active database grammar. Matching `cfsqltype` values in query parameter structs are preserved. Mixed values fall back to the grammar's string type.
+
+You can pass an explicit `sqlType` as the third argument when the column needs a more specific database type, such as `BIGINT`, `UUID`, or a particular decimal precision:
+
+```cfc
+query
+    .from( "users" )
+    .whereInBulk( "id", userIds, "BIGINT" )
+    .get();
+```
+
+The explicit `sqlType` should match the constrained column so the database can avoid implicit conversions. `whereNotInBulk`, `andWhereInBulk`, `orWhereInBulk`, `andWhereNotInBulk`, and `orWhereNotInBulk` are also available.
+
+Bulk value expansion is supported by these grammars and database features:
+
++ SQL Server 2016+ using `OPENJSON`; database compatibility level 130+ is required
++ PostgreSQL 9.4+ using `JSONB_ARRAY_ELEMENTS_TEXT`
++ MySQL 8.0.4+ and MariaDB 10.6+ using `JSON_TABLE`
++ Oracle Database 12c Release 1 (12.1.0.2)+ using `JSON_TABLE`
++ SQLite with JSON functions enabled; they are built in by default as of SQLite 3.38.0
+
+Derby does not support bulk value expansion and throws an `UnsupportedOperation` exception for non-empty collections.
+
+## Development Validation
+
+qb can detect statically identifiable duplicate select output names before they are silently collapsed by CFML query results. Enable this validation in development and leave it disabled in production:
+
+```cfc
+moduleSettings = {
+    "qb": {
+        "validateDuplicateSelectColumns": true
+    }
+};
+```
+
+The validation checks the final selection when the query is compiled, including simple columns, explicit aliases, subselect aliases, and explicitly aliased typed columns. Wildcards and expressions without explicit aliases are skipped because their output names cannot be known until the query executes.
+
+## Return Formatters
+
+qb includes named return formatters for `array`, `query`, `none`, and `struct`. The `struct` formatter returns a struct of rows keyed by a selected column:
+
+```cfc
+usersByUsername = query
+    .setReturnFormat( "struct", { "columnKey": "username" } )
+    .from( "users" )
+    .get();
+```
+
+Applications can register reusable custom formatter factories in their qb module settings:
+
+```cfc
+moduleSettings = {
+    "qb": {
+        "returnFormatters": {
+            "ids": function( options ) {
+                return function( q ) {
+                    return queryColumnData( q, options.column );
+                };
+            }
+        }
+    }
+};
+
+ids = query
+    .setReturnFormat( "ids", { "column": "id" } )
+    .from( "users" )
+    .get();
+```
+
+Formatter factories can also be WireBox mapping names or components with a `toFormatter( options )` method.
+
 Here's a gist with an example of the powerful models you can create with this!
 https://gist.github.com/elpete/80d641b98025f16059f6476561d88202
 
@@ -118,4 +200,3 @@ For both Lucee and ACF you need to set the JDBC Driver class to `org.sqlite.JDBC
 ## Full Docs
 
 You can browse the full documentation at https://qb.ortusbooks.com
-

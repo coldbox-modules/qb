@@ -1,5 +1,42 @@
 component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "MySQL Grammar-specific tests", function() {
+            it( "keeps renamed tables in the configured default schema", function() {
+                var schema = getBuilder().setDefaultSchema( "app" );
+
+                expect( schema.rename( "users", "accounts", {}, false ).toSql() ).toBe( [ "RENAME TABLE `app`.`users` TO `app`.`accounts`" ] );
+            } );
+
+            it( "keeps renamed tables in an explicitly configured schema", function() {
+                var schema = getBuilder().setDefaultSchema( "app" );
+
+                expect( schema.rename( "audit.users", "accounts", {}, false ).toSql() ).toBe( [ "RENAME TABLE `audit`.`users` TO `audit`.`accounts`" ] );
+            } );
+            it( "discovers and qualifies base tables in the requested schema when dropping all objects", function() {
+                var schema = getBuilder();
+                variables.mockGrammar.$(
+                    "runQuery",
+                    queryNew(
+                        "Tables_in_tenant,Table_type",
+                        "varchar,varchar",
+                        [ { Tables_in_tenant: "users", Table_type: "BASE TABLE" } ]
+                    )
+                );
+
+                var statements = schema.dropAllObjects( {}, false, "tenant" );
+                var quote = chr( 96 );
+
+                expect( statements[ 2 ] ).toBeWithCase( "DROP TABLE #quote#tenant#quote#.#quote#users#quote#" );
+                expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 1 ] ).toBeWithCase(
+                    "SHOW FULL TABLES FROM #quote#tenant#quote# WHERE table_type = 'BASE TABLE'"
+                );
+            } );
+        } );
+    }
+
     function emptyTable() {
         return [ "CREATE TABLE `users` ()" ];
     }
@@ -93,7 +130,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function enum() {
-        return [ "CREATE TABLE `employees` (`tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL)" ];
+        return [ "CREATE TABLE `employees` (`tshirt_size` ENUM('S''s', 'M', 'L', 'XL', 'XXL') NOT NULL)" ];
     }
 
     function float() {
@@ -349,7 +386,7 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function comment() {
-        return [ "CREATE TABLE `users` (`active` TINYINT(1) NOT NULL COMMENT 'This is a comment')" ];
+        return [ "CREATE TABLE `users` (`active` TINYINT(1) NOT NULL COMMENT 'Pete''s comment')" ];
     }
 
     function defaultForChar() {
@@ -365,7 +402,15 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
     }
 
     function defaultForString() {
-        return [ "CREATE TABLE `users` (`country` VARCHAR(255) NOT NULL DEFAULT 'USA')" ];
+        return [ "CREATE TABLE `users` (`country` VARCHAR(255) NOT NULL DEFAULT 'O''Brien')" ];
+    }
+
+    function defaultForEmptyString() {
+        return [ "CREATE TABLE `users` (`nickname` VARCHAR(255) NOT NULL DEFAULT '')" ];
+    }
+
+    function defaultForUnicodeString() {
+        return [ "CREATE TABLE `users` (`nickname` NVARCHAR(255) NOT NULL DEFAULT 'O''Brien')" ];
     }
 
     function timestampWithCurrent() {
@@ -543,6 +588,13 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
     function addColumn() {
         return [ "ALTER TABLE `users` ADD `tshirt_size` ENUM('S', 'M', 'L', 'XL', 'XXL') NOT NULL" ];
+    }
+
+    function addTimestamps() {
+        return [
+            "ALTER TABLE `users` ADD `createdDate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE `users` ADD `modifiedDate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        ];
     }
 
     function addMultiple() {

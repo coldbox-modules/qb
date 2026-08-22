@@ -1,5 +1,35 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "Oracle data modification CTEs", function() {
+            it( "rejects unsupported CTE update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" );
+
+                expect( function() {
+                    builder.update( values = { "name": "changed" }, toSQL = true );
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
+
+            it( "rejects unsupported CTE delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 0 );
+                    } )
+                    .from( "inactive_users" );
+
+                expect( function() {
+                    builder.delete( toSQL = true );
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
+        } );
+    }
+
     function selectAllColumns() {
         return "SELECT * FROM ""USERS""";
     }
@@ -344,6 +374,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereInArrayOfQueryParamStructs() {
         return { sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
+    }
+
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""STATUS"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" VARCHAR2(4000) PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""EXTERNALID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" VARCHAR2(4000) PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ACTIVE"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,0]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER(19, 0) PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER(19, 0) PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ACTIVE"" = ? OR ""ID"" IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE ""ID"" NOT IN (SELECT ""VALUE"" FROM JSON_TABLE(?, '$[*]' COLUMNS(""VALUE"" NUMBER PATH '$')) ""QB_BULK_VALUES"")",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function bulkExplicitSqlType() {
+        return "NUMBER(19, 0)";
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM ""USERS"" WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM ""USERS"" WHERE 1 = 1";
     }
 
     function orWhereIn() {
@@ -1007,6 +1105,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return {
+            sql: "MERGE INTO ""RECORDS"" ""QB_TARGET"" USING (SELECT ?, ?, ? FROM dual UNION ALL SELECT ?, ?, ? FROM dual) ""QB_SRC"" ON (""QB_TARGET"".""A"" = ""QB_SRC"".""A"" OR (""QB_TARGET"".""A"" IS NULL AND ""QB_SRC"".""A"" IS NULL)) AND (""QB_TARGET"".""B"" = ""QB_SRC"".""B"" OR (""QB_TARGET"".""B"" IS NULL AND ""QB_SRC"".""B"" IS NULL)) WHEN MATCHED THEN UPDATE SET ""C"" = ""QB_SRC"".""C"" WHEN NOT MATCHED THEN INSERT (""A"", ""B"", ""C"") VALUES (""QB_SRC"".""A"", ""QB_SRC"".""B"", ""QB_SRC"".""C"")",
+            bindings: [
+                1,
+                "NULL",
+                "first",
+                2,
+                "value",
+                "second"
+            ]
+        };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "MERGE INTO ""USERS"" ""QB_TARGET"" USING (SELECT ""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"" FROM ""ACTIVEDIRECTORYUSERS"" WHERE ""ACTIVE"" = ?) ""QB_SRC"" ON ""QB_TARGET"".""USERNAME"" = ""QB_SRC"".""USERNAME"" WHEN MATCHED THEN UPDATE SET ""ACTIVE"" = ""QB_SRC"".""ACTIVE"", ""MODIFIEDDATE"" = ""QB_SRC"".""MODIFIEDDATE"" WHEN NOT MATCHED THEN INSERT (""USERNAME"", ""ACTIVE"", ""CREATEDDATE"", ""MODIFIEDDATE"") VALUES (""QB_SRC"".""USERNAME"", ""QB_SRC"".""ACTIVE"", ""QB_SRC"".""CREATEDDATE"", ""QB_SRC"".""MODIFIEDDATE"")",
@@ -1070,6 +1182,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function deleteWithJoins() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function deleteWithJoinsAndAliases() {
         return { exception: "UnsupportedOperation" };
     }
 
@@ -1185,6 +1301,68 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return {
             "sql": "SELECT * FROM ""LEFTTABLE"" ""LT"" LEFT JOIN ""RIGHTTABLE"" ""RT"" ON ""RT"".""ID"" = ""LT"".""ID"" AND EXISTS (SELECT 1 FROM ""EXISTSTABLE"" ""ET"" WHERE ""ET"".""ID"" = ""LT"".""ID"")",
             "bindings": []
+        };
+    }
+
+    function jsonScalarSelect() {
+        return "SELECT JSON_VALUE(""PROFILE"", '$.""contacts""[0].""email""') AS ""EXPLICITNAME"", JSON_VALUE(""PROFILE"", '$.""contacts""[0].""email""') AS ""SHORTCUTNAME"" FROM ""USERS""";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""age""') >= ? AND JSON_VALUE(""PROFILE"", '$.""age""') < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")",
+            bindings: [ "en", "en" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""name""') AND JSON_EXISTS(""PROFILE"", '$.""name""')";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? AND JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ? ORDER BY JSON_VALUE(""PROFILE"", '$.""name""') ASC, JSON_VALUE(""PROFILE"", '$.""name""') DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? AND JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ? OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonEmptyCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")",
+            bindings: [ "NULL", "NULL" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT JSON_VALUE(""PROFILE"", '$.""0""') AS ""EXPLICITKEY"", JSON_VALUE(""PROFILE"", '$[0]') AS ""SHORTCUTINDEX"" FROM ""USERS""";
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM ""USERS"" WHERE NOT (JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")) OR NOT (JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"")) OR JSON_EXISTS(""PROFILE"", '$.""languages""[*]?(@ == $value)' PASSING ? AS ""value"") AND NOT (JSON_EXISTS(""PROFILE"", '$.""nickname""')) OR JSON_EXISTS(""PROFILE"", '$.""name""') OR NOT (JSON_EXISTS(""PROFILE"", '$.""timezone""')) OR JSON_VALUE(""PROFILE"", '$.""languages"".size()' RETURNING NUMBER) > ?",
+            bindings: [ "en", "fr", "de", 1 ]
         };
     }
 

@@ -12,11 +12,14 @@ component {
             "defaultReturnFormat": "array",
             "preventDuplicateJoins": false,
             "validateOperatorsAndCombinators": true,
+            "validateDuplicateSelectColumns": false,
+            "validateQueryExecuteReturnType": false,
             "collectQueryLog": true,
             "convertEmptyStringsToNull": true,
+            "shouldWrapValues": true,
             "validateQueryParamStructKeys": true,
-            "numericSQLType": "NUMERIC",
             "integerSQLType": "INTEGER",
+            "bigIntegerSQLType": "BIGINT",
             "decimalSQLType": "DECIMAL",
             "defaultOptions": {},
             "sqlCommenter": {
@@ -29,7 +32,8 @@ component {
             },
             "shouldMaxRowsOverrideToAll": function( maxRows ) {
                 return maxRows <= 0;
-            }
+            },
+            "returnFormatters": {}
         };
 
         interceptorSettings = { "customInterceptionPoints": "preQBExecute,postQBExecute" };
@@ -51,17 +55,26 @@ component {
             .to( "qb.models.Query.QueryUtils" )
             .initArg( name = "convertEmptyStringsToNull", value = settings.convertEmptyStringsToNull )
             .initArg( name = "validateQueryParamStructKeys", value = settings.validateQueryParamStructKeys )
-            .initArg( name = "numericSQLType", value = settings.numericSQLType )
             .initArg( name = "integerSQLType", value = settings.integerSQLType )
+            .initArg( name = "bigIntegerSQLType", value = settings.bigIntegerSQLType )
             .initArg( name = "decimalSQLType", value = settings.decimalSQLType );
+
+        binder
+            .map( alias = "ReturnFormatterRegistry@qb", force = true )
+            .to( "qb.models.Query.ReturnFormatterRegistry" )
+            .initArg( name = "utils", ref = "QueryUtils@qb" )
+            .initArg( name = "returnFormatters", value = settings.returnFormatters );
 
         binder
             .map( alias = "QueryBuilder@qb", force = true )
             .to( "qb.models.Query.QueryBuilder" )
             .initArg( name = "grammar", ref = settings.defaultGrammar )
             .initArg( name = "utils", ref = "QueryUtils@qb" )
+            .initArg( name = "returnFormatterRegistry", ref = "ReturnFormatterRegistry@qb" )
             .initArg( name = "preventDuplicateJoins", value = settings.preventDuplicateJoins )
             .initArg( name = "validateOperatorsAndCombinators", value = settings.validateOperatorsAndCombinators )
+            .initArg( name = "validateDuplicateSelectColumns", value = settings.validateDuplicateSelectColumns )
+            .initArg( name = "validateQueryExecuteReturnType", value = settings.validateQueryExecuteReturnType )
             .initArg( name = "collectQueryLog", value = settings.collectQueryLog )
             .initArg( name = "returnFormat", value = settings.defaultReturnFormat )
             .initArg( name = "defaultOptions", value = settings.defaultOptions )
@@ -71,7 +84,15 @@ component {
         binder
             .map( alias = "SchemaBuilder@qb", force = true )
             .to( "qb.models.Schema.SchemaBuilder" )
-            .initArg( name = "grammar", ref = settings.defaultGrammar );
+            .initArg( name = "grammar", ref = settings.defaultGrammar )
+            .initArg( name = "defaultOptions", value = settings.defaultOptions );
+
+        // Apply shouldWrapValues setting to the configured grammar singleton.
+        // When defaultGrammar is AutoDiscover@qb, the setting is forwarded via
+        // onMissingMethod to whatever concrete grammar AutoDiscover resolves at runtime.
+        if ( structKeyExists( settings, "shouldWrapValues" ) ) {
+            wirebox.getInstance( settings.defaultGrammar ).setShouldWrapValues( settings.shouldWrapValues );
+        }
     }
 
 }

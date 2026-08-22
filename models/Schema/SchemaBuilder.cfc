@@ -76,7 +76,7 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var blueprint = new Blueprint(
             this,
             getGrammar(),
@@ -85,7 +85,7 @@ component accessors="true" {
         );
         blueprint.addCommand( "create" );
         blueprint.setCreating( true );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         arguments.callback( blueprint );
         if ( arguments.execute ) {
             blueprint
@@ -112,7 +112,7 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var query = new models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
@@ -124,7 +124,7 @@ component accessors="true" {
         );
         blueprint.addCommand( "createView", { query: query } );
         blueprint.setCreating( true );
-        blueprint.setTable( arguments.view );
+        blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
             blueprint
@@ -152,7 +152,7 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var query = new models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
@@ -164,7 +164,7 @@ component accessors="true" {
         );
         blueprint.addCommand( "createAs", { query: query } );
         blueprint.setCreating( true );
-        blueprint.setTable( arguments.newTableName );
+        blueprint.setTable( qualifyTable( arguments.newTableName ) );
 
         if ( arguments.execute ) {
             blueprint
@@ -192,7 +192,7 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var query = new models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
@@ -204,30 +204,29 @@ component accessors="true" {
         );
         blueprint.addCommand( "alterView", { query: query } );
         blueprint.setCreating( true );
-        blueprint.setTable( arguments.view );
+        blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        query.getBindings(),
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            var statements = blueprint.toSql();
+            statements.each( function( statement, index ) {
+                getGrammar().runQuery(
+                    statement,
+                    index == statements.len() ? query.getBindings() : [],
+                    options,
+                    "result",
+                    variables.pretending,
+                    function( data ) {
+                        variables.queryLog.append( data );
+                    }
+                );
+            } );
         }
 
         return blueprint;
     }
 
     public Blueprint function dropView( required string view, struct options = {}, boolean execute = true ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var blueprint = new Blueprint(
             this,
             getGrammar(),
@@ -235,7 +234,7 @@ component accessors="true" {
             getDefaultSchema()
         );
         blueprint.addCommand( "dropView" );
-        blueprint.setTable( arguments.view );
+        blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
             blueprint
@@ -243,7 +242,7 @@ component accessors="true" {
                 .each( function( statement ) {
                     getGrammar().runQuery(
                         statement,
-                        query.getBindings(),
+                        [],
                         options,
                         "result",
                         variables.pretending,
@@ -267,7 +266,7 @@ component accessors="true" {
      * @returns  The blueprint instance
      */
     public Blueprint function drop( required string table, struct options = {}, boolean execute = true ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var blueprint = new Blueprint(
             this,
             getGrammar(),
@@ -275,7 +274,7 @@ component accessors="true" {
             getDefaultSchema()
         );
         blueprint.addCommand( "drop" );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         if ( arguments.execute ) {
             blueprint
                 .toSql()
@@ -305,7 +304,7 @@ component accessors="true" {
      * @returns  The blueprint instance
      */
     public Blueprint function truncate( required string table, struct options = {}, boolean execute = true ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var blueprint = new Blueprint(
             this,
             getGrammar(),
@@ -313,7 +312,7 @@ component accessors="true" {
             getDefaultSchema()
         );
         blueprint.addCommand( "truncate" );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         if ( arguments.execute ) {
             blueprint
                 .toSql()
@@ -343,7 +342,7 @@ component accessors="true" {
      * @returns  The blueprint instance
      */
     public Blueprint function dropIfExists( required string table, struct options = {}, boolean execute = true ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var blueprint = new Blueprint(
             this,
             getGrammar(),
@@ -351,7 +350,7 @@ component accessors="true" {
             getDefaultSchema()
         );
         blueprint.addCommand( "drop" );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         blueprint.setIfExists( true );
         if ( arguments.execute ) {
             blueprint
@@ -389,14 +388,14 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var blueprint = new Blueprint(
             this,
             getGrammar(),
             arguments.options,
             getDefaultSchema()
         );
-        blueprint.setTable( arguments.table );
+        blueprint.setTable( qualifyTable( arguments.table ) );
         arguments.callback( blueprint );
         if ( arguments.execute ) {
             blueprint
@@ -433,14 +432,14 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var blueprint = new Blueprint(
             this,
             getGrammar(),
             arguments.options,
             getDefaultSchema()
         );
-        blueprint.setTable( arguments.from );
+        blueprint.setTable( qualifyTable( arguments.from ) );
         blueprint.addCommand( "renameTable", { to: arguments.to } );
         if ( arguments.execute ) {
             blueprint
@@ -478,7 +477,7 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         return rename( argumentCollection = arguments );
     }
 
@@ -498,10 +497,13 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
-        var args = [ listLast( arguments.name, "." ) ];
+        arguments.options = mergeOptions( arguments.options );
+        if ( listLen( arguments.name, "." ) > 1 ) {
+            arguments.schema = listDeleteAt( arguments.name, listLen( arguments.name, "." ), "." );
+        }
+        var args = [ getGrammar().prepareSchemaIdentifierForLookup( listLast( arguments.name, "." ) ) ];
         if ( arguments.schema != "" ) {
-            arrayAppend( args, arguments.schema );
+            arrayAppend( args, getGrammar().prepareSchemaIdentifierForLookup( arguments.schema ) );
         }
         var sql = getGrammar().compileTableExists( arguments.name, arguments.schema );
         if ( arguments.execute ) {
@@ -510,7 +512,10 @@ component accessors="true" {
                 args,
                 arguments.options,
                 "query",
-                variables.pretending
+                variables.pretending,
+                function( data ) {
+                    variables.queryLog.append( data );
+                }
             );
             return isDefined( "q.RecordCount" ) ? q.RecordCount > 0 : false;
         }
@@ -535,10 +540,16 @@ component accessors="true" {
         struct options = {},
         boolean execute = true
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
-        var args = [ listLast( arguments.table, "." ), arguments.column ];
+        arguments.options = mergeOptions( arguments.options );
+        if ( listLen( arguments.table, "." ) > 1 ) {
+            arguments.schema = listDeleteAt( arguments.table, listLen( arguments.table, "." ), "." );
+        }
+        var args = [
+            getGrammar().prepareSchemaIdentifierForLookup( listLast( arguments.table, "." ) ),
+            getGrammar().prepareSchemaIdentifierForLookup( arguments.column )
+        ];
         if ( arguments.schema != "" ) {
-            arrayAppend( args, arguments.schema );
+            arrayAppend( args, getGrammar().prepareSchemaIdentifierForLookup( arguments.schema ) );
         }
         var sql = getGrammar().compileColumnExists( arguments.table, arguments.column, arguments.schema );
         if ( arguments.execute ) {
@@ -570,8 +581,19 @@ component accessors="true" {
         boolean execute = true,
         string schema = variables.defaultSchema
     ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
-        var statements = getGrammar().compileDropAllObjects( arguments.options, arguments.schema, this );
+        arguments.options = mergeOptions( arguments.options );
+        if ( variables.pretending ) {
+            return [];
+        }
+        var dropOptions = arguments.options;
+        var dropSchema = arguments.schema;
+        var grammar = getGrammar();
+        grammar.pushShouldWrapValuesContext( getShouldWrapValues() );
+        try {
+            var statements = grammar.compileDropAllObjects( dropOptions, dropSchema, this );
+        } finally {
+            grammar.popShouldWrapValuesContext();
+        }
         if ( arguments.execute ) {
             statements.each( function( statement ) {
                 getGrammar().runQuery(
@@ -598,7 +620,7 @@ component accessors="true" {
      * @returns The executed sql statement.
      */
     public string function enableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var statement = getGrammar().compileEnableForeignKeyConstraints( arguments.options );
         if ( arguments.execute ) {
             getGrammar().runQuery(
@@ -624,7 +646,7 @@ component accessors="true" {
      * @returns The executed sql statement.
      */
     public string function disableForeignKeyConstraints( struct options = {}, boolean execute = true ) {
-        structAppend( arguments.options, variables.defaultOptions, false );
+        arguments.options = mergeOptions( arguments.options );
         var statement = getGrammar().compileDisableForeignKeyConstraints( arguments.options );
         if ( arguments.execute ) {
             getGrammar().runQuery(
@@ -656,6 +678,30 @@ component accessors="true" {
             return javacast( "null", "" );
         }
         return variables.shouldWrapValues;
+    }
+
+    /**
+     * Merges per-operation options with schema defaults without mutating the caller's struct.
+     */
+    private struct function mergeOptions( required struct options ) {
+        var mergedOptions = structCopy( arguments.options );
+        structAppend( mergedOptions, variables.defaultOptions, false );
+        return mergedOptions;
+    }
+
+    /**
+     * Prefixes an unqualified schema object with the configured default schema.
+     * Explicitly qualified object names are returned unchanged.
+     *
+     * @table The table or view name to qualify.
+     *
+     * @return The qualified table or view name.
+     */
+    private string function qualifyTable( required string table ) {
+        if ( variables.defaultSchema == "" || listLen( arguments.table, "." ) > 1 ) {
+            return arguments.table;
+        }
+        return "#variables.defaultSchema#.#arguments.table#";
     }
 
 }

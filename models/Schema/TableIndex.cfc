@@ -3,6 +3,8 @@
  */
 component accessors="true" {
 
+    property name="blueprint";
+
     /**
      * The constraint type.
      */
@@ -44,12 +46,23 @@ component accessors="true" {
      */
     property name="onDeleteAction" default="NO ACTION";
 
+    variables.validReferentialActions = [
+        "RESTRICT",
+        "CASCADE",
+        "SET NULL",
+        "NO ACTION",
+        "SET DEFAULT"
+    ];
+
     /**
      * Create a new TableIndex instance.
      *
      * @returns A TableIndex instance.
      */
-    public TableIndex function init() {
+    public TableIndex function init( Blueprint blueprint ) {
+        if ( !isNull( arguments.blueprint ) ) {
+            setBlueprint( arguments.blueprint );
+        }
         variables.columns = [];
         return this;
     }
@@ -88,6 +101,13 @@ component accessors="true" {
      * @returns The TableIndex instance.
      */
     public TableIndex function onTable( required string table ) {
+        if (
+            listLen( arguments.table, "." ) == 1 &&
+            !isNull( getBlueprint() ) &&
+            getBlueprint().getDefaultSchema() != ""
+        ) {
+            arguments.table = "#getBlueprint().getDefaultSchema()#.#arguments.table#";
+        }
         setTable( arguments.table );
         return this;
     }
@@ -118,6 +138,16 @@ component accessors="true" {
         return this;
     }
 
+    public TableIndex function setOnUpdateAction( required string onUpdateAction ) {
+        variables.onUpdateAction = normalizeReferentialAction( arguments.onUpdateAction );
+        return this;
+    }
+
+    public TableIndex function setOnDeleteAction( required string onDeleteAction ) {
+        variables.onDeleteAction = normalizeReferentialAction( arguments.onDeleteAction );
+        return this;
+    }
+
     /**
      * Set the column or columns that make up the constraint.
      *
@@ -132,6 +162,14 @@ component accessors="true" {
 
     private array function arrayWrap( required any value ) {
         return isArray( arguments.value ) ? arguments.value : [ arguments.value ];
+    }
+
+    private string function normalizeReferentialAction( required string action ) {
+        var normalizedAction = uCase( trim( arguments.action ) );
+        if ( !variables.validReferentialActions.contains( normalizedAction ) ) {
+            throw( type = "InvalidReferentialAction", message = "Invalid foreign-key action [#arguments.action#]." );
+        }
+        return normalizedAction;
     }
 
 }

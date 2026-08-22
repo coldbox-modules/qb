@@ -294,7 +294,7 @@ component extends="testbox.system.BaseSpec" {
                         return schema.create(
                             "employees",
                             function( table ) {
-                                table.enum( "tshirt_size", [ "S", "M", "L", "XL", "XXL" ] );
+                                table.enum( "tshirt_size", [ "S's", "M", "L", "XL", "XXL" ] );
                             },
                             {},
                             false
@@ -1068,7 +1068,7 @@ component extends="testbox.system.BaseSpec" {
                         return schema.create(
                             "users",
                             function( table ) {
-                                table.boolean( "active" ).comment( "This is a comment" );
+                                table.boolean( "active" ).comment( "Pete's comment" );
                             },
                             {},
                             false
@@ -1120,12 +1120,38 @@ component extends="testbox.system.BaseSpec" {
                         return schema.create(
                             "users",
                             function( table ) {
-                                table.string( "country" ).default( "USA" );
+                                table.string( "country" ).default( "O'Brien" );
                             },
                             {},
                             false
                         );
                     }, defaultForString() );
+                } );
+
+                it( "default for empty string", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "users",
+                            function( table ) {
+                                table.string( "nickname" ).default( "" );
+                            },
+                            {},
+                            false
+                        );
+                    }, defaultForEmptyString() );
+                } );
+
+                it( "default for unicode string", function() {
+                    testCase( function( schema ) {
+                        return schema.create(
+                            "users",
+                            function( table ) {
+                                table.unicodeString( "nickname" ).default( "O'Brien" );
+                            },
+                            {},
+                            false
+                        );
+                    }, defaultForUnicodeString() );
                 } );
 
                 it( "timestamp withCurrent", function() {
@@ -1660,6 +1686,19 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "adding columns", function() {
+                it( "can add timestamp columns", function() {
+                    testCase( function( schema ) {
+                        return schema.alter(
+                            "users",
+                            function( table ) {
+                                table.timestamps();
+                            },
+                            {},
+                            false
+                        );
+                    }, addTimestamps() );
+                } );
+
                 it( "can add a new column", function() {
                     testCase( function( schema ) {
                         return schema.alter(
@@ -1813,6 +1852,18 @@ component extends="testbox.system.BaseSpec" {
                         return schema.dropView( "active_users", {}, false );
                     }, dropView() );
                 } );
+
+                it( "can execute a drop view statement", function() {
+                    var schema = getBuilder();
+                    schema.getGrammar().$( "runQuery", {} );
+
+                    schema.dropView( "active_users" );
+
+                    var runQueryLog = schema.getGrammar().$callLog().runQuery;
+                    expect( runQueryLog ).toHaveLength( 1 );
+                    expect( runQueryLog[ 1 ][ 1 ] ).toBeWithCase( dropView()[ 1 ] );
+                    expect( runQueryLog[ 1 ][ 2 ] ).toBe( [] );
+                } );
             } );
 
             describe( "create table as and select into", function() {
@@ -1834,6 +1885,30 @@ component extends="testbox.system.BaseSpec" {
                 testCase( function( schema ) {
                     return schema.hasTable( name = "users", options = {}, execute = false );
                 }, hasTable() );
+            } );
+
+            it( "logs has table executions", function() {
+                var schema = getBuilder();
+                schema
+                    .getGrammar()
+                    .$( "runQuery" )
+                    .$callback( function(
+                        sql,
+                        bindings,
+                        options,
+                        returnObject,
+                        pretend,
+                        postProcessHook
+                    ) {
+                        if ( !isNull( arguments.postProcessHook ) ) {
+                            arguments.postProcessHook( { sql: arguments.sql, bindings: arguments.bindings, options: arguments.options } );
+                        }
+                        return queryNew( "exists", "integer", [ { exists: 1 } ] );
+                    } );
+
+                schema.hasTable( "users" );
+
+                expect( schema.getQueryLog() ).toHaveLength( 1 );
             } );
 
             it( "has table in a schema", function() {

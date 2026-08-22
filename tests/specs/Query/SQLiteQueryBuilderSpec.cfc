@@ -1,5 +1,69 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "SQLite conflict returning clauses", function() {
+            it( "places returning after an upsert conflict clause exactly once", function() {
+                var sql = getBuilder()
+                    .from( "users" )
+                    .returning( "id" )
+                    .upsert(
+                        values = { "id": 1, "name": "Jane" },
+                        target = [ "id" ],
+                        update = [ "name" ],
+                        toSql = true
+                    );
+
+                expect( reMatchNoCase( "RETURNING", sql ) ).toHaveLength( 1 );
+                expect( findNoCase( "RETURNING", sql ) ).toBeGT( findNoCase( "ON CONFLICT", sql ) );
+            } );
+        } );
+
+        describe( "SQLite data modification CTEs", function() {
+            it( "compiles CTEs before update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.update( values = { "name": "changed" }, toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 1, "changed", 42 ] );
+            } );
+
+            it( "binds update values before joined predicates", function() {
+                var builder = getBuilder().pretend();
+
+                builder
+                    .table( "employees" )
+                    .join( "departments", function( join ) {
+                        join.on( "departments.id", "employees.departmentId" ).where( "departments.active", 1 );
+                    } )
+                    .update( values = { "departmentName": "changed" } );
+
+                expect( builder.getQueryLog()[ 1 ].bindings.map( ( binding ) => binding.value ) ).toBe( [ "changed", 1 ] );
+            } );
+
+            it( "compiles CTEs before delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 0 );
+                    } )
+                    .from( "inactive_users" )
+                    .where( "id", 42 );
+
+                var sql = builder.delete( toSQL = true );
+
+                expect( sql ).toStartWith( "WITH" );
+                expect( builder.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 0, 42 ] );
+            } );
+        } );
+    }
+
     private function getBuilder() {
         variables.utils = getMockBox().createMock( "qb.models.Query.QueryUtils" ).init();
         variables.grammar = getMockBox().createMock( "qb.models.Grammars.SQLiteGrammar" ).init( variables.utils );
@@ -388,6 +452,74 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereInArrayOfQueryParamStructs() {
         return { sql: "SELECT * FROM ""users"" WHERE ""id"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
+    }
+
+    function whereInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkStrings() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""status"" IN (SELECT CAST(""value"" AS TEXT) FROM JSON_EACH(?))",
+            bindings: [ "[""active"",""pending""]" ]
+        };
+    }
+
+    function whereInBulkMixed() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""externalId"" IN (SELECT CAST(""value"" AS TEXT) FROM JSON_EACH(?))",
+            bindings: [ "[1,""two""]" ]
+        };
+    }
+
+    function whereInBulkBooleans() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""active"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ "[true,false]" ]
+        };
+    }
+
+    function whereInBulkBigInt() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ "[1,2]" ]
+        };
+    }
+
+    function whereInBulkExplicitType() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" IN (SELECT CAST(""value"" AS BIGINT) FROM JSON_EACH(?))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function bulkTimestampSqlType() {
+        return "TEXT";
+    }
+
+    function orWhereInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""active"" = ? OR ""id"" IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ 1, "[1,2,3]" ]
+        };
+    }
+
+    function whereNotInBulk() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE ""id"" NOT IN (SELECT CAST(""value"" AS INTEGER) FROM JSON_EACH(?))",
+            bindings: [ "[1,2,3]" ]
+        };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 1 = 1";
     }
 
     function orWhereIn() {
@@ -1117,6 +1249,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "INSERT INTO ""users"" (""username"", ""active"", ""createdDate"", ""modifiedDate"") SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ? ON CONFLICT (""username"") DO UPDATE SET ""active"" = EXCLUDED.""active"", ""modifiedDate"" = EXCLUDED.""modifiedDate""",
@@ -1186,6 +1322,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return { exception: "UnsupportedOperation" };
     }
 
+    function deleteWithJoinsAndAliases() {
+        return { exception: "UnsupportedOperation" };
+    }
+
     function crossApply() {
         return { exception: "UnsupportedOperation" }
     }
@@ -1206,6 +1346,68 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         return {
             "sql": "SELECT * FROM ""LeftTable"" AS ""lt"" LEFT JOIN ""RightTable"" AS ""rt"" ON ""rt"".""id"" = ""lt"".""id"" AND EXISTS (SELECT 1 FROM ""ExistsTable"" AS ""et"" WHERE ""et"".""id"" = ""lt"".""id"")",
             "bindings": []
+        };
+    }
+
+    function jsonScalarSelect() {
+        return "SELECT JSON_EXTRACT(""profile"", '$.""contacts""[0].""email""') AS ""explicitName"", JSON_EXTRACT(""profile"", '$.""contacts""[0].""email""') AS ""shortcutName"" FROM ""users""";
+    }
+
+    function jsonScalarWhere() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSON_EXTRACT(""profile"", '$.""age""') >= ? AND JSON_EXTRACT(""profile"", '$.""age""') < ?",
+            bindings: [ 21, 65 ]
+        };
+    }
+
+    function jsonContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)",
+            bindings: [ "en", "en" ]
+        };
+    }
+
+    function jsonExists() {
+        return "SELECT * FROM ""users"" WHERE JSON_TYPE(""profile"", '$.""name""') IS NOT NULL AND JSON_TYPE(""profile"", '$.""name""') IS NOT NULL";
+    }
+
+    function jsonLengthAndOrder() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ? AND JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ? ORDER BY JSON_EXTRACT(""profile"", '$.""name""') ASC, JSON_EXTRACT(""profile"", '$.""name""') DESC",
+            bindings: [ 1, 1 ]
+        };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? AND JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ? OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') = ?",
+            bindings: [ 1, 1, 2, 2 ]
+        };
+    }
+
+    function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonEmptyCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonNullContains() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)",
+            bindings: [ "NULL", "NULL" ]
+        };
+    }
+
+    function jsonNumericObjectKey() {
+        return "SELECT JSON_EXTRACT(""profile"", '$.""0""') AS ""explicitKey"", JSON_EXTRACT(""profile"", '$[0]') AS ""shortcutIndex"" FROM ""users""";
+    }
+
+    function jsonConveniencePredicates() {
+        return {
+            sql: "SELECT * FROM ""users"" WHERE NOT (EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)) OR NOT (EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?)) OR EXISTS (SELECT 1 FROM JSON_EACH(""profile"", '$.""languages""') WHERE ""json_each"".""value"" IS ?) AND NOT (JSON_TYPE(""profile"", '$.""nickname""') IS NOT NULL) OR JSON_TYPE(""profile"", '$.""name""') IS NOT NULL OR NOT (JSON_TYPE(""profile"", '$.""timezone""') IS NOT NULL) OR JSON_ARRAY_LENGTH(""profile"", '$.""languages""') > ?",
+            bindings: [ "en", "fr", "de", 1 ]
         };
     }
 

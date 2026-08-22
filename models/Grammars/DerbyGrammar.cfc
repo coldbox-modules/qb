@@ -21,24 +21,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     ];
 
     /**
-     * Runs a query through `queryExecute`.
-     * This function exists so that platform-specific grammars can override it if needed.
-     *
-     * @sql The sql string to execute.
-     * @bindings The bindings to apply to the query.
-     * @options Any options to pass to `queryExecute`. Default: {}.
-     *
-     * @return any
-     */
-    public any function runQuery( sql, bindings, options ) {
-        var result = super.runQuery( argumentCollection = arguments );
-        if ( isQuery( result ) && result.recordCount > 0 ) {
-            return utils.queryRemoveColumns( result, "QB_RN" );
-        }
-        return result;
-    }
-
-    /**
      * Compiles the lock portion of a sql statement.
      *
      * @query The Builder instance.
@@ -191,6 +173,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required array columns,
         required struct updateMap
     ) {
+        if ( !arguments.query.getOrders().isEmpty() || !isNull( arguments.query.getOffsetValue() ) ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "Derby does not support direct ORDER BY or OFFSET clauses on UPDATE statements."
+            );
+        }
+        if ( !query.getCommonTables().isEmpty() ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "This grammar does not support UPDATE statements with Common Table Expressions."
+            );
+        }
         if ( !query.getJoins().isEmpty() ) {
             throw(
                 type = "UnsupportedOperation",
@@ -221,7 +215,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 } )
                 .toList( ", " );
 
-            var updateStatement = "UPDATE #wrapTable( query.getTableName() )#";
+            var updateStatement = "UPDATE #wrapQueryTable( query )#";
 
             if ( !arguments.query.getJoins().isEmpty() ) {
                 updateStatement &= " " & compileJoins( arguments.query, arguments.query.getJoins() );
@@ -235,6 +229,20 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
     }
 
+    public string function compileDelete( required QueryBuilder query ) {
+        if (
+            !arguments.query.getOrders().isEmpty() ||
+            !isNull( arguments.query.getLimitValue() ) ||
+            !isNull( arguments.query.getOffsetValue() )
+        ) {
+            throw(
+                type = "UnsupportedOperation",
+                message = "Derby does not support direct ORDER BY, LIMIT, or OFFSET clauses on DELETE statements."
+            );
+        }
+        return super.compileDelete( arguments.query );
+    }
+
     public string function compileUpsert(
         required QueryBuilder qb,
         required array insertColumns,
@@ -243,7 +251,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         required any updates,
         required array target,
         QueryBuilder source,
-        any deleteUnmatched = false
+        any deleteUnmatched = false,
+        boolean matchNulls = false
     ) {
         if ( !isBoolean( arguments.deleteUnmatched ) || arguments.deleteUnmatched ) {
             throw( type = "UnsupportedOperation", message = "This grammar does not support DELETE in a upsert clause" );
@@ -287,11 +296,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                     .toList( ", " );
             }
 
-            var constraintString = arguments.target
-                .map( function( column ) {
-                    return "#wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
-                } )
-                .toList( " AND " );
+            var constraintString = compileUpsertTargetConstraint( arguments.target, arguments.matchNulls );
 
             var updateList = "";
             if ( isArray( arguments.updates ) ) {
@@ -339,7 +344,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      */
     private string function compileOffsetValue( required query, offsetValue ) {
         if ( !isNull( arguments.query.getLimitValue() ) && isNull( arguments.offsetValue ) ) {
-            param arguments.offsetValue = 0;
+            return "OFFSET 0 ROWS";
         } else if ( isNull( arguments.offsetValue ) ) {
             return "";
         }
@@ -369,19 +374,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
      * @return string
      */
     function wrapValue( required any value ) {
-        if ( !variables.shouldWrapValues ) {
+        if ( !getShouldWrapValues() ) {
             return arguments.value;
         }
 
         if (
             len( arguments.value ) == 0 ||
-            arguments.value == "*" ||
-            left( arguments.value, 1 ) == """"
+            arguments.value == "*"
         ) {
             return arguments.value;
         }
 
-        return """#arguments.value#""";
+        var normalizedValue = toString( arguments.value );
+        if (
+            len( normalizedValue ) >= 2 &&
+            left( normalizedValue, 1 ) == """" &&
+            right( normalizedValue, 1 ) == """"
+        ) {
+            normalizedValue = mid( normalizedValue, 2, len( normalizedValue ) - 2 );
+        }
+        normalizedValue = replace( normalizedValue, """", """""", "all" );
+        return """#normalizedValue#""";
     }
 
     function compileCreateAs( blueprint, commandParameters ) {
@@ -456,13 +469,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function compileAddColumn( blueprint, commandParameters ) {
+        var originalIndexes = blueprint.getIndexes();
         try {
             var originalShouldWrapValues = getShouldWrapValues();
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            var originalIndexes = blueprint.getIndexes();
             blueprint.setIndexes( [] );
 
             var body = concatenate( [ compileCreateColumn( commandParameters.column, blueprint ) ], ", " );
@@ -471,8 +484,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 blueprint.addConstraint( index );
             }
 
-            blueprint.setIndexes( originalIndexes );
-
             return concatenate( [
                 "ALTER TABLE",
                 wrapTable( blueprint.getTable() ),
@@ -480,6 +491,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 body
             ] );
         } finally {
+            blueprint.setIndexes( originalIndexes );
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
             }
@@ -574,12 +586,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function wrapDefaultType( column ) {
+        if ( shouldQuoteDefaultValue( arguments.column ) ) {
+            return quoteStringLiteral( column.getDefaultValue() );
+        }
         switch ( column.getType() ) {
             case "boolean":
                 return column.getDefaultValue() ? "TRUE" : "FALSE";
-            case "char":
-            case "string":
-                return "'#column.getDefaultValue()#'";
             default:
                 return column.getDefaultValue();
         }
@@ -617,7 +629,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function typeEnum( column ) {
         blueprint.appendIndex(
             type = "check",
-            name = "enum_#blueprint.getTable()#_#column.getName()#",
+            name = "enum_#listLast( blueprint.getTable(), "." )#_#column.getName()#",
             columns = column
         );
         return "VARCHAR(255)";
@@ -728,7 +740,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
         sql &= " WHERE #wrapColumn( { "type": "simple", "value": "t.tablename" } )# = ?";
         if ( schemaName != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemanname" } )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemaname" } )# = ?";
         }
         return sql;
     }
@@ -740,7 +752,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         }
         sql &= " WHERE #wrapColumn( { "type": "simple", "value": "t.tablename" } )# = ? AND #wrapColumn( { "type": "simple", "value": "c.columnname" } )# = ?";
         if ( schema != "" ) {
-            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemanname" } )# = ?";
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemaname" } )# = ?";
         }
         return sql;
     }
@@ -752,7 +764,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.sb.getShouldWrapValues() );
             }
 
-            var tables = getAllTableNames( options );
+            var tables = getAllTableNames( options, schema );
             return arrayMap( tables, function( table ) {
                 return "DROP TABLE #wrapTable( table )#";
             } );
@@ -761,6 +773,26 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( originalShouldWrapValues );
             }
         }
+    }
+
+    function getAllTableNames( options, schema = "" ) {
+        var sql = "SELECT #wrapColumn( { "type": "simple", "value": "t.tablename" } )# AS #wrapValue( "table_name" )#, #wrapColumn( { "type": "simple", "value": "s.schemaname" } )# AS #wrapValue( "table_schema" )# FROM #wrapTable( "sys.systables t" )# JOIN #wrapTable( "sys.sysschemas s" )# ON #wrapColumn( { "type": "simple", "value": "t.schemaid" } )# = #wrapColumn( { "type": "simple", "value": "s.schemaid" } )# WHERE #wrapColumn( { "type": "simple", "value": "t.tabletype" } )# = 'T'";
+        var args = [];
+        if ( arguments.schema != "" ) {
+            sql &= " AND #wrapColumn( { "type": "simple", "value": "s.schemaname" } )# = ?";
+            args.append( arguments.schema );
+        }
+        var tablesQuery = runQuery(
+            sql,
+            args,
+            arguments.options,
+            "query"
+        );
+        var tables = [];
+        for ( var table in tablesQuery ) {
+            tables.append( "#table[ "table_schema" ]#.#table[ "table_name" ]#" );
+        }
+        return tables;
     }
 
 }

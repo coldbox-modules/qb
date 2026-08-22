@@ -1,5 +1,35 @@
 component extends="tests.resources.AbstractQueryBuilderSpec" {
 
+    function run() {
+        super.run();
+
+        describe( "Derby data modification CTEs", function() {
+            it( "rejects unsupported CTE update statements", function() {
+                var builder = getBuilder()
+                    .with( "active_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 1 );
+                    } )
+                    .from( "active_users" );
+
+                expect( function() {
+                    builder.update( values = { "name": "changed" }, toSQL = true );
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
+
+            it( "rejects unsupported CTE delete statements", function() {
+                var builder = getBuilder()
+                    .with( "inactive_users", function( cte ) {
+                        cte.from( "users" ).where( "active", 0 );
+                    } )
+                    .from( "inactive_users" );
+
+                expect( function() {
+                    builder.delete( toSQL = true );
+                } ).toThrow( type = "UnsupportedOperation" );
+            } );
+        } );
+    }
+
     function selectAllColumns() {
         return "SELECT * FROM ""users""";
     }
@@ -338,6 +368,46 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
 
     function whereInArrayOfQueryParamStructs() {
         return { sql: "SELECT * FROM ""users"" WHERE ""id"" IN (?, ?, ?)", bindings: [ 1, 2, 3 ] };
+    }
+
+    function whereInBulk() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkStrings() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkMixed() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkBooleans() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkBigInt() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkExplicitType() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function orWhereInBulk() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereNotInBulk() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function whereInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 0 = 1";
+    }
+
+    function whereNotInBulkEmpty() {
+        return "SELECT * FROM ""users"" WHERE 1 = 1";
     }
 
     function orWhereIn() {
@@ -989,6 +1059,20 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
         };
     }
 
+    function upsertMatchNulls() {
+        return {
+            sql: "MERGE INTO ""records"" ""qb_target"" USING (VALUES (?, ?, ?), (?, ?, ?)) AS ""qb_src"" ON (""qb_target"".""a"" = ""qb_src"".""a"" OR (""qb_target"".""a"" IS NULL AND ""qb_src"".""a"" IS NULL)) AND (""qb_target"".""b"" = ""qb_src"".""b"" OR (""qb_target"".""b"" IS NULL AND ""qb_src"".""b"" IS NULL)) WHEN MATCHED THEN UPDATE SET ""c"" = ""qb_src"".""c"" WHEN NOT MATCHED THEN INSERT (""a"", ""b"", ""c"") VALUES (""qb_src"".""a"", ""qb_src"".""b"", ""qb_src"".""c"")",
+            bindings: [
+                1,
+                "NULL",
+                "first",
+                2,
+                "value",
+                "second"
+            ]
+        };
+    }
+
     function upsertFromClosure() {
         return {
             sql: "MERGE INTO ""users"" ""qb_target"" USING (SELECT ""username"", ""active"", ""createdDate"", ""modifiedDate"" FROM ""activeDirectoryUsers"" WHERE ""active"" = ?) AS ""qb_src"" ON ""qb_target"".""username"" = ""qb_src"".""username"" WHEN MATCHED THEN UPDATE SET ""active"" = ""qb_src"".""active"", ""modifiedDate"" = ""qb_src"".""modifiedDate"" WHEN NOT MATCHED THEN INSERT (""username"", ""active"", ""createdDate"", ""modifiedDate"") VALUES (""qb_src"".""username"", ""qb_src"".""active"", ""qb_src"".""createdDate"", ""qb_src"".""modifiedDate"")",
@@ -1052,6 +1136,10 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
     }
 
     function deleteWithJoins() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function deleteWithJoinsAndAliases() {
         return { exception: "UnsupportedOperation" };
     }
 
@@ -1168,6 +1256,50 @@ component extends="tests.resources.AbstractQueryBuilderSpec" {
             "sql": "SELECT * FROM ""LeftTable"" AS ""lt"" LEFT JOIN ""RightTable"" AS ""rt"" ON ""rt"".""id"" = ""lt"".""id"" AND EXISTS (SELECT 1 FROM ""ExistsTable"" AS ""et"" WHERE ""et"".""id"" = ""lt"".""id"")",
             "bindings": []
         };
+    }
+
+    function jsonScalarSelect() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonScalarWhere() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonExists() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonLengthAndOrder() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonLengthEqualityShortcut() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonEmptyCompoundContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonNullContains() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonNumericObjectKey() {
+        return { exception: "UnsupportedOperation" };
+    }
+
+    function jsonConveniencePredicates() {
+        return { exception: "UnsupportedOperation" };
     }
 
     function aggregateExists() {

@@ -39,6 +39,39 @@ component extends="testbox.system.BaseSpec" {
                         } );
                 } ).notToThrow();
             } );
+
+            it( "keeps internally-created execution builders in pretend mode", function() {
+                expect( function() {
+                    new qb.models.Query.QueryBuilder()
+                        .from( "users" )
+                        .pretend()
+                        .exists();
+                } ).notToThrow();
+
+                expect( function() {
+                    new qb.models.Query.QueryBuilder()
+                        .from( "users" )
+                        .pretend()
+                        .insertBulk( [ { "id": 1 } ] );
+                } ).notToThrow();
+
+                expect( function() {
+                    new qb.models.Query.QueryBuilder()
+                        .from( "users" )
+                        .select( "status" )
+                        .groupBy( "status" )
+                        .pretend()
+                        .paginate();
+                } ).notToThrow();
+            } );
+
+            it( "does not query database catalogs when pretending to drop all objects", function() {
+                var schema = new qb.models.Schema.SchemaBuilder( grammar = new qb.models.Grammars.PostgresGrammar() );
+
+                expect( function() {
+                    schema.pretend().dropAllObjects();
+                } ).notToThrow();
+            } );
         } );
     }
 

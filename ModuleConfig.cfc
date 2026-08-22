@@ -19,6 +19,7 @@ component {
             "shouldWrapValues": true,
             "validateQueryParamStructKeys": true,
             "integerSQLType": "INTEGER",
+            "bigIntegerSQLType": "BIGINT",
             "decimalSQLType": "DECIMAL",
             "defaultOptions": {},
             "sqlCommenter": {
@@ -55,6 +56,7 @@ component {
             .initArg( name = "convertEmptyStringsToNull", value = settings.convertEmptyStringsToNull )
             .initArg( name = "validateQueryParamStructKeys", value = settings.validateQueryParamStructKeys )
             .initArg( name = "integerSQLType", value = settings.integerSQLType )
+            .initArg( name = "bigIntegerSQLType", value = settings.bigIntegerSQLType )
             .initArg( name = "decimalSQLType", value = settings.decimalSQLType );
 
         binder

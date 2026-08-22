@@ -24,6 +24,11 @@ component singleton displayname="QueryUtils" accessors="true" {
     property name="integerSQLType" default="INTEGER";
 
     /**
+     * Allow overriding default big integer numeric SQL type inferral.
+     */
+    property name="bigIntegerSQLType" default="BIGINT";
+
+    /**
      * Allow overriding default decimal numeric SQL type inferral.
      */
     property name="decimalSQLType" default="DECIMAL";
@@ -37,11 +42,13 @@ component singleton displayname="QueryUtils" accessors="true" {
         boolean validateQueryParamStructKeys = true,
         string integerSqlType = "INTEGER",
         string decimalSqlType = "DECIMAL",
-        any log
+        any log,
+        string bigIntegerSqlType = "BIGINT"
     ) {
         variables.convertEmptyStringsToNull = arguments.convertEmptyStringsToNull;
         variables.validateQueryParamStructKeys = arguments.validateQueryParamStructKeys;
         variables.integerSqlType = arguments.integerSqlType;
+        variables.bigIntegerSqlType = arguments.bigIntegerSqlType;
         variables.decimalSqlType = arguments.decimalSqlType;
         if ( !isNull( arguments.log ) ) {
             variables.log = arguments.log;
@@ -891,7 +898,12 @@ component singleton displayname="QueryUtils" accessors="true" {
 
     private string function deriveNumericSqlType( required numeric value ) {
         var isInteger = reFind( "^-?\d+$", arguments.value ) > 0;
-        return normalizeSqlType( isInteger ? variables.integerSqlType : variables.decimalSqlType );
+        if ( !isInteger ) {
+            return normalizeSqlType( variables.decimalSqlType );
+        }
+
+        var isBigInteger = arguments.value < -2147483648 || arguments.value > 2147483647;
+        return normalizeSqlType( isBigInteger ? variables.bigIntegerSqlType : variables.integerSqlType );
     }
 
     /**

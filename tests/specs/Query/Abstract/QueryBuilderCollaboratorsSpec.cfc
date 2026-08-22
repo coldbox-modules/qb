@@ -51,6 +51,19 @@ component extends="testbox.system.BaseSpec" {
                 expect( getCollaborators( builder ) ).toHaveLength( 1 );
             } );
 
+            it( "supports collaborators on QueryBuilder subclasses outside the qb package", function() {
+                var builder = prepareMock( new tests.resources.ExternalQueryBuilder() );
+
+                expect( function() {
+                    builder.where( function( query ) {
+                        query.where( "id", 1 );
+                    } );
+                } ).notToThrow();
+
+                expect( getCollaborators( builder ) ).toHaveKey( "QueryExecutor" );
+                expect( builder.wasWhereNestedCalled() ).toBeTrue();
+            } );
+
             it( "rebuilds validation after settings change", function() {
                 var builder = prepareBuilder();
                 builder.where( "id", 1 );

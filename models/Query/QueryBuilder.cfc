@@ -498,6 +498,14 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
     /**
+     * Returns the lazily instantiated executor for collaborators operating on
+     * this builder or one of its subclasses.
+     */
+    public QueryExecutor function getQueryExecutor() {
+        return getCollaborator( "QueryExecutor" );
+    }
+
+    /**
      * Returns the lazily instantiated predicate builder. It is cached separately
      * because predicate validation remains the only general collaborator involved
      * in a basic WHERE clause.

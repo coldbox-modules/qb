@@ -49,6 +49,25 @@ component extends="testbox.system.BaseSpec" {
                     expect( utils.inferSqlType( -100, variables.mockGrammar ) ).toBe( "INTEGER" );
                 } );
 
+                it( "uses integers through the signed 32-bit boundaries", function() {
+                    expect( utils.inferSqlType( javacast( "long", "2147483647" ), variables.mockGrammar ) ).toBe(
+                        "INTEGER"
+                    );
+                    expect( utils.inferSqlType( javacast( "long", "-2147483648" ), variables.mockGrammar ) ).toBe(
+                        "INTEGER"
+                    );
+                } );
+
+                it( "uses big integers outside the signed 32-bit boundaries", function() {
+                    expect( utils.inferSqlType( javacast( "long", "2147483648" ), variables.mockGrammar ) ).toBe(
+                        "BIGINT"
+                    );
+                    expect( utils.inferSqlType( javacast( "long", "-2147483649" ), variables.mockGrammar ) ).toBe(
+                        "BIGINT"
+                    );
+                    expect( utils.inferSqlType( javacast( "long", "348060777867223040" ), variables.mockGrammar ) ).toBe( "BIGINT" );
+                } );
+
                 it( "decimals", function() {
                     expect( utils.inferSqlType( 4.50, variables.mockGrammar ) ).toBe( "DECIMAL" );
                 } );

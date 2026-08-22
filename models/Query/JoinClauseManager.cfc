@@ -29,7 +29,7 @@ component {
     ) {
         if ( arguments.builder.getUtils().isBuilder( arguments.table ) ) {
             arguments.table = arguments.builder
-                .getCollaborator( "QueryExecutor" )
+                .getQueryExecutor()
                 .cloneJoinClause( arguments.builder, arguments.table, arguments.builder );
             if ( arguments.preventDuplicateJoins && containsJoin( arguments.builder, arguments.table ) ) {
                 return arguments.builder;
@@ -40,21 +40,15 @@ component {
         var join = newJoin( builder = arguments.builder, type = arguments.type, table = arguments.table );
 
         if ( isClosure( arguments.first ) || isCustomFunction( arguments.first ) ) {
-            var commonTableState = arguments.builder
-                .getCollaborator( "QueryExecutor" )
-                .captureCommonTableState( arguments.builder );
+            var commonTableState = arguments.builder.getQueryExecutor().captureCommonTableState( arguments.builder );
             try {
                 arguments.first( join );
             } catch ( any e ) {
-                arguments.builder
-                    .getCollaborator( "QueryExecutor" )
-                    .restoreCommonTableState( arguments.builder, commonTableState );
+                arguments.builder.getQueryExecutor().restoreCommonTableState( arguments.builder, commonTableState );
                 rethrow;
             }
             if ( arguments.preventDuplicateJoins && containsJoin( arguments.builder, join ) ) {
-                arguments.builder
-                    .getCollaborator( "QueryExecutor" )
-                    .restoreCommonTableState( arguments.builder, commonTableState );
+                arguments.builder.getQueryExecutor().restoreCommonTableState( arguments.builder, commonTableState );
                 return arguments.builder;
             }
             return attachJoin( arguments.builder, join );
@@ -111,7 +105,7 @@ component {
         string type = "inner",
         boolean where = false
     ) {
-        var executor = arguments.builder.getCollaborator( "QueryExecutor" );
+        var executor = arguments.builder.getQueryExecutor();
         var commonTableState = executor.captureCommonTableState( arguments.builder );
         try {
             if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {
@@ -161,7 +155,7 @@ component {
         required string type,
         required any tableLikeSource
     ) {
-        var executor = arguments.builder.getCollaborator( "QueryExecutor" );
+        var executor = arguments.builder.getQueryExecutor();
         var commonTableState = executor.captureCommonTableState( arguments.builder );
         try {
             if (
@@ -220,7 +214,7 @@ component {
      * Builds and attaches a cross join against a derived table.
      */
     public QueryBuilder function crossJoinSub( required QueryBuilder builder, required any alias, required any input ) {
-        var executor = arguments.builder.getCollaborator( "QueryExecutor" );
+        var executor = arguments.builder.getQueryExecutor();
         var commonTableState = executor.captureCommonTableState( arguments.builder );
         try {
             if ( isClosure( arguments.input ) || isCustomFunction( arguments.input ) ) {

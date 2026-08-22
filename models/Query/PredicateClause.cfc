@@ -14,7 +14,7 @@ component {
         string combinator = "and"
     ) {
         if ( isClosure( arguments.column ) || isCustomFunction( arguments.column ) ) {
-            return whereNested( arguments.builder, arguments.column, arguments.combinator );
+            return arguments.builder.whereNested( arguments.column, arguments.combinator );
         }
 
         arguments.builder.getQueryValidator().validateCombinator( arguments.combinator );
@@ -314,9 +314,7 @@ component {
     ) {
         arguments.builder.getQueryValidator().validateCombinator( arguments.combinator );
         if ( !arguments.query.getWheres().isEmpty() ) {
-            arguments.query = arguments.builder
-                .getCollaborator( "QueryExecutor" )
-                .snapshotBuilder( arguments.builder, arguments.query );
+            arguments.query = arguments.builder.getQueryExecutor().snapshotBuilder( arguments.builder, arguments.query );
             arguments.builder
                 .getWheres()
                 .append( { type: "nested", query: arguments.query, combinator: arguments.combinator } );
@@ -378,9 +376,7 @@ component {
             arguments.query = arguments.builder.newQuery();
             callback( arguments.query );
         }
-        arguments.query = arguments.builder
-            .getCollaborator( "QueryExecutor" )
-            .snapshotBuilder( arguments.builder, arguments.query );
+        arguments.query = arguments.builder.getQueryExecutor().snapshotBuilder( arguments.builder, arguments.query );
 
         var type = arguments.negate ? "notNullSub" : "nullSub";
         arguments.builder.getWheres().append( { type: type, query: arguments.query, combinator: arguments.combinator } );
@@ -416,14 +412,10 @@ component {
         }
 
         if ( !isNull( arguments.start ) && arguments.builder.getUtils().isBuilder( arguments.start ) ) {
-            arguments.start = arguments.builder
-                .getCollaborator( "QueryExecutor" )
-                .snapshotBuilder( arguments.builder, arguments.start );
+            arguments.start = arguments.builder.getQueryExecutor().snapshotBuilder( arguments.builder, arguments.start );
         }
         if ( !isNull( arguments.end ) && arguments.builder.getUtils().isBuilder( arguments.end ) ) {
-            arguments.end = arguments.builder
-                .getCollaborator( "QueryExecutor" )
-                .snapshotBuilder( arguments.builder, arguments.end );
+            arguments.end = arguments.builder.getQueryExecutor().snapshotBuilder( arguments.builder, arguments.end );
         }
 
         var bindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
@@ -591,9 +583,7 @@ component {
         }
         var typedColumn = toColumnType( arguments.builder, arguments.column );
         var columnBindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
-        arguments.query = arguments.builder
-            .getCollaborator( "QueryExecutor" )
-            .snapshotBuilder( arguments.builder, arguments.query );
+        arguments.query = arguments.builder.getQueryExecutor().snapshotBuilder( arguments.builder, arguments.query );
         arguments.builder
             .getWheres()
             .append( {
@@ -625,9 +615,7 @@ component {
         }
         var typedColumn = toColumnType( arguments.builder, arguments.column );
         var columnBindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
-        arguments.query = arguments.builder
-            .getCollaborator( "QueryExecutor" )
-            .snapshotBuilder( arguments.builder, arguments.query );
+        arguments.query = arguments.builder.getQueryExecutor().snapshotBuilder( arguments.builder, arguments.query );
 
         var type = arguments.negate ? "notInSub" : "inSub";
         arguments.builder
@@ -652,9 +640,7 @@ component {
         combinator = "and",
         negate = false
     ) {
-        arguments.query = arguments.builder
-            .getCollaborator( "QueryExecutor" )
-            .snapshotBuilder( arguments.builder, arguments.query );
+        arguments.query = arguments.builder.getQueryExecutor().snapshotBuilder( arguments.builder, arguments.query );
         var type = arguments.negate ? "notExists" : "exists";
         arguments.builder.getWheres().append( { type: type, query: arguments.query, combinator: arguments.combinator } );
         arguments.builder.addBindings( arguments.query.getBindings(), "where" );

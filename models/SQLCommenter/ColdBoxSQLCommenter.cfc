@@ -20,14 +20,17 @@ component extends="SQLCommenter" singleton accessors="true" {
      * Set up the commenters array with configured Commenter components.
      */
     function onDIComplete() {
-        variables.commenters = variables.settings.sqlCommenter.commenters.map( ( commenterInfo ) => {
+        variables.commenters = [];
+        for ( var commenterInfo in variables.settings.sqlCommenter.commenters ) {
             param commenterInfo.properties = {};
             if ( !commenterInfo.keyExists( "class" ) ) {
                 throw( "A commenter must have a class pointing to a WireBox mapping" );
             }
 
-            return variables.wirebox.getInstance( commenterInfo.class ).setProperties( commenterInfo.properties );
-        } );
+            variables.commenters.append(
+                variables.wirebox.getInstance( commenterInfo.class ).setProperties( commenterInfo.properties )
+            );
+        }
     }
 
     /**
@@ -45,8 +48,9 @@ component extends="SQLCommenter" singleton accessors="true" {
             return arguments.sql;
         }
 
-        var comments = variables.commenters.reduce( ( acc, commenter ) => {
-            acc.append(
+        var comments = {};
+        for ( var commenter in variables.commenters ) {
+            comments.append(
                 commenter.getComments(
                     sql = sql,
                     datasource = isNull( datasource ) ? javacast( "null", "" ) : datasource,
@@ -54,8 +58,7 @@ component extends="SQLCommenter" singleton accessors="true" {
                 ),
                 true
             );
-            return acc;
-        }, {} );
+        }
 
         return appendCommentsToSQL( arguments.sql, comments );
     }

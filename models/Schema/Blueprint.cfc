@@ -582,8 +582,14 @@ component accessors="true" {
     }
 
     public array function toSql() {
-        var originalCommands = variables.commands.map( ( command ) => command );
-        var originalIndexes = variables.indexes.map( ( index ) => index );
+        var originalCommands = [];
+        for ( var command in variables.commands ) {
+            originalCommands.append( command );
+        }
+        var originalIndexes = [];
+        for ( var index in variables.indexes ) {
+            originalIndexes.append( index );
+        }
         var statements = [];
         try {
             // we use a for loop here because we can potentially modify this array while looping over it.

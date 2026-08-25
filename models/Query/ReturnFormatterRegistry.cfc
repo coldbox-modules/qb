@@ -81,29 +81,11 @@ component accessors="true" singleton {
     }
 
     private void function registerBuiltInReturnFormatters() {
-        registerReturnFormatter(
-            name = "query",
-            factory = function( options ) {
-                return function( q ) {
-                    return q;
-                };
-            }
-        );
-        registerReturnFormatter(
-            name = "none",
-            factory = function( options ) {
-                return function( q ) {
-                    return q;
-                };
-            }
-        );
+        registerReturnFormatter( name = "query", factory = new qb.models.Query.Formatters.IdentityFormatterFactory() );
+        registerReturnFormatter( name = "none", factory = new qb.models.Query.Formatters.IdentityFormatterFactory() );
         registerReturnFormatter(
             name = "array",
-            factory = function( options ) {
-                return function( q ) {
-                    return variables.utils.queryToArrayOfStructs( q );
-                };
-            }
+            factory = new qb.models.Query.Formatters.ArrayFormatterFactory( variables.utils )
         );
         registerReturnFormatter(
             name = "struct",

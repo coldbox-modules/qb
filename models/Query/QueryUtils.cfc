@@ -53,10 +53,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         if ( !isNull( arguments.log ) ) {
             variables.log = arguments.log;
         } else {
-            variables.log = {
-                "debug": function() {
-                }
-            };
+            variables.log = new qb.models.Support.NullLogger();
         }
         return this;
     }
@@ -516,7 +513,7 @@ component singleton displayname="QueryUtils" accessors="true" {
                 }
                 inferredTypes.append( inferSqlType( item, arguments.grammar ) );
             }
-            return arraySame( inferredTypes, ( sqlType ) => sqlType, "VARCHAR" );
+            return arraySame( inferredTypes, "VARCHAR" );
         }
 
         if ( isStruct( value ) ) {
@@ -704,9 +701,9 @@ component singleton displayname="QueryUtils" accessors="true" {
         if ( isPureBoxLang() ) {
             queryColumns = arguments.q.getColumnNames();
         } else {
-            queryColumns = getMetadata( arguments.q ).map( function( item ) {
-                return item.name;
-            } );
+            for ( var item in getMetadata( arguments.q ) ) {
+                queryColumns.append( item.name );
+            }
         }
 
         var results = [];
@@ -757,47 +754,42 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     public query function queryRemoveColumns( required query q, required string columns ) {
         var columnsToRemove = arguments.columns.listToArray();
-        var queryColumnInfo = isPureBoxLang() ? q
-            .getColumnNames()
-            .map( ( name ) => {
-                return { "name": name, "TypeName": "varchar" };
-            } ) : getMetadata( q );
-        var queryAsArray = queryToArrayOfStructs( q );
-        queryAsArray.each( function( row ) {
-            columnsToRemove.each( function( col ) {
-                structDelete( row, col );
-            } );
-        } );
-
-        var newColumns = queryColumnInfo
-            .filter( function( column ) {
-                return !arrayContainsNoCase( columnsToRemove, column.name );
-            } )
-            .map( function( column ) {
-                return column.name;
-            } );
-
-        var newColumnTypes = newColumns.map( function( col ) {
-            var foundColumn = queryColumnInfo.filter( function( c ) {
-                return c.name == col;
-            } );
-            if ( arrayIsEmpty( foundColumn ) ) {
-                return "varchar";
+        var queryColumnInfo = [];
+        if ( isPureBoxLang() ) {
+            for ( var name in q.getColumnNames() ) {
+                queryColumnInfo.append( { "name": name, "TypeName": "varchar" } );
             }
-            var foundType = lCase( foundColumn[ 1 ].TypeName );
+        } else {
+            queryColumnInfo = getMetadata( q );
+        }
+        var queryAsArray = queryToArrayOfStructs( q );
+        for ( var row in queryAsArray ) {
+            for ( var col in columnsToRemove ) {
+                structDelete( row, col );
+            }
+        }
+
+        var newColumns = [];
+        var newColumnTypes = [];
+        for ( var column in queryColumnInfo ) {
+            if ( arrayContainsNoCase( columnsToRemove, column.name ) ) {
+                continue;
+            }
+            newColumns.append( column.name );
+            var foundType = lCase( column.TypeName );
             switch ( foundType ) {
                 case "number":
-                    return "double";
+                    newColumnTypes.append( "double" );
+                    break;
                 case "varchar2":
-                    return "varchar";
                 case "char":
-                    return "varchar";
                 case "clob":
-                    return "varchar";
+                    newColumnTypes.append( "varchar" );
+                    break;
                 default:
-                    return foundType;
+                    newColumnTypes.append( foundType );
             }
-        } );
+        }
 
         return queryNew( newColumns.toList(), newColumnTypes.toList(), queryAsArray );
     }
@@ -818,16 +810,15 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     /**
-     * Returns the value of the closure if every element in the array returns the same value.
+     * Returns the first value if every element in the array is the same.
      * Otherwise, it returns the default value.
      *
      * @args The array of elements.
-     * @closure The closure to execute and retrieve the compared value.
      * @defaultValue The default value to return if the array does not return all the same values. Default: "".
      *
      * @return any
      */
-    private any function arraySame( required array args, required any closure, any defaultValue = "" ) {
+    private any function arraySame( required array args, any defaultValue = "" ) {
         if ( arrayLen( arguments.args ) == 0 ) {
             return arguments.defaultValue;
         }
@@ -835,12 +826,12 @@ component singleton displayname="QueryUtils" accessors="true" {
         if ( isNull( arguments.args[ 1 ] ) ) {
             return arguments.defaultValue;
         }
-        var initial = closure( arguments.args[ 1 ] );
+        var initial = arguments.args[ 1 ];
 
         for ( var i = 1; i <= arguments.args.len(); i++ ) {
             if (
                 isNull( arguments.args[ i ] ) ||
-                closure( arguments.args[ i ] ) != initial
+                arguments.args[ i ] != initial
             ) {
                 return defaultValue;
             }
@@ -1070,15 +1061,15 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     public string function serializeBindings( required array bindings, required any grammar ) {
-        return serializeJSON(
-            arguments.bindings.map( function( binding ) {
-                var newBinding = extractBinding( binding, grammar );
-                if ( isBinary( newBinding.value ) ) {
-                    newBinding.value = toBase64( newBinding.value );
-                }
-                return newBinding;
-            } )
-        );
+        var serializedBindings = [];
+        for ( var binding in arguments.bindings ) {
+            var newBinding = extractBinding( binding, arguments.grammar );
+            if ( isBinary( newBinding.value ) ) {
+                newBinding.value = toBase64( newBinding.value );
+            }
+            serializedBindings.append( newBinding );
+        }
+        return serializeJSON( serializedBindings );
     }
 
     private boolean function isFloatingPoint( required struct binding ) {
@@ -1119,7 +1110,15 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     private boolean function isPureBoxLang() {
-        return server.keyExists( "boxlang" ) && !server.boxlang.modules.some( ( moduleName ) => findNoCase( "compat-cfml", moduleName ) > 0 );
+        if ( !server.keyExists( "boxlang" ) ) {
+            return false;
+        }
+        for ( var moduleName in server.boxlang.modules ) {
+            if ( findNoCase( "compat-cfml", moduleName ) > 0 ) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void function checkForNonQueryParamStructKeys( required struct param ) {
@@ -1135,7 +1134,12 @@ component singleton displayname="QueryUtils" accessors="true" {
             "scale",
             "value"
         ];
-        var extraKeys = param.keyArray().filter( ( key ) => !validKeys.containsNoCase( key ) );
+        var extraKeys = [];
+        for ( var key in param.keyArray() ) {
+            if ( !validKeys.containsNoCase( key ) ) {
+                extraKeys.append( key );
+            }
+        }
         if ( !extraKeys.isEmpty() ) {
             throw(
                 type = "QBInvalidQueryParam",
@@ -1161,10 +1165,12 @@ component singleton displayname="QueryUtils" accessors="true" {
             "scale",
             "value"
         ];
-        return param
-            .keyArray()
-            .filter( ( key ) => !validKeys.containsNoCase( key ) )
-            .isEmpty();
+        for ( var key in param.keyArray() ) {
+            if ( !validKeys.containsNoCase( key ) ) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean function isBoxLang() {

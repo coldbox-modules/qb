@@ -50,6 +50,9 @@ component accessors="true" {
         variables.defaultSchema = arguments.defaultSchema;
         variables.pretending = false;
         variables.queryLog = [];
+        variables.queryLogHook = function( data ) {
+            variables.queryLog.append( arguments.data );
+        };
         variables.shouldWrapValues = javacast( "null", "" );
         return this;
     }
@@ -88,20 +91,7 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.table ) );
         arguments.callback( blueprint );
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        [],
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), [], arguments.options );
         }
         return blueprint;
     }
@@ -127,20 +117,7 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        query.getBindings(),
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), query.getBindings(), arguments.options );
         }
 
         return blueprint;
@@ -167,20 +144,7 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.newTableName ) );
 
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        query.getBindings(),
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), query.getBindings(), arguments.options );
         }
 
         return blueprint;
@@ -207,19 +171,12 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
-            var statements = blueprint.toSql();
-            statements.each( function( statement, index ) {
-                getGrammar().runQuery(
-                    statement,
-                    index == statements.len() ? query.getBindings() : [],
-                    options,
-                    "result",
-                    variables.pretending,
-                    function( data ) {
-                        variables.queryLog.append( data );
-                    }
-                );
-            } );
+            executeStatements(
+                blueprint.toSql(),
+                query.getBindings(),
+                arguments.options,
+                true
+            );
         }
 
         return blueprint;
@@ -237,20 +194,7 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.view ) );
 
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        [],
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), [], arguments.options );
         }
 
         return blueprint;
@@ -276,20 +220,7 @@ component accessors="true" {
         blueprint.addCommand( "drop" );
         blueprint.setTable( qualifyTable( arguments.table ) );
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        [],
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), [], arguments.options );
         }
         return blueprint;
     }
@@ -314,20 +245,7 @@ component accessors="true" {
         blueprint.addCommand( "truncate" );
         blueprint.setTable( qualifyTable( arguments.table ) );
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        [],
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), [], arguments.options );
         }
         return blueprint;
     }
@@ -353,20 +271,7 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.table ) );
         blueprint.setIfExists( true );
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        [],
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), [], arguments.options );
         }
         return blueprint;
     }
@@ -398,20 +303,7 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.table ) );
         arguments.callback( blueprint );
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        [],
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), [], arguments.options );
         }
         return blueprint;
     }
@@ -442,20 +334,7 @@ component accessors="true" {
         blueprint.setTable( qualifyTable( arguments.from ) );
         blueprint.addCommand( "renameTable", { to: arguments.to } );
         if ( arguments.execute ) {
-            blueprint
-                .toSql()
-                .each( function( statement ) {
-                    getGrammar().runQuery(
-                        statement,
-                        [],
-                        options,
-                        "result",
-                        variables.pretending,
-                        function( data ) {
-                            variables.queryLog.append( data );
-                        }
-                    );
-                } );
+            executeStatements( blueprint.toSql(), [], arguments.options );
         }
         return blueprint;
     }
@@ -513,9 +392,7 @@ component accessors="true" {
                 arguments.options,
                 "query",
                 variables.pretending,
-                function( data ) {
-                    variables.queryLog.append( data );
-                }
+                variables.queryLogHook
             );
             return isDefined( "q.RecordCount" ) ? q.RecordCount > 0 : false;
         }
@@ -559,9 +436,7 @@ component accessors="true" {
                 arguments.options,
                 "query",
                 variables.pretending,
-                function( data ) {
-                    variables.queryLog.append( data );
-                }
+                variables.queryLogHook
             );
             return isDefined( "q.RecordCount" ) ? q.RecordCount > 0 : false;
         }
@@ -595,18 +470,7 @@ component accessors="true" {
             grammar.popShouldWrapValuesContext();
         }
         if ( arguments.execute ) {
-            statements.each( function( statement ) {
-                getGrammar().runQuery(
-                    statement,
-                    [],
-                    options,
-                    "result",
-                    variables.pretending,
-                    function( data ) {
-                        variables.queryLog.append( data );
-                    }
-                );
-            } );
+            executeStatements( statements, [], arguments.options );
         }
         return statements;
     }
@@ -629,9 +493,7 @@ component accessors="true" {
                 arguments.options,
                 "result",
                 variables.pretending,
-                function( data ) {
-                    variables.queryLog.append( data );
-                }
+                variables.queryLogHook
             );
         }
         return statement;
@@ -655,9 +517,7 @@ component accessors="true" {
                 arguments.options,
                 "result",
                 variables.pretending,
-                function( data ) {
-                    variables.queryLog.append( data );
-                }
+                variables.queryLogHook
             );
         }
         return statement;
@@ -687,6 +547,30 @@ component accessors="true" {
         var mergedOptions = structCopy( arguments.options );
         structAppend( mergedOptions, variables.defaultOptions, false );
         return mergedOptions;
+    }
+
+    /**
+     * Executes compiled schema statements without per-statement callback closures.
+     */
+    private void function executeStatements(
+        required array statements,
+        array bindings = [],
+        required struct options,
+        boolean bindingsOnlyOnLastStatement = false
+    ) {
+        for ( var i = 1; i <= arguments.statements.len(); i++ ) {
+            var statementBindings = arguments.bindingsOnlyOnLastStatement && i != arguments.statements.len()
+             ? []
+             : arguments.bindings;
+            getGrammar().runQuery(
+                arguments.statements[ i ],
+                statementBindings,
+                arguments.options,
+                "result",
+                variables.pretending,
+                variables.queryLogHook
+            );
+        }
     }
 
     /**

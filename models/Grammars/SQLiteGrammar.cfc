@@ -123,10 +123,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var returningColumns = arguments.query
-                .getReturning()
-                .map( wrapColumn )
-                .toList( ", " );
+            var wrappedReturningColumns = [];
+            for ( var column in arguments.query.getReturning() ) {
+                wrappedReturningColumns.append( wrapColumn( column ) );
+            }
+            var returningColumns = wrappedReturningColumns.toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
             return super.compileInsert( argumentCollection = arguments ) & returningClause;
         } finally {
@@ -179,18 +180,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var updateList = columns
-                .map( function( column ) {
-                    var value = updateMap[ column.original ];
-                    var assignment = "?";
-                    if ( utils.isExpression( value ) ) {
-                        assignment = value.getSql();
-                    } else if ( utils.isBuilder( value ) ) {
-                        assignment = "(#value.toSQL()#)";
-                    }
-                    return "#wrapColumn( column.formatted )# = #assignment#";
-                } )
-                .toList( ", " );
+            var updateAssignments = [];
+            for ( var column in arguments.columns ) {
+                var value = arguments.updateMap[ column.original ];
+                var assignment = "?";
+                if ( utils.isExpression( value ) ) {
+                    assignment = value.getSql();
+                } else if ( utils.isBuilder( value ) ) {
+                    assignment = "(#value.toSQL()#)";
+                }
+                updateAssignments.append( "#wrapColumn( column.formatted )# = #assignment#" );
+            }
+            var updateList = updateAssignments.toList( ", " );
 
             var updateStatement = "UPDATE #wrapQueryTable( query )# SET #updateList#";
 
@@ -200,41 +201,39 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 updateStatement = trim( "#updateStatement# #compileWheres( query, query.getWheres() )#" );
             }
 
-            var returningColumns = arguments.query
-                .getReturning()
-                .map( wrapColumn )
-                .toList( ", " );
+            var wrappedReturningColumns = [];
+            for ( var column in arguments.query.getReturning() ) {
+                wrappedReturningColumns.append( wrapColumn( column ) );
+            }
+            var returningColumns = wrappedReturningColumns.toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
             var rowLimitClause = trim(
                 "#compileLimitValue( query, query.getLimitValue() )# #compileOffsetValue( query, query.getOffsetValue() )#"
             );
-            var trailingClauses = arrayMap( [ returningClause, compileOrders( query, query.getOrders() ), rowLimitClause ], function( clause ) {
-                return trim( clause );
-            } );
-            trailingClauses = arrayFilter( trailingClauses, function( clause ) {
-                return clause != "";
-            } );
-            trailingClauses = arrayToList( trailingClauses, " " );
+            var trailingClauses = [];
+            for ( var clause in [ returningClause, compileOrders( query, query.getOrders() ), rowLimitClause ] ) {
+                clause = trim( clause );
+                if ( clause != "" ) {
+                    trailingClauses.append( clause );
+                }
+            }
+            var trailingClauseSql = arrayToList( trailingClauses, " " );
 
             if ( joins.isEmpty() ) {
                 return trim(
-                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & trailingClauses
+                    compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & trailingClauseSql
                 );
             }
 
-            var updateQuery = arguments.query;
-            var joinedTables = joins
-                .map( function( join ) {
-                    return wrapTable( join.getTable() );
-                } )
-                .toList( ", " );
-            var predicates = joins
-                .map( function( join ) {
-                    return trim( removeLeadingFilterKeyword( compileWheres( updateQuery, join.getWheres() ) ) );
-                } )
-                .filter( function( predicate ) {
-                    return predicate != "";
-                } );
+            var joinedTables = [];
+            var predicates = [];
+            for ( var join in joins ) {
+                joinedTables.append( wrapTable( join.getTable() ) );
+                var predicate = trim( removeLeadingFilterKeyword( compileWheres( arguments.query, join.getWheres() ) ) );
+                if ( predicate != "" ) {
+                    predicates.append( predicate );
+                }
+            }
             var queryPredicate = trim(
                 removeLeadingFilterKeyword( compileWheres( arguments.query, query.getWheres() ) )
             );
@@ -242,13 +241,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 predicates.append( queryPredicate );
             }
 
-            updateStatement &= " FROM #joinedTables#";
+            updateStatement &= " FROM #joinedTables.toList( ", " )#";
             if ( !predicates.isEmpty() ) {
                 updateStatement &= " WHERE #predicates.toList( " AND " )#";
             }
 
             return trim(
-                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & trailingClauses
+                compileCommonTables( query, query.getCommonTables() ) & " " & updateStatement & " " & trailingClauseSql
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -292,10 +291,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var returningColumns = arguments.query
-                .getReturning()
-                .map( wrapColumn )
-                .toList( ", " );
+            var wrappedReturningColumns = [];
+            for ( var column in arguments.query.getReturning() ) {
+                wrappedReturningColumns.append( wrapColumn( column ) );
+            }
+            var returningColumns = wrappedReturningColumns.toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
             return trim(
                 compileCommonTables( query, query.getCommonTables() ) & " DELETE FROM #wrapQueryTable( query )# #compileWheres( query, query.getWheres() )##returningClause# #compileOrders( query, query.getOrders() )# #compileLimitValue( query, query.getLimitValue() )# #compileOffsetValue( query, query.getOffsetValue() )#"
@@ -341,37 +341,40 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             ) : this.compileInsertUsing( arguments.qb, arguments.insertColumns, arguments.source );
             var updateString = "";
             if ( isArray( arguments.updates ) ) {
-                updateString = arguments.updateColumns
-                    .map( function( column ) {
-                        return "#wrapColumn( column.formatted )# = EXCLUDED.#wrapColumn( column.formatted )#";
-                    } )
-                    .toList( ", " );
+                var updateAssignments = [];
+                for ( var column in arguments.updateColumns ) {
+                    updateAssignments.append(
+                        "#wrapColumn( column.formatted )# = EXCLUDED.#wrapColumn( column.formatted )#"
+                    );
+                }
+                updateString = updateAssignments.toList( ", " );
             } else {
-                updateString = arguments.updateColumns
-                    .map( function( column ) {
-                        var equalsClause = "?";
-                        if (
-                            !isNull( updates[ column.original ] ) && getUtils().isExpression(
-                                updates[ column.original ]
-                            )
-                        ) {
-                            equalsClause = updates[ column.original ].getSQL();
-                        }
-                        return "#wrapColumn( column.formatted )# = #equalsClause#";
-                    } )
-                    .toList( ", " );
+                var updateAssignments = [];
+                for ( var column in arguments.updateColumns ) {
+                    var equalsClause = "?";
+                    if (
+                        !isNull( arguments.updates[ column.original ] ) && getUtils().isExpression(
+                            arguments.updates[ column.original ]
+                        )
+                    ) {
+                        equalsClause = arguments.updates[ column.original ].getSQL();
+                    }
+                    updateAssignments.append( "#wrapColumn( column.formatted )# = #equalsClause#" );
+                }
+                updateString = updateAssignments.toList( ", " );
             }
 
-            var constraintString = arguments.target
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
+            var wrappedTargetColumns = [];
+            for ( var column in arguments.target ) {
+                wrappedTargetColumns.append( wrapColumn( column.formatted ) );
+            }
+            var constraintString = wrappedTargetColumns.toList( ", " );
 
-            var returningColumns = arguments.qb
-                .getReturning()
-                .map( wrapColumn )
-                .toList( ", " );
+            var wrappedReturningColumns = [];
+            for ( var column in arguments.qb.getReturning() ) {
+                wrappedReturningColumns.append( wrapColumn( column ) );
+            }
+            var returningColumns = wrappedReturningColumns.toList( ", " );
             var returningClause = returningColumns != "" ? " RETURNING #returningColumns#" : "";
 
             return insertString & " ON CONFLICT (#constraintString#) DO UPDATE SET #updateString##returningClause#";
@@ -512,13 +515,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function generateAutoIncrement( column, blueprint ) {
         // SQLite does not allow the primary key defined as a constraint when using autoincrement
         if ( column.getAutoIncrement() ) {
-            blueprint.setIndexes(
-                blueprint
-                    .getIndexes()
-                    .filter( function( index ) {
-                        return index.getType() != "primary";
-                    } )
-            );
+            var nonPrimaryIndexes = [];
+            for ( var index in blueprint.getIndexes() ) {
+                if ( index.getType() != "primary" ) {
+                    nonPrimaryIndexes.append( index );
+                }
+            }
+            blueprint.setIndexes( nonPrimaryIndexes );
         }
         return column.getAutoIncrement() ? "PRIMARY KEY AUTOINCREMENT" : "";
     }
@@ -526,12 +529,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     function generateUniqueConstraint( column, blueprint ) {
         // SQLite does not have an enum type so we add an CHECK constraint to enforce specific values
         if ( column.getType() == "enum" ) {
-            var values = column
-                .getValues()
-                .map( function( value ) {
-                    return quoteStringLiteral( value );
-                } )
-                .toList( ", " );
+            var quotedValues = [];
+            for ( var value in column.getValues() ) {
+                quotedValues.append( quoteStringLiteral( value ) );
+            }
+            var values = quotedValues.toList( ", " );
             return "CHECK (#wrapColumn( { "type": "simple", "value": column.getName() } )# IN (#values#))";
         }
 
@@ -752,12 +754,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     ===================================*/
 
     function indexUnique( index, tableName, isAlter = false ) {
-        var references = arguments.index
-            .getColumns()
-            .map( function( column ) {
-                return wrapColumn( { "type": "simple", "value": column } );
-            } )
-            .toList( ", " );
+        var wrappedReferences = [];
+        for ( var column in arguments.index.getColumns() ) {
+            wrappedReferences.append( wrapColumn( { "type": "simple", "value": column } ) );
+        }
+        var references = wrappedReferences.toList( ", " );
 
         if ( isAlter ) {
             return "CREATE UNIQUE INDEX #wrapValue( arguments.index.getName() )# ON #wrapTable( tableName )#(#references#)";
@@ -767,29 +768,26 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
     }
 
     function indexPrimary( index ) {
-        var references = arguments.index
-            .getColumns()
-            .map( function( column ) {
-                return wrapColumn( { "type": "simple", "value": column } );
-            } )
-            .toList( ", " );
+        var wrappedReferences = [];
+        for ( var column in arguments.index.getColumns() ) {
+            wrappedReferences.append( wrapColumn( { "type": "simple", "value": column } ) );
+        }
+        var references = wrappedReferences.toList( ", " );
         return "PRIMARY KEY (#references#)";
     }
 
     function indexForeign( index ) {
         // FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
-        var keys = arguments.index
-            .getForeignKey()
-            .map( function( key ) {
-                return wrapColumn( { "type": "simple", "value": key } );
-            } )
-            .toList( ", " );
-        var references = arguments.index
-            .getColumns()
-            .map( function( column ) {
-                return wrapColumn( { "type": "simple", "value": column } );
-            } )
-            .toList( ", " );
+        var wrappedKeys = [];
+        for ( var key in arguments.index.getForeignKey() ) {
+            wrappedKeys.append( wrapColumn( { "type": "simple", "value": key } ) );
+        }
+        var keys = wrappedKeys.toList( ", " );
+        var wrappedReferences = [];
+        for ( var column in arguments.index.getColumns() ) {
+            wrappedReferences.append( wrapColumn( { "type": "simple", "value": column } ) );
+        }
+        var references = wrappedReferences.toList( ", " );
         return arrayToList(
             [
                 "FOREIGN KEY (#keys#)",

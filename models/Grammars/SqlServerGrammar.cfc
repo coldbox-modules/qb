@@ -151,11 +151,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         if ( arguments.jsonPath.path.isEmpty() ) {
             return "#wrapJsonColumn( arguments.jsonPath )# IS NOT NULL";
         }
-        var path = duplicate( arguments.jsonPath.path );
-        var key = path.pop();
-        var openJson = path.isEmpty()
+        var pathSegmentCount = arguments.jsonPath.path.len();
+        var key = arguments.jsonPath.path[ pathSegmentCount ];
+        var openJson = pathSegmentCount == 1
          ? "OPENJSON(#wrapJsonColumn( arguments.jsonPath )#)"
-         : "OPENJSON(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( path )#')";
+         : "OPENJSON(#wrapJsonColumn( arguments.jsonPath )#, '#buildJsonPath( arguments.jsonPath.path, pathSegmentCount - 1 )#')";
         return "'#replace( key, "'", "''", "all" )#' IN (SELECT [key] FROM #openJson#)";
     }
 

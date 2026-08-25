@@ -93,7 +93,9 @@ component singleton displayname="QueryUtils" accessors="true" {
                 checkForNonQueryParamStructKeys( value );
             }
 
-            binding = structCopy( value );
+            for ( var key in value ) {
+                binding[ key ] = isNull( value[ key ] ) ? javacast( "null", "" ) : value[ key ];
+            }
         } else {
             binding = { value: normalizeSqlValue( value ) };
         }

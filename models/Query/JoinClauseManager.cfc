@@ -257,32 +257,28 @@ component {
      * Returns whether an equivalent join is already attached.
      */
     private boolean function containsJoin( required QueryBuilder builder, required JoinClause join ) {
-        return arguments.builder
-            .getJoins()
-            .find( function( existingJoin ) {
-                return existingJoin.isEqualTo( join );
-            } ) > 0;
+        for ( var existingJoin in arguments.builder.getJoins() ) {
+            if ( existingJoin.isEqualTo( arguments.join ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * Returns bindings in their compiled join order.
      */
     private array function getJoinBindings( required QueryBuilder builder, required JoinClause join ) {
-        var queryBuilder = arguments.builder;
         var bindings = [];
         if (
             arguments.join.isJoin() &&
             arguments.builder.getUtils().isExpression( arguments.join.getTable() )
         ) {
-            bindings.append(
-                arguments.join
-                    .getTable()
-                    .getBindings()
-                    .map( function( binding ) {
-                        return queryBuilder.getUtils().extractBinding( binding, queryBuilder.getGrammar() );
-                    } ),
-                true
-            );
+            for ( var binding in arguments.join.getTable().getBindings() ) {
+                bindings.append(
+                    arguments.builder.getUtils().extractBinding( binding, arguments.builder.getGrammar() )
+                );
+            }
         }
         bindings.append( arguments.join.getBindings(), true );
         return bindings;

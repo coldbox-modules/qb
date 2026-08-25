@@ -337,9 +337,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
         setReturnFormatterRegistry( arguments.returnFormatterRegistry );
         if ( isNull( arguments.columnFormatter ) ) {
-            arguments.columnFormatter = function( column ) {
-                return column;
-            };
+            arguments.columnFormatter = identityColumnFormatter;
         }
         setPaginationCollector( arguments.paginationCollector );
         setColumnFormatter( arguments.columnFormatter );
@@ -353,15 +351,21 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         setCollectQueryLog( arguments.collectQueryLog );
 
         if ( isNull( arguments.shouldMaxRowsOverrideToAll ) ) {
-            arguments.shouldMaxRowsOverrideToAll = function( maxRows ) {
-                return maxRows <= 0;
-            };
+            arguments.shouldMaxRowsOverrideToAll = defaultShouldMaxRowsOverrideToAll;
         }
         setShouldMaxRowsOverrideToAll( arguments.shouldMaxRowsOverrideToAll );
 
         setDefaultValues();
 
         return this;
+    }
+
+    private any function identityColumnFormatter( required any column ) {
+        return arguments.column;
+    }
+
+    private boolean function defaultShouldMaxRowsOverrideToAll( required numeric maxRows ) {
+        return arguments.maxRows <= 0;
     }
 
     /**
@@ -557,9 +561,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function select( any columns = "*" ) {
-        var newColumns = normalizeToArray( arguments.columns )
-            .map( ( column ) => applyColumnFormatter( column ) )
-            .map( ( column ) => mapToColumnType( column ) );
+        var newColumns = normalizeColumns( arguments.columns );
 
         if ( newColumns.isEmpty() ) {
             newColumns = [ { "type": "simple", "value": "*" } ];
@@ -620,6 +622,102 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
     }
 
+    /**
+     * Applies the configured formatter and type mapping without collection callbacks.
+     */
+    private array function normalizeColumns( required any columns ) {
+        var normalizedColumns = [];
+        for ( var column in normalizeToArray( arguments.columns ) ) {
+            normalizedColumns.append( mapToColumnType( applyColumnFormatter( column ) ) );
+        }
+        return normalizedColumns;
+    }
+
+    /**
+     * Builds raw expressions while assigning bindings only to the first expression.
+     */
+    private array function mapRawExpressions( required array expressions, required array bindings ) {
+        var rawExpressions = [];
+        for ( var i = 1; i <= arguments.expressions.len(); i++ ) {
+            rawExpressions.append( raw( arguments.expressions[ i ], i == 1 ? arguments.bindings : [] ) );
+        }
+        return rawExpressions;
+    }
+
+    /**
+     * Builds original/formatted column definitions for data modification statements.
+     */
+    private array function buildColumnDefinitions( required array columns, boolean sort = false ) {
+        var definitions = [];
+        for ( var column in arguments.columns ) {
+            definitions.append( { "original": column, "formatted": listLast( applyColumnFormatter( column ), "." ) } );
+        }
+        if ( arguments.sort ) {
+            definitions = sortColumnDefinitions( definitions );
+        }
+        return definitions;
+    }
+
+    /**
+     * Sorts column definitions without allocating a comparator closure.
+     */
+    private array function sortColumnDefinitions( required array columns ) {
+        for ( var i = 2; i <= arguments.columns.len(); i++ ) {
+            var currentColumn = arguments.columns[ i ];
+            var position = i - 1;
+            while (
+                position >= 1 &&
+                compareNoCase( currentColumn.formatted, arguments.columns[ position ].formatted ) < 0
+            ) {
+                arguments.columns[ position + 1 ] = arguments.columns[ position ];
+                position--;
+            }
+            arguments.columns[ position + 1 ] = currentColumn;
+        }
+        return arguments.columns;
+    }
+
+    /**
+     * Converts formatted column names to grammar-ready typed definitions.
+     */
+    private void function typeColumnDefinitions( required array columns ) {
+        for ( var column in arguments.columns ) {
+            column.formatted = mapToColumnType( column.formatted );
+        }
+    }
+
+    /**
+     * Builds per-row bindings and their flattened execution-order equivalent.
+     */
+    private struct function buildInsertBindingData( required array values, required array columns ) {
+        var rows = [];
+        var flattened = [];
+        for ( var value in arguments.values ) {
+            var row = [];
+            for ( var column in arguments.columns ) {
+                var binding = getUtils().extractBinding(
+                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
+                    variables.grammar
+                );
+                row.append( binding );
+                if ( getUtils().isNotExpression( binding ) ) {
+                    flattened.append( binding );
+                } else {
+                    flattened.append( extractExpressionBindings( binding ), true );
+                }
+            }
+            rows.append( row );
+        }
+        return { "rows": rows, "flattened": flattened };
+    }
+
+    private any function qualifyUpsertTargetColumn( required any column ) {
+        if ( listLen( arguments.column, "." ) > 1 ) {
+            return arguments.column;
+        }
+        return "qb_target.#arguments.column#";
+    }
+
 
     /**
      * Adds a sub-select to the query.
@@ -655,9 +753,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addSelect( required any columns ) {
-        var newColumns = normalizeToArray( arguments.columns )
-            .map( ( column ) => applyColumnFormatter( column ) )
-            .map( ( column ) => mapToColumnType( column ) );
+        var newColumns = normalizeColumns( arguments.columns );
         var newBindings = extractColumnBindings( newColumns );
         var selectedColumns = variables.columns.isEmpty() ? [] : arraySlice( variables.columns, 1 );
 
@@ -690,9 +786,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function selectRaw( required any expression, array bindings = [] ) {
-        var expressions = arrayWrap( arguments.expression );
-        var rawBindings = arguments.bindings;
-        return addSelect( expressions.map( ( expression, index ) => raw( expression, index == 1 ? rawBindings : [] ) ) );
+        return addSelect( mapRawExpressions( arrayWrap( arguments.expression ), arguments.bindings ) );
     }
 
     /**
@@ -738,9 +832,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function reselectRaw( required any expression, array bindings = [] ) {
-        var expressions = arrayWrap( arguments.expression );
-        var rawBindings = arguments.bindings;
-        return select( expressions.map( ( expression, index ) => raw( expression, index == 1 ? rawBindings : [] ) ) );
+        return select( mapRawExpressions( arrayWrap( arguments.expression ), arguments.bindings ) );
     }
 
     /********************************************************************************\
@@ -1449,12 +1541,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             if ( variables.joins.len() != arguments.otherQB.getJoins().len() ) {
                 return false;
             }
-            if (
-                variables.joins.some( function( j, index ) {
-                    return ( !j.isEqualTo( otherQB.getJoins()[ index ] ) );
-                } )
-            ) {
-                return false;
+            for ( var i = 1; i <= variables.joins.len(); i++ ) {
+                if ( !variables.joins[ i ].isEqualTo( arguments.otherQB.getJoins()[ i ] ) ) {
+                    return false;
+                }
             }
         }
 
@@ -1462,15 +1552,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             if ( variables.unions.len() != arguments.otherQB.getUnions().len() ) {
                 return false;
             }
-            if (
-                variables.unions.some( function( u, index ) {
-                    return (
-                        u[ "ALL" ] != otherQB.getUnions()[ index ][ "ALL" ] ||
-                        !u[ "QUERY" ].isEqualTo( otherQB.getUnions()[ index ][ "QUERY" ] )
-                    );
-                } )
-            ) {
-                return false;
+            for ( var i = 1; i <= variables.unions.len(); i++ ) {
+                if (
+                    variables.unions[ i ][ "ALL" ] != arguments.otherQB.getUnions()[ i ][ "ALL" ] ||
+                    !variables.unions[ i ][ "QUERY" ].isEqualTo( arguments.otherQB.getUnions()[ i ][ "QUERY" ] )
+                ) {
+                    return false;
+                }
             }
         }
 
@@ -1478,17 +1566,22 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             if ( variables.commonTables.len() != arguments.otherQB.getCommonTables().len() ) {
                 return false;
             }
-            if (
-                variables.commonTables.some( function( cT, index ) {
-                    return (
-                        !getUtils().arrayCompare( cT[ "COLUMNS" ], otherQB.getCommonTables()[ index ][ "COLUMNS" ] ) ||
-                        !getUtils().structCompare( cT[ "NAME" ], otherQB.getCommonTables()[ index ][ "NAME" ] ) ||
-                        cT[ "RECURSIVE" ] != otherQB.getCommonTables()[ index ][ "RECURSIVE" ] ||
-                        !cT[ "QUERY" ].isEqualTo( otherQB.getCommonTables()[ index ][ "QUERY" ] )
-                    );
-                } )
-            ) {
-                return false;
+            for ( var i = 1; i <= variables.commonTables.len(); i++ ) {
+                var commonTable = variables.commonTables[ i ];
+                if (
+                    !getUtils().arrayCompare(
+                        commonTable[ "COLUMNS" ],
+                        arguments.otherQB.getCommonTables()[ i ][ "COLUMNS" ]
+                    ) ||
+                    !getUtils().structCompare(
+                        commonTable[ "NAME" ],
+                        arguments.otherQB.getCommonTables()[ i ][ "NAME" ]
+                    ) ||
+                    commonTable[ "RECURSIVE" ] != arguments.otherQB.getCommonTables()[ i ][ "RECURSIVE" ] ||
+                    !commonTable[ "QUERY" ].isEqualTo( arguments.otherQB.getCommonTables()[ i ][ "QUERY" ] )
+                ) {
+                    return false;
+                }
             }
         }
 
@@ -1895,9 +1988,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function groupBy( required groups ) {
-        var groupBys = normalizeToArray( arguments.groups )
-            .map( ( groupBy ) => applyColumnFormatter( groupBy ) )
-            .map( ( groupBy ) => mapToColumnType( groupBy ) );
+        var groupBys = normalizeColumns( arguments.groups );
         var groupBindings = extractColumnBindings( groupBys );
         variables.groups.append( groupBys, true );
         addBindings( groupBindings, "groupBy" );
@@ -2340,13 +2431,18 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
         arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
+        var cteColumns = [];
+        for ( var column in arguments.columns ) {
+            cteColumns.append( mapToColumnType( applyColumnFormatter( column ) ) );
+        }
+
         // track the union statement
         arrayAppend(
             variables.commonTables,
             {
                 name: mapToColumnType( arguments.name ),
                 query: arguments.input,
-                columns: arguments.columns.map( applyColumnFormatter ).map( mapToColumnType ),
+                columns: cteColumns,
                 recursive: arguments.recursive
             }
         );
@@ -2528,25 +2624,20 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         function onFalse,
         boolean withoutScoping = false
     ) {
-        var defaultCallback = function( q ) {
-            return q;
-        };
-        arguments.onFalse = isNull( arguments.onFalse ) ? defaultCallback : arguments.onFalse;
-
         if ( arguments.withoutScoping ) {
             if ( arguments.condition ) {
                 arguments.onTrue( this );
-            } else {
+            } else if ( !isNull( arguments.onFalse ) ) {
                 arguments.onFalse( this );
             }
         } else {
-            withScoping( function() {
-                if ( condition ) {
-                    onTrue( this );
-                } else {
-                    onFalse( this );
-                }
-            } );
+            var originalWhereCount = getWheres().len();
+            if ( arguments.condition ) {
+                arguments.onTrue( this );
+            } else if ( !isNull( arguments.onFalse ) ) {
+                arguments.onFalse( this );
+            }
+            getPredicateClause().scopeNewWheres( this, originalWhereCount );
         }
 
         return this;
@@ -2606,42 +2697,14 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             arguments.values = [ arguments.values ];
         }
 
-        var columns = getGrammar()
-            .resolveInsertColumnNames( arguments.values )
-            .map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
-                return { "original": column, "formatted": formatted };
-            } );
-        columns.sort( function( a, b ) {
-            return compareNoCase( a.formatted, b.formatted );
-        } );
-        var newBindings = arguments.values.map( function( value ) {
-            return columns.map( function( column ) {
-                return getUtils().extractBinding(
-                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
-                    variables.grammar
-                );
-            } );
-        } );
+        var columns = buildColumnDefinitions( getGrammar().resolveInsertColumnNames( arguments.values ), true );
+        var bindingData = buildInsertBindingData( arguments.values, columns );
+        var newBindings = bindingData.rows;
+        var newInsertBindings = bindingData.flattened;
 
-        var newInsertBindings = [];
-        newBindings.each( function( bindingsArray ) {
-            bindingsArray.each( function( binding ) {
-                if ( getUtils().isNotExpression( binding ) ) {
-                    newInsertBindings.append( binding );
-                } else {
-                    newInsertBindings.append( extractExpressionBindings( binding ), true );
-                }
-            } );
-        } );
+        typeColumnDefinitions( columns );
 
-        columns.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-
-        var sql = withWrappingContext( function() {
-            return getGrammar().compileInsert( this, columns, newBindings );
-        } );
+        var sql = withGrammarWrapping( "compileInsert", { "query": this, "columns": columns, "values": newBindings } );
 
         variables.bindings.insert = newInsertBindings;
         clearBindings( except = "insert" );
@@ -2707,9 +2770,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 if ( getGrammar().supportsBulkInsert() ) {
                     var bulkInsert = getGrammar().prepareBulkInsert( this, batch, arguments.sqlTypes );
                     addBindings( [ bulkInsert.binding ], "insert" );
-                    var sql = withWrappingContext( function() {
-                        return getGrammar().compileBulkInsert( this, bulkInsert.columns );
-                    } );
+                    var sql = withGrammarWrapping(
+                        "compileBulkInsert",
+                        { "query": this, "columns": bulkInsert.columns }
+                    );
                     if ( arguments.toSql ) {
                         results.append( sql );
                     } else {
@@ -2768,31 +2832,25 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             clearBindings( except = [ "commonTables" ] );
 
             if ( isNull( arguments.columns ) ) {
-                arguments.columns = arguments.source
-                    .getColumns()
-                    .map( function( column ) {
-                        return getGrammar().extractAlias( mapToColumnType( column ) );
-                    } );
+                arguments.columns = [];
+                for ( var column in arguments.source.getColumns() ) {
+                    arguments.columns.append( getGrammar().extractAlias( mapToColumnType( column ) ) );
+                }
                 if ( arguments.columns.len() == 1 && arguments.columns[ 1 ] == "*" ) {
                     arguments.columns = [];
                 }
             }
 
-            var formattedColumns = arguments.columns.map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
-                return { "original": column, "formatted": formatted };
-            } );
+            var formattedColumns = buildColumnDefinitions( arguments.columns );
 
             addBindingsFromBuilder( arguments.source );
 
-            formattedColumns.each( ( c ) => {
-                c.formatted = mapToColumnType( c.formatted );
-            } );
+            typeColumnDefinitions( formattedColumns );
 
-            var sourceQuery = arguments.source;
-            var sql = withWrappingContext( function() {
-                return getGrammar().compileInsertUsing( this, formattedColumns, sourceQuery );
-            } );
+            var sql = withGrammarWrapping(
+                "compileInsertUsing",
+                { "query": this, "columns": formattedColumns, "source": arguments.source }
+            );
         } catch ( any e ) {
             executor.restoreCommonTableState( this, commonTableState );
             variables.bindings = originalBindings;
@@ -2837,56 +2895,25 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             values = [ values ];
         }
 
-        var columns = getGrammar()
-            .resolveInsertColumnNames( arguments.values )
-            .map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
-                return { "original": column, "formatted": formatted };
-            } );
-        columns.sort( function( a, b ) {
-            return compareNoCase( a.formatted, b.formatted );
-        } );
-        var newBindings = arguments.values.map( function( value ) {
-            return columns.map( function( column ) {
-                return getUtils().extractBinding(
-                    value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
-                    variables.grammar
-                );
-            } );
-        } );
+        var columns = buildColumnDefinitions( getGrammar().resolveInsertColumnNames( arguments.values ), true );
+        var bindingData = buildInsertBindingData( arguments.values, columns );
+        var newBindings = bindingData.rows;
+        var newInsertBindings = bindingData.flattened;
 
-        var newInsertBindings = [];
-        newBindings.each( function( bindingsArray ) {
-            bindingsArray.each( function( binding ) {
-                if ( getUtils().isNotExpression( binding ) ) {
-                    newInsertBindings.append( binding );
-                } else {
-                    newInsertBindings.append( extractExpressionBindings( binding ), true );
-                }
-            } );
-        } );
+        arguments.target = buildColumnDefinitions( arrayWrap( arguments.target ) );
 
-        arguments.target = arrayWrap( arguments.target ).map( function( column ) {
-            var formatted = listLast( applyColumnFormatter( column ), "." );
-            return { "original": column, "formatted": formatted };
-        } );
+        typeColumnDefinitions( columns );
+        typeColumnDefinitions( arguments.target );
 
-        columns.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-        arguments.target.each( ( c ) => {
-            c.formatted = mapToColumnType( c.formatted );
-        } );
-
-        var targetColumns = arguments.target;
-        var sql = withWrappingContext( function() {
-            return getGrammar().compileInsertIgnore(
-                this,
-                columns,
-                targetColumns,
-                newBindings
-            );
-        } );
+        var sql = withGrammarWrapping(
+            "compileInsertIgnore",
+            {
+                "qb": this,
+                "columns": columns,
+                "target": arguments.target,
+                "values": newBindings
+            }
+        );
 
         variables.bindings.insert = newInsertBindings;
         clearBindings( except = "insert" );
@@ -2900,19 +2927,21 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
 
     public QueryBuilder function returning( required any columns ) {
         var returningColumns = isArray( arguments.columns ) ? arguments.columns : listToArray( arguments.columns );
-        returningColumns = returningColumns.map( function( column ) {
-            return mapToColumnType( listLast( applyColumnFormatter( column ), "." ) );
-        } );
-        variables.returning = returningColumns;
+        var formattedReturningColumns = [];
+        for ( var column in returningColumns ) {
+            formattedReturningColumns.append( mapToColumnType( listLast( applyColumnFormatter( column ), "." ) ) );
+        }
+        variables.returning = formattedReturningColumns;
         return this;
     }
 
     public QueryBuilder function returningRaw( required any columns ) {
         var returningColumns = isArray( arguments.columns ) ? arguments.columns : [ arguments.columns ];
-        returningColumns = returningColumns.map( function( column ) {
-            return mapToColumnType( new Expression( column ) );
-        } );
-        variables.returning = returningColumns;
+        var rawReturningColumns = [];
+        for ( var column in returningColumns ) {
+            rawReturningColumns.append( mapToColumnType( new Expression( column ) ) );
+        }
+        variables.returning = rawReturningColumns;
         return this;
     }
 
@@ -2935,16 +2964,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     public any function update( struct values = {}, struct options = {}, boolean toSql = false ) {
         arguments.values = structCopy( arguments.values );
         structAppend( arguments.values, variables.updates, false );
-        var updateArray = arguments.values
-            .keyArray()
-            .map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
-                return { original: column, formatted: formatted };
-            } );
-
-        updateArray.sort( function( a, b ) {
-            return compareNoCase( a.formatted, b.formatted );
-        } );
+        var updateArray = buildColumnDefinitions( arguments.values.keyArray(), true );
 
         var newUpdateBindings = [];
         var executor = getCollaborator( "QueryExecutor" );
@@ -2968,14 +2988,12 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 }
             }
 
-            updateArray.each( ( c ) => {
-                c.formatted = mapToColumnType( c.formatted );
-            } );
+            typeColumnDefinitions( updateArray );
 
-            var updateValues = arguments.values;
-            sql = withWrappingContext( function() {
-                return getGrammar().compileUpdate( this, updateArray, updateValues );
-            } );
+            sql = withGrammarWrapping(
+                "compileUpdate",
+                { "query": this, "columns": updateArray, "updateMap": arguments.values }
+            );
         } catch ( any e ) {
             executor.restoreCommonTableState( this, commonTableState );
             rethrow;
@@ -3100,10 +3118,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 return this.insert( values = arguments.values, options = arguments.options, toSql = arguments.toSql );
             }
 
-            arguments.target = arrayWrap( arguments.target ).map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
-                return { "original": column, "formatted": formatted };
-            } );
+            arguments.target = buildColumnDefinitions( arrayWrap( arguments.target ) );
 
             var columns = [];
             if ( isStruct( arguments.values[ 1 ] ) ) {
@@ -3111,14 +3126,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             } else {
                 columns = arguments.values;
             }
-            columns = columns.map( function( column ) {
-                var formatted = listLast( applyColumnFormatter( column ), "." );
-                return { "original": column, "formatted": formatted };
-            } );
+            columns = buildColumnDefinitions( columns );
             if ( isStruct( arguments.values[ 1 ] ) ) {
-                columns.sort( function( a, b ) {
-                    return compareNoCase( a.formatted, b.formatted );
-                } );
+                columns = sortColumnDefinitions( columns );
             }
 
             var updateArray = [];
@@ -3126,77 +3136,48 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 arguments.update = columns;
             } else {
                 if ( isArray( arguments.update ) ) {
-                    arguments.update = arguments.update.map( function( column ) {
-                        var formatted = listLast( applyColumnFormatter( column ), "." );
-                        return { "original": column, "formatted": formatted };
-                    } );
+                    arguments.update = buildColumnDefinitions( arguments.update );
                 }
             }
 
             if ( isArray( arguments.update ) ) {
                 updateArray = arguments.update;
             } else {
-                updateArray = arguments.update
-                    .keyArray()
-                    .map( function( column ) {
-                        var formatted = listLast( applyColumnFormatter( column ), "." );
-                        return { original: column, formatted: formatted };
-                    } );
+                updateArray = buildColumnDefinitions( arguments.update.keyArray() );
             }
 
-            updateArray.sort( function( a, b ) {
-                return compareNoCase( a.formatted, b.formatted );
-            } );
+            updateArray = sortColumnDefinitions( updateArray );
 
             var newInsertBindings = [];
             if ( isStruct( arguments.values[ 1 ] ) ) {
-                newInsertBindings = arguments.values.map( function( value ) {
-                    return columns.map( function( column ) {
-                        return getUtils().extractBinding(
-                            value.keyExists( column.original ) ? value[ column.original ] : javacast( "null", "" ),
-                            variables.grammar
-                        );
-                    } );
-                } );
+                var bindingData = buildInsertBindingData( arguments.values, columns );
+                newInsertBindings = bindingData.rows;
+                addBindings( bindingData.flattened, "insert" );
             }
 
-            newInsertBindings.each( function( bindingsArray ) {
-                bindingsArray.each( function( binding ) {
-                    if ( getUtils().isNotExpression( binding ) ) {
-                        addBindings( binding, "insert" );
-                    } else {
-                        addExpressionBindings( binding, "insert" );
-                    }
-                } );
-            } );
-
             if ( isStruct( arguments.update ) ) {
-                var updates = arguments.update;
-                updateArray.each( function( column ) {
+                for ( var column in updateArray ) {
                     if (
-                        isNull( updates[ column.original ] ) ||
-                        getUtils().isNotExpression( updates[ column.original ] )
+                        isNull( arguments.update[ column.original ] ) ||
+                        getUtils().isNotExpression( arguments.update[ column.original ] )
                     ) {
                         addBindings(
                             getUtils().extractBinding(
-                                isNull( updates[ column.original ] ) ? javacast( "null", "" ) : updates[ column.original ],
+                                isNull( arguments.update[ column.original ] )
+                                 ? javacast( "null", "" )
+                                 : arguments.update[ column.original ],
                                 variables.grammar
                             ),
                             "insert"
                         );
                     } else {
-                        addExpressionBindings( updates[ column.original ], "insert" );
+                        addExpressionBindings( arguments.update[ column.original ], "insert" );
                     }
-                } );
+                }
             }
 
             if ( isClosure( arguments.deleteUnmatched ) || isCustomFunction( arguments.deleteUnmatched ) ) {
-                var deleteRestrictions = newQuery().setColumnFormatter( ( column ) => {
-                    if ( listLen( column, "." ) > 1 ) {
-                        return column;
-                    }
-                    return "qb_target.#column#";
-                } );
+                var deleteRestrictions = newQuery().setColumnFormatter( qualifyUpsertTargetColumn );
                 arguments.deleteUnmatched( deleteRestrictions );
                 arguments.deleteUnmatched = deleteRestrictions;
             }
@@ -3209,37 +3190,24 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 addBindings( arguments.deleteUnmatched.getBindings(), "insert" );
             }
 
-            columns.each( ( c ) => {
-                c.formatted = mapToColumnType( c.formatted );
-            } );
-            updateArray.each( ( c ) => {
-                c.formatted = mapToColumnType( c.formatted );
-            } );
-            arguments.target.each( ( c ) => {
-                c.formatted = mapToColumnType( c.formatted );
-            } );
+            typeColumnDefinitions( columns );
+            typeColumnDefinitions( updateArray );
+            typeColumnDefinitions( arguments.target );
 
-            var updateForUpsert = arguments.update;
-            var targetForUpsert = arguments.target;
-            var hasSourceForUpsert = !isNull( arguments.source );
-            if ( hasSourceForUpsert ) {
-                var sourceForUpsert = arguments.source;
-            }
-            var deleteUnmatchedForUpsert = arguments.deleteUnmatched;
-            var matchNullsForUpsert = arguments.matchNulls;
-            var sql = withWrappingContext( function() {
-                return getGrammar().compileUpsert(
-                    this,
-                    columns,
-                    newInsertBindings,
-                    updateArray,
-                    updateForUpsert,
-                    targetForUpsert,
-                    hasSourceForUpsert ? sourceForUpsert : javacast( "null", "" ),
-                    deleteUnmatchedForUpsert,
-                    matchNullsForUpsert
-                );
-            } );
+            var sql = withGrammarWrapping(
+                "compileUpsert",
+                {
+                    "qb": this,
+                    "insertColumns": columns,
+                    "values": newInsertBindings,
+                    "updateColumns": updateArray,
+                    "updates": arguments.update,
+                    "target": arguments.target,
+                    "source": isNull( arguments.source ) ? javacast( "null", "" ) : arguments.source,
+                    "deleteUnmatched": arguments.deleteUnmatched,
+                    "matchNulls": arguments.matchNulls
+                }
+            );
         } catch ( any e ) {
             executor.restoreCommonTableState( this, commonTableState );
             variables.bindings = originalBindings;
@@ -3276,9 +3244,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             where( arguments.idColumnName, "=", arguments.id );
         }
 
-        var sql = withWrappingContext( function() {
-            return getGrammar().compileDelete( this );
-        } );
+        var sql = withGrammarWrapping( "compileDelete", { "query": this } );
 
         if ( toSql ) {
             return sql;
@@ -3302,9 +3268,12 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         if ( arguments.order.isEmpty() ) {
             arguments.order = getGrammar().getSelectBindingOrder( this );
         }
-        var bindingOrder = arrayFilter( arguments.order, function( type ) {
-            return !arrayContainsNoCase( except, type );
-        } );
+        var bindingOrder = [];
+        for ( var type in arguments.order ) {
+            if ( !arrayContainsNoCase( arguments.except, type ) ) {
+                bindingOrder.append( type );
+            }
+        }
 
         var flatBindings = [];
         for ( var key in bindingOrder ) {
@@ -3581,34 +3550,43 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         boolean toSQL = false,
         any showBindings = false
     ) {
-        return getCollaborator( "QueryExecutor" ).withAggregate(
-            builder = this,
-            aggregate = {
-                type: type,
-                column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
-                defaultValue: isNull( arguments.defaultValue ) ? javacast( "null", "" ) : arguments.defaultValue
-            },
-            callback = function() {
-                return withReturnFormat( "query", function() {
-                    return getCollaborator( "QueryExecutor" ).withColumns(
-                        builder = this,
-                        columns = column,
-                        callback = function() {
-                            if ( toSQL ) {
-                                return this.toSQL( showBindings = showBindings );
-                            }
-
-                            var result = get( options = options );
-                            if ( result.recordCount <= 0 && !isNull( defaultValue ) ) {
-                                return defaultValue;
-                            } else {
-                                return result.aggregate;
-                            }
-                        }
-                    );
-                } );
+        var aggregate = {
+            type: arguments.type,
+            column: mapToColumnType( applyColumnFormatter( arguments.column ) ),
+            defaultValue: isNull( arguments.defaultValue ) ? javacast( "null", "" ) : arguments.defaultValue
+        };
+        var originalAggregate = getAggregate();
+        var originalOrders = getOrders();
+        var originalAggregateBindings = getRawBindings().aggregate;
+        var originalColumns = [ { "type": "simple", "value": "*" } ];
+        var shouldRestoreColumns = getUnions().isEmpty();
+        try {
+            setAggregate( aggregate );
+            setOrders( [] );
+            getRawBindings().aggregate = [];
+            addColumnBindings( [ aggregate.column ], "aggregate" );
+            if ( shouldRestoreColumns ) {
+                originalColumns = getColumns();
+                select( arguments.column );
             }
-        );
+
+            if ( arguments.toSQL ) {
+                return this.toSQL( showBindings = arguments.showBindings );
+            }
+
+            var result = getUsingReturnFormat( returnFormat = "query", options = arguments.options );
+            if ( result.recordCount <= 0 && !isNull( arguments.defaultValue ) ) {
+                return arguments.defaultValue;
+            }
+            return result.aggregate;
+        } finally {
+            if ( shouldRestoreColumns ) {
+                select( originalColumns );
+            }
+            setAggregate( originalAggregate );
+            setOrders( originalOrders );
+            getRawBindings().aggregate = originalAggregateBindings;
+        }
     }
 
     /**
@@ -3624,9 +3602,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             .prepareInternalExecutionBuilder( this, newQuery() )
             .clearFrom();
         getCollaborator( "QueryExecutor" ).hoistNestedCommonTables( existsSource, existsQuery );
-        var existsSql = withWrappingContext( function() {
-            return getGrammar().compileSelect( existsSource );
-        } );
+        var existsSql = withGrammarWrapping( "compileSelect", { "query": existsSource } );
         existsQuery.selectRaw(
             "CASE WHEN EXISTS (#existsSql#) THEN 1 ELSE 0 END AS aggregate",
             existsSource.getBindings()
@@ -3712,9 +3688,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      */
     public any function first( struct options = {} ) {
         take( 1 );
-        var results = withReturnFormat( "array", function() {
-            return get( options = options );
-        } );
+        var results = getUsingReturnFormat( returnFormat = "array", options = arguments.options );
         if ( arrayIsEmpty( results ) ) {
             return {};
         }
@@ -3755,9 +3729,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return any
      */
     public any function last( struct options = {} ) {
-        var results = withReturnFormat( "array", function() {
-            return get( options = options );
-        } );
+        var results = getUsingReturnFormat( returnFormat = "array", options = arguments.options );
         if ( arrayIsEmpty( results ) ) {
             return {};
         }
@@ -3820,25 +3792,27 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         boolean throwWhenNotFound = false,
         struct options = {}
     ) {
-        return withReturnFormat( "query", function() {
-            take( 1 );
-            var result = get( columns = column, options = options );
-            if ( result.recordCount <= 0 ) {
-                if ( throwWhenNotFound ) {
-                    throw(
-                        type = "RecordCountException",
-                        message = "Expected at least one row to be returned for `value` function."
-                    );
-                } else {
-                    return defaultValue;
-                }
+        take( 1 );
+        var result = getUsingReturnFormat(
+            returnFormat = "query",
+            columns = arguments.column,
+            options = arguments.options
+        );
+        if ( result.recordCount <= 0 ) {
+            if ( arguments.throwWhenNotFound ) {
+                throw(
+                    type = "RecordCountException",
+                    message = "Expected at least one row to be returned for `value` function."
+                );
             } else {
-                var firstColumnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
-                    result
-                )[ 1 ].name
-                return result[ firstColumnName ][ 1 ];
+                return arguments.defaultValue;
             }
-        } );
+        } else {
+            var firstColumnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
+                result
+            )[ 1 ].name
+            return result[ firstColumnName ][ 1 ];
+        }
     }
 
     /**
@@ -3870,17 +3844,19 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return [any]
      */
     public array function values( required any column, struct options = {} ) {
-        return withReturnFormat( "query", function() {
-            var result = get( columns = column, options = options );
-            var columnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
-                result
-            )[ 1 ].name;
-            var results = [];
-            for ( var row in result ) {
-                results.append( row[ columnName ] );
-            }
-            return results;
-        } );
+        var result = getUsingReturnFormat(
+            returnFormat = "query",
+            columns = arguments.column,
+            options = arguments.options
+        );
+        var columnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
+            result
+        )[ 1 ].name;
+        var results = [];
+        for ( var row in result ) {
+            results.append( row[ columnName ] );
+        }
+        return results;
     }
 
     /**
@@ -4082,11 +4058,11 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         );
     }
 
-    private any function withWrappingContext( required function callback ) {
+    private any function withGrammarWrapping( required string compiler, required struct compilerArguments ) {
         var grammar = getGrammar();
         grammar.pushShouldWrapValuesContext( getShouldWrapValues() );
         try {
-            return arguments.callback();
+            return invoke( grammar, arguments.compiler, arguments.compilerArguments );
         } finally {
             grammar.popShouldWrapValuesContext();
         }
@@ -4101,9 +4077,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         if ( getValidateDuplicateSelectColumns() && getAggregate().isEmpty() ) {
             getCollaborator( "QueryValidator" ).validateUniqueSelectColumns( getColumns(), getGrammar() );
         }
-        var sql = withWrappingContext( function() {
-            return grammar.compileSelect( this );
-        } );
+        var sql = withGrammarWrapping( "compileSelect", { "query": this } );
 
         if ( isBoolean( arguments.showBindings ) && arguments.showBindings == false ) {
             return sql;
@@ -4224,6 +4198,23 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
     /**
+     * Executes get with a temporary return format without allocating a callback closure.
+     */
+    private any function getUsingReturnFormat( required any returnFormat, any columns, struct options = {} ) {
+        var originalReturnFormat = getReturnFormat();
+        setReturnFormat( arguments.returnFormat );
+        var result = javacast( "null", "" );
+        try {
+            result = isNull( arguments.columns )
+             ? get( options = arguments.options )
+             : get( columns = arguments.columns, options = arguments.options );
+        } finally {
+            variables.returnFormat = originalReturnFormat;
+        }
+        return result;
+    }
+
+    /**
      * Converts the arguments passed in to it into an array.
      *
      * @return array
@@ -4238,9 +4229,11 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
 
         try {
-            return arrayMap( trim( arguments.listOrArray ).split( ",\s*" ), function( item ) {
-                return trim( item );
-            } );
+            var values = [];
+            for ( var item in trim( arguments.listOrArray ).split( ",\s*" ) ) {
+                values.append( trim( item ) );
+            }
+            return values;
         } catch ( any e ) {
             return [ arguments.listOrArray ];
         }

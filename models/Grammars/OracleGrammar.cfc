@@ -211,25 +211,25 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             var multiple = arguments.values.len() > 1;
 
-            var columnsString = arguments.columns
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
+            var wrappedColumns = [];
+            for ( var column in arguments.columns ) {
+                wrappedColumns.append( wrapColumn( column.formatted ) );
+            }
+            var columnsString = wrappedColumns.toList( ", " );
 
-            var placeholderString = values
-                .map( function( valueArray ) {
-                    return "INTO #wrapTable( query.getTableName() )# (#columnsString#) VALUES (" & valueArray
-                        .map( function( item ) {
-                            if ( getUtils().isExpression( item ) ) {
-                                return item.getSQL();
-                            } else {
-                                return "?";
-                            }
-                        } )
-                        .toList( ", " ) & ")";
-                } )
-                .toList( " " );
+            var placeholderRows = [];
+            for ( var valueArray in arguments.values ) {
+                var placeholders = [];
+                for ( var item in valueArray ) {
+                    placeholders.append( getUtils().isExpression( item ) ? item.getSQL() : "?" );
+                }
+                placeholderRows.append(
+                    "INTO #wrapTable( query.getTableName() )# (#columnsString#) VALUES (" &
+                    placeholders.toList( ", " ) &
+                    ")"
+                );
+            }
+            var placeholderString = placeholderRows.toList( " " );
             return trim( "INSERT#multiple ? " ALL" : ""# #placeholderString##multiple ? " SELECT 1 FROM dual" : ""#" );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -307,61 +307,57 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.qb.getShouldWrapValues() );
             }
 
-            var columnsString = arguments.insertColumns
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
-
-            var valuesString = arrayToList(
-                arguments.insertColumns.map( function( column ) {
-                    return wrapColumn( { "type": "simple", "value": "QB_SRC.#column.formatted.value#" } );
-                } ),
-                ", "
-            );
+            var wrappedInsertColumns = [];
+            var wrappedSourceColumns = [];
+            for ( var column in arguments.insertColumns ) {
+                wrappedInsertColumns.append( wrapColumn( column.formatted ) );
+                wrappedSourceColumns.append(
+                    wrapColumn( { "type": "simple", "value": "QB_SRC.#column.formatted.value#" } )
+                );
+            }
+            var columnsString = wrappedInsertColumns.toList( ", " );
+            var valuesString = wrappedSourceColumns.toList( ", " );
 
             var placeholderString = "";
             if ( !isNull( arguments.source ) ) {
                 placeholderString = compileSelect( arguments.source );
             } else {
-                placeholderString = arguments.values
-                    .map( function( valueArray ) {
-                        return "SELECT " & valueArray
-                            .map( function( item ) {
-                                if ( getUtils().isExpression( item ) ) {
-                                    return item.getSQL();
-                                } else {
-                                    return "?";
-                                }
-                            } )
-                            .toList( ", " ) & " FROM dual";
-                    } )
-                    .toList( " UNION ALL " );
+                var placeholderRows = [];
+                for ( var valueArray in arguments.values ) {
+                    var placeholders = [];
+                    for ( var item in valueArray ) {
+                        placeholders.append( getUtils().isExpression( item ) ? item.getSQL() : "?" );
+                    }
+                    placeholderRows.append( "SELECT " & placeholders.toList( ", " ) & " FROM dual" );
+                }
+                placeholderString = placeholderRows.toList( " UNION ALL " );
             }
 
             var constraintString = compileUpsertTargetConstraint( arguments.target, arguments.matchNulls );
 
             var updateList = "";
             if ( isArray( arguments.updates ) ) {
-                updateList = arguments.updates
-                    .map( function( column ) {
-                        return "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
-                    } )
-                    .toList( ", " );
+                var updateAssignments = [];
+                for ( var column in arguments.updates ) {
+                    updateAssignments.append(
+                        "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#"
+                    );
+                }
+                updateList = updateAssignments.toList( ", " );
             } else {
-                updateList = arguments.updateColumns
-                    .map( function( column ) {
-                        var equalsClause = "?";
-                        if (
-                            !isNull( updates[ column.original ] ) && getUtils().isExpression(
-                                updates[ column.original ]
-                            )
-                        ) {
-                            equalsClause = updates[ column.original ].getSQL();
-                        }
-                        return "#wrapColumn( column.formatted )# = #equalsClause#";
-                    } )
-                    .toList( ", " );
+                var updateAssignments = [];
+                for ( var column in arguments.updateColumns ) {
+                    var equalsClause = "?";
+                    if (
+                        !isNull( arguments.updates[ column.original ] ) && getUtils().isExpression(
+                            arguments.updates[ column.original ]
+                        )
+                    ) {
+                        equalsClause = arguments.updates[ column.original ].getSQL();
+                    }
+                    updateAssignments.append( "#wrapColumn( column.formatted )# = #equalsClause#" );
+                }
+                updateList = updateAssignments.toList( ", " );
             }
             var updateStatement = updateList == "" ? "" : " WHEN MATCHED THEN UPDATE SET #updateList#";
 
@@ -833,18 +829,16 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
     function indexForeign( index ) {
         // FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
-        var keys = arguments.index
-            .getForeignKey()
-            .map( function( key ) {
-                return wrapColumn( { "type": "simple", "value": key } );
-            } )
-            .toList( ", " );
-        var references = arguments.index
-            .getColumns()
-            .map( function( column ) {
-                return wrapColumn( { "type": "simple", "value": column } );
-            } )
-            .toList( ", " );
+        var wrappedKeys = [];
+        for ( var key in arguments.index.getForeignKey() ) {
+            wrappedKeys.append( wrapColumn( { "type": "simple", "value": key } ) );
+        }
+        var keys = wrappedKeys.toList( ", " );
+        var wrappedReferences = [];
+        for ( var column in arguments.index.getColumns() ) {
+            wrappedReferences.append( wrapColumn( { "type": "simple", "value": column } ) );
+        }
+        var references = wrappedReferences.toList( ", " );
         return arrayToList(
             [
                 "CONSTRAINT #wrapValue( arguments.index.getName() )#",

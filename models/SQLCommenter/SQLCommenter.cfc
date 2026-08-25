@@ -69,14 +69,15 @@ component singleton {
         arguments.commentString = trim( arguments.commentString );
         arguments.commentString = replace( arguments.commentString, "/*", "" );
         arguments.commentString = replace( arguments.commentString, "*/", "" );
-        return listToArray( arguments.commentString ).reduce( ( acc, serializedKeyValuePair ) => {
+        var comments = {};
+        for ( var serializedKeyValuePair in listToArray( arguments.commentString ) ) {
             var key = decodeFromURL( unescapeMetaCharacters( listFirst( serializedKeyValuePair, "=" ) ) );
             var value = decodeFromURL(
                 unescapeMetaCharacters( unescapeSQL( listLast( serializedKeyValuePair, "=" ) ) )
             );
-            acc[ key ] = value;
-            return acc;
-        }, {} );
+            comments[ key ] = value;
+        }
+        return comments;
     }
 
     /**

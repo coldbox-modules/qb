@@ -9,30 +9,32 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         required array columns,
         required struct sqlTypes
     ) {
-        var grammar = this;
         var normalizedColumns = arguments.columns;
-        var serializedValues = arguments.values.map( function( row ) {
+        var serializedValues = [];
+        for ( var row in arguments.values ) {
             var serializedRow = {};
-            normalizedColumns.each( function( column ) {
+            for ( var column in normalizedColumns ) {
                 if ( !row.keyExists( column.original ) || isNull( row[ column.original ] ) ) {
                     serializedRow[ column.original ] = javacast( "null", "" );
-                    return;
+                    continue;
                 }
-                var binding = getUtils().extractBinding( row[ column.original ], grammar );
+                var binding = getUtils().extractBinding( row[ column.original ], this );
                 serializedRow[ column.original ] = binding.null ? javacast( "null", "" ) : binding.value;
-            } );
-            return serializedRow;
-        } );
+            }
+            serializedValues.append( serializedRow );
+        }
 
-        var bulkValues = arguments.values;
-        var explicitSqlTypes = arguments.sqlTypes;
-        normalizedColumns.each( function( column ) {
-            var columnValues = bulkValues.map( function( row ) {
-                return row.keyExists( column.original ) ? row[ column.original ] : javacast( "null", "" );
-            } );
-            var sqlType = explicitSqlTypes.keyExists( column.original )
-             ? explicitSqlTypes[ column.original ]
-             : resolveWhereInBulkSqlType( getUtils().inferSqlType( columnValues, grammar ) );
+        for ( var column in normalizedColumns ) {
+            var columnValues = [];
+            arrayResize( columnValues, arguments.values.len() );
+            for ( var i = 1; i <= arguments.values.len(); i++ ) {
+                columnValues[ i ] = arguments.values[ i ].keyExists( column.original )
+                 ? arguments.values[ i ][ column.original ]
+                 : javacast( "null", "" );
+            }
+            var sqlType = arguments.sqlTypes.keyExists( column.original )
+             ? arguments.sqlTypes[ column.original ]
+             : resolveWhereInBulkSqlType( getUtils().inferSqlType( columnValues, this ) );
             sqlType = trim( sqlType );
             if (
                 sqlType == "" ||
@@ -44,13 +46,13 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 throw( type = "InvalidSQLType", message = "Invalid SQL type [#sqlType#] for a bulk insert." );
             }
             column.bulkSqlType = sqlType;
-        } );
+        }
 
         return {
             "columns": normalizedColumns,
             "binding": getUtils().extractBinding(
                 { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
-                grammar
+                this
             )
         };
     }
@@ -62,32 +64,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var columnsString = arguments.columns.map( ( column ) => wrapColumn( column.formatted ) ).toList( ", " );
-            var returningColumns = arguments.query
-                .getReturning()
-                .map( function( column ) {
-                    if ( column.type == "raw" ) {
-                        return trim( column.value.getSQL() );
-                    }
-                    if ( listLen( column.value, "." ) > 1 ) {
-                        return column.value;
-                    }
-                    return "INSERTED." & wrapColumn( column );
-                } )
-                .toList( ", " );
+            var wrappedColumns = [];
+            for ( var column in arguments.columns ) {
+                wrappedColumns.append( wrapColumn( column.formatted ) );
+            }
+            var columnsString = wrappedColumns.toList( ", " );
+            var returningColumns = compileOutputColumns( arguments.query.getReturning(), "INSERTED." );
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
-            var withColumns = arguments.columns
-                .map( function( column ) {
-                    var escapedPath = replace(
-                        replace( column.original, "\", "\\", "all" ),
-                        """",
-                        "\""",
-                        "all"
-                    );
-                    escapedPath = replace( escapedPath, "'", "''", "all" );
-                    return "#wrapColumn( column.formatted )# #column.bulkSqlType# '$.""#escapedPath#""'";
-                } )
-                .toList( ", " );
+            var withColumnDefinitions = [];
+            for ( var column in arguments.columns ) {
+                var escapedPath = replace(
+                    replace( column.original, "\", "\\", "all" ),
+                    """",
+                    "\""",
+                    "all"
+                );
+                escapedPath = replace( escapedPath, "'", "''", "all" );
+                withColumnDefinitions.append(
+                    "#wrapColumn( column.formatted )# #column.bulkSqlType# '$.""#escapedPath#""'"
+                );
+            }
+            var withColumns = withColumnDefinitions.toList( ", " );
 
             return "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#)#returningClause# SELECT #columnsString# FROM OPENJSON(?) WITH (#withColumns#)";
         } finally {
@@ -120,6 +117,23 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             default:
                 return normalizedType;
         }
+    }
+
+    /**
+     * Compiles SQL Server OUTPUT columns without allocating a formatter closure.
+     */
+    private string function compileOutputColumns( required array columns, required string prefix ) {
+        var outputColumns = [];
+        for ( var column in arguments.columns ) {
+            if ( column.type == "raw" ) {
+                outputColumns.append( trim( column.value.getSQL() ) );
+            } else if ( listLen( column.value, "." ) > 1 ) {
+                outputColumns.append( column.value );
+            } else {
+                outputColumns.append( arguments.prefix & wrapColumn( column ) );
+            }
+        }
+        return outputColumns.toList( ", " );
     }
 
     public string function compileJsonScalar( required struct jsonPath ) {
@@ -175,7 +189,8 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 "SELECT * FROM (#super.compileSelect( rootQuery )#) AS #wrapValue( "qb_union_0" )#"
             ];
 
-            unions.each( function( union, index ) {
+            for ( var index = 1; index <= unions.len(); index++ ) {
+                var union = unions[ index ];
                 if ( union.query.getOrders().len() && !isLimitedQuery( union.query ) ) {
                     throw(
                         type = "OrderByNotAllowed",
@@ -188,7 +203,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 sql.append(
                     "#unionOperator# SELECT * FROM (#compileSelect( union.query )#) AS #wrapValue( "qb_union_#index#" )#"
                 );
-            } );
+            }
 
             return trim( concatenate( sql ) );
         } finally {
@@ -203,7 +218,12 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             return false;
         }
 
-        return arguments.query.getUnions().some( ( union ) => union.query.getOrders().len() );
+        for ( var union in arguments.query.getUnions() ) {
+            if ( union.query.getOrders().len() ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public array function getSelectBindingOrder( required QueryBuilder query ) {
@@ -314,39 +334,24 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var columnsString = arguments.columns
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
+            var wrappedColumns = [];
+            for ( var column in arguments.columns ) {
+                wrappedColumns.append( wrapColumn( column.formatted ) );
+            }
+            var columnsString = wrappedColumns.toList( ", " );
 
-            var returningColumns = arguments.query
-                .getReturning()
-                .map( function( column ) {
-                    if ( column.type == "raw" ) {
-                        return trim( column.value.getSQL() );
-                    }
-                    if ( listLen( column.value, "." ) > 1 ) {
-                        return column.value;
-                    }
-                    return "INSERTED." & wrapColumn( column );
-                } )
-                .toList( ", " );
+            var returningColumns = compileOutputColumns( arguments.query.getReturning(), "INSERTED." );
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
 
-            var placeholderString = values
-                .map( function( valueArray ) {
-                    return "(" & valueArray
-                        .map( function( item ) {
-                            if ( getUtils().isExpression( item ) ) {
-                                return item.getSQL();
-                            } else {
-                                return "?";
-                            }
-                        } )
-                        .toList( ", " ) & ")";
-                } )
-                .toList( ", " );
+            var placeholderRows = [];
+            for ( var valueArray in arguments.values ) {
+                var placeholders = [];
+                for ( var item in valueArray ) {
+                    placeholders.append( getUtils().isExpression( item ) ? item.getSQL() : "?" );
+                }
+                placeholderRows.append( "(" & placeholders.toList( ", " ) & ")" );
+            }
+            var placeholderString = placeholderRows.toList( ", " );
             return trim(
                 "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#)#returningClause# VALUES #placeholderString#"
             );
@@ -425,7 +430,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
         if ( !isNull( query.getLimitValue() ) && isNull( query.getOffsetValue() ) ) {
             select &= "TOP (#query.getLimitValue()#) ";
         }
-        return select & columns.map( wrapColumn ).toList( ", " );
+        var wrappedColumns = [];
+        for ( var column in arguments.columns ) {
+            wrappedColumns.append( wrapColumn( column ) );
+        }
+        return select & wrappedColumns.toList( ", " );
     }
 
     /**
@@ -470,17 +479,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             return "ORDER BY 1";
         }
 
-        var orderBys = orders.map( function( orderBy ) {
+        var orderBys = [];
+        for ( var orderBy in arguments.orders ) {
             if ( orderBy.direction == "raw" ) {
-                return orderBy.column.getSQL();
+                orderBys.append( orderBy.column.getSQL() );
             } else if ( orderBy.direction == "random" ) {
-                return orderByRandom();
+                orderBys.append( orderByRandom() );
             } else if ( orderBy.keyExists( "query" ) ) {
-                return "(#compileSelect( orderBy.query )#) #uCase( orderBy.direction )#";
+                orderBys.append( "(#compileSelect( orderBy.query )#) #uCase( orderBy.direction )#" );
             } else {
-                return "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
+                orderBys.append( "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#" );
             }
-        } );
+        }
 
         return "ORDER BY #orderBys.toList( ", " )#";
     }
@@ -565,18 +575,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var updateList = columns
-                .map( function( column ) {
-                    var value = updateMap[ column.original ];
-                    var assignment = "?";
-                    if ( utils.isExpression( value ) ) {
-                        assignment = value.getSql();
-                    } else if ( utils.isBuilder( value ) ) {
-                        assignment = "(#value.toSQL()#)";
-                    }
-                    return "#wrapColumn( column.formatted )# = #assignment#";
-                } )
-                .toList( ", " );
+            var updateAssignments = [];
+            for ( var column in arguments.columns ) {
+                var value = arguments.updateMap[ column.original ];
+                var assignment = "?";
+                if ( utils.isExpression( value ) ) {
+                    assignment = value.getSql();
+                } else if ( utils.isBuilder( value ) ) {
+                    assignment = "(#value.toSQL()#)";
+                }
+                updateAssignments.append( "#wrapColumn( column.formatted )# = #assignment#" );
+            }
+            var updateList = updateAssignments.toList( ", " );
 
             var updateTable = "";
             if ( arguments.query.getAlias() != "" ) {
@@ -595,18 +605,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 updateList
             ] );
 
-            var returningColumns = arguments.query
-                .getReturning()
-                .map( function( column ) {
-                    if ( column.type == "raw" ) {
-                        return trim( column.value.getSQL() );
-                    }
-                    if ( listLen( column.value, "." ) > 1 ) {
-                        return column.value;
-                    }
-                    return "INSERTED." & wrapColumn( column );
-                } )
-                .toList( ", " );
+            var returningColumns = compileOutputColumns( arguments.query.getReturning(), "INSERTED." );
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
 
             if ( arguments.query.getJoins().isEmpty() && arguments.query.getAlias() == "" ) {
@@ -654,18 +653,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var returningColumns = arguments.query
-                .getReturning()
-                .map( function( column ) {
-                    if ( column.type == "raw" ) {
-                        return trim( column.value.getSQL() );
-                    }
-                    if ( listLen( column.value, "." ) > 1 ) {
-                        return column.value;
-                    }
-                    return "DELETED." & wrapColumn( column );
-                } )
-                .toList( ", " );
+            var returningColumns = compileOutputColumns( arguments.query.getReturning(), "DELETED." );
             var returningClause = returningColumns != "" ? "OUTPUT #returningColumns#" : "";
 
             var hasJoins = !arguments.query.getJoins().isEmpty();
@@ -676,48 +664,32 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
             if ( !hasJoins && !hasAlias ) {
                 return trim(
-                    arrayToList(
-                        arrayFilter(
-                            [
-                                compileCommonTables( query, query.getCommonTables() ),
-                                "DELETE",
-                                topClause,
-                                "FROM",
-                                wrapQueryTable( query ),
-                                returningClause,
-                                compileWheres( query, query.getWheres() )
-                            ],
-                            function( sql ) {
-                                return sql != "";
-                            }
-                        ),
-                        " "
-                    )
+                    concatenate( [
+                        compileCommonTables( query, query.getCommonTables() ),
+                        "DELETE",
+                        topClause,
+                        "FROM",
+                        wrapQueryTable( query ),
+                        returningClause,
+                        compileWheres( query, query.getWheres() )
+                    ] )
                 );
             }
 
             return trim(
-                arrayToList(
-                    arrayFilter(
-                        [
-                            compileCommonTables( query, query.getCommonTables() ),
-                            "DELETE",
-                            topClause,
-                            hasAlias
-                             ? wrapAlias( getTablePrefix() & query.getAlias() )
-                             : wrapTable( query.getTableName(), false ),
-                            returningClause,
-                            "FROM",
-                            wrapQueryTable( query ),
-                            hasJoins ? compileJoins( query, query.getJoins() ) : "",
-                            compileWheres( query, query.getWheres() )
-                        ],
-                        function( sql ) {
-                            return sql != "";
-                        }
-                    ),
-                    " "
-                )
+                concatenate( [
+                    compileCommonTables( query, query.getCommonTables() ),
+                    "DELETE",
+                    topClause,
+                    hasAlias
+                     ? wrapAlias( getTablePrefix() & query.getAlias() )
+                     : wrapTable( query.getTableName(), false ),
+                    returningClause,
+                    "FROM",
+                    wrapQueryTable( query ),
+                    hasJoins ? compileJoins( query, query.getJoins() ) : "",
+                    compileWheres( query, query.getWheres() )
+                ] )
             );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -744,28 +716,24 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             var sourceString = "";
-            var columnsString = arguments.insertColumns
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
+            var wrappedInsertColumns = [];
+            for ( var column in arguments.insertColumns ) {
+                wrappedInsertColumns.append( wrapColumn( column.formatted ) );
+            }
+            var columnsString = wrappedInsertColumns.toList( ", " );
 
             if ( !isNull( arguments.source ) ) {
                 sourceString = "(#compileSelect( arguments.source )#) AS [qb_src]";
             } else {
-                var placeholderString = arguments.values
-                    .map( function( valueArray ) {
-                        return "(" & valueArray
-                            .map( function( item ) {
-                                if ( getUtils().isExpression( item ) ) {
-                                    return item.getSQL();
-                                } else {
-                                    return "?";
-                                }
-                            } )
-                            .toList( ", " ) & ")";
-                    } )
-                    .toList( ", " );
+                var placeholderRows = [];
+                for ( var valueArray in arguments.values ) {
+                    var placeholders = [];
+                    for ( var item in valueArray ) {
+                        placeholders.append( getUtils().isExpression( item ) ? item.getSQL() : "?" );
+                    }
+                    placeholderRows.append( "(" & placeholders.toList( ", " ) & ")" );
+                }
+                var placeholderString = placeholderRows.toList( ", " );
 
                 sourceString = "(VALUES #placeholderString#) AS [qb_src] (#columnsString#)";
             }
@@ -774,25 +742,27 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
             var updateList = "";
             if ( isArray( arguments.updates ) ) {
-                updateList = arguments.updates
-                    .map( function( column ) {
-                        return "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
-                    } )
-                    .toList( ", " );
+                var updateAssignments = [];
+                for ( var column in arguments.updates ) {
+                    updateAssignments.append(
+                        "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#"
+                    );
+                }
+                updateList = updateAssignments.toList( ", " );
             } else {
-                updateList = arguments.updateColumns
-                    .map( function( column ) {
-                        var equalsClause = "?";
-                        if (
-                            !isNull( updates[ column.original ] ) && getUtils().isExpression(
-                                updates[ column.original ]
-                            )
-                        ) {
-                            equalsClause = updates[ column.original ].getSQL();
-                        }
-                        return "#wrapColumn( column.formatted )# = #equalsClause#";
-                    } )
-                    .toList( ", " );
+                var updateAssignments = [];
+                for ( var column in arguments.updateColumns ) {
+                    var equalsClause = "?";
+                    if (
+                        !isNull( arguments.updates[ column.original ] ) && getUtils().isExpression(
+                            arguments.updates[ column.original ]
+                        )
+                    ) {
+                        equalsClause = arguments.updates[ column.original ].getSQL();
+                    }
+                    updateAssignments.append( "#wrapColumn( column.formatted )# = #equalsClause#" );
+                }
+                updateList = updateAssignments.toList( ", " );
             }
             var updateStatement = updateList == "" ? "" : " WHEN MATCHED THEN UPDATE SET #updateList#";
 
@@ -811,18 +781,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
                 deleteStatement = " WHEN NOT MATCHED BY SOURCE #deleteRestrictionsStatement#THEN DELETE";
             }
 
-            var returningColumns = arguments.qb
-                .getReturning()
-                .map( function( column ) {
-                    if ( column.type == "raw" ) {
-                        return trim( column.value.getSQL() );
-                    }
-                    if ( listLen( column.value, "." ) > 1 ) {
-                        return column.value;
-                    }
-                    return "INSERTED." & wrapColumn( column );
-                } )
-                .toList( ", " );
+            var returningColumns = compileOutputColumns( arguments.qb.getReturning(), "INSERTED." );
 
             var returningClause = returningColumns != "" ? " OUTPUT #returningColumns#" : "";
             return trim(
@@ -1240,27 +1199,28 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             var tables = getAllTableNames( options, schema );
-            var tableList = arrayToList(
-                arrayMap( tables, function( table ) {
-                    return wrapTable( table );
-                } ),
-                ", "
-            );
+            var wrappedTables = [];
+            for ( var table in tables ) {
+                wrappedTables.append( wrapTable( table ) );
+            }
+            var tableList = wrappedTables.toList( ", " );
             var foreignKeySchemaFilter = arguments.schema == "" ? "" : " WHERE OBJECT_SCHEMA_NAME(parent_object_id) = #quoteUnicodeStringLiteral( arguments.schema )#";
-            return arrayFilter(
-                [
-                    "DECLARE @sql NVARCHAR(MAX) = N'';
+            var statements = [
+                "DECLARE @sql NVARCHAR(MAX) = N'';
                 SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id))
                     + ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
                 FROM sys.foreign_keys#foreignKeySchemaFilter#;
 
                 EXEC sp_executesql @sql;",
-                    arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#"
-                ],
-                function( sql ) {
-                    return sql != "";
+                arrayIsEmpty( tables ) ? "" : "DROP TABLE #tableList#"
+            ];
+            var nonEmptyStatements = [];
+            for ( var sql in statements ) {
+                if ( sql != "" ) {
+                    nonEmptyStatements.append( sql );
                 }
-            );
+            }
+            return nonEmptyStatements;
         } finally {
             if ( !isNull( arguments.sb.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

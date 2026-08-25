@@ -28,6 +28,7 @@ component {
         }
 
         var arrowParts = listToArray( parsedColumn, "->", false, true );
+        var normalizedPath = [];
         if ( arrowParts.len() > 1 ) {
             if ( !arguments.path.isEmpty() ) {
                 throw(
@@ -36,10 +37,15 @@ component {
                 );
             }
             parsedColumn = trim( arrowParts.shift() );
-            arguments.path = arrowParts.map( ( segment ) => normalizeJsonPathSegment( segment ) );
+            for ( var segment in arrowParts ) {
+                normalizedPath.append( normalizeJsonPathSegment( segment ) );
+            }
         } else {
-            arguments.path = arguments.path.map( ( segment ) => segment );
+            for ( var segment in arguments.path ) {
+                normalizedPath.append( segment );
+            }
         }
+        arguments.path = normalizedPath;
 
         var definition = {
             type: "jsonPath",

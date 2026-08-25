@@ -81,27 +81,30 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
         var hasRecursion = false;
 
-        var sql = arguments.commonTables.map( function( commonTable ) {
-            var sql = arguments.commonTable.query.toSQL();
+        var sql = [];
+        for ( var commonTable in arguments.commonTables ) {
+            var commonTableSql = commonTable.query.toSQL();
 
             // generate the optional column definition
-            var columns = arguments.commonTable.columns
-                .map( function( value ) {
-                    return wrapColumn( arguments.value );
-                } )
-                .toList();
+            var wrappedColumns = [];
+            for ( var value in commonTable.columns ) {
+                wrappedColumns.append( wrapColumn( value ) );
+            }
+            var columns = wrappedColumns.toList();
 
             // we need to track if any of the CTEs are recursive
-            if ( arguments.commonTable.recursive ) {
+            if ( commonTable.recursive ) {
                 throw( type = "UnsupportedOperation", message = "This grammar does not support recursive CTEs." );
             }
 
-            return wrapColumn( arguments.commonTable.name ) & (
-                len( columns ) ? " " & ( variables.cteColumnsRequireParentheses ? "(" : "" ) & columns & (
-                    variables.cteColumnsRequireParentheses ? ")" : ""
-                ) : ""
-            ) & " AS (" & sql & ")";
-        } );
+            sql.append(
+                wrapColumn( commonTable.name ) & (
+                    len( columns ) ? " " & ( variables.cteColumnsRequireParentheses ? "(" : "" ) & columns & (
+                        variables.cteColumnsRequireParentheses ? ")" : ""
+                    ) : ""
+                ) & " AS (" & commonTableSql & ")"
+            );
+        }
 
         /*
             Most implementations of CTE require the RECURSIVE keyword if *any* single CTE uses recursive,
@@ -134,23 +137,24 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
 
             var multiple = arguments.values.len() > 1;
 
-            var columnsString = arguments.columns
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
+            var wrappedColumns = [];
+            for ( var column in arguments.columns ) {
+                wrappedColumns.append( wrapColumn( column.formatted ) );
+            }
+            var columnsString = wrappedColumns.toList( ", " );
 
-            var results = arguments.values.map( function( valueArray ) {
-                return "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#) VALUES (" & valueArray
-                    .map( function( item ) {
-                        if ( getUtils().isExpression( item ) ) {
-                            return item.getSQL();
-                        } else {
-                            return "?";
-                        }
-                    } )
-                    .toList( ", " ) & ")";
-            } );
+            var results = [];
+            for ( var valueArray in arguments.values ) {
+                var placeholders = [];
+                for ( var item in valueArray ) {
+                    placeholders.append( getUtils().isExpression( item ) ? item.getSQL() : "?" );
+                }
+                results.append(
+                    "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#) VALUES (" &
+                    placeholders.toList( ", " ) &
+                    ")"
+                );
+            }
 
             return trim( results.toList( "; " ) );
         } finally {
@@ -202,18 +206,18 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var updateList = columns
-                .map( function( column ) {
-                    var value = updateMap[ column.original ];
-                    var assignment = "?";
-                    if ( utils.isExpression( value ) ) {
-                        assignment = value.getSql();
-                    } else if ( utils.isBuilder( value ) ) {
-                        assignment = "(#value.toSQL()#)";
-                    }
-                    return "#wrapColumn( column.formatted )# = #assignment#";
-                } )
-                .toList( ", " );
+            var updateAssignments = [];
+            for ( var column in arguments.columns ) {
+                var value = arguments.updateMap[ column.original ];
+                var assignment = "?";
+                if ( utils.isExpression( value ) ) {
+                    assignment = value.getSql();
+                } else if ( utils.isBuilder( value ) ) {
+                    assignment = "(#value.toSQL()#)";
+                }
+                updateAssignments.append( "#wrapColumn( column.formatted )# = #assignment#" );
+            }
+            var updateList = updateAssignments.toList( ", " );
 
             var updateStatement = "UPDATE #wrapQueryTable( query )#";
 
@@ -264,61 +268,57 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
                 setShouldWrapValues( arguments.qb.getShouldWrapValues() );
             }
 
-            var columnsString = arguments.insertColumns
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
-
-            var valuesString = arrayToList(
-                arguments.insertColumns.map( function( column ) {
-                    return wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } );
-                } ),
-                ", "
-            );
+            var wrappedInsertColumns = [];
+            var wrappedSourceColumns = [];
+            for ( var column in arguments.insertColumns ) {
+                wrappedInsertColumns.append( wrapColumn( column.formatted ) );
+                wrappedSourceColumns.append(
+                    wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )
+                );
+            }
+            var columnsString = wrappedInsertColumns.toList( ", " );
+            var valuesString = wrappedSourceColumns.toList( ", " );
 
             var placeholderString = "";
             if ( !isNull( arguments.source ) ) {
                 placeholderString = compileSelect( arguments.source );
             } else {
-                placeholderString = "VALUES " & arguments.values
-                    .map( function( valueArray ) {
-                        return "(" & valueArray
-                            .map( function( item ) {
-                                if ( getUtils().isExpression( item ) ) {
-                                    return item.getSQL();
-                                } else {
-                                    return "?";
-                                }
-                            } )
-                            .toList( ", " ) & ")";
-                    } )
-                    .toList( ", " );
+                var placeholderRows = [];
+                for ( var valueArray in arguments.values ) {
+                    var placeholders = [];
+                    for ( var item in valueArray ) {
+                        placeholders.append( getUtils().isExpression( item ) ? item.getSQL() : "?" );
+                    }
+                    placeholderRows.append( "(" & placeholders.toList( ", " ) & ")" );
+                }
+                placeholderString = "VALUES " & placeholderRows.toList( ", " );
             }
 
             var constraintString = compileUpsertTargetConstraint( arguments.target, arguments.matchNulls );
 
             var updateList = "";
             if ( isArray( arguments.updates ) ) {
-                updateList = arguments.updates
-                    .map( function( column ) {
-                        return "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#";
-                    } )
-                    .toList( ", " );
+                var updateAssignments = [];
+                for ( var column in arguments.updates ) {
+                    updateAssignments.append(
+                        "#wrapColumn( column.formatted )# = #wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } )#"
+                    );
+                }
+                updateList = updateAssignments.toList( ", " );
             } else {
-                updateList = arguments.updateColumns
-                    .map( function( column ) {
-                        var equalsClause = "?";
-                        if (
-                            !isNull( updates[ column.original ] ) && getUtils().isExpression(
-                                updates[ column.original ]
-                            )
-                        ) {
-                            equalsClause = updates[ column.original ].getSQL();
-                        }
-                        return "#wrapColumn( column.formatted )# = #equalsClause#";
-                    } )
-                    .toList( ", " );
+                var updateAssignments = [];
+                for ( var column in arguments.updateColumns ) {
+                    var equalsClause = "?";
+                    if (
+                        !isNull( arguments.updates[ column.original ] ) && getUtils().isExpression(
+                            arguments.updates[ column.original ]
+                        )
+                    ) {
+                        equalsClause = arguments.updates[ column.original ].getSQL();
+                    }
+                    updateAssignments.append( "#wrapColumn( column.formatted )# = #equalsClause#" );
+                }
+                updateList = updateAssignments.toList( ", " );
             }
             var updateStatement = updateList == "" ? "" : " WHEN MATCHED THEN UPDATE SET #updateList#";
 
@@ -765,9 +765,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             }
 
             var tables = getAllTableNames( options, schema );
-            return arrayMap( tables, function( table ) {
-                return "DROP TABLE #wrapTable( table )#";
-            } );
+            var statements = [];
+            for ( var table in tables ) {
+                statements.append( "DROP TABLE #wrapTable( table )#" );
+            }
+            return statements;
         } finally {
             if ( !isNull( arguments.sb.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

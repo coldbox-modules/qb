@@ -76,19 +76,8 @@ component displayname="Grammar" accessors="true" singleton {
         variables.shouldWrapValues = true;
         variables.shouldWrapValuesContext = createObject( "java", "java.lang.ThreadLocal" ).init();
         // These are overwritten by WireBox, if it exists.
-        variables.interceptorService = {
-            "processState": function() {
-            },
-            "announce": function() {
-            }
-        };
-        variables.log = {
-            "canDebug": function() {
-                return false;
-            },
-            "debug": function() {
-            }
-        };
+        variables.interceptorService = new qb.models.Support.NullInterceptorService();
+        variables.log = new qb.models.Support.NullLogger();
         return this;
     }
 
@@ -303,27 +292,30 @@ component displayname="Grammar" accessors="true" singleton {
 
         var hasRecursion = false;
 
-        var sql = arguments.commonTables.map( function( commonTable ) {
-            var sql = arguments.commonTable.query.toSQL();
+        var sql = [];
+        for ( var commonTable in arguments.commonTables ) {
+            var commonTableSql = commonTable.query.toSQL();
 
             // generate the optional column definition
-            var columns = arguments.commonTable.columns
-                .map( function( value ) {
-                    return wrapColumn( arguments.value );
-                } )
-                .toList();
+            var wrappedColumns = [];
+            for ( var value in commonTable.columns ) {
+                wrappedColumns.append( wrapColumn( value ) );
+            }
+            var columns = wrappedColumns.toList();
 
             // we need to track if any of the CTEs are recursive
-            if ( arguments.commonTable.recursive ) {
+            if ( commonTable.recursive ) {
                 hasRecursion = true;
             }
 
-            return wrapColumn( arguments.commonTable.name ) & (
-                len( columns ) ? " " & ( variables.cteColumnsRequireParentheses ? "(" : "" ) & columns & (
-                    variables.cteColumnsRequireParentheses ? ")" : ""
-                ) : ""
-            ) & " AS (" & sql & ")";
-        } );
+            sql.append(
+                wrapColumn( commonTable.name ) & (
+                    len( columns ) ? " " & ( variables.cteColumnsRequireParentheses ? "(" : "" ) & columns & (
+                        variables.cteColumnsRequireParentheses ? ")" : ""
+                    ) : ""
+                ) & " AS (" & commonTableSql & ")"
+            );
+        }
 
         /*
             Most implementations of CTE require the RECURSIVE keyword if *any* single CTE uses recursive,
@@ -347,7 +339,11 @@ component displayname="Grammar" accessors="true" singleton {
             return "";
         }
         var select = query.getDistinct() && query.getAggregate().isEmpty() ? "SELECT DISTINCT " : "SELECT ";
-        return select & columns.map( wrapColumn ).toList( ", " );
+        var wrappedColumns = [];
+        for ( var column in arguments.columns ) {
+            wrappedColumns.append( wrapColumn( column ) );
+        }
+        return select & wrappedColumns.toList( ", " );
     }
 
     public string function compileConcat( required string alias, required array items ) {
@@ -828,7 +824,11 @@ component displayname="Grammar" accessors="true" singleton {
             return "";
         }
 
-        return trim( "GROUP BY #groups.map( wrapColumn ).toList( ", " )#" );
+        var wrappedGroups = [];
+        for ( var group in arguments.groups ) {
+            wrappedGroups.append( wrapColumn( group ) );
+        }
+        return trim( "GROUP BY #wrappedGroups.toList( ", " )#" );
     }
 
     /**
@@ -843,7 +843,10 @@ component displayname="Grammar" accessors="true" singleton {
         if ( arguments.havings.isEmpty() ) {
             return "";
         }
-        var sql = arguments.havings.map( compileHaving );
+        var sql = [];
+        for ( var having in arguments.havings ) {
+            sql.append( compileHaving( having ) );
+        }
         return trim( "HAVING #removeLeadingCombinator( sql.toList( " " ) )#" );
     }
 
@@ -878,12 +881,13 @@ component displayname="Grammar" accessors="true" singleton {
             return "";
         }
 
-        var sql = arguments.unions.map( function( union ) {
+        var sql = [];
+        for ( var union in arguments.unions ) {
             /*
              * No queries being unioned to the origin query can contain an ORDER BY clause, only the outer-most
              * QueryBuilder instance can actually have a defined orderBy().
              */
-            if ( arguments.union.query.getOrders().len() ) {
+            if ( union.query.getOrders().len() ) {
                 throw(
                     type = "OrderByNotAllowed",
                     message = "The ORDER BY clause is not allowed in a UNION statement.",
@@ -891,10 +895,9 @@ component displayname="Grammar" accessors="true" singleton {
                 );
             }
 
-            var sql = arguments.union.query.toSQL();
-
-            return "UNION " & ( arguments.union.all ? "ALL " : "" ) & sql;
-        } );
+            var unionSql = union.query.toSQL();
+            sql.append( "UNION " & ( union.all ? "ALL " : "" ) & unionSql );
+        }
 
         return trim( arrayToList( sql, " " ) );
     }
@@ -912,17 +915,18 @@ component displayname="Grammar" accessors="true" singleton {
             return "";
         }
 
-        var orderBys = orders.map( function( orderBy ) {
+        var orderBys = [];
+        for ( var orderBy in arguments.orders ) {
             if ( orderBy.direction == "raw" ) {
-                return orderBy.column.getSQL();
+                orderBys.append( orderBy.column.getSQL() );
             } else if ( orderBy.direction == "random" ) {
-                return orderByRandom();
+                orderBys.append( orderByRandom() );
             } else if ( orderBy.keyExists( "query" ) ) {
-                return "(#this.compileSelect( orderBy.query )#) #uCase( orderBy.direction )#";
+                orderBys.append( "(#this.compileSelect( orderBy.query )#) #uCase( orderBy.direction )#" );
             } else {
-                return "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#";
+                orderBys.append( "#wrapColumn( orderBy.column )# #uCase( orderBy.direction )#" );
             }
-        } );
+        }
 
         return "ORDER BY #orderBys.toList( ", " )#";
     }
@@ -1002,25 +1006,21 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var columnsString = arguments.columns
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
+            var wrappedColumns = [];
+            for ( var column in arguments.columns ) {
+                wrappedColumns.append( wrapColumn( column.formatted ) );
+            }
+            var columnsString = wrappedColumns.toList( ", " );
 
-            var placeholderString = values
-                .map( function( valueArray ) {
-                    return "(" & valueArray
-                        .map( function( item ) {
-                            if ( getUtils().isExpression( item ) ) {
-                                return item.getSQL();
-                            } else {
-                                return "?";
-                            }
-                        } )
-                        .toList( ", " ) & ")";
-                } )
-                .toList( ", " );
+            var placeholderRows = [];
+            for ( var valueArray in arguments.values ) {
+                var placeholders = [];
+                for ( var item in valueArray ) {
+                    placeholders.append( getUtils().isExpression( item ) ? item.getSQL() : "?" );
+                }
+                placeholderRows.append( "(" & placeholders.toList( ", " ) & ")" );
+            }
+            var placeholderString = placeholderRows.toList( ", " );
             return trim( "INSERT INTO #wrapTable( query.getTableName() )# (#columnsString#) VALUES #placeholderString#" );
         } finally {
             if ( !isNull( arguments.query.getShouldWrapValues() ) ) {
@@ -1047,18 +1047,18 @@ component displayname="Grammar" accessors="true" singleton {
         var columnNames = [];
         var seenColumns = {};
 
-        arguments.values.each( function( row ) {
-            if ( !isStruct( arguments.row ) ) {
+        for ( var row in arguments.values ) {
+            if ( !isStruct( row ) ) {
                 throw( type = "InvalidSQLType", message = "Please pass an array of structs mapping columns to values" );
             }
 
-            for ( var key in arguments.row ) {
+            for ( var key in row ) {
                 if ( !seenColumns.keyExists( key ) ) {
                     seenColumns[ key ] = true;
                     columnNames.append( key );
                 }
             }
-        } );
+        }
 
         return columnNames;
     }
@@ -1071,15 +1071,15 @@ component displayname="Grammar" accessors="true" singleton {
      * @sqlTypes Explicit SQL types keyed by column name.
      */
     public struct function prepareBulkInsert( required any query, required array values, required struct sqlTypes ) {
-        var builder = arguments.query;
-        var columns = resolveInsertColumnNames( arguments.values ).map( function( column ) {
-            var formatted = listLast( builder.applyColumnFormatter( column ), "." );
-            return { "original": column, "formatted": { "type": "simple", "value": formatted } };
-        } );
-        columns.sort( ( a, b ) => compareNoCase( a.formatted.value, b.formatted.value ) );
+        var columns = [];
+        for ( var columnName in resolveInsertColumnNames( arguments.values ) ) {
+            var formatted = listLast( arguments.query.applyColumnFormatter( columnName ), "." );
+            columns.append( { "original": columnName, "formatted": { "type": "simple", "value": formatted } } );
+        }
+        columns = sortColumnsByFormattedValue( columns );
 
-        arguments.values.each( function( row ) {
-            columns.each( function( column ) {
+        for ( var row in arguments.values ) {
+            for ( var column in columns ) {
                 if (
                     row.keyExists( column.original ) &&
                     !isNull( row[ column.original ] ) &&
@@ -1087,10 +1087,29 @@ component displayname="Grammar" accessors="true" singleton {
                 ) {
                     throw( type = "InvalidBulkValue", message = "Bulk insert values cannot contain SQL expressions." );
                 }
-            } );
-        } );
+            }
+        }
 
         return prepareBulkInsertValues( arguments.values, columns, arguments.sqlTypes );
+    }
+
+    /**
+     * Sort normalized column definitions without allocating a comparator closure.
+     */
+    private array function sortColumnsByFormattedValue( required array columns ) {
+        for ( var i = 2; i <= arguments.columns.len(); i++ ) {
+            var currentColumn = arguments.columns[ i ];
+            var position = i - 1;
+            while (
+                position >= 1 &&
+                compareNoCase( currentColumn.formatted.value, arguments.columns[ position ].formatted.value ) < 0
+            ) {
+                arguments.columns[ position + 1 ] = arguments.columns[ position ];
+                position--;
+            }
+            arguments.columns[ position + 1 ] = currentColumn;
+        }
+        return arguments.columns;
     }
 
     /**
@@ -1153,18 +1172,18 @@ component displayname="Grammar" accessors="true" singleton {
      * @return The compiled match predicate.
      */
     public string function compileUpsertTargetConstraint( required array target, boolean matchNulls = false ) {
-        var shouldMatchNulls = arguments.matchNulls;
-        return arguments.target
-            .map( function( column ) {
-                var targetColumn = wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } );
-                var sourceColumn = wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } );
-                var equality = "#targetColumn# = #sourceColumn#";
-                if ( !shouldMatchNulls ) {
-                    return equality;
-                }
-                return "(#equality# OR (#targetColumn# IS NULL AND #sourceColumn# IS NULL))";
-            } )
-            .toList( " AND " );
+        var constraints = [];
+        for ( var column in arguments.target ) {
+            var targetColumn = wrapColumn( { "type": "simple", "value": "qb_target.#column.formatted.value#" } );
+            var sourceColumn = wrapColumn( { "type": "simple", "value": "qb_src.#column.formatted.value#" } );
+            var equality = "#targetColumn# = #sourceColumn#";
+            constraints.append(
+                arguments.matchNulls
+                 ? "(#equality# OR (#targetColumn# IS NULL AND #sourceColumn# IS NULL))"
+                 : equality
+            );
+        }
+        return constraints.toList( " AND " );
     }
 
     /**
@@ -1187,11 +1206,11 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var columnsString = arguments.columns
-                .map( function( column ) {
-                    return wrapColumn( column.formatted );
-                } )
-                .toList( ", " );
+            var wrappedColumns = [];
+            for ( var column in arguments.columns ) {
+                wrappedColumns.append( wrapColumn( column.formatted ) );
+            }
+            var columnsString = wrappedColumns.toList( ", " );
             var targetColumns = columnsString == "" ? "" : " (#columnsString#)";
 
             return trim(
@@ -1227,18 +1246,18 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.query.getShouldWrapValues() );
             }
 
-            var updateList = columns
-                .map( function( column ) {
-                    var value = updateMap[ column.original ];
-                    var assignment = "?";
-                    if ( utils.isExpression( value ) ) {
-                        assignment = value.getSql();
-                    } else if ( utils.isBuilder( value ) ) {
-                        assignment = "(#value.toSQL()#)";
-                    }
-                    return "#wrapColumn( column.formatted )# = #assignment#";
-                } )
-                .toList( ", " );
+            var updateAssignments = [];
+            for ( var column in arguments.columns ) {
+                var value = arguments.updateMap[ column.original ];
+                var assignment = "?";
+                if ( utils.isExpression( value ) ) {
+                    assignment = value.getSql();
+                } else if ( utils.isBuilder( value ) ) {
+                    assignment = "(#value.toSQL()#)";
+                }
+                updateAssignments.append( "#wrapColumn( column.formatted )# = #assignment#" );
+            }
+            var updateList = updateAssignments.toList( ", " );
 
             var updateStatement = "UPDATE #wrapQueryTable( query )#";
 
@@ -1338,12 +1357,13 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     private string function concatenate( required array sql, string separator = " " ) {
-        return arrayToList(
-            arrayFilter( arguments.sql, function( item ) {
-                return item != "";
-            } ),
-            arguments.separator
-        );
+        var fragments = [];
+        for ( var item in arguments.sql ) {
+            if ( item != "" ) {
+                fragments.append( item );
+            }
+        }
+        return arrayToList( fragments, arguments.separator );
     }
 
     /**
@@ -1383,16 +1403,14 @@ component displayname="Grammar" accessors="true" singleton {
 
         var parts = explodeTable( arguments.table );
         if ( getUtils().isNotSubQuery( parts.table ) ) {
-            parts.table = parts.table
-                .listToArray( "." )
-                .map( function( tablePart, index, tableParts ) {
-                    // Add the tableprefix when we get to the last element
-                    if ( index == tableParts.len() ) {
-                        return wrapValue( getTablePrefix() & tablePart );
-                    }
-                    return wrapValue( tablePart );
-                } )
-                .toList( "." );
+            var tableParts = parts.table.listToArray( "." );
+            var wrappedTableParts = [];
+            for ( var i = 1; i <= tableParts.len(); i++ ) {
+                wrappedTableParts.append(
+                    wrapValue( i == tableParts.len() ? getTablePrefix() & tableParts[ i ] : tableParts[ i ] )
+                );
+            }
+            parts.table = wrappedTableParts.toList( "." );
         }
         if ( !parts.alias.len() ) {
             return parts.table;
@@ -1471,10 +1489,11 @@ component displayname="Grammar" accessors="true" singleton {
         var columnParts = explodeColumnAlias( arguments.column.value );
         arguments.column = columnParts.column;
         var alias = columnParts.alias;
-        arguments.column = arguments.column
-            .listToArray( "." )
-            .map( wrapValue )
-            .toList( "." );
+        var wrappedColumnParts = [];
+        for ( var columnPart in arguments.column.listToArray( "." ) ) {
+            wrappedColumnParts.append( wrapValue( columnPart ) );
+        }
+        arguments.column = wrappedColumnParts.toList( "." );
         if ( !alias.len() ) {
             return arguments.column;
         }
@@ -1718,12 +1737,11 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function compileCreateColumns( required blueprint ) {
-        return blueprint
-            .getColumns()
-            .map( function( column ) {
-                return compileCreateColumn( column, blueprint );
-            } )
-            .toList( ", " );
+        var columns = [];
+        for ( var column in arguments.blueprint.getColumns() ) {
+            columns.append( compileCreateColumn( column, arguments.blueprint ) );
+        }
+        return columns.toList( ", " );
     }
 
     function compileCreateColumn( column, blueprint ) {
@@ -2178,12 +2196,11 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function typeEnum( column ) {
-        var values = column
-            .getValues()
-            .map( function( value ) {
-                return quoteStringLiteral( value );
-            } )
-            .toList( ", " );
+        var quotedValues = [];
+        for ( var value in arguments.column.getValues() ) {
+            quotedValues.append( quoteStringLiteral( value ) );
+        }
+        var values = quotedValues.toList( ", " );
         return "ENUM(#values#)";
     }
 
@@ -2373,15 +2390,18 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            return blueprint
-                .getIndexes()
-                .map( function( index ) {
-                    return invoke( this, "index#index.getType()#", { index: index, blueprint: blueprint } );
-                } )
-                .filter( function( item ) {
-                    return item != "";
-                } )
-                .toList( ", " );
+            var compiledIndexes = [];
+            for ( var index in arguments.blueprint.getIndexes() ) {
+                var compiledIndex = invoke(
+                    this,
+                    "index#index.getType()#",
+                    { index: index, blueprint: arguments.blueprint }
+                );
+                if ( compiledIndex != "" ) {
+                    compiledIndexes.append( compiledIndex );
+                }
+            }
+            return compiledIndexes.toList( ", " );
         } finally {
             if ( !isNull( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );
@@ -2396,13 +2416,12 @@ component displayname="Grammar" accessors="true" singleton {
                 setShouldWrapValues( arguments.blueprint.getSchemaBuilder().getShouldWrapValues() );
             }
 
-            var columnList = commandParameters.index
-                .getColumns()
-                .map( function( column ) {
-                    column = isSimpleValue( column ) ? column : column.getName();
-                    return wrapValue( column );
-                } )
-                .toList( ", " );
+            var wrappedColumns = [];
+            for ( var column in commandParameters.index.getColumns() ) {
+                column = isSimpleValue( column ) ? column : column.getName();
+                wrappedColumns.append( wrapValue( column ) );
+            }
+            var columnList = wrappedColumns.toList( ", " );
 
             return concatenate( [
                 "CREATE INDEX",
@@ -2419,29 +2438,26 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function indexBasic( index, blueprint ) {
-        var columnsString = arguments.index
-            .getColumns()
-            .map( function( column ) {
-                return wrapColumn( { "type": "simple", "value": column } );
-            } )
-            .toList( ", " );
+        var wrappedColumns = [];
+        for ( var column in arguments.index.getColumns() ) {
+            wrappedColumns.append( wrapColumn( { "type": "simple", "value": column } ) );
+        }
+        var columnsString = wrappedColumns.toList( ", " );
         return "INDEX #wrapValue( arguments.index.getName() )# (#columnsString#)";
     }
 
     function indexForeign( index ) {
         // FOREIGN KEY ("country_id") REFERENCES countries ("id") ON DELETE CASCADE
-        var keys = arguments.index
-            .getForeignKey()
-            .map( function( key ) {
-                return wrapColumn( { "type": "simple", "value": key } );
-            } )
-            .toList( ", " );
-        var references = arguments.index
-            .getColumns()
-            .map( function( column ) {
-                return wrapColumn( { "type": "simple", "value": column } );
-            } )
-            .toList( ", " );
+        var wrappedKeys = [];
+        for ( var key in arguments.index.getForeignKey() ) {
+            wrappedKeys.append( wrapColumn( { "type": "simple", "value": key } ) );
+        }
+        var keys = wrappedKeys.toList( ", " );
+        var wrappedReferences = [];
+        for ( var column in arguments.index.getColumns() ) {
+            wrappedReferences.append( wrapColumn( { "type": "simple", "value": column } ) );
+        }
+        var references = wrappedReferences.toList( ", " );
         return concatenate( [
             "CONSTRAINT #wrapValue( arguments.index.getName() )#",
             "FOREIGN KEY (#keys#)",
@@ -2452,33 +2468,30 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     function indexPrimary( index ) {
-        var references = arguments.index
-            .getColumns()
-            .map( function( column ) {
-                return wrapColumn( { "type": "simple", "value": column } );
-            } )
-            .toList( ", " );
+        var wrappedReferences = [];
+        for ( var column in arguments.index.getColumns() ) {
+            wrappedReferences.append( wrapColumn( { "type": "simple", "value": column } ) );
+        }
+        var references = wrappedReferences.toList( ", " );
         return "CONSTRAINT #wrapValue( arguments.index.getName() )# PRIMARY KEY (#references#)";
     }
 
     function indexUnique( index ) {
-        var references = arguments.index
-            .getColumns()
-            .map( function( column ) {
-                return wrapColumn( { "type": "simple", "value": column } );
-            } )
-            .toList( ", " );
+        var wrappedReferences = [];
+        for ( var column in arguments.index.getColumns() ) {
+            wrappedReferences.append( wrapColumn( { "type": "simple", "value": column } ) );
+        }
+        var references = wrappedReferences.toList( ", " );
         return "CONSTRAINT #wrapValue( arguments.index.getName() )# UNIQUE (#references#)";
     }
 
     function indexCheck( index ) {
         var column = arguments.index.getColumns()[ 1 ];
-        var values = column
-            .getValues()
-            .map( function( val ) {
-                return quoteStringLiteral( val );
-            } )
-            .toList( ", " );
+        var quotedValues = [];
+        for ( var val in column.getValues() ) {
+            quotedValues.append( quoteStringLiteral( val ) );
+        }
+        var values = quotedValues.toList( ", " );
         return concatenate( [
             "CONSTRAINT",
             wrapValue( arguments.index.getName() ),

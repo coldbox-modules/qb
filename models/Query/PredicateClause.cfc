@@ -182,9 +182,13 @@ component {
             } );
 
         if ( !arguments.values.isEmpty() ) {
-            var serializedValues = extractedBindings.map( function( binding ) {
-                return binding.null ? javacast( "null", "" ) : binding.value;
-            } );
+            var serializedValues = [];
+            arrayResize( serializedValues, extractedBindings.len() );
+            for ( var i = 1; i <= extractedBindings.len(); i++ ) {
+                serializedValues[ i ] = extractedBindings[ i ].null
+                 ? javacast( "null", "" )
+                 : extractedBindings[ i ].value;
+            }
             arguments.builder.addBindings( columnBindings, "where" );
             arguments.builder.addBindings(
                 [
@@ -212,13 +216,13 @@ component {
         string combinator = "and"
     ) {
         arguments.builder.getQueryValidator().validateCombinator( arguments.combinator );
-        var queryBuilder = arguments.builder;
-        arguments.builder.addBindings(
-            arguments.whereBindings.map( function( binding ) {
-                return queryBuilder.getUtils().extractBinding( binding, queryBuilder.getGrammar() );
-            } ),
-            "where"
-        );
+        var extractedWhereBindings = [];
+        for ( var binding in arguments.whereBindings ) {
+            extractedWhereBindings.append(
+                arguments.builder.getUtils().extractBinding( binding, arguments.builder.getGrammar() )
+            );
+        }
+        arguments.builder.addBindings( extractedWhereBindings, "where" );
         arguments.builder.getWheres().append( { type: "raw", sql: arguments.sql, combinator: arguments.combinator } );
         return arguments.builder;
     }
@@ -528,8 +532,16 @@ component {
     public QueryBuilder function withScoping( required QueryBuilder builder, required function callback ) {
         var originalWhereCount = arguments.builder.getWheres().len();
         arguments.callback();
-        if ( arguments.builder.getWheres().len() > originalWhereCount ) {
-            addNewWheresWithinGroup( arguments.builder, originalWhereCount );
+        scopeNewWheres( arguments.builder, originalWhereCount );
+        return arguments.builder;
+    }
+
+    /**
+     * Groups predicates added after a known where-clause count.
+     */
+    package QueryBuilder function scopeNewWheres( required QueryBuilder builder, required numeric originalWhereCount ) {
+        if ( arguments.builder.getWheres().len() > arguments.originalWhereCount ) {
+            addNewWheresWithinGroup( arguments.builder, arguments.originalWhereCount );
         }
         return arguments.builder;
     }

@@ -153,15 +153,17 @@ component displayname="Grammar" accessors="true" singleton {
         function postProcessHook
     ) {
         local.result = "";
+        var executionOptions = {};
+        structAppend( executionOptions, arguments.options, true );
         var data = {
             "sql": arguments.sql,
             "bindings": arguments.bindings,
-            "options": structCopy( arguments.options ),
+            "options": executionOptions,
             "returnObject": arguments.returnObject,
             "pretend": arguments.pretend
         };
         tryPreInterceptor( data );
-        structAppend( data.options, { result: "local.result" }, true );
+        data.options.result = "local.result";
         if ( variables.log.canDebug() ) {
             variables.log.debug(
                 "Executing sql: #data.sql#",
@@ -1562,9 +1564,11 @@ component displayname="Grammar" accessors="true" singleton {
     /**
      * Builds a portable SQL/JSON path literal.
      */
-    public string function buildJsonPath( required array path ) {
+    public string function buildJsonPath( required array path, numeric segmentCount ) {
+        var pathSegmentCount = isNull( arguments.segmentCount ) ? arguments.path.len() : arguments.segmentCount;
         var compiledPath = "$";
-        for ( var segment in arguments.path ) {
+        for ( var i = 1; i <= pathSegmentCount; i++ ) {
+            var segment = arguments.path[ i ];
             if ( getUtils().isActuallyNumeric( segment ) ) {
                 compiledPath &= "[#segment#]";
             } else {

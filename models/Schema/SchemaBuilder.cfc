@@ -544,8 +544,9 @@ component accessors="true" {
      * Merges per-operation options with schema defaults without mutating the caller's struct.
      */
     private struct function mergeOptions( required struct options ) {
-        var mergedOptions = structCopy( arguments.options );
-        structAppend( mergedOptions, variables.defaultOptions, false );
+        var mergedOptions = {};
+        structAppend( mergedOptions, variables.defaultOptions, true );
+        structAppend( mergedOptions, arguments.options, true );
         return mergedOptions;
     }
 

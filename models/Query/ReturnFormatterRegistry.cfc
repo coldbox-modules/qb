@@ -95,16 +95,19 @@ component accessors="true" singleton {
 
     private struct function normalizeFormatterDefinition( required any definition ) {
         if ( isStruct( arguments.definition ) && arguments.definition.keyExists( "factory" ) ) {
-            var normalizedDefinition = structCopy( arguments.definition );
-            param normalizedDefinition.options = {};
-            param normalizedDefinition.properties = {};
-            param normalizedDefinition.force = false;
-
             return {
-                "factory": normalizedDefinition.factory,
-                "options": normalizedDefinition.options,
-                "properties": normalizedDefinition.properties,
-                "force": normalizedDefinition.force
+                "factory": arguments.definition.factory,
+                "options": arguments.definition.keyExists( "options" ) && !isNull( arguments.definition.options )
+                 ? arguments.definition.options
+                 : {},
+                "properties": arguments.definition.keyExists( "properties" ) && !isNull(
+                    arguments.definition.properties
+                )
+                 ? arguments.definition.properties
+                 : {},
+                "force": arguments.definition.keyExists( "force" ) && !isNull( arguments.definition.force )
+                 ? arguments.definition.force
+                 : false
             };
         }
 

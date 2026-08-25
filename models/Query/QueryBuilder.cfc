@@ -2962,28 +2962,37 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return query
      */
     public any function update( struct values = {}, struct options = {}, boolean toSql = false ) {
-        arguments.values = structCopy( arguments.values );
-        structAppend( arguments.values, variables.updates, false );
-        var updateArray = buildColumnDefinitions( arguments.values.keyArray(), true );
+        var updateKeys = arguments.values.keyArray();
+        for ( var configuredUpdateKey in variables.updates ) {
+            if ( !arguments.values.keyExists( configuredUpdateKey ) ) {
+                updateKeys.append( configuredUpdateKey );
+            }
+        }
+        var updateArray = buildColumnDefinitions( updateKeys, true );
 
+        var resolvedUpdateValues = {};
         var newUpdateBindings = [];
         var executor = getCollaborator( "QueryExecutor" );
         var commonTableState = executor.captureCommonTableState( this );
         var sql = "";
         try {
             for ( var column in updateArray ) {
-                var value = arguments.values[ column.original ];
+                var value = arguments.values.keyExists( column.original )
+                 ? arguments.values[ column.original ]
+                 : variables.updates[ column.original ];
                 if ( isCustomFunction( value ) || isClosure( value ) ) {
                     var subselect = newQuery();
                     value( subselect );
-                    arguments.values[ column.original ] = executor.snapshotBuilder( this, subselect );
-                    newUpdateBindings.append( arguments.values[ column.original ].getBindings(), true );
+                    resolvedUpdateValues[ column.original ] = executor.snapshotBuilder( this, subselect );
+                    newUpdateBindings.append( resolvedUpdateValues[ column.original ].getBindings(), true );
                 } else if ( getUtils().isBuilder( value ) ) {
-                    arguments.values[ column.original ] = executor.snapshotBuilder( this, value );
-                    newUpdateBindings.append( arguments.values[ column.original ].getBindings(), true );
+                    resolvedUpdateValues[ column.original ] = executor.snapshotBuilder( this, value );
+                    newUpdateBindings.append( resolvedUpdateValues[ column.original ].getBindings(), true );
                 } else if ( getUtils().isExpression( value ) ) {
+                    resolvedUpdateValues[ column.original ] = value;
                     newUpdateBindings.append( extractExpressionBindings( value ), true );
                 } else {
+                    resolvedUpdateValues[ column.original ] = value;
                     newUpdateBindings.append( getUtils().extractBinding( value, variables.grammar ) );
                 }
             }
@@ -2992,7 +3001,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
 
             sql = withGrammarWrapping(
                 "compileUpdate",
-                { "query": this, "columns": updateArray, "updateMap": arguments.values }
+                { "query": this, "columns": updateArray, "updateMap": resolvedUpdateValues }
             );
         } catch ( any e ) {
             executor.restoreCommonTableState( this, commonTableState );

@@ -1,11 +1,13 @@
 component accessors="true" {
 
     property name="utils";
-    property name="options";
+    property name="columnKey";
 
     public StructFormatter function init( any utils = new qb.models.Query.QueryUtils(), struct options = {} ) {
         variables.utils = arguments.utils;
-        variables.options = structCopy( arguments.options );
+        variables.columnKey = arguments.options.keyExists( "columnKey" ) && !isNull( arguments.options.columnKey )
+         ? arguments.options.columnKey
+         : javacast( "null", "" );
         return this;
     }
 
@@ -14,18 +16,14 @@ component accessors="true" {
     }
 
     public struct function format( required any q ) {
-        if (
-            !variables.options.keyExists( "columnKey" ) || isNull( variables.options.columnKey ) || !len(
-                variables.options.columnKey
-            )
-        ) {
+        if ( isNull( variables.columnKey ) || !len( variables.columnKey ) ) {
             throw(
                 type = "MissingColumnKey",
                 message = "A columnKey option is required for the [struct] return formatter."
             );
         }
 
-        return variables.utils.queryToStructOfStructs( arguments.q, variables.options.columnKey );
+        return variables.utils.queryToStructOfStructs( arguments.q, variables.columnKey );
     }
 
 }

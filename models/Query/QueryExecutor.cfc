@@ -38,9 +38,10 @@ component {
         string returnObject = "query",
         struct bindingsDefinition = { provided: false }
     ) {
-        var queryOptions = structCopy( arguments.options );
+        var queryOptions = {};
         var queryBuilder = arguments.builder;
-        structAppend( queryOptions, arguments.builder.getDefaultOptions(), false );
+        structAppend( queryOptions, arguments.builder.getDefaultOptions(), true );
+        structAppend( queryOptions, arguments.options, true );
         if ( queryOptions.keyExists( "returntype" ) ) {
             arguments.builder.getQueryValidator().validateQueryExecuteOptions( queryOptions );
         }

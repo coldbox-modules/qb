@@ -124,6 +124,107 @@ component extends="testbox.system.BaseSpec" {
                 expect( utils.queryToStructOfStructs( queryNew( "name", "varchar" ), "id" ) ).toBe( {} );
             } );
 
+            it( "projects retained query columns without mutating the source query", function() {
+                var utils = new qb.models.Query.QueryUtils();
+                var source = queryNew(
+                    "id,name,age",
+                    "integer,varchar,integer",
+                    [ { id: 1, name: "Ada", age: 36 }, { id: 2, name: "Grace", age: 85 } ]
+                );
+
+                var result = utils.queryRemoveColumns( source, "NaMe" );
+
+                expect( listLen( result.columnList ) ).toBe( 2 );
+                expect( listFindNoCase( result.columnList, "id" ) > 0 ).toBeTrue();
+                expect( listFindNoCase( result.columnList, "age" ) > 0 ).toBeTrue();
+                expect( listFindNoCase( result.columnList, "name" ) ).toBe( 0 );
+                expect( result.recordCount ).toBe( 2 );
+                expect( result.id[ 1 ] ).toBe( 1 );
+                expect( result.id[ 2 ] ).toBe( 2 );
+                expect( result.age[ 1 ] ).toBe( 36 );
+                expect( result.age[ 2 ] ).toBe( 85 );
+                expect( listLen( source.columnList ) ).toBe( 3 );
+                expect( listFindNoCase( source.columnList, "name" ) > 0 ).toBeTrue();
+                expect( source.name[ 1 ] ).toBe( "Ada" );
+                expect( source.name[ 2 ] ).toBe( "Grace" );
+            } );
+
+            it( "flattens requested binding groups in order while honoring exclusions", function() {
+                var builder = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.PostgresGrammar() );
+                builder.addBindings( { value: "selected" }, "select" );
+                builder.addBindings( { value: "joined" }, "join" );
+                builder.addBindings( { value: "filtered" }, "where" );
+
+                var bindings = builder.getBindings( except = [ "SELECT" ], order = [ "select", "join", "where" ] );
+
+                expect( bindings.map( ( binding ) => binding.value ) ).toBe( [ "joined", "filtered" ] );
+            } );
+
+            it( "wraps simple identifiers through the fast path and preserves alias parsing", function() {
+                var grammar = new qb.models.Grammars.PostgresGrammar();
+
+                expect( grammar.wrapColumn( { type: "simple", value: "accounts.users.id" } ) ).toBe(
+                    """accounts"".""users"".""id"""
+                );
+                expect( grammar.wrapColumn( { type: "simple", value: "users.id AS userId" } ) ).toBe(
+                    """users"".""id"" AS ""userId"""
+                );
+                expect( grammar.wrapColumn( { type: "simple", value: "users.id#chr( 9 )#userId" } ) ).toBe(
+                    """users"".""id"" AS ""userId"""
+                );
+            } );
+
+            it( "normalizes prefixed SQL types without changing public results", function() {
+                var utils = new qb.models.Query.QueryUtils();
+                var grammar = new qb.models.Grammars.BaseGrammar( utils );
+
+                expect( utils.inferSqlType( { cfsqltype: " cf_sql_bigint " }, grammar ) ).toBe( "BIGINT" );
+                expect( utils.inferSqlType( { sqltype: " Decimal " }, grammar ) ).toBe( "DECIMAL" );
+                expect( grammar.resolveWhereInBulkSqlType( " cf_sql_varchar " ) ).toBe( "VARCHAR" );
+                expect( grammar.resolveWhereInBulkSqlType( " timestamp " ) ).toBe( "TIMESTAMP" );
+            } );
+
+            it( "infers array SQL types without retaining per-item type results", function() {
+                var utils = new qb.models.Query.QueryUtils();
+                var grammar = new qb.models.Grammars.PostgresGrammar( utils );
+                var sparseValues = [];
+                arrayResize( sparseValues, 4 );
+                sparseValues[ 1 ] = 1;
+                sparseValues[ 3 ] = 3;
+                sparseValues[ 4 ] = { null: true };
+
+                expect( utils.inferSqlType( sparseValues, grammar ) ).toBe( "INTEGER" );
+                expect( utils.inferSqlType( [ 1, "mixed" ], grammar ) ).toBe( "VARCHAR" );
+                expect( utils.inferSqlType( [], grammar ) ).toBe( "VARCHAR" );
+            } );
+
+            it( "appends scalar and array binding inputs without changing their order", function() {
+                var builder = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.PostgresGrammar() );
+
+                builder.addBindings( { value: "first" }, "where" );
+                builder.addBindings( [ { value: "second" }, { value: "third" } ], "where" );
+
+                expect( builder.getBindings( order = [ "where" ] ).map( ( binding ) => binding.value ) ).toBe( [ "first", "second", "third" ] );
+            } );
+
+            it( "normalizes a single column without splitting and preserves list behavior", function() {
+                var builder = new qb.models.Query.QueryBuilder();
+
+                expect( builder.normalizeToArray( " users.id " ) ).toBe( [ "users.id" ] );
+                expect( builder.normalizeToArray( "users.id, users.name" ) ).toBe( [ "users.id", "users.name" ] );
+                expect( builder.normalizeToArray( "" ) ).toBe( [ "" ] );
+            } );
+
+            it( "wraps simple table names without changing prefix or alias behavior", function() {
+                var grammar = new qb.models.Grammars.PostgresGrammar();
+
+                expect( grammar.wrapTable( "analytics.users" ) ).toBe( """analytics"".""users""" );
+                grammar.setTablePrefix( "qb_" );
+                expect( grammar.wrapTable( "analytics.users" ) ).toBe( """analytics"".""qb_users""" );
+                grammar.setTablePrefix( "" );
+                expect( grammar.wrapTable( "users AS u" ) ).toBe( """users"" AS ""u""" );
+            } );
+
             it( "does not resolve the target grammar when there are no nested common tables", function() {
                 var grammar = createMock( "qb.models.Grammars.BaseGrammar" )
                     .init()

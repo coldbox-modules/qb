@@ -3277,17 +3277,14 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         if ( arguments.order.isEmpty() ) {
             arguments.order = getGrammar().getSelectBindingOrder( this );
         }
-        var bindingOrder = [];
-        for ( var type in arguments.order ) {
-            if ( !arrayContainsNoCase( arguments.except, type ) ) {
-                bindingOrder.append( type );
-            }
-        }
 
         var flatBindings = [];
-        for ( var key in bindingOrder ) {
-            if ( structKeyExists( bindings, key ) ) {
-                arrayAppend( flatBindings, bindings[ key ], true );
+        for ( var type in arguments.order ) {
+            if (
+                !arrayContainsNoCase( arguments.except, type ) &&
+                structKeyExists( variables.bindings, type )
+            ) {
+                flatBindings.append( variables.bindings[ type ], true );
             }
         }
 
@@ -3333,11 +3330,11 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      * @return qb.models.Query.QueryBuilder
      */
     public QueryBuilder function addBindings( required any newBindings, string type = "where" ) {
-        if ( !isArray( newBindings ) ) {
-            newBindings = [ newBindings ];
+        if ( isArray( arguments.newBindings ) ) {
+            variables.bindings[ arguments.type ].append( arguments.newBindings, true );
+        } else {
+            variables.bindings[ arguments.type ].append( arguments.newBindings );
         }
-
-        variables.bindings[ type ].append( newBindings, true );
 
         return this;
     }
@@ -4242,8 +4239,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         }
 
         try {
+            var normalizedValue = trim( arguments.listOrArray );
+            if ( !find( ",", normalizedValue ) ) {
+                return [ normalizedValue ];
+            }
+
             var values = [];
-            for ( var item in trim( arguments.listOrArray ).split( ",\s*" ) ) {
+            for ( var item in normalizedValue.split( ",\s*" ) ) {
                 values.append( trim( item ) );
             }
             return values;

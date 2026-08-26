@@ -792,7 +792,10 @@ component displayname="Grammar" accessors="true" singleton {
      * @return string
      */
     public string function resolveWhereInBulkSqlType( required string sqlType ) {
-        return reReplaceNoCase( trim( arguments.sqlType ), "^CF_SQL_", "" ).uCase();
+        var normalizedSqlType = trim( arguments.sqlType ).uCase();
+        return left( normalizedSqlType, 7 ) == "CF_SQL_"
+         ? right( normalizedSqlType, len( normalizedSqlType ) - 7 )
+         : normalizedSqlType;
     }
 
     /**
@@ -1409,6 +1412,30 @@ component displayname="Grammar" accessors="true" singleton {
             return arguments.table.getSql();
         }
 
+        var tableValue = trim( toString( arguments.table ) );
+        if (
+            !find( " ", tableValue ) &&
+            !find( chr( 9 ), tableValue ) &&
+            !find( chr( 10 ), tableValue ) &&
+            !find( chr( 11 ), tableValue ) &&
+            !find( chr( 12 ), tableValue ) &&
+            !find( chr( 13 ), tableValue ) &&
+            variables.utils.isNotSubQuery( tableValue )
+        ) {
+            var simpleTableParts = tableValue.listToArray( "." );
+            var wrappedSimpleTableParts = [];
+            for ( var simpleTableIndex = 1; simpleTableIndex <= simpleTableParts.len(); simpleTableIndex++ ) {
+                wrappedSimpleTableParts.append(
+                    wrapValue(
+                        simpleTableIndex == simpleTableParts.len()
+                         ? getTablePrefix() & simpleTableParts[ simpleTableIndex ]
+                         : simpleTableParts[ simpleTableIndex ]
+                    )
+                );
+            }
+            return wrappedSimpleTableParts.toList( "." );
+        }
+
         var parts = explodeTable( arguments.table );
         if ( getUtils().isNotSubQuery( parts.table ) ) {
             var tableParts = parts.table.listToArray( "." );
@@ -1494,7 +1521,23 @@ component displayname="Grammar" accessors="true" singleton {
              : jsonSql;
         }
 
-        var columnParts = explodeColumnAlias( arguments.column.value );
+        var columnValue = arguments.column.value;
+        if (
+            !find( " ", columnValue ) &&
+            !find( chr( 9 ), columnValue ) &&
+            !find( chr( 10 ), columnValue ) &&
+            !find( chr( 11 ), columnValue ) &&
+            !find( chr( 12 ), columnValue ) &&
+            !find( chr( 13 ), columnValue )
+        ) {
+            var simpleColumnParts = [];
+            for ( var simpleColumnPart in columnValue.listToArray( "." ) ) {
+                simpleColumnParts.append( wrapValue( simpleColumnPart ) );
+            }
+            return simpleColumnParts.toList( "." );
+        }
+
+        var columnParts = explodeColumnAlias( columnValue );
         arguments.column = columnParts.column;
         var alias = columnParts.alias;
         var wrappedColumnParts = [];

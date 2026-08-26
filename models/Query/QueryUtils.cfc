@@ -561,18 +561,25 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         if ( isArray( value ) ) {
-            var inferredTypes = [];
-            for ( var i = 1; i <= arguments.value.len(); i++ ) {
-                if ( !arrayIsDefined( arguments.value, i ) || isNull( arguments.value[ i ] ) ) {
+            var inferredType = "";
+            var hasInferredType = false;
+            for ( var valueIndex = 1; valueIndex <= arguments.value.len(); valueIndex++ ) {
+                if ( !arrayIsDefined( arguments.value, valueIndex ) || isNull( arguments.value[ valueIndex ] ) ) {
                     continue;
                 }
-                var item = arguments.value[ i ];
+                var item = arguments.value[ valueIndex ];
                 if ( isStruct( item ) && item.keyExists( "null" ) && item.null ) {
                     continue;
                 }
-                inferredTypes.append( inferSqlType( item, arguments.grammar ) );
+                var itemType = inferSqlType( item, arguments.grammar );
+                if ( !hasInferredType ) {
+                    inferredType = itemType;
+                    hasInferredType = true;
+                } else if ( itemType != inferredType ) {
+                    return "VARCHAR";
+                }
             }
-            return arraySame( inferredTypes, "VARCHAR" );
+            return hasInferredType ? inferredType : "VARCHAR";
         }
 
         if ( isStruct( value ) ) {
@@ -662,7 +669,10 @@ component singleton displayname="QueryUtils" accessors="true" {
     }
 
     private string function normalizeSqlType( required string sqltype ) {
-        return reReplaceNoCase( trim( arguments.sqltype ), "^cf_sql_", "" ).uCase();
+        var normalizedSqlType = trim( arguments.sqltype ).uCase();
+        return left( normalizedSqlType, 7 ) == "CF_SQL_"
+         ? right( normalizedSqlType, len( normalizedSqlType ) - 7 )
+         : normalizedSqlType;
     }
 
     /**
@@ -834,26 +844,24 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return query
      */
     public query function queryRemoveColumns( required query q, required string columns ) {
-        var columnsToRemove = arguments.columns.listToArray();
+        var columnsToRemove = {};
+        for ( var columnToRemove in arguments.columns.listToArray() ) {
+            columnsToRemove[ columnToRemove ] = true;
+        }
+
         var queryColumnInfo = [];
         if ( isPureBoxLang() ) {
-            for ( var name in q.getColumnNames() ) {
+            for ( var name in arguments.q.getColumnNames() ) {
                 queryColumnInfo.append( { "name": name, "TypeName": "varchar" } );
             }
         } else {
-            queryColumnInfo = getMetadata( q );
-        }
-        var queryAsArray = queryToArrayOfStructs( q );
-        for ( var row in queryAsArray ) {
-            for ( var col in columnsToRemove ) {
-                structDelete( row, col );
-            }
+            queryColumnInfo = getMetadata( arguments.q );
         }
 
         var newColumns = [];
         var newColumnTypes = [];
         for ( var column in queryColumnInfo ) {
-            if ( arrayContainsNoCase( columnsToRemove, column.name ) ) {
+            if ( columnsToRemove.keyExists( column.name ) ) {
                 continue;
             }
             newColumns.append( column.name );
@@ -872,7 +880,19 @@ component singleton displayname="QueryUtils" accessors="true" {
             }
         }
 
-        return queryNew( newColumns.toList(), newColumnTypes.toList(), queryAsArray );
+        var queryRows = [];
+        if ( arguments.q.recordCount > 0 ) {
+            arrayResize( queryRows, arguments.q.recordCount );
+        }
+        for ( var queryRow in arguments.q ) {
+            var rowData = structNew( "ordered" );
+            for ( var retainedColumn in newColumns ) {
+                rowData[ retainedColumn ] = queryRow[ retainedColumn ];
+            }
+            queryRows[ arguments.q.currentRow ] = rowData;
+        }
+
+        return queryNew( newColumns.toList(), newColumnTypes.toList(), queryRows );
     }
 
     /**
@@ -888,37 +908,6 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         return arguments.value;
-    }
-
-    /**
-     * Returns the first value if every element in the array is the same.
-     * Otherwise, it returns the default value.
-     *
-     * @args The array of elements.
-     * @defaultValue The default value to return if the array does not return all the same values. Default: "".
-     *
-     * @return any
-     */
-    private any function arraySame( required array args, any defaultValue = "" ) {
-        if ( arrayLen( arguments.args ) == 0 ) {
-            return arguments.defaultValue;
-        }
-
-        if ( isNull( arguments.args[ 1 ] ) ) {
-            return arguments.defaultValue;
-        }
-        var initial = arguments.args[ 1 ];
-
-        for ( var i = 1; i <= arguments.args.len(); i++ ) {
-            if (
-                isNull( arguments.args[ i ] ) ||
-                arguments.args[ i ] != initial
-            ) {
-                return defaultValue;
-            }
-        }
-
-        return initial;
     }
 
     /**

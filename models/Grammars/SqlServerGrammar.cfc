@@ -1,5 +1,13 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
 
+    public boolean function supportsReturningRowsOnInsert() {
+        return true;
+    }
+
+    public boolean function supportsReturningRowsOnUpdate() {
+        return true;
+    }
+
     public boolean function supportsBulkInsert() {
         return true;
     }

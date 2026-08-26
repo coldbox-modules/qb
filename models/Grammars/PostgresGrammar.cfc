@@ -1,5 +1,13 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public boolean function supportsReturningRowsOnInsert() {
+        return true;
+    }
+
+    public boolean function supportsReturningRowsOnUpdate() {
+        return true;
+    }
+
     public string function compileWhereInBulkValues( required string sqlType ) {
         return "SELECT CAST(""value"" AS #arguments.sqlType#) FROM JSONB_ARRAY_ELEMENTS_TEXT(CAST(? AS JSONB)) AS ""qb_bulk_values""(""value"")";
     }

@@ -115,6 +115,20 @@ component displayname="Grammar" accessors="true" singleton {
     }
 
     /**
+     * Returns whether this grammar can return rows from an INSERT statement.
+     */
+    public boolean function supportsReturningRowsOnInsert() {
+        return false;
+    }
+
+    /**
+     * Returns whether this grammar can return rows from an UPDATE statement.
+     */
+    public boolean function supportsReturningRowsOnUpdate() {
+        return false;
+    }
+
+    /**
      * Returns the binding groups in the order they appear in an UPDATE statement.
      */
     public array function getUpdateBindingOrder( required QueryBuilder query ) {

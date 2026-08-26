@@ -738,13 +738,19 @@ component displayname="Grammar" accessors="true" singleton {
      */
     private string function compileWhereInPlaceholders( required array values ) {
         var placeholders = [];
+        if ( arguments.values.isEmpty() ) {
+            return "";
+        }
+        arrayResize( placeholders, arguments.values.len() );
         for ( var valueIndex = 1; valueIndex <= arguments.values.len(); valueIndex++ ) {
             if ( !arrayIsDefined( arguments.values, valueIndex ) || isNull( arguments.values[ valueIndex ] ) ) {
-                placeholders.append( "?" );
+                placeholders[ valueIndex ] = "?";
                 continue;
             }
             var value = arguments.values[ valueIndex ];
-            placeholders.append( variables.utils.isExpression( value ) ? value.getSql() : "?" );
+            placeholders[ valueIndex ] = isSimpleValue( value ) || !variables.utils.isExpression( value )
+             ? "?"
+             : value.getSql();
         }
         return placeholders.toList( ", " );
     }

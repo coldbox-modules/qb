@@ -84,18 +84,20 @@ component {
         var type = arguments.negate ? "notIn" : "in";
         var typedColumn = toColumnType( arguments.builder, arguments.column );
         var bindings = arguments.values.isEmpty() ? [] : arguments.builder.extractColumnBindings( [ typedColumn ] );
+        var utils = arguments.builder.getUtils();
+        var grammar = arguments.builder.getGrammar();
         for ( var valueIndex = 1; valueIndex <= arguments.values.len(); valueIndex++ ) {
             if ( !arrayIsDefined( arguments.values, valueIndex ) || isNull( arguments.values[ valueIndex ] ) ) {
-                bindings.append(
-                    arguments.builder.getUtils().extractBinding( grammar = arguments.builder.getGrammar() )
-                );
+                bindings.append( utils.extractBinding( grammar = grammar ) );
                 continue;
             }
             var value = arguments.values[ valueIndex ];
-            if ( arguments.builder.getUtils().isExpression( value ) ) {
+            if ( isSimpleValue( value ) ) {
+                bindings.append( utils.extractBinding( value, grammar ) );
+            } else if ( utils.isExpression( value ) ) {
                 bindings.append( arguments.builder.extractExpressionBindings( value ), true );
             } else {
-                bindings.append( arguments.builder.getUtils().extractBinding( value, arguments.builder.getGrammar() ) );
+                bindings.append( utils.extractBinding( value, grammar ) );
             }
         }
 
@@ -125,31 +127,40 @@ component {
         arguments.builder.getQueryValidator().validateCombinator( arguments.combinator );
         arguments.values = arguments.builder.normalizeToArray( arguments.values );
 
-        var extractedBindings = [];
+        var utils = arguments.builder.getUtils();
+        var grammar = arguments.builder.getGrammar();
+        var shouldInferSqlType = isNull( arguments.sqlType );
+        var inferredSqlType = "VARCHAR";
+        var hasInferredSqlType = false;
+        var hasMixedSqlTypes = false;
+        var serializedValues = [];
         if ( !arguments.values.isEmpty() ) {
-            arrayResize( extractedBindings, arguments.values.len() );
+            arrayResize( serializedValues, arguments.values.len() );
         }
         for ( var valueIndex = 1; valueIndex <= arguments.values.len(); valueIndex++ ) {
             if ( !arrayIsDefined( arguments.values, valueIndex ) || isNull( arguments.values[ valueIndex ] ) ) {
-                extractedBindings[ valueIndex ] = arguments.builder
-                    .getUtils()
-                    .extractBinding( grammar = arguments.builder.getGrammar() );
+                serializedValues[ valueIndex ] = javacast( "null", "" );
                 continue;
             }
-            if ( arguments.builder.getUtils().isExpression( arguments.values[ valueIndex ] ) ) {
+            var value = arguments.values[ valueIndex ];
+            if ( !isSimpleValue( value ) && utils.isExpression( value ) ) {
                 throw( type = "InvalidBulkValue", message = "Bulk IN values cannot contain SQL expressions." );
             }
-            extractedBindings[ valueIndex ] = arguments.builder
-                .getUtils()
-                .extractBinding( arguments.values[ valueIndex ], arguments.builder.getGrammar() );
+            var binding = utils.extractBinding( value, grammar );
+            serializedValues[ valueIndex ] = binding.null ? javacast( "null", "" ) : binding.value;
+            if ( shouldInferSqlType && !binding.null ) {
+                var bindingSqlType = reReplaceNoCase( trim( binding.cfsqltype ), "^cf_sql_", "" ).uCase();
+                if ( !hasInferredSqlType ) {
+                    inferredSqlType = bindingSqlType;
+                    hasInferredSqlType = true;
+                } else if ( compareNoCase( inferredSqlType, bindingSqlType ) != 0 ) {
+                    hasMixedSqlTypes = true;
+                }
+            }
         }
 
-        if ( isNull( arguments.sqlType ) ) {
-            arguments.sqlType = arguments.builder
-                .getGrammar()
-                .resolveWhereInBulkSqlType(
-                    arguments.builder.getUtils().inferSqlType( arguments.values, arguments.builder.getGrammar() )
-                );
+        if ( shouldInferSqlType ) {
+            arguments.sqlType = grammar.resolveWhereInBulkSqlType( hasMixedSqlTypes ? "VARCHAR" : inferredSqlType );
         }
 
         arguments.sqlType = trim( arguments.sqlType );
@@ -182,22 +193,13 @@ component {
             } );
 
         if ( !arguments.values.isEmpty() ) {
-            var serializedValues = [];
-            arrayResize( serializedValues, extractedBindings.len() );
-            for ( var i = 1; i <= extractedBindings.len(); i++ ) {
-                serializedValues[ i ] = extractedBindings[ i ].null
-                 ? javacast( "null", "" )
-                 : extractedBindings[ i ].value;
-            }
             arguments.builder.addBindings( columnBindings, "where" );
             arguments.builder.addBindings(
                 [
-                    arguments.builder
-                        .getUtils()
-                        .extractBinding(
-                            { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
-                            arguments.builder.getGrammar()
-                        )
+                    utils.extractBinding(
+                        { value: serializeJSON( serializedValues ), cfsqltype: "LONGVARCHAR" },
+                        grammar
+                    )
                 ],
                 "where"
             );
@@ -557,6 +559,26 @@ component {
         string combinator = "and"
     ) {
         var typedColumn = toColumnType( arguments.builder, arguments.column );
+        if (
+            typedColumn.type == "simple" &&
+            !isNull( arguments.value ) &&
+            isSimpleValue( arguments.value )
+        ) {
+            var utils = arguments.builder.getUtils();
+            var binding = utils.extractBinding( arguments.value, arguments.builder.getGrammar() );
+            arguments.builder
+                .getWheres()
+                .append( {
+                    column: typedColumn,
+                    operator: arguments.operator,
+                    value: arguments.value,
+                    combinator: arguments.combinator,
+                    type: "basic"
+                } );
+            arguments.builder.addBindings( binding, "where" );
+            return arguments.builder;
+        }
+
         var bindings = arguments.builder.extractColumnBindings( [ typedColumn ] );
         bindings.append(
             extractPredicateBindings(

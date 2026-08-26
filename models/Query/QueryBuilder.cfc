@@ -3858,9 +3858,13 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
             columns = arguments.column,
             options = arguments.options
         );
-        var columnName = getFunctionList().keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
+        var functionList = getFunctionList();
+        var columnName = functionList.keyExists( "queryColumnList" ) ? queryColumnList( result ).listFirst() : getMetadata(
             result
         )[ 1 ].name;
+        if ( functionList.keyExists( "queryColumnData" ) ) {
+            return queryColumnData( result, columnName );
+        }
         var results = [];
         for ( var row in result ) {
             results.append( row[ columnName ] );

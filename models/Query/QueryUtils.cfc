@@ -33,6 +33,48 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     property name="decimalSQLType" default="DECIMAL";
 
+    variables.numericValueTypes = {
+        "AtomicInteger": true,
+        "AtomicLong": true,
+        "BigDecimal": true,
+        "BigInteger": true,
+        "Byte": true,
+        "CFDouble": true,
+        "Double": true,
+        "DoubleAccumulator": true,
+        "DoubleAdder": true,
+        "Float": true,
+        "Integer": true,
+        "Long": true,
+        "LongAccumulator": true,
+        "LongAdder": true,
+        "Short": true
+    };
+
+    variables.dateValueTypes = {
+        "Date": true,
+        "DateTime": true,
+        "DateTimeImpl": true,
+        "OleDateTime": true,
+        "Time": true,
+        "Timestamp": true
+    };
+
+    variables.booleanValueTypes = { "CFBoolean": true, "Boolean": true };
+
+    variables.validQueryParamKeys = {
+        "cfsqltype": true,
+        "list": true,
+        "maxlength": true,
+        "name": true,
+        "null": true,
+        "nulls": true,
+        "sqltype": true,
+        "separator": true,
+        "scale": true,
+        "value": true
+    };
+
     /**
      * Creates a new QueryUtils helper.
      * @return               qb.models.Query.QueryUtils
@@ -89,12 +131,21 @@ component singleton displayname="QueryUtils" accessors="true" {
                 return value;
             }
 
-            if ( variables.validateQueryParamStructKeys ) {
-                checkForNonQueryParamStructKeys( value );
-            }
-
+            var invalidKeys = [];
             for ( var key in value ) {
+                if (
+                    variables.validateQueryParamStructKeys &&
+                    !variables.validQueryParamKeys.keyExists( key )
+                ) {
+                    invalidKeys.append( key );
+                }
                 binding[ key ] = isNull( value[ key ] ) ? javacast( "null", "" ) : value[ key ];
+            }
+            if ( !invalidKeys.isEmpty() ) {
+                throw(
+                    type = "QBInvalidQueryParam",
+                    message = "Invalid keys detected in your query param struct: [#invalidKeys.sort( "textnocase" ).toList( ", " )#]. Usually this happens when you meant to serialize the struct to JSON first."
+                );
             }
         } else {
             binding = { value: normalizeSqlValue( value ) };
@@ -117,10 +168,15 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         if ( !structKeyExists( binding, "cfsqltype" ) ) {
-            if ( checkIsActuallyBoolean( binding.value ) ) {
+            var valueType = isArray( binding.value ) || isStruct( binding.value )
+             ? javacast( "null", "" )
+             : listLast( toString( getMetadata( binding.value ) ), ". " );
+            if ( !isNull( valueType ) && variables.booleanValueTypes.keyExists( valueType ) ) {
                 structAppend( binding, arguments.grammar.convertToBooleanType( binding.value ), true );
             } else {
-                binding.sqltype = inferSqlType( binding.value, arguments.grammar );
+                binding.sqltype = isNull( valueType )
+                 ? inferSqlType( binding.value, arguments.grammar )
+                 : inferSqlType( binding.value, arguments.grammar, valueType );
                 binding.cfsqltype = binding.sqltype;
             }
         }
@@ -494,11 +550,12 @@ component singleton displayname="QueryUtils" accessors="true" {
     /**
      * Infer the correct type from a value.
      *
-     * @value The value from which to infer the type.
+     * @value     The value from which to infer the type.
+     * @valueType A previously resolved runtime type for the value.
      *
      * @return string
      */
-    public string function inferSqlType( any value, required any grammar ) {
+    public string function inferSqlType( any value, required any grammar, string valueType ) {
         if ( isNull( arguments.value ) ) {
             return "VARCHAR";
         }
@@ -530,16 +587,23 @@ component singleton displayname="QueryUtils" accessors="true" {
             return structKeyExists( value, "value" ) ? inferSqlType( value.value, grammar ) : "VARCHAR";
         }
 
-        if ( checkIsActuallyNumeric( value ) ) {
+        var resolvedValueType = isNull( arguments.valueType )
+         ? listLast( toString( getMetadata( arguments.value ) ), ". " )
+         : arguments.valueType;
+        if ( isSimpleValue( arguments.value ) && variables.numericValueTypes.keyExists( resolvedValueType ) ) {
             return deriveNumericSqlType( value );
         }
 
-        if ( checkIsActuallyDate( value ) ) {
-            return "TIMESTAMP";
+        if ( variables.booleanValueTypes.keyExists( resolvedValueType ) ) {
+            return arguments.grammar.getBooleanSqlType();
         }
 
-        if ( checkIsActuallyBoolean( value ) ) {
-            return arguments.grammar.getBooleanSqlType();
+        var dateValueType = resolvedValueType;
+        if ( isPureBoxLang() && isDate( arguments.value ) ) {
+            dateValueType = listLast( arguments.value.$bx.$class.getName(), "." );
+        }
+        if ( isDate( arguments.value ) && variables.dateValueTypes.keyExists( dateValueType ) ) {
+            return "TIMESTAMP";
         }
 
         return "VARCHAR";
@@ -729,18 +793,33 @@ component singleton displayname="QueryUtils" accessors="true" {
      * @return struct
      */
     public struct function queryToStructOfStructs( required any q, required string columnKey ) {
-        var rows = queryToArrayOfStructs( arguments.q );
         var results = {};
+        if ( arguments.q.recordCount == 0 ) {
+            return results;
+        }
 
-        for ( var row in rows ) {
-            if ( !row.keyExists( arguments.columnKey ) ) {
+        var queryColumns = [];
+        if ( isPureBoxLang() ) {
+            queryColumns = arguments.q.getColumnNames();
+        } else {
+            for ( var item in getMetadata( arguments.q ) ) {
+                queryColumns.append( item.name );
+            }
+        }
+
+        for ( var queryRow in arguments.q ) {
+            var rowData = structNew( "ordered" );
+            for ( var column in queryColumns ) {
+                rowData[ column ] = queryRow[ column ];
+            }
+            if ( !rowData.keyExists( arguments.columnKey ) ) {
                 throw(
                     type = "MissingColumnKey",
                     message = "The columnKey [#arguments.columnKey#] was not found in the query results."
                 );
             }
 
-            results[ row[ arguments.columnKey ] ] = row;
+            results[ rowData[ arguments.columnKey ] ] = rowData;
         }
 
         return results;
@@ -867,26 +946,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
         var type = listLast( toString( getMetadata( arguments.value ) ), ". " );
         variables.log.debug( "checkIsActuallyNumeric: #arguments.value# is #type#" );
-        return isSimpleValue( arguments.value ) && arrayContainsNoCase(
-            [
-                "AtomicInteger",
-                "AtomicLong",
-                "BigDecimal",
-                "BigInteger",
-                "Byte",
-                "CFDouble",
-                "Double",
-                "DoubleAccumulator",
-                "DoubleAdder",
-                "Float",
-                "Integer",
-                "Long",
-                "LongAccumulator",
-                "LongAdder",
-                "Short"
-            ],
-            type
-        );
+        return isSimpleValue( arguments.value ) && variables.numericValueTypes.keyExists( type );
     }
 
     private string function deriveNumericSqlType( required numeric value ) {
@@ -918,17 +978,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             className = listLast( toString( getMetadata( arguments.value ) ), "." )
         }
 
-        return isDate( arguments.value ) && arrayContainsNoCase(
-            [
-                "Date",
-                "DateTime",
-                "DateTimeImpl",
-                "OleDateTime",
-                "Time",
-                "Timestamp"
-            ],
-            className
-        );
+        return isDate( arguments.value ) && variables.dateValueTypes.keyExists( className );
     }
 
     /**
@@ -943,10 +993,7 @@ component singleton displayname="QueryUtils" accessors="true" {
             return false;
         }
 
-        return arrayContainsNoCase(
-            [ "CFBoolean", "Boolean" ],
-            listLast( toString( getMetadata( arguments.value ) ), "." )
-        );
+        return variables.booleanValueTypes.keyExists( listLast( toString( getMetadata( arguments.value ) ), "." ) );
     }
 
 
@@ -1079,16 +1126,23 @@ component singleton displayname="QueryUtils" accessors="true" {
             return false;
         }
 
-        return arguments.binding.cfsqltype.findNoCase( "decimal" ) > 0 ||
-        arguments.binding.cfsqltype.findNoCase( "double" ) > 0 ||
-        arguments.binding.cfsqltype.findNoCase( "float" ) > 0 ||
-        arguments.binding.cfsqltype.findNoCase( "money" ) > 0 ||
-        arguments.binding.cfsqltype.findNoCase( "money4" ) > 0 ||
-        (
-            arguments.binding.cfsqltype.findNoCase( "numeric" ) > 0 && arguments.binding.value
-                .toString()
-                .findNoCase( "." ) > 0
-        );
+        var sqlType = uCase( arguments.binding.cfsqltype );
+        if ( left( sqlType, 7 ) == "CF_SQL_" ) {
+            sqlType = right( sqlType, len( sqlType ) - 7 );
+        }
+
+        switch ( sqlType ) {
+            case "DECIMAL":
+            case "DOUBLE":
+            case "FLOAT":
+            case "MONEY":
+            case "MONEY4":
+                return true;
+            case "NUMERIC":
+                return arguments.binding.value.toString().find( "." ) > 0;
+            default:
+                return false;
+        }
     }
 
     private numeric function calculateNumberOfDecimalDigits( required struct binding ) {
@@ -1123,52 +1177,13 @@ component singleton displayname="QueryUtils" accessors="true" {
         return true;
     }
 
-    private void function checkForNonQueryParamStructKeys( required struct param ) {
-        var validKeys = [
-            "cfsqltype",
-            "list",
-            "maxlength",
-            "name",
-            "null",
-            "nulls",
-            "sqltype",
-            "separator",
-            "scale",
-            "value"
-        ];
-        var extraKeys = [];
-        for ( var key in param.keyArray() ) {
-            if ( !validKeys.containsNoCase( key ) ) {
-                extraKeys.append( key );
-            }
-        }
-        if ( !extraKeys.isEmpty() ) {
-            throw(
-                type = "QBInvalidQueryParam",
-                message = "Invalid keys detected in your query param struct: [#extraKeys.sort( "textnocase" ).toList( ", " )#]. Usually this happens when you meant to serialize the struct to JSON first."
-            );
-        }
-    }
-
     public boolean function isValidQueryParamStruct( required any param ) {
         if ( !isStruct( arguments.param ) || isObject( arguments.param ) ) {
             return false;
         }
 
-        var validKeys = [
-            "cfsqltype",
-            "list",
-            "maxlength",
-            "name",
-            "null",
-            "nulls",
-            "sqltype",
-            "separator",
-            "scale",
-            "value"
-        ];
         for ( var key in param.keyArray() ) {
-            if ( !validKeys.containsNoCase( key ) ) {
+            if ( !variables.validQueryParamKeys.keyExists( key ) ) {
                 return false;
             }
         }

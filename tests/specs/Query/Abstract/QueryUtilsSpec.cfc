@@ -222,6 +222,316 @@ component extends="testbox.system.BaseSpec" {
                 } );
             } );
 
+            describe( "unsafe numeric inference setting", function() {
+                it( "defaults to VARCHAR for unsafe numeric combinations", function() {
+                    var defaultUtils = new qb.models.Query.QueryUtils();
+                    expect( defaultUtils.getThrowOnUnsafeNumericInference() ).toBeFalse();
+                    expect(
+                        defaultUtils.extractBinding(
+                            {
+                                value: [ { value: 1, cfsqltype: "BIGINT" }, { value: 1.5, cfsqltype: "DOUBLE" } ],
+                                list: true
+                            },
+                            variables.mockGrammar
+                        ).cfsqltype
+                    ).toBe( "VARCHAR" );
+                } );
+
+                it( "throws a descriptive error for unsafe numeric list bindings when enabled", function() {
+                    var strictUtils = new qb.models.Query.QueryUtils( throwOnUnsafeNumericInference = true );
+                    expect( function() {
+                        strictUtils.extractBinding(
+                            {
+                                value: [ { value: 1, cfsqltype: "BIGINT" }, { value: 1.5, cfsqltype: "DOUBLE" } ],
+                                list: true
+                            },
+                            variables.mockGrammar
+                        );
+                    } ).toThrow( "QBUnsafeNumericInference" );
+                    expect( function() {
+                        strictUtils.inferSqlType(
+                            [ { value: 1.5, cfsqltype: "cf_sql_float" }, { value: 0.1, sqltype: "cf_sql_decimal" } ],
+                            variables.mockGrammar
+                        );
+                    } ).toThrow( "QBUnsafeNumericInference" );
+                } );
+
+                it( "still widens safe numeric combinations when enabled", function() {
+                    var strictUtils = new qb.models.Query.QueryUtils( throwOnUnsafeNumericInference = true );
+                    expect( strictUtils.inferSqlType( [ 1, javacast( "long", "3000000000" ) ], variables.mockGrammar ) ).toBe( "BIGINT" );
+                    expect( strictUtils.inferSqlType( [ 1, 1.25 ], variables.mockGrammar ) ).toBe( "DECIMAL" );
+                } );
+
+                it( "keeps ordinary mixed text arrays as VARCHAR when enabled regardless of order", function() {
+                    var strictUtils = new qb.models.Query.QueryUtils( throwOnUnsafeNumericInference = true );
+                    expect(
+                        strictUtils.inferSqlType(
+                            [ { value: 1, cfsqltype: "BIGINT" }, { value: 1.5, cfsqltype: "DOUBLE" }, "text" ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "VARCHAR" );
+                    expect(
+                        strictUtils.inferSqlType(
+                            [ "text", { value: 1.5, cfsqltype: "DOUBLE" }, { value: 1, cfsqltype: "BIGINT" } ],
+                            variables.mockGrammar
+                        )
+                    ).toBe( "VARCHAR" );
+                } );
+
+                it( "honors an explicit outer binding type when enabled", function() {
+                    var strictUtils = new qb.models.Query.QueryUtils( throwOnUnsafeNumericInference = true );
+                    var binding = strictUtils.extractBinding(
+                        {
+                            value: [ { value: 1, cfsqltype: "BIGINT" }, { value: 1.5, cfsqltype: "DOUBLE" } ],
+                            list: true,
+                            cfsqltype: "FLOAT"
+                        },
+                        variables.mockGrammar
+                    );
+                    expect( binding.cfsqltype ).toBe( "FLOAT" );
+                } );
+
+                it( "uses configured numeric types during widening", function() {
+                    var configuredUtils = new qb.models.Query.QueryUtils( decimalSqlType = "cf_sql_numeric" );
+                    expect( configuredUtils.inferSqlType( [ 1, 1.25 ], variables.mockGrammar ) ).toBe( "NUMERIC" );
+                    configuredUtils.setBigIntegerSqlType( "cf_sql_double" );
+                    configuredUtils.setThrowOnUnsafeNumericInference( true );
+                    expect( function() {
+                        configuredUtils.inferSqlType(
+                            [ javacast( "long", "3000000000" ), 1.25 ],
+                            variables.mockGrammar
+                        );
+                    } ).toThrow( "QBUnsafeNumericInference" );
+                } );
+
+                it( "preserves the greatest fractional scale in a promoted decimal list", function() {
+                    var binding = variables.utils.extractBinding(
+                        {
+                            value: [
+                                1,
+                                javacast( "long", "3000000000" ),
+                                1.125,
+                                -2.5
+                            ],
+                            list: true
+                        },
+                        variables.mockGrammar
+                    );
+                    expect( binding.cfsqltype ).toBe( "DECIMAL" );
+                    expect( binding.scale ).toBe( 3 );
+                    expect( binding.value ).toBe( [
+                        1,
+                        javacast( "long", "3000000000" ),
+                        1.125,
+                        -2.5
+                    ] );
+                } );
+            } );
+
+            describe( "explicit numeric array widening", function() {
+                var cases = [
+                    { leftType: "TINYINT", rightType: "TINYINT", expectedType: "TINYINT" },
+                    { leftType: "TINYINT", rightType: "SMALLINT", expectedType: "SMALLINT" },
+                    { leftType: "TINYINT", rightType: "INTEGER", expectedType: "INTEGER" },
+                    { leftType: "TINYINT", rightType: "BIGINT", expectedType: "BIGINT" },
+                    { leftType: "SMALLINT", rightType: "SMALLINT", expectedType: "SMALLINT" },
+                    { leftType: "SMALLINT", rightType: "INTEGER", expectedType: "INTEGER" },
+                    { leftType: "SMALLINT", rightType: "BIGINT", expectedType: "BIGINT" },
+                    { leftType: "INTEGER", rightType: "INTEGER", expectedType: "INTEGER" },
+                    { leftType: "INTEGER", rightType: "BIGINT", expectedType: "BIGINT" },
+                    { leftType: "BIGINT", rightType: "BIGINT", expectedType: "BIGINT" },
+                    { leftType: "TINYINT", rightType: "DECIMAL", expectedType: "DECIMAL" },
+                    { leftType: "TINYINT", rightType: "NUMERIC", expectedType: "NUMERIC" },
+                    { leftType: "TINYINT", rightType: "REAL", expectedType: "REAL" },
+                    { leftType: "TINYINT", rightType: "FLOAT", expectedType: "FLOAT" },
+                    { leftType: "TINYINT", rightType: "DOUBLE", expectedType: "DOUBLE" },
+                    { leftType: "SMALLINT", rightType: "DECIMAL", expectedType: "DECIMAL" },
+                    { leftType: "SMALLINT", rightType: "NUMERIC", expectedType: "NUMERIC" },
+                    { leftType: "SMALLINT", rightType: "REAL", expectedType: "REAL" },
+                    { leftType: "SMALLINT", rightType: "FLOAT", expectedType: "FLOAT" },
+                    { leftType: "SMALLINT", rightType: "DOUBLE", expectedType: "DOUBLE" },
+                    { leftType: "INTEGER", rightType: "DECIMAL", expectedType: "DECIMAL" },
+                    { leftType: "INTEGER", rightType: "NUMERIC", expectedType: "NUMERIC" },
+                    { leftType: "INTEGER", rightType: "REAL", expectedType: "DOUBLE" },
+                    { leftType: "INTEGER", rightType: "FLOAT", expectedType: "FLOAT" },
+                    { leftType: "INTEGER", rightType: "DOUBLE", expectedType: "DOUBLE" },
+                    { leftType: "BIGINT", rightType: "DECIMAL", expectedType: "DECIMAL" },
+                    { leftType: "BIGINT", rightType: "NUMERIC", expectedType: "NUMERIC" },
+                    { leftType: "BIGINT", rightType: "REAL", expectedType: "VARCHAR" },
+                    { leftType: "BIGINT", rightType: "FLOAT", expectedType: "VARCHAR" },
+                    { leftType: "BIGINT", rightType: "DOUBLE", expectedType: "VARCHAR" },
+                    { leftType: "REAL", rightType: "FLOAT", expectedType: "FLOAT" },
+                    { leftType: "REAL", rightType: "DOUBLE", expectedType: "DOUBLE" },
+                    { leftType: "FLOAT", rightType: "DOUBLE", expectedType: "DOUBLE" },
+                    { leftType: "DECIMAL", rightType: "FLOAT", expectedType: "VARCHAR" },
+                    { leftType: "NUMERIC", rightType: "DOUBLE", expectedType: "VARCHAR" },
+                    { leftType: "BIT", rightType: "TINYINT", expectedType: "TINYINT" },
+                    { leftType: "MONEY4", rightType: "SMALLINT", expectedType: "MONEY4" },
+                    { leftType: "MONEY4", rightType: "MONEY", expectedType: "MONEY" },
+                    { leftType: "MONEY", rightType: "BIGINT", expectedType: "DECIMAL" }
+                ];
+                for ( var testCase in cases ) {
+                    it(
+                        title = "combines #testCase.leftType# and #testCase.rightType# as #testCase.expectedType#",
+                        data = testCase,
+                        body = function( data ) {
+                            // Small values deliberately prove that declared types, not just values, determine promotion.
+                            expectNumericArrayType(
+                                [ { value: 1, cfsqltype: data.leftType }, { value: 1, sqltype: data.rightType } ],
+                                data.expectedType
+                            );
+                            expectNumericArrayType(
+                                [
+                                    { value: 1, sqltype: "cf_sql_" & lCase( data.leftType ) },
+                                    { value: 1, cfsqltype: "cf_sql_" & lCase( data.rightType ) }
+                                ],
+                                data.expectedType
+                            );
+                        }
+                    );
+                }
+
+                it( "falls back to VARCHAR for explicit FLOAT mixed with inferred big integers and decimals", function() {
+                    expectNumericArrayType(
+                        [
+                            1,
+                            javacast( "long", "3000000000" ),
+                            1.25,
+                            { value: 2, cfsqltype: "FLOAT" }
+                        ],
+                        "VARCHAR"
+                    );
+                } );
+
+                it( "widens INTEGER and REAL to DOUBLE to preserve integer precision", function() {
+                    expectNumericArrayType(
+                        [ { value: 16777217, cfsqltype: "INTEGER" }, { value: 1.5, cfsqltype: "REAL" } ],
+                        "DOUBLE"
+                    );
+                } );
+
+                it( "avoids rounding BIGINT values beyond the exact DOUBLE integer range", function() {
+                    expectNumericArrayType(
+                        [
+                            { value: javacast( "long", "9007199254740993" ), cfsqltype: "BIGINT" },
+                            { value: 1.5, cfsqltype: "DOUBLE" }
+                        ],
+                        "VARCHAR"
+                    );
+                } );
+
+                it( "avoids rounding exact decimal fractions into FLOAT", function() {
+                    expectNumericArrayType(
+                        [ { value: 0.1, cfsqltype: "DECIMAL" }, { value: 1.5, cfsqltype: "FLOAT" } ],
+                        "VARCHAR"
+                    );
+                } );
+
+                it( "preserves a manually specified type on the outer list binding", function() {
+                    var binding = variables.utils.extractBinding(
+                        { value: [ 1, javacast( "long", "3000000000" ), 1.25 ], list: true, cfsqltype: "FLOAT" },
+                        variables.mockGrammar
+                    );
+                    expect( binding.cfsqltype ).toBe( "FLOAT" );
+                    expect( binding.sqltype ).toBe( "FLOAT" );
+                } );
+            } );
+
+            describe( "numeric array widening", function() {
+                it( "keeps byte short and int values within INTEGER", function() {
+                    var values = [ javacast( "byte", -128 ), javacast( "short", 32767 ), javacast( "int", 2147483647 ) ];
+                    expectNumericArrayType( values, "INTEGER" );
+                } );
+
+                it( "keeps both signed 32-bit boundaries within INTEGER", function() {
+                    var values = [ javacast( "long", "-2147483648" ), 0, javacast( "long", "2147483647" ) ];
+                    expectNumericArrayType( values, "INTEGER" );
+                } );
+
+                it( "widens the reported mixed integer list to BIGINT", function() {
+                    var values = [ 1, javacast( "long", "3000000000" ) ];
+                    expectNumericArrayType( values, "BIGINT" );
+                } );
+
+                it( "widens below the signed 32-bit minimum to BIGINT", function() {
+                    var values = [ 1, javacast( "long", "-2147483649" ) ];
+                    expectNumericArrayType( values, "BIGINT" );
+                } );
+
+                it( "widens above the signed 32-bit maximum to BIGINT", function() {
+                    var values = [ 1, javacast( "long", "2147483648" ) ];
+                    expectNumericArrayType( values, "BIGINT" );
+                } );
+
+                it( "covers both signed 64-bit boundaries with BIGINT", function() {
+                    var values = [
+                        javacast( "long", "-9223372036854775808" ),
+                        0,
+                        javacast( "long", "9223372036854775807" )
+                    ];
+                    expectNumericArrayType( values, "BIGINT" );
+                } );
+
+                it( "widens integers and decimal literals to DECIMAL", function() {
+                    var values = [ -1, 0, 4.5 ];
+                    expectNumericArrayType( values, "DECIMAL" );
+                } );
+
+                it( "widens integers and fractional floats to DECIMAL", function() {
+                    var values = [ 1, javacast( "float", -1.25 ) ];
+                    expectNumericArrayType( values, "DECIMAL" );
+                } );
+
+                it( "widens integers and fractional doubles to DECIMAL", function() {
+                    var values = [ -1, javacast( "double", 1.125 ) ];
+                    expectNumericArrayType( values, "DECIMAL" );
+                } );
+
+                it( "widens big integers and fractional floats to DECIMAL", function() {
+                    var values = [ javacast( "long", "3000000000" ), javacast( "float", 1.25 ) ];
+                    expectNumericArrayType( values, "DECIMAL" );
+                } );
+
+                it( "widens big integers and fractional doubles to DECIMAL", function() {
+                    var values = [ javacast( "long", "-3000000000" ), javacast( "double", -1.125 ) ];
+                    expectNumericArrayType( values, "DECIMAL" );
+                } );
+
+                it( "widens integers big integers floats and doubles to DECIMAL", function() {
+                    var values = [
+                        1,
+                        javacast( "long", "3000000000" ),
+                        javacast( "float", 1.25 ),
+                        javacast( "double", -1.125 )
+                    ];
+                    expectNumericArrayType( values, "DECIMAL" );
+                } );
+
+                it( "widens untyped numeric parameter structs to BIGINT", function() {
+                    var values = [ { value: 1 }, { value: javacast( "long", "3000000000" ) } ];
+                    expectNumericArrayType( values, "BIGINT" );
+                } );
+
+                it( "widens normalized explicit numeric parameter types to DECIMAL", function() {
+                    var values = [
+                        { value: 1, cfsqltype: "cf_sql_integer" },
+                        { value: javacast( "long", "3000000000" ), sqltype: "cf_sql_bigint" },
+                        { value: 1.25, cfsqltype: "cf_sql_decimal" }
+                    ];
+                    expectNumericArrayType( values, "DECIMAL" );
+                } );
+
+                it( "ignores nulls while widening numeric members", function() {
+                    var values = [ 1, javacast( "null", "" ), javacast( "long", "3000000000" ) ];
+                    expectNumericArrayType( values, "BIGINT" );
+                } );
+
+                it( "retains VARCHAR when a widened numeric list also contains text", function() {
+                    var values = [ 1, javacast( "long", "3000000000" ), "example" ];
+                    expectNumericArrayType( values, "VARCHAR" );
+                } );
+            } );
+
             describe( "it infers the sql type from the members of an array", function() {
                 it( "if all the members of the array are the same", function() {
                     expect( utils.inferSqlType( [ 1, 2 ], variables.mockGrammar ) ).toBe( "INTEGER" );
@@ -272,13 +582,13 @@ component extends="testbox.system.BaseSpec" {
                     expect( utils.inferSqlType( [ { value: 1 }, { value: 2 } ], variables.mockGrammar ) ).toBe( "INTEGER" );
                 } );
 
-                it( "defaults to VARCHAR when query parameter struct types differ", function() {
+                it( "widens INTEGER and BIGINT query parameter structs to BIGINT", function() {
                     expect(
                         utils.inferSqlType(
                             [ { value: 1, cfsqltype: "INTEGER" }, { value: 2, cfsqltype: "BIGINT" } ],
                             variables.mockGrammar
                         )
-                    ).toBe( "VARCHAR" );
+                    ).toBe( "BIGINT" );
                 } );
 
                 it( "but defaults to VARCHAR if they are different", function() {
@@ -833,6 +1143,26 @@ component extends="testbox.system.BaseSpec" {
                 expect( builder.toSQL() ).toBe( originalSql );
             } );
         } );
+    }
+
+    private void function expectNumericArrayType( required array values, required string expectedType ) {
+        var reversedValues = [];
+        for ( var i = arguments.values.len(); i >= 1; i-- ) {
+            if ( !arrayIsDefined( arguments.values, i ) || isNull( arguments.values[ i ] ) ) {
+                reversedValues.append( javacast( "null", "" ) );
+            } else {
+                reversedValues.append( arguments.values[ i ] );
+            }
+        }
+        for ( var orderedValues in [ arguments.values, reversedValues ] ) {
+            expect( variables.utils.inferSqlType( orderedValues, variables.mockGrammar ) ).toBe(
+                arguments.expectedType
+            );
+            var binding = variables.utils.extractBinding( { value: orderedValues, list: true }, variables.mockGrammar );
+            expect( binding.cfsqltype ).toBe( arguments.expectedType );
+            expect( binding.sqltype ).toBe( arguments.expectedType );
+            expect( binding.list ).toBeTrue();
+        }
     }
 
 }

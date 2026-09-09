@@ -33,6 +33,12 @@ component singleton displayname="QueryUtils" accessors="true" {
      */
     property name="decimalSQLType" default="DECIMAL";
 
+    /**
+     * Throw when numeric array types cannot be combined without potential precision loss.
+     * Recommended in development; otherwise inference falls back to VARCHAR.
+     */
+    property name="throwOnUnsafeNumericInference" default="false";
+
     variables.numericValueTypes = {
         "AtomicInteger": true,
         "AtomicLong": true,
@@ -85,12 +91,14 @@ component singleton displayname="QueryUtils" accessors="true" {
         string integerSqlType = "INTEGER",
         string decimalSqlType = "DECIMAL",
         any log,
-        string bigIntegerSqlType = "BIGINT"
+        string bigIntegerSqlType = "BIGINT",
+        boolean throwOnUnsafeNumericInference = false
     ) {
         variables.convertEmptyStringsToNull = arguments.convertEmptyStringsToNull;
         variables.validateQueryParamStructKeys = arguments.validateQueryParamStructKeys;
         variables.integerSqlType = arguments.integerSqlType;
         variables.bigIntegerSqlType = arguments.bigIntegerSqlType;
+        variables.throwOnUnsafeNumericInference = arguments.throwOnUnsafeNumericInference;
         variables.decimalSqlType = arguments.decimalSqlType;
         if ( !isNull( arguments.log ) ) {
             variables.log = arguments.log;
@@ -561,8 +569,7 @@ component singleton displayname="QueryUtils" accessors="true" {
         }
 
         if ( isArray( value ) ) {
-            var inferredType = "";
-            var hasInferredType = false;
+            var inferredTypes = {};
             for ( var valueIndex = 1; valueIndex <= arguments.value.len(); valueIndex++ ) {
                 if ( !arrayIsDefined( arguments.value, valueIndex ) || isNull( arguments.value[ valueIndex ] ) ) {
                     continue;
@@ -572,14 +579,15 @@ component singleton displayname="QueryUtils" accessors="true" {
                     continue;
                 }
                 var itemType = inferSqlType( item, arguments.grammar );
-                if ( !hasInferredType ) {
-                    inferredType = itemType;
-                    hasInferredType = true;
-                } else if ( itemType != inferredType ) {
-                    return "VARCHAR";
-                }
+                inferredTypes[ itemType ] = true;
             }
-            return hasInferredType ? inferredType : "VARCHAR";
+            if ( inferredTypes.isEmpty() ) {
+                return "VARCHAR";
+            }
+            if ( inferredTypes.count() == 1 ) {
+                return inferredTypes.keyArray()[ 1 ];
+            }
+            return combineNumericSqlTypes( inferredTypes );
         }
 
         if ( isStruct( value ) ) {
@@ -938,6 +946,60 @@ component singleton displayname="QueryUtils" accessors="true" {
         return isSimpleValue( arguments.value ) && variables.numericValueTypes.keyExists( type );
     }
 
+    /**
+     * Combine declared numeric ranges, rather than narrowing them to the current values.
+     * Exact decimals and approximate types have no portable, lossless common type.
+     */
+    private string function combineNumericSqlTypes( required struct types ) {
+        var integerTypes = "BIT,TINYINT,SMALLINT,INTEGER,BIGINT";
+        var numericTypes = integerTypes & ",MONEY4,MONEY,DECIMAL,NUMERIC,REAL,FLOAT,DOUBLE";
+        var integerRank = 0;
+        for ( var sqlType in arguments.types ) {
+            if ( !listFindNoCase( numericTypes, sqlType ) ) {
+                return "VARCHAR";
+            }
+            integerRank = max( integerRank, listFindNoCase( integerTypes, sqlType ) );
+        }
+
+        var hasDecimal = arguments.types.keyExists( "DECIMAL" ) || arguments.types.keyExists( "NUMERIC" );
+        var hasMoney = arguments.types.keyExists( "MONEY" ) || arguments.types.keyExists( "MONEY4" );
+        var hasApproximate = arguments.types.keyExists( "REAL" ) || arguments.types.keyExists( "FLOAT" ) || arguments.types.keyExists( "DOUBLE" );
+        if ( hasApproximate ) {
+            if ( hasDecimal || hasMoney || integerRank == 5 ) {
+                if ( variables.throwOnUnsafeNumericInference ) {
+                    throw(
+                        type = "QBUnsafeNumericInference",
+                        message = "Cannot infer a common numeric SQL type without potential precision loss.",
+                        detail = "Numeric types: [#arguments.types
+                            .keyArray()
+                            .sort( "textnocase" )
+                            .toList( ", " )#]. Specify a SQL type on the outer binding, or disable throwOnUnsafeNumericInference to fall back to VARCHAR."
+                    );
+                }
+                return "VARCHAR";
+            }
+            if ( arguments.types.keyExists( "DOUBLE" ) ) {
+                return "DOUBLE";
+            }
+            if ( arguments.types.keyExists( "FLOAT" ) ) {
+                return "FLOAT";
+            }
+            // REAL has 24 significant binary digits; use DOUBLE for the full INTEGER range.
+            return integerRank == 4 ? "DOUBLE" : "REAL";
+        }
+
+        if ( hasDecimal ) {
+            return arguments.types.keyExists( "DECIMAL" ) ? "DECIMAL" : "NUMERIC";
+        }
+        if ( hasMoney ) {
+            if ( integerRank == 5 ) {
+                return "DECIMAL";
+            }
+            return arguments.types.keyExists( "MONEY" ) || integerRank == 4 ? "MONEY" : "MONEY4";
+        }
+        return listGetAt( integerTypes, integerRank );
+    }
+
     private string function deriveNumericSqlType( required numeric value ) {
         var isInteger = reFind( "^-?\d+$", arguments.value ) > 0;
         if ( !isInteger ) {
@@ -1137,6 +1199,30 @@ component singleton displayname="QueryUtils" accessors="true" {
     private numeric function calculateNumberOfDecimalDigits( required struct binding ) {
         if ( isNull( arguments.binding.value ) || arguments.binding.null ) {
             return 0;
+        }
+
+        if ( isArray( arguments.binding.value ) ) {
+            var scale = 0;
+            for ( var valueIndex = 1; valueIndex <= arguments.binding.value.len(); valueIndex++ ) {
+                if (
+                    !arrayIsDefined( arguments.binding.value, valueIndex ) || isNull(
+                        arguments.binding.value[ valueIndex ]
+                    )
+                ) {
+                    continue;
+                }
+                var item = arguments.binding.value[ valueIndex ];
+                var itemBinding = isStruct( item ) ? {
+                    value: isNull( item.value ) ? javacast( "null", "" ) : item.value,
+                    null: structKeyExists( item, "null" ) && item.null
+                } : { value: item, null: false };
+                if ( isStruct( item ) && structKeyExists( item, "scale" ) && !itemBinding.null ) {
+                    scale = max( scale, item.scale );
+                } else {
+                    scale = max( scale, calculateNumberOfDecimalDigits( itemBinding ) );
+                }
+            }
+            return scale;
         }
 
         if ( isInstanceOf( arguments.binding.value, "java.math.BigDecimal" ) ) {

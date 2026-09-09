@@ -20,6 +20,23 @@ Using qb, you can:
 
 Installation is easy through [CommandBox](https://www.ortussolutions.com/products/commandbox) and [ForgeBox](https://www.coldbox.org/forgebox).  Simply type `box install qb` to get started.
 
+## Numeric list inference
+
+qb combines numeric array members using a common SQL type that covers their declared ranges. For example, `[ 1, 3000000000 ]` uses `BIGINT`, and integers mixed with fractional values use `DECIMAL`. Explicit member types such as `TINYINT`, `SMALLINT`, `REAL`, `FLOAT`, and `DOUBLE` also participate in inference.
+
+When there is no portable numeric promotion without potential precision loss, qb falls back to `VARCHAR`. Examples include `BIGINT` mixed with `DOUBLE`, and `DECIMAL` mixed with `FLOAT`. This preserves the binding representation; the database can still apply its own conversion when executing the query.
+
+We recommend enabling `throwOnUnsafeNumericInference` in development to catch these combinations early:
+
+```cfc
+// config/ColdBox.cfc, in your development environment configuration
+moduleSettings.qb.throwOnUnsafeNumericInference = true;
+```
+
+The setting defaults to `false`. When enabled, unsafe numeric array inference throws `QBUnsafeNumericInference` with the conflicting SQL types. Safe promotions and ordinary mixed text arrays retain their normal behavior. For standalone usage, pass `throwOnUnsafeNumericInference = true` to the `QueryUtils` constructor.
+
+An explicit `cfsqltype` or `sqltype` on the outer binding always takes precedence; this setting does not validate caller-selected conversions or database column precision and scale.
+
 ## Code Samples
 
 Compare these two examples:

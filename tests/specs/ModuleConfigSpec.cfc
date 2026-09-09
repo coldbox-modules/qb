@@ -16,6 +16,7 @@ component extends="testbox.system.BaseSpec" {
                 moduleConfig.configure();
 
                 var settings = moduleConfig.$getProperty( "settings", "variables" );
+                expect( settings.throwOnUnsafeNumericInference ).toBeFalse();
                 expect( settings.integerSQLType ).toBe( "INTEGER" );
                 expect( settings.bigIntegerSQLType ).toBe( "BIGINT" );
                 expect( settings.decimalSQLType ).toBe( "DECIMAL" );

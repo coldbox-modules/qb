@@ -79,7 +79,7 @@ jobs:
 
       - name: Install and Configure Semantic Release
         run: |
-          box install commandbox-semantic-release@^3.0.0
+          box install commandbox-semantic-release@3.0.2
           box config set endpoints.forgebox.APIToken=${{ secrets.FORGEBOX_TOKEN }}
           box config set modules.commandbox-semantic-release.targetBranch=main
           # Module plugin settings use flattened plugins-* keys.

@@ -541,7 +541,7 @@ component {
     /**
      * Groups predicates added after a known where-clause count.
      */
-    package QueryBuilder function scopeNewWheres( required QueryBuilder builder, required numeric originalWhereCount ) {
+    public QueryBuilder function scopeNewWheres( required QueryBuilder builder, required numeric originalWhereCount ) {
         if ( arguments.builder.getWheres().len() > arguments.originalWhereCount ) {
             addNewWheresWithinGroup( arguments.builder, arguments.originalWhereCount );
         }

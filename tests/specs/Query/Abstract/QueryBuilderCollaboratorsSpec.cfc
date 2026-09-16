@@ -2,6 +2,16 @@ component extends="testbox.system.BaseSpec" {
 
     function run() {
         describe( "QueryBuilder collaborators", function() {
+            it( "keeps cross-component collaborator methods public", function() {
+                var builderMetadata = getMetadata( new qb.models.Query.QueryBuilder() );
+                var predicateClauseMetadata = getMetadata( new qb.models.Query.PredicateClause() );
+
+                expect( getFunctionAccess( builderMetadata, "isPretending" ) ).toBe( "public" );
+                expect( getFunctionAccess( builderMetadata, "getQueryValidator" ) ).toBe( "public" );
+                expect( getFunctionAccess( builderMetadata, "getQueryExecutor" ) ).toBe( "public" );
+                expect( getFunctionAccess( predicateClauseMetadata, "scopeNewWheres" ) ).toBe( "public" );
+            } );
+
             it( "does not instantiate collaborators during construction", function() {
                 var builder = prepareBuilder();
 
@@ -109,6 +119,15 @@ component extends="testbox.system.BaseSpec" {
 
     private struct function getCollaborators( required QueryBuilder builder ) {
         return arguments.builder.$getProperty( name = "collaborators", scope = "variables" );
+    }
+
+    private string function getFunctionAccess( required struct componentMetadata, required string functionName ) {
+        for ( var functionMetadata in arguments.componentMetadata.functions ) {
+            if ( functionMetadata.name == arguments.functionName ) {
+                return functionMetadata.access;
+            }
+        }
+        return "missing";
     }
 
 }

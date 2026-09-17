@@ -315,6 +315,14 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "setGrammar()", function() {
+                it( "tracks a derived table alias", function() {
+                    query.fromSub( "active_users", function( subquery ) {
+                        subquery.from( "users" );
+                    } );
+
+                    expect( query.getAlias() ).toBe( "active_users" );
+                } );
+
                 it( "rejects grammar changes after compiling a derived table", function() {
                     query.fromSub( "active_users", function( subquery ) {
                         subquery.from( "users" );

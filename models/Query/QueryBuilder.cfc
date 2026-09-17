@@ -981,6 +981,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
 
             // generate the derived table SQL
             this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
+            variables.alias = arguments.alias;
             variables.grammarCompiledFrom = true;
             addBindings( arguments.input.getBindings(), "from" );
             return this;

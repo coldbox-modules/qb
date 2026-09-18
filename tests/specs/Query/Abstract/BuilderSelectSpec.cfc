@@ -242,6 +242,25 @@ component extends="testbox.system.BaseSpec" {
             } );
 
             describe( "selectRaw()", function() {
+                it( "keeps the default wildcard when given no raw columns", function() {
+                    query.from( "users" ).selectRaw( [] );
+                    expect( query.toSQL() ).toBe( "SELECT * FROM ""users""" );
+                } );
+
+                it( "preserves existing columns and bindings when given no raw columns", function() {
+                    query
+                        .from( "users" )
+                        .selectRaw( "? AS value", [ 42 ] )
+                        .selectRaw( [] );
+                    expect( query.toSQL() ).toBe( "SELECT ? AS value FROM ""users""" );
+                    expect( query.getBindings().map( ( binding ) => binding.value ) ).toBe( [ 42 ] );
+                } );
+
+                it( "keeps the default wildcard when adding no columns", function() {
+                    query.from( "users" ).addSelect( [] );
+                    expect( query.toSQL() ).toBe( "SELECT * FROM ""users""" );
+                } );
+
                 it( "applies a flat binding list once across multiple expressions", function() {
                     query.selectRaw( [ "? AS firstValue", "? AS secondValue" ], [ 1, 2 ] ).from( "users" );
 

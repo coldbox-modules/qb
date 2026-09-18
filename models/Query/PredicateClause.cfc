@@ -333,7 +333,11 @@ component {
      * Creates a builder for a nested WHERE predicate.
      */
     public QueryBuilder function forNestedWhere( required QueryBuilder builder ) {
-        return arguments.builder.newQuery().from( arguments.builder.getTableName() );
+        var nested = arguments.builder.newQuery();
+        // The source provides column context, but its bindings belong only to the outer query.
+        nested.setTableName( arguments.builder.getTableName() );
+        nested.setAlias( arguments.builder.getAlias() );
+        return nested;
     }
 
     /**

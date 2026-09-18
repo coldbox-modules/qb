@@ -8,6 +8,7 @@ on:
       - "development"
   pull_request:
     branches:
+      - next
       - main
       - master
       - development

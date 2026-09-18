@@ -754,6 +754,9 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      */
     public QueryBuilder function addSelect( required any columns ) {
         var newColumns = normalizeColumns( arguments.columns );
+        if ( newColumns.isEmpty() ) {
+            return this;
+        }
         var newBindings = extractColumnBindings( newColumns );
         var selectedColumns = variables.columns.isEmpty() ? [] : arraySlice( variables.columns, 1 );
 

@@ -50,6 +50,7 @@ component extends="tests.resources.querybuilder.AbstractQueryBuilderSubselectSpe
                                 .where( "age", ">=", "21" );
 
                             builder.fromSub( "u", derivedTable );
+                            expect( builder.getAlias() ).toBe( "u" );
                         }, fromDerivedTable() );
                     } );
 
@@ -60,6 +61,7 @@ component extends="tests.resources.querybuilder.AbstractQueryBuilderSubselectSpe
                                     .from( "users" )
                                     .where( "age", ">=", "21" );
                             } );
+                            expect( builder.getAlias() ).toBe( "u" );
                         }, fromDerivedTable() );
                     } );
 

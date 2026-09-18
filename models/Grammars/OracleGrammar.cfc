@@ -126,11 +126,7 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             return "FROM DUAL";
         }
 
-        var fullTable = arguments.tableName;
-        if ( query.getAlias() != "" ) {
-            fullTable &= " #query.getAlias()#";
-        }
-        return "FROM " & wrapTable( fullTable );
+        return "FROM " & wrapQueryTable( arguments.query );
     }
 
     /**

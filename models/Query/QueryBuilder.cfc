@@ -598,7 +598,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
 
     public struct function mapToColumnType( required any column ) {
         if ( isSimpleValue( arguments.column ) ) {
-            if ( find( "->", arguments.column ) ) {
+            if ( getJsonPathStart( arguments.column ) ) {
                 return jsonPath( column = arguments.column );
             }
             return { "type": "simple", "value": arguments.column };

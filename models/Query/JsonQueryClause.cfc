@@ -27,16 +27,22 @@ component {
             parsedColumn = trim( mid( parsedColumn, aliasMatch.pos[ 2 ], aliasMatch.len[ 2 ] ) );
         }
 
-        var arrowParts = listToArray( parsedColumn, "->", false, true );
+        var pathStart = arguments.builder.getJsonPathStart( parsedColumn );
         var normalizedPath = [];
-        if ( arrowParts.len() > 1 ) {
+        if ( pathStart > 0 ) {
             if ( !arguments.path.isEmpty() ) {
                 throw(
                     type = "QBInvalidJsonPath",
                     message = "JSON paths cannot combine arrow syntax with an explicit path array."
                 );
             }
-            parsedColumn = trim( arrowParts.shift() );
+            var arrowParts = listToArray(
+                mid( parsedColumn, pathStart + 2, len( parsedColumn ) ),
+                "->",
+                false,
+                true
+            );
+            parsedColumn = trim( left( parsedColumn, pathStart - 1 ) );
             for ( var segment in arrowParts ) {
                 normalizedPath.append( normalizeJsonPathSegment( segment ) );
             }

@@ -19,13 +19,31 @@ component extends="tests.resources.AbstractSchemaBuilderSpec" {
 
             it( "discovers and qualifies tables in the requested schema when dropping all objects", function() {
                 var schema = getBuilder();
-                variables.mockGrammar.$( "runQuery", queryNew( "table_name", "varchar", [ { table_name: "users" } ] ) );
+                variables.mockGrammar
+                    .$( "runQuery" )
+                    .$results(
+                        queryNew( "table_name", "varchar", [ { table_name: "users" } ] ),
+                        queryNew( "drop_statement", "varchar", [] )
+                    );
 
                 expect( schema.dropAllObjects( {}, false, "tenant" ) ).toBe( [ "DROP TABLE ""tenant"".""users"" CASCADE" ] );
                 expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 1 ] ).toBeWithCase(
                     "SELECT ""table_name"" FROM ""information_schema"".""tables"" WHERE ""table_schema"" = ? AND ""table_type"" = 'BASE TABLE'"
                 );
                 expect( variables.mockGrammar.$callLog().runQuery[ 1 ][ 2 ] ).toBe( [ "tenant" ] );
+                expect( variables.mockGrammar.$callLog().runQuery[ 2 ][ 2 ] ).toBe( [ "tenant" ] );
+            } );
+
+            it( "drops routines even when no tables remain", function() {
+                var schema = getBuilder();
+                var dropRoutine = "DROP FUNCTION IF EXISTS tenant.example(integer) CASCADE";
+                variables.mockGrammar
+                    .$( "runQuery" )
+                    .$results(
+                        queryNew( "table_name", "varchar", [] ),
+                        queryNew( "drop_statement", "varchar", [ { drop_statement: dropRoutine } ] )
+                    );
+                expect( schema.dropAllObjects( {}, false, "tenant" ) ).toBe( [ dropRoutine ] );
             } );
 
             it( "drops indexes from the table's schema", function() {

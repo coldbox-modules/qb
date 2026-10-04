@@ -33,7 +33,7 @@ component extends="testbox.system.BaseSpec" {
                 }
                 expect( observations.len() ).toBe( 1 );
                 expect( observations[ 1 ].executionTime ).toBeGTE( 0 );
-                expect( observations[ 1 ].exception ).toBe( failure );
+                expect( observations[ 1 ].exception ).toBeSameInstanceAs( failure );
                 expect( failure.type ).notToBe( "ObserverFailure" );
                 expect( diagnostics.len() ).toBe( 1 );
                 expect( diagnostics[ 1 ].type ).toBe( "ObserverFailure" );
@@ -66,7 +66,7 @@ component extends="testbox.system.BaseSpec" {
                 } catch ( any caught ) {
                     failure = caught;
                 }
-                expect( failure ).toBe( original );
+                expect( failure ).toBeSameInstanceAs( original );
                 expect( failure.type ).notToBe( "DiagnosticFailure" );
                 expect( failure.type ).notToBe( "ObserverFailure" );
             } );

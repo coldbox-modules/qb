@@ -189,7 +189,27 @@ component displayname="Grammar" accessors="true" singleton {
         data.executionTime = 0;
         data.query = javacast( "null", "" );
         if ( !arguments.pretend ) {
-            var q = queryExecute( data.sql, data.bindings, data.options );
+            var q = javacast( "null", "" );
+            try {
+                q = queryExecute( data.sql, data.bindings, data.options );
+            } catch ( any failure ) {
+                data.executionTime = getTickCount() - startTick;
+                data.exception = failure;
+                // Observers cannot replace the original query failure.
+                try {
+                    param variables.useAnnounceMethodForInterceptorService = structKeyExists(
+                        variables.interceptorService,
+                        "announce"
+                    );
+                    if ( variables.useAnnounceMethodForInterceptorService ) {
+                        variables.interceptorService.announce( "onQBExecuteException", data );
+                    } else {
+                        variables.interceptorService.processState( "onQBExecuteException", data );
+                    }
+                } catch ( any observerFailure ) {
+                }
+                rethrow;
+            }
             data.executionTime = getTickCount() - startTick;
             data.query = isNull( q ) ? javacast( "null", "" ) : q;
             data.result = local.result;

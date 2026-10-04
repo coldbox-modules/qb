@@ -189,7 +189,26 @@ component displayname="Grammar" accessors="true" singleton {
         data.executionTime = 0;
         data.query = javacast( "null", "" );
         if ( !arguments.pretend ) {
-            var q = queryExecute( data.sql, data.bindings, data.options );
+            var q = javacast( "null", "" );
+            try {
+                q = queryExecute( data.sql, data.bindings, data.options );
+            } catch ( any failure ) {
+                data.executionTime = getTickCount() - startTick;
+                data.exception = failure;
+                // Observers cannot replace the original query failure.
+                try {
+                    if ( variables.useAnnounceMethodForInterceptorService ) {
+                        variables.interceptorService.announce( "onQBExecuteException", data );
+                    } else {
+                        variables.interceptorService.processState( "onQBExecuteException", data );
+                    }
+                } catch ( any observerFailure ) {
+                    variables.log.debug( "Failed to notify onQBExecuteException observers", observerFailure );
+                } finally {
+                    // Neither an observer nor its diagnostic logger may replace the query failure.
+                    rethrow;
+                }
+            }
             data.executionTime = getTickCount() - startTick;
             data.query = isNull( q ) ? javacast( "null", "" ) : q;
             data.result = local.result;

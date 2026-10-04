@@ -37,7 +37,7 @@ component {
             "returnFormatters": {}
         };
 
-        interceptorSettings = { "customInterceptionPoints": "preQBExecute,postQBExecute" };
+        interceptorSettings = { "customInterceptionPoints": "preQBExecute,postQBExecute,onQBExecuteException" };
     }
 
     function onLoad() {

@@ -33,7 +33,7 @@ component extends="testbox.system.BaseSpec" {
                 }
                 expect( observations.len() ).toBe( 1 );
                 expect( observations[ 1 ].executionTime ).toBeGTE( 0 );
-                expect( observations[ 1 ].exception ).toBeSameInstanceAs( failure );
+                assertQueryExceptionPreserved( observations[ 1 ].exception, failure );
                 expect( failure.type ).notToBe( "ObserverFailure" );
                 expect( diagnostics.len() ).toBe( 1 );
                 expect( diagnostics[ 1 ].type ).toBe( "ObserverFailure" );
@@ -66,7 +66,7 @@ component extends="testbox.system.BaseSpec" {
                 } catch ( any caught ) {
                     failure = caught;
                 }
-                expect( failure ).toBeSameInstanceAs( original );
+                assertQueryExceptionPreserved( original, failure );
                 expect( failure.type ).notToBe( "DiagnosticFailure" );
                 expect( failure.type ).notToBe( "ObserverFailure" );
             } );
@@ -96,6 +96,15 @@ component extends="testbox.system.BaseSpec" {
                 expect( states ).toBe( [ "preQBExecute", "postQBExecute" ] );
             } );
         } );
+    }
+
+    private void function assertQueryExceptionPreserved( required any original, required any caught ) {
+        // CFML engines may create a new catch struct around the same rethrown exception.
+        if ( isObject( arguments.original ) ) {
+            expect( arguments.caught ).toBeSameInstanceAs( arguments.original );
+        } else {
+            expect( arguments.caught ).toBe( arguments.original );
+        }
     }
 
 }

@@ -667,10 +667,25 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
             for ( var table in tables ) {
                 wrappedTables.append( wrapTable( table ) );
             }
-            if ( arrayIsEmpty( tables ) ) {
-                return [];
+            var statements = [];
+            if ( !arrayIsEmpty( tables ) ) {
+                statements.append( "DROP TABLE #wrappedTables.toList( ", " )# CASCADE" );
             }
-            return [ "DROP TABLE #wrappedTables.toList( ", " )# CASCADE" ];
+            // Dropping tables removes their triggers, but leaves standalone routines behind.
+            // Discover before executing any drops: table dependencies can remove some routines,
+            // so each routine drop must tolerate it having disappeared already.
+            // Use qualified catalog type names (e.g. pg_catalog.timestamptz) in signatures.
+            // This avoids search_path ambiguity and JDBC parsing WITH in timestamp type aliases.
+            var routines = runQuery(
+                "SELECT format('DROP %s IF EXISTS %I.%I(%s) CASCADE', CASE WHEN p.prokind = 'p' THEN 'PROCEDURE' ELSE 'FUNCTION' END, n.nspname, p.proname, COALESCE((SELECT string_agg(format('%I.%I', tn.nspname, t.typname), ', ' ORDER BY a.position) FROM generate_subscripts(p.proargtypes, 1) a(position) JOIN pg_type t ON t.oid = p.proargtypes[a.position] JOIN pg_namespace tn ON tn.oid = t.typnamespace), '')) AS drop_statement FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = ? AND p.prokind IN ('f', 'p', 'w') AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.classid = CAST('pg_proc' AS regclass) AND d.objid = p.oid AND d.refclassid = CAST('pg_extension' AS regclass) AND d.deptype = 'e') ORDER BY p.oid",
+                [ arguments.schema == "" ? "public" : arguments.schema ],
+                arguments.options,
+                "query"
+            );
+            for ( var routine in routines ) {
+                statements.append( routine.drop_statement );
+            }
+            return statements;
         } finally {
             if ( !isNull( arguments.sb.getShouldWrapValues() ) ) {
                 setShouldWrapValues( originalShouldWrapValues );

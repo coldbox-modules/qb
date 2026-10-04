@@ -197,18 +197,17 @@ component displayname="Grammar" accessors="true" singleton {
                 data.exception = failure;
                 // Observers cannot replace the original query failure.
                 try {
-                    param variables.useAnnounceMethodForInterceptorService = structKeyExists(
-                        variables.interceptorService,
-                        "announce"
-                    );
                     if ( variables.useAnnounceMethodForInterceptorService ) {
                         variables.interceptorService.announce( "onQBExecuteException", data );
                     } else {
                         variables.interceptorService.processState( "onQBExecuteException", data );
                     }
                 } catch ( any observerFailure ) {
+                    variables.log.debug( "Failed to notify onQBExecuteException observers", observerFailure );
+                } finally {
+                    // Neither an observer nor its diagnostic logger may replace the query failure.
+                    rethrow;
                 }
-                rethrow;
             }
             data.executionTime = getTickCount() - startTick;
             data.query = isNull( q ) ? javacast( "null", "" ) : q;

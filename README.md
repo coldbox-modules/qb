@@ -217,7 +217,3 @@ For both Lucee and ACF you need to set the JDBC Driver class to `org.sqlite.JDBC
 ## Full Docs
 
 You can browse the full documentation at https://qb.ortusbooks.com
-
-## Failed query observation
-
-onQBExecuteException announces the same execution context as preQBExecute, plus executionTime (milliseconds) and the original exception. It is emitted only when queryExecute fails; pretend queries do not execute or announce failure. An observational failure hook cannot replace the original database exception: qb rethrows that exception unchanged even when an observer throws. Existing preQBExecute/postQBExecute contracts are preserved. Do not export bindings, results, credentials, or complete interception data from a telemetry listener.

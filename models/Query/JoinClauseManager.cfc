@@ -113,11 +113,11 @@ component {
                 arguments.input( subquery );
                 arguments.input = subquery;
             }
-            arguments.input = executor.snapshotBuilder( arguments.builder, arguments.input );
+            var compiled = executor.compileSubquery( arguments.builder, arguments.input );
 
             var table = arguments.builder.raw(
-                arguments.builder.getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
-                arguments.input.getBindings()
+                arguments.builder.getGrammar().wrapTable( "(#compiled.sql#) AS #arguments.alias#" ),
+                compiled.bindings
             );
 
             var joinCount = arguments.builder.getJoins().len();
@@ -185,14 +185,14 @@ component {
                 arguments.tableLikeSource = subquery;
             }
 
-            arguments.tableLikeSource = executor.snapshotBuilder( arguments.builder, arguments.tableLikeSource );
+            var compiled = executor.compileSubquery( arguments.builder, arguments.tableLikeSource );
 
             var join = new qb.models.Query.JoinClause(
                 joiningQuery = arguments.builder,
                 type = arguments.type,
                 table = arguments.name,
-                lateralRawExpression = arguments.tableLikeSource.toSQL(),
-                lateralBindings = arguments.tableLikeSource.getBindings()
+                lateralRawExpression = compiled.sql,
+                lateralBindings = compiled.bindings
             );
 
             if ( arguments.builder.getPreventDuplicateJoins() && containsJoin( arguments.builder, join ) ) {
@@ -200,7 +200,7 @@ component {
                 return arguments.builder;
             }
 
-            arguments.builder.addBindings( arguments.tableLikeSource.getBindings(), "join" );
+            arguments.builder.addBindings( compiled.bindings, "join" );
             arguments.builder.getJoins().append( join );
             arguments.builder.setGrammarCompiledJoin( true );
             return arguments.builder;
@@ -222,11 +222,11 @@ component {
                 arguments.input( subquery );
                 arguments.input = subquery;
             }
-            arguments.input = executor.snapshotBuilder( arguments.builder, arguments.input );
+            var compiled = executor.compileSubquery( arguments.builder, arguments.input );
 
             var table = arguments.builder.raw(
-                arguments.builder.getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ),
-                arguments.input.getBindings()
+                arguments.builder.getGrammar().wrapTable( "(#compiled.sql#) AS #arguments.alias#" ),
+                compiled.bindings
             );
 
             var joinCount = arguments.builder.getJoins().len();

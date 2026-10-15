@@ -980,13 +980,7 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
                 arguments.input = subquery;
             }
 
-            arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
-
-            return getCollaborator( "QueryExecutor" ).attachDerivedTableSnapshot(
-                this,
-                arguments.input,
-                arguments.alias
-            );
+            return getCollaborator( "QueryExecutor" ).attachDerivedTable( this, arguments.input, arguments.alias );
         } catch ( any e ) {
             getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
             rethrow;

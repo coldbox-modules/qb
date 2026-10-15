@@ -982,12 +982,11 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
 
             arguments.input = getCollaborator( "QueryExecutor" ).snapshotBuilder( this, arguments.input );
 
-            // generate the derived table SQL
-            this.fromRaw( getGrammar().wrapTable( "(#arguments.input.toSQL()#) AS #arguments.alias#" ) );
-            variables.alias = arguments.alias;
-            variables.grammarCompiledFrom = true;
-            addBindings( arguments.input.getBindings(), "from" );
-            return this;
+            return getCollaborator( "QueryExecutor" ).attachDerivedTableSnapshot(
+                this,
+                arguments.input,
+                arguments.alias
+            );
         } catch ( any e ) {
             getCollaborator( "QueryExecutor" ).restoreCommonTableState( this, commonTableState );
             rethrow;
@@ -2599,9 +2598,10 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     private numeric function getCountForPagination( struct options = {} ) {
         if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
             var countSource = clone().clearOrders();
-            return getCollaborator( "QueryExecutor" )
-                .prepareInternalExecutionBuilder( this, newQuery() )
-                .fromSub( "aggregate_table", countSource )
+            var executor = getCollaborator( "QueryExecutor" );
+            var countQuery = executor.prepareInternalExecutionBuilder( this, newQuery() );
+            return executor
+                .attachDerivedTableSnapshot( countQuery, countSource, "aggregate_table" )
                 .count( options = arguments.options );
         }
         return count( options = arguments.options );

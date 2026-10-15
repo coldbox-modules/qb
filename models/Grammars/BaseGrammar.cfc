@@ -274,9 +274,12 @@ component displayname="Grammar" accessors="true" singleton {
                 var aggregate = queryToCompile.getAggregate();
                 var unionQuery = queryToCompile.clone().setAggregate( {} );
                 queryToCompile = queryToCompile
-                    .newQuery()
-                    .setAggregate( aggregate )
-                    .fromSub( "qb_aggregate_source", unionQuery );
+                    .getQueryExecutor()
+                    .attachDerivedTableSnapshot(
+                        queryToCompile.newQuery().setAggregate( aggregate ),
+                        unionQuery,
+                        "qb_aggregate_source"
+                    );
             }
 
             var sql = [];

@@ -2597,8 +2597,8 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
      */
     private numeric function getCountForPagination( struct options = {} ) {
         if ( !variables.groups.isEmpty() || !variables.havings.isEmpty() || variables.distinct ) {
-            var countSource = clone().clearOrders();
             var executor = getCollaborator( "QueryExecutor" );
+            var countSource = executor.cloneBuilder( builder = this, includeOrders = false );
             var countQuery = executor.prepareInternalExecutionBuilder( this, newQuery() );
             return executor
                 .attachDerivedTableSnapshot( countQuery, countSource, "aggregate_table" )

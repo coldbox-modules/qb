@@ -205,7 +205,8 @@ component singleton displayname="QueryUtils" accessors="true" {
             binding.value = timeFormat( binding.value, "HH:mm:ss.nZ" );
         }
         if ( isFloatingPoint( binding ) ) {
-            param binding.scale = calculateNumberOfDecimalDigits( binding );
+            // `max()` returns a Double, and Adobe CF treats a non-integer scale as 0.
+            param binding.scale = javacast( "int", calculateNumberOfDecimalDigits( binding ) );
         }
 
         // binding.sqltype = replace( binding.cfsqltype, "", "" );

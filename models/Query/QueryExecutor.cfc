@@ -98,9 +98,18 @@ component {
     /**
      * Creates an isolated clone without copying lazily instantiated collaborators.
      */
-    public QueryBuilder function cloneBuilder( required QueryBuilder builder, boolean includeWheres = true ) {
+    public QueryBuilder function cloneBuilder(
+        required QueryBuilder builder,
+        boolean includeWheres = true,
+        boolean includeOrders = true
+    ) {
         var clonedQuery = arguments.builder.newQuery();
-        copyQueryState( arguments.builder, clonedQuery, arguments.includeWheres );
+        copyQueryState(
+            arguments.builder,
+            clonedQuery,
+            arguments.includeWheres,
+            arguments.includeOrders
+        );
         if ( arguments.builder.isPretending() ) {
             clonedQuery.pretend();
         }
@@ -251,7 +260,8 @@ component {
     private void function copyQueryState(
         required QueryBuilder source,
         required QueryBuilder target,
-        boolean includeWheres = true
+        boolean includeWheres = true,
+        boolean includeOrders = true
     ) {
         arguments.target.setDistinct( arguments.source.getDistinct() );
         arguments.target.setAggregate( cloneQueryStateValue( arguments.source, arguments.source.getAggregate() ) );
@@ -274,7 +284,9 @@ component {
         arguments.target.setGroups( cloneQueryStateValue( arguments.source, arguments.source.getGroups() ) );
         arguments.target.setHavings( cloneQueryStateValue( arguments.source, arguments.source.getHavings() ) );
         arguments.target.setUnions( cloneQueryStateValue( arguments.source, arguments.source.getUnions() ) );
-        arguments.target.setOrders( cloneQueryStateValue( arguments.source, arguments.source.getOrders() ) );
+        if ( arguments.includeOrders ) {
+            arguments.target.setOrders( cloneQueryStateValue( arguments.source, arguments.source.getOrders() ) );
+        }
         arguments.target.setCommonTables( cloneQueryStateValue( arguments.source, arguments.source.getCommonTables() ) );
         if ( !isNull( arguments.source.getLimitValue() ) ) {
             arguments.target.setLimitValue( arguments.source.getLimitValue() );
@@ -289,7 +301,10 @@ component {
 
         var sourceBindings = arguments.source.getRawBindings();
         for ( var bindingType in sourceBindings ) {
-            if ( !arguments.includeWheres && bindingType == "where" ) {
+            if (
+                ( !arguments.includeWheres && bindingType == "where" ) ||
+                ( !arguments.includeOrders && bindingType == "orderBy" )
+            ) {
                 continue;
             }
             arguments.target.addBindings(

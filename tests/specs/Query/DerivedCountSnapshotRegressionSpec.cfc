@@ -2,6 +2,41 @@ component extends="testbox.system.BaseSpec" {
 
     function run() {
         describe( "derived count snapshots", function() {
+            it( "omits root order subqueries from counts while preserving nested projection orders", function() {
+                var builder = getBuilder()
+                    .from( "users" )
+                    .select( "id" )
+                    .subSelect( "child_id", function( child ) {
+                        child
+                            .from( "children" )
+                            .select( "id" )
+                            .where( "type", 22 )
+                            .orderBy( "id" )
+                            .limit( 1 );
+                    } )
+                    .where( "tenant_id", 11 )
+                    .groupBy( "id" )
+                    .orderBySub( function( orderQuery ) {
+                        orderQuery
+                            .from( "ranking" )
+                            .select( "rank" )
+                            .where( "tenant_id", 77 )
+                            .orderBy( "rank" )
+                            .limit( 1 );
+                    } );
+                var bindings = duplicate( builder.getBindings() );
+                builder.paginate();
+                var calls = builder.getGrammar().$callLog().runQuery;
+                expect( calls[ 1 ].sql ).notToInclude( "[ranking]" );
+                expect( calls[ 1 ].sql ).toInclude( "ORDER BY [id] ASC" );
+                expect( calls[ 1 ].bindings.map( ( binding ) => binding.value ) ).toBe( [ 22, 11 ] );
+                expect( calls[ 2 ].sql ).toInclude( "[ranking]" );
+                expect( calls[ 2 ].bindings.map( ( binding ) => binding.value ) ).toBe( [ 22, 11, 77 ] );
+                expect( builder.getOrders() ).toHaveLength( 1 );
+                expect( builder.getOrders()[ 1 ].query.getOrders() ).toHaveLength( 1 );
+                expect( builder.getBindings() ).toBe( bindings );
+            } );
+
             for ( var mode in [ "group", "distinct", "having" ] ) {
                 it(
                     title = "preserves source CTEs and order bindings for #mode# pagination",

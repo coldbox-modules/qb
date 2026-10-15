@@ -134,6 +134,41 @@ component {
     }
 
     /**
+     * Captures SQL and isolated bindings for an immediately compiled subquery.
+     * CTE hoisting and explicit wrapping policies retain the original clone path.
+     */
+    public struct function compileSubquery( required QueryBuilder owner, required any builder ) {
+        if (
+            !isInstanceOf( arguments.builder, "qb.models.Query.QueryBuilder" ) &&
+            isStruct( arguments.builder ) &&
+            structKeyExists( arguments.builder, "retrieveQuery" )
+        ) {
+            arguments.builder = arguments.builder.retrieveQuery();
+        }
+        if ( !arguments.builder.getCommonTables().isEmpty() || !isNull( arguments.builder.getShouldWrapValues() ) ) {
+            var snapshot = snapshotBuilder( arguments.owner, arguments.builder );
+            return { sql: snapshot.toSQL(), bindings: snapshot.getBindings() };
+        }
+        var sql = arguments.builder.toSQL();
+        return { sql: sql, bindings: cloneQueryStateValue( arguments.builder, arguments.builder.getBindings() ) };
+    }
+
+    /**
+     * Attaches caller-owned input as SQL text with isolated bindings.
+     */
+    public QueryBuilder function attachDerivedTable(
+        required QueryBuilder owner,
+        required any builder,
+        required string alias
+    ) {
+        return attachCompiledDerivedTable(
+            arguments.owner,
+            compileSubquery( arguments.owner, arguments.builder ),
+            arguments.alias
+        );
+    }
+
+    /**
      * Attaches an already isolated, internally owned snapshot as a derived table.
      * Callers must not pass a builder that remains mutable outside this operation.
      */
@@ -143,12 +178,24 @@ component {
         required string alias
     ) {
         hoistNestedCommonTables( arguments.snapshot, arguments.owner );
+        return attachCompiledDerivedTable(
+            arguments.owner,
+            { sql: arguments.snapshot.toSQL(), bindings: arguments.snapshot.getBindings() },
+            arguments.alias
+        );
+    }
+
+    private QueryBuilder function attachCompiledDerivedTable(
+        required QueryBuilder owner,
+        required struct compiled,
+        required string alias
+    ) {
         arguments.owner.fromRaw(
-            arguments.owner.getGrammar().wrapTable( "(#arguments.snapshot.toSQL()#) AS #arguments.alias#" )
+            arguments.owner.getGrammar().wrapTable( "(#arguments.compiled.sql#) AS #arguments.alias#" )
         );
         arguments.owner.setAlias( arguments.alias );
         arguments.owner.setGrammarCompiledFrom( true );
-        arguments.owner.addBindings( arguments.snapshot.getBindings(), "from" );
+        arguments.owner.addBindings( arguments.compiled.bindings, "from" );
         return arguments.owner;
     }
 

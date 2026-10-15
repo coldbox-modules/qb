@@ -98,9 +98,9 @@ component {
     /**
      * Creates an isolated clone without copying lazily instantiated collaborators.
      */
-    public QueryBuilder function cloneBuilder( required QueryBuilder builder ) {
+    public QueryBuilder function cloneBuilder( required QueryBuilder builder, boolean includeWheres = true ) {
         var clonedQuery = arguments.builder.newQuery();
-        copyQueryState( arguments.builder, clonedQuery );
+        copyQueryState( arguments.builder, clonedQuery, arguments.includeWheres );
         if ( arguments.builder.isPretending() ) {
             clonedQuery.pretend();
         }
@@ -248,7 +248,11 @@ component {
         );
     }
 
-    private void function copyQueryState( required QueryBuilder source, required QueryBuilder target ) {
+    private void function copyQueryState(
+        required QueryBuilder source,
+        required QueryBuilder target,
+        boolean includeWheres = true
+    ) {
         arguments.target.setDistinct( arguments.source.getDistinct() );
         arguments.target.setAggregate( cloneQueryStateValue( arguments.source, arguments.source.getAggregate() ) );
         arguments.target.setColumns( cloneQueryStateValue( arguments.source, arguments.source.getColumns() ) );
@@ -264,7 +268,9 @@ component {
             clonedJoins.append( cloneJoinClause( arguments.source, join, arguments.target ) );
         }
         arguments.target.setJoins( clonedJoins );
-        arguments.target.setWheres( cloneQueryStateValue( arguments.source, arguments.source.getWheres() ) );
+        if ( arguments.includeWheres ) {
+            arguments.target.setWheres( cloneQueryStateValue( arguments.source, arguments.source.getWheres() ) );
+        }
         arguments.target.setGroups( cloneQueryStateValue( arguments.source, arguments.source.getGroups() ) );
         arguments.target.setHavings( cloneQueryStateValue( arguments.source, arguments.source.getHavings() ) );
         arguments.target.setUnions( cloneQueryStateValue( arguments.source, arguments.source.getUnions() ) );
@@ -283,6 +289,9 @@ component {
 
         var sourceBindings = arguments.source.getRawBindings();
         for ( var bindingType in sourceBindings ) {
+            if ( !arguments.includeWheres && bindingType == "where" ) {
+                continue;
+            }
             arguments.target.addBindings(
                 cloneQueryStateValue( arguments.source, sourceBindings[ bindingType ] ),
                 bindingType

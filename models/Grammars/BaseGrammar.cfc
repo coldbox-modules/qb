@@ -258,7 +258,11 @@ component displayname="Grammar" accessors="true" singleton {
      *
      * @return string
      */
-    public string function compileSelect( required QueryBuilder query ) {
+    public string function compileSelect(
+        required QueryBuilder query,
+        boolean includeUnions = true,
+        boolean includeCommonTables = true
+    ) {
         if ( arguments.query.getValidateDuplicateSelectColumns() && arguments.query.getAggregate().isEmpty() ) {
             arguments.query.getQueryValidator().validateUniqueSelectColumns( arguments.query.getColumns(), this );
         }
@@ -270,7 +274,11 @@ component displayname="Grammar" accessors="true" singleton {
             }
 
             var queryToCompile = arguments.query;
-            if ( !queryToCompile.getAggregate().isEmpty() && !queryToCompile.getUnions().isEmpty() ) {
+            if (
+                arguments.includeUnions && !queryToCompile.getAggregate().isEmpty() && !queryToCompile
+                    .getUnions()
+                    .isEmpty()
+            ) {
                 var aggregate = queryToCompile.getAggregate();
                 var unionQuery = queryToCompile.clone().setAggregate( {} );
                 queryToCompile = queryToCompile
@@ -285,6 +293,12 @@ component displayname="Grammar" accessors="true" singleton {
             var sql = [];
 
             for ( var component in selectComponents ) {
+                if (
+                    ( component == "unions" && !arguments.includeUnions ) ||
+                    ( component == "commonTables" && !arguments.includeCommonTables )
+                ) {
+                    continue;
+                }
                 var func = variables[ "compile#component#" ];
                 var args = { "query": queryToCompile, "#component#": invoke( queryToCompile, "get" & component ) };
                 arrayAppend( sql, func( argumentCollection = args ) );

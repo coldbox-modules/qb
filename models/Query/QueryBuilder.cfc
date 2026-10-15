@@ -4043,6 +4043,14 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         return getCollaborator( "QueryExecutor" ).cloneBuilder( this );
     }
 
+    /**
+     * Clones all query state except the root WHERE predicates and their bindings.
+     * Nested queries retained in projections, joins, and other clauses remain isolated.
+     */
+    public QueryBuilder function cloneWithoutWheres() {
+        return getCollaborator( "QueryExecutor" ).cloneBuilder( this, false );
+    }
+
 
     /**
      * Wrap up any sql in an Expression.

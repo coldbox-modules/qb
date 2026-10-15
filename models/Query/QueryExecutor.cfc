@@ -125,6 +125,25 @@ component {
     }
 
     /**
+     * Attaches an already isolated, internally owned snapshot as a derived table.
+     * Callers must not pass a builder that remains mutable outside this operation.
+     */
+    public QueryBuilder function attachDerivedTableSnapshot(
+        required QueryBuilder owner,
+        required QueryBuilder snapshot,
+        required string alias
+    ) {
+        hoistNestedCommonTables( arguments.snapshot, arguments.owner );
+        arguments.owner.fromRaw(
+            arguments.owner.getGrammar().wrapTable( "(#arguments.snapshot.toSQL()#) AS #arguments.alias#" )
+        );
+        arguments.owner.setAlias( arguments.alias );
+        arguments.owner.setGrammarCompiledFrom( true );
+        arguments.owner.addBindings( arguments.snapshot.getBindings(), "from" );
+        return arguments.owner;
+    }
+
+    /**
      * Captures the part of a builder changed while attaching nested CTEs.
      */
     public struct function captureCommonTableState( required QueryBuilder builder ) {

@@ -187,14 +187,11 @@ component extends="qb.models.Grammars.BaseGrammar" singleton accessors="true" {
             }
 
             var commonTables = arguments.query.getCommonTables();
-            var rootQuery = arguments.query.clone();
-            var unions = rootQuery.getUnions();
-            rootQuery.setUnions( [] );
-            rootQuery.setCommonTables( [] );
+            var unions = arguments.query.getUnions();
 
             var sql = [
                 commonTables.isEmpty() ? "" : compileCommonTables( arguments.query, commonTables ),
-                "SELECT * FROM (#super.compileSelect( rootQuery )#) AS #wrapValue( "qb_union_0" )#"
+                "SELECT * FROM (#super.compileSelect( arguments.query, false, false )#) AS #wrapValue( "qb_union_0" )#"
             ];
 
             for ( var index = 1; index <= unions.len(); index++ ) {

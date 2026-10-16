@@ -846,6 +846,57 @@ component extends="testbox.system.BaseSpec" {
                 expect( utils.extractBinding( decimal, variables.mockGrammar ).scale ).toBe( 9 );
             } );
 
+            describe( "sets the calculated scale as an Integer", function() {
+                // Adobe CF treats a Double scale (2.0) as 0 and rounds the value.
+                it( "for a decimal value", function() {
+                    var binding = utils.extractBinding(
+                        { "value": javacast( "double", 12500.50 ), "cfsqltype": "DECIMAL" },
+                        variables.mockGrammar
+                    );
+
+                    expect( getMetadata( binding.scale ).getName() ).toBe( "java.lang.Integer" );
+                    expect( binding.scale ).toBe( 1 );
+                } );
+
+                it( "for an inferred decimal value", function() {
+                    var binding = utils.extractBinding( javacast( "double", 12500.50 ), variables.mockGrammar );
+
+                    expect( binding.cfsqltype ).toBe( "DECIMAL" );
+                    expect( getMetadata( binding.scale ).getName() ).toBe( "java.lang.Integer" );
+                    expect( binding.scale ).toBe( 1 );
+                } );
+
+                it( "for a BigDecimal value", function() {
+                    var binding = utils.extractBinding(
+                        createObject( "java", "java.math.BigDecimal" ).init( "12500.50" ),
+                        variables.mockGrammar
+                    );
+
+                    expect( getMetadata( binding.scale ).getName() ).toBe( "java.lang.Integer" );
+                    expect( binding.scale ).toBe( 2 );
+                } );
+
+                it( "for a value in scientific notation", function() {
+                    var binding = utils.extractBinding(
+                        createObject( "java", "java.math.BigDecimal" ).init( "1.23E-4" ),
+                        variables.mockGrammar
+                    );
+
+                    expect( getMetadata( binding.scale ).getName() ).toBe( "java.lang.Integer" );
+                    expect( binding.scale ).toBe( 6 );
+                } );
+
+                it( "for a decimal list", function() {
+                    var binding = utils.extractBinding(
+                        { value: [ 1.125, -2.5 ], cfsqltype: "DECIMAL", list: true },
+                        variables.mockGrammar
+                    );
+
+                    expect( getMetadata( binding.scale ).getName() ).toBe( "java.lang.Integer" );
+                    expect( binding.scale ).toBe( 3 );
+                } );
+            } );
+
             it( "does not set a scale for integers", function() {
                 var binding = utils.extractBinding(
                     { "value": 3.14159, "cfsqltype": "INTEGER" },

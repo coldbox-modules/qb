@@ -218,29 +218,29 @@ For both Lucee and ACF you need to set the JDBC Driver class to `org.sqlite.JDBC
 
 You can browse the full documentation at https://qb.ortusbooks.com
 
-## Transaction controls (PostgreSQL)
+## Constraint timing (PostgreSQL)
 
-Use typed controls inside an existing transaction; these methods do not begin or
-commit one. PostgreSQL is the first supported dialect. Other grammars throw
+Use typed constraint timing inside an existing transaction; this method does not
+begin, commit, roll back, or own one. PostgreSQL is the first supported dialect. Other grammars throw
 `UnsupportedOperation` rather than silently dropping a requested control.
 
 ```cfml
 transaction {
     qb.setConstraints( "DEFERRED" ); // Empty constraint list means ALL.
     qb.setConstraints( "IMMEDIATE", [ "public.child_parent_fk" ] );
-    qb.lockTables( [ "public.items", "outbox" ], "SHARE" );
 }
 ```
 
-`setConstraints` accepts `IMMEDIATE` or `DEFERRED`. `lockTables` accepts PostgreSQL’s
-eight table-lock modes and an optional `nowait=true` argument. Table and constraint
-names must be simple identifiers and may also be schema qualified.
+`setConstraints` accepts `IMMEDIATE` or `DEFERRED`. Constraint names must be
+simple identifiers and may also be schema qualified.
 Raw SQL, aliases, expressions, and mode fragments are rejected. Identifiers are
 always quoted. Pass `toSql=true` to compile a command without executing it.
 
-Each operation accepts `options` for normal query options and runs through qb’s
+The operation accepts `options` for normal query options and runs through qb’s
 standard executor, logging, interception, and pretend support. A control command
 has no value bindings: bindings and SELECT state already on the builder are kept
 for that query and are not sent with the command. Use the language’s built-in
 transaction and savepoint operations for transaction lifecycle management.
-Constraint and lock semantics remain the database’s own.
+Constraint semantics remain the database’s own. Explicit table locking and its
+lifetime remain application-owned database operations; qb provides no table-lock
+callback or transaction ownership API.

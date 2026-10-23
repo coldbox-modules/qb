@@ -11,10 +11,6 @@ component displayname="Grammar" accessors="true" singleton {
         throw( type = "UnsupportedOperation", message = "This grammar does not support constraint timing controls." );
     }
 
-    public string function compileLockTables( required array tables, required string mode, required boolean nowait ) {
-        throw( type = "UnsupportedOperation", message = "This grammar does not support explicit table locks." );
-    }
-
 
     /**
      * ColdBox Interceptor Service to announce pre- and post- interception points

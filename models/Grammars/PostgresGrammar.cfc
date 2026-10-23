@@ -11,24 +11,6 @@ component extends="qb.models.Grammars.BaseGrammar" singleton {
         return "SET CONSTRAINTS " & constraints & " " & mode;
     }
 
-    public string function compileLockTables( required array tables, required string mode, required boolean nowait ) {
-        var mode = uCase( trim( arguments.mode ) );
-        if (
-            !listFind(
-                "ACCESS SHARE|ROW SHARE|ROW EXCLUSIVE|SHARE UPDATE EXCLUSIVE|SHARE|SHARE ROW EXCLUSIVE|EXCLUSIVE|ACCESS EXCLUSIVE",
-                mode,
-                "|"
-            )
-        ) {
-            throw( type = "InvalidTransactionControl", message = "Invalid PostgreSQL table lock mode." );
-        }
-        if ( arguments.tables.isEmpty() ) {
-            throw( type = "InvalidTransactionControl", message = "At least one table must be locked." );
-        }
-        var tables = arguments.tables.map( ( name ) => transactionIdentifier( name, true ) ).toList( ", " );
-        return "LOCK TABLE " & tables & " IN " & mode & " MODE" & ( arguments.nowait ? " NOWAIT" : "" );
-    }
-
     /** These commands accept identifiers, never raw SQL, expressions, aliases, or bindings. */
     private string function transactionIdentifier( required any name, boolean qualified = false ) {
         var pattern = arguments.qualified ? "^[A-Za-z_][A-Za-z0-9_$]*(\.[A-Za-z_][A-Za-z0-9_$]*)?$" : "^[A-Za-z_][A-Za-z0-9_$]*$";

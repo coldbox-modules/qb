@@ -1,19 +1,5 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
-    public string function compileSavepoint( required string name, required string action ) {
-        var name = transactionIdentifier( arguments.name );
-        switch ( arguments.action ) {
-            case "create":
-                return "SAVEPOINT " & name;
-            case "rollback":
-                return "ROLLBACK TO SAVEPOINT " & name;
-            case "release":
-                return "RELEASE SAVEPOINT " & name;
-            default:
-                throw( type = "InvalidTransactionControl", message = "Unknown savepoint action." );
-        }
-    }
-
     public string function compileSetConstraints( required string mode, required array constraints ) {
         var mode = uCase( trim( arguments.mode ) );
         if ( !listFind( "IMMEDIATE,DEFERRED", mode ) ) {

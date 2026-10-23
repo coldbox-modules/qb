@@ -3959,48 +3959,6 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
     }
 
 
-    /** Create a named savepoint in the caller's current transaction. */
-    public any function createSavepoint( required string name, struct options = {}, boolean toSql = false ) {
-        var sql = getGrammar().compileSavepoint( arguments.name, "create" );
-        if ( arguments.toSql ) {
-            return sql;
-        }
-        return runQuery(
-            sql = sql,
-            options = arguments.options,
-            returnObject = "result",
-            bindings = []
-        );
-    }
-
-    /** Roll back to a named savepoint without ending the caller's transaction. */
-    public any function rollbackToSavepoint( required string name, struct options = {}, boolean toSql = false ) {
-        var sql = getGrammar().compileSavepoint( arguments.name, "rollback" );
-        if ( arguments.toSql ) {
-            return sql;
-        }
-        return runQuery(
-            sql = sql,
-            options = arguments.options,
-            returnObject = "result",
-            bindings = []
-        );
-    }
-
-    /** Release a savepoint without committing the caller's transaction. */
-    public any function releaseSavepoint( required string name, struct options = {}, boolean toSql = false ) {
-        var sql = getGrammar().compileSavepoint( arguments.name, "release" );
-        if ( arguments.toSql ) {
-            return sql;
-        }
-        return runQuery(
-            sql = sql,
-            options = arguments.options,
-            returnObject = "result",
-            bindings = []
-        );
-    }
-
     /** Set constraint timing. An empty constraint list means ALL constraints. */
     public any function setConstraints(
         required string mode,

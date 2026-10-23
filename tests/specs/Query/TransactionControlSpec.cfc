@@ -2,12 +2,6 @@ component extends="testbox.system.BaseSpec" {
 
     function run() {
         describe( "typed transaction controls", function() {
-            it( "compiles PostgreSQL savepoint operations", function() {
-                var builder = postgres();
-                expect( builder.createSavepoint( name = "batch_1", toSql = true ) ).toBe( "SAVEPOINT ""batch_1""" );
-                expect( builder.rollbackToSavepoint( name = "batch_1", toSql = true ) ).toBe( "ROLLBACK TO SAVEPOINT ""batch_1""" );
-                expect( builder.releaseSavepoint( name = "batch_1", toSql = true ) ).toBe( "RELEASE SAVEPOINT ""batch_1""" );
-            } );
             it( "compiles all or explicitly named constraint modes", function() {
                 var builder = postgres();
                 expect( builder.setConstraints( mode = "deferred", toSql = true ) ).toBe( "SET CONSTRAINTS ALL DEFERRED" );
@@ -31,28 +25,56 @@ component extends="testbox.system.BaseSpec" {
                     )
                 ).toBe( "LOCK TABLE ""items"" IN ACCESS EXCLUSIVE MODE NOWAIT" );
             } );
+            it( "accepts each PostgreSQL table lock mode", function() {
+                var builder = postgres();
+                var modes = [
+                    "ACCESS SHARE",
+                    "ROW SHARE",
+                    "ROW EXCLUSIVE",
+                    "SHARE UPDATE EXCLUSIVE",
+                    "SHARE",
+                    "SHARE ROW EXCLUSIVE",
+                    "EXCLUSIVE",
+                    "ACCESS EXCLUSIVE"
+                ];
+                for ( var mode in modes ) {
+                    expect( builder.lockTables( tables = [ "items" ], mode = mode, toSql = true ) ).toBe( "LOCK TABLE ""items"" IN " & mode & " MODE" );
+                }
+            } );
+            it( "compiles controls without executing or changing SELECT state", function() {
+                var builder = postgres()
+                    .from( "users" )
+                    .where( "id", 17 )
+                    .pretend();
+                var before = builder.toSQL();
+                builder.setConstraints( mode = "DEFERRED", toSql = true );
+                builder.lockTables( tables = [ "items" ], toSql = true );
+                expect( builder.getQueryLog() ).toBeEmpty();
+                expect( builder.toSQL() ).toBe( before );
+                expect( builder.getBindings()[ 1 ].value ).toBe( 17 );
+            } );
             it( "quotes command identifiers even when ordinary wrapping is disabled", function() {
                 var grammar = new qb.models.Grammars.PostgresGrammar();
                 grammar.setShouldWrapValues( false );
                 var builder = new qb.models.Query.QueryBuilder( grammar = grammar );
-                expect( builder.createSavepoint( name = "MixedCase", toSql = true ) ).toBe( "SAVEPOINT ""MixedCase""" );
+                expect( builder.lockTables( tables = [ "MixedCase" ], toSql = true ) ).toBe( "LOCK TABLE ""MixedCase"" IN SHARE MODE" );
+                expect(
+                    builder.setConstraints( mode = "IMMEDIATE", constraints = [ "public.MixedCase" ], toSql = true )
+                ).toBe( "SET CONSTRAINTS ""public"".""MixedCase"" IMMEDIATE" );
             } );
             it( "rejects raw SQL, aliases, empty lists, and invalid modes", function() {
                 var builder = postgres();
-                expect( () => builder.createSavepoint( name = "x; COMMIT", toSql = true ) ).toThrow( "InvalidTransactionControl" );
-                expect( () => builder.releaseSavepoint( name = "", toSql = true ) ).toThrow( "InvalidTransactionControl" );
                 expect( () => builder.lockTables( tables = [], toSql = true ) ).toThrow( "InvalidTransactionControl" );
                 expect( () => builder.lockTables( tables = [ "items AS i" ], toSql = true ) ).toThrow( "InvalidTransactionControl" );
                 expect( () => builder.lockTables( tables = [ builder.raw( "items" ) ], toSql = true ) ).toThrow( "InvalidTransactionControl" );
                 expect( () => builder.lockTables( tables = [ "items" ], mode = "SHARE; COMMIT", toSql = true ) ).toThrow( "InvalidTransactionControl" );
+                expect( () => builder.lockTables( tables = [ "items; COMMIT" ], toSql = true ) ).toThrow( "InvalidTransactionControl" );
+                expect( () => builder.setConstraints( mode = "IMMEDIATE", constraints = [ builder.raw( "ALL" ) ], toSql = true ) ).toThrow( "InvalidTransactionControl" );
                 expect( () => builder.setConstraints( mode = "later", toSql = true ) ).toThrow( "InvalidTransactionControl" );
                 expect( () => builder.setConstraints( mode = "DEFERRED", constraints = [ "*" ], toSql = true ) ).toThrow( "InvalidTransactionControl" );
             } );
             it( "fails explicitly when a dialect does not implement the operation", function() {
                 var builder = new qb.models.Query.QueryBuilder( grammar = new qb.models.Grammars.BaseGrammar() );
-                expect( () => builder.createSavepoint( name = "batch", toSql = true ) ).toThrow( "UnsupportedOperation" );
-                expect( () => builder.rollbackToSavepoint( name = "batch", toSql = true ) ).toThrow( "UnsupportedOperation" );
-                expect( () => builder.releaseSavepoint( name = "batch", toSql = true ) ).toThrow( "UnsupportedOperation" );
                 expect( () => builder.setConstraints( mode = "DEFERRED", toSql = true ) ).toThrow( "UnsupportedOperation" );
                 expect( () => builder.lockTables( tables = [ "items" ], toSql = true ) ).toThrow( "UnsupportedOperation" );
             } );
@@ -61,12 +83,9 @@ component extends="testbox.system.BaseSpec" {
                     .from( "users" )
                     .where( "id", 17 )
                     .pretend();
-                builder.createSavepoint( "batch" );
-                builder.rollbackToSavepoint( "batch" );
-                builder.releaseSavepoint( "batch" );
                 builder.setConstraints( "DEFERRED" );
                 builder.lockTables( [ "users" ] );
-                expect( builder.getQueryLog() ).toHaveLength( 5 );
+                expect( builder.getQueryLog() ).toHaveLength( 2 );
                 for ( var entry in builder.getQueryLog() ) {
                     expect( entry.bindings ).toBeEmpty();
                     expect( entry.pretend ).toBeTrue();
@@ -81,19 +100,16 @@ component extends="testbox.system.BaseSpec" {
                 builder.$( "runQuery", { "ok": true } );
                 builder.from( "users" ).where( "id", 17 );
                 var before = builder.toSQL();
-                builder.createSavepoint( name = "batch", options = { "datasource": "special" } );
-                builder.rollbackToSavepoint( name = "batch" );
-                builder.releaseSavepoint( name = "batch" );
-                builder.setConstraints( mode = "IMMEDIATE" );
+                builder.setConstraints( mode = "IMMEDIATE", options = { "datasource": "special" } );
                 builder.lockTables( tables = [ "items" ] );
                 var calls = builder.$callLog().runQuery;
-                expect( calls ).toHaveLength( 5 );
+                expect( calls ).toHaveLength( 2 );
                 for ( var call in calls ) {
                     expect( call.bindings ).toBeEmpty();
                     expect( call.returnObject ).toBe( "result" );
                 }
                 expect( calls[ 1 ].options ).toBe( { "datasource": "special" } );
-                expect( calls[ 1 ].sql ).toBe( "SAVEPOINT ""batch""" );
+                expect( calls[ 1 ].sql ).toBe( "SET CONSTRAINTS ALL IMMEDIATE" );
                 expect( builder.toSQL() ).toBe( before );
                 expect( builder.getBindings()[ 1 ].value ).toBe( 17 );
             } );

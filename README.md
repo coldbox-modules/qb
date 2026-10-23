@@ -226,11 +226,6 @@ commit one. PostgreSQL is the first supported dialect. Other grammars throw
 
 ```cfml
 transaction {
-    qb.createSavepoint( "batch_edit" );
-    // Apply the batch. Roll back just this batch when necessary:
-    qb.rollbackToSavepoint( "batch_edit" );
-    qb.releaseSavepoint( "batch_edit" );
-
     qb.setConstraints( "DEFERRED" ); // Empty constraint list means ALL.
     qb.setConstraints( "IMMEDIATE", [ "public.child_parent_fk" ] );
     qb.lockTables( [ "public.items", "outbox" ], "SHARE" );
@@ -238,14 +233,14 @@ transaction {
 ```
 
 `setConstraints` accepts `IMMEDIATE` or `DEFERRED`. `lockTables` accepts PostgreSQL’s
-eight table-lock modes and an optional `nowait=true` argument. Savepoint names must
-be simple identifiers; table and constraint names may also be schema qualified.
+eight table-lock modes and an optional `nowait=true` argument. Table and constraint
+names must be simple identifiers and may also be schema qualified.
 Raw SQL, aliases, expressions, and mode fragments are rejected. Identifiers are
 always quoted. Pass `toSql=true` to compile a command without executing it.
 
 Each operation accepts `options` for normal query options and runs through qb’s
 standard executor, logging, interception, and pretend support. A control command
 has no value bindings: bindings and SELECT state already on the builder are kept
-for that query and are not sent with the command. Releasing a savepoint makes its
-name available again; rollback to a savepoint leaves it available for further
-rollback or release. Constraint and lock semantics remain the database’s own.
+for that query and are not sent with the command. Use the language’s built-in
+transaction and savepoint operations for transaction lifecycle management.
+Constraint and lock semantics remain the database’s own.

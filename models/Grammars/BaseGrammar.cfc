@@ -7,10 +7,6 @@
  */
 component displayname="Grammar" accessors="true" singleton {
 
-    public string function compileSavepoint( required string name, required string action ) {
-        throw( type = "UnsupportedOperation", message = "This grammar does not support savepoint controls." );
-    }
-
     public string function compileSetConstraints( required string mode, required array constraints ) {
         throw( type = "UnsupportedOperation", message = "This grammar does not support constraint timing controls." );
     }

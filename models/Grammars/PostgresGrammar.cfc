@@ -1,5 +1,61 @@
 component extends="qb.models.Grammars.BaseGrammar" singleton {
 
+    public string function compileSavepoint( required string name, required string action ) {
+        var name = transactionIdentifier( arguments.name );
+        switch ( arguments.action ) {
+            case "create":
+                return "SAVEPOINT " & name;
+            case "rollback":
+                return "ROLLBACK TO SAVEPOINT " & name;
+            case "release":
+                return "RELEASE SAVEPOINT " & name;
+            default:
+                throw( type = "InvalidTransactionControl", message = "Unknown savepoint action." );
+        }
+    }
+
+    public string function compileSetConstraints( required string mode, required array constraints ) {
+        var mode = uCase( trim( arguments.mode ) );
+        if ( !listFind( "IMMEDIATE,DEFERRED", mode ) ) {
+            throw( type = "InvalidTransactionControl", message = "Constraint mode must be IMMEDIATE or DEFERRED." );
+        }
+        var constraints = arguments.constraints.isEmpty() ? "ALL" : arguments.constraints
+            .map( ( name ) => transactionIdentifier( name, true ) )
+            .toList( ", " );
+        return "SET CONSTRAINTS " & constraints & " " & mode;
+    }
+
+    public string function compileLockTables( required array tables, required string mode, required boolean nowait ) {
+        var mode = uCase( trim( arguments.mode ) );
+        if (
+            !listFind(
+                "ACCESS SHARE|ROW SHARE|ROW EXCLUSIVE|SHARE UPDATE EXCLUSIVE|SHARE|SHARE ROW EXCLUSIVE|EXCLUSIVE|ACCESS EXCLUSIVE",
+                mode,
+                "|"
+            )
+        ) {
+            throw( type = "InvalidTransactionControl", message = "Invalid PostgreSQL table lock mode." );
+        }
+        if ( arguments.tables.isEmpty() ) {
+            throw( type = "InvalidTransactionControl", message = "At least one table must be locked." );
+        }
+        var tables = arguments.tables.map( ( name ) => transactionIdentifier( name, true ) ).toList( ", " );
+        return "LOCK TABLE " & tables & " IN " & mode & " MODE" & ( arguments.nowait ? " NOWAIT" : "" );
+    }
+
+    /** These commands accept identifiers, never raw SQL, expressions, aliases, or bindings. */
+    private string function transactionIdentifier( required any name, boolean qualified = false ) {
+        var pattern = arguments.qualified ? "^[A-Za-z_][A-Za-z0-9_$]*(\.[A-Za-z_][A-Za-z0-9_$]*)?$" : "^[A-Za-z_][A-Za-z0-9_$]*$";
+        if ( !isSimpleValue( arguments.name ) || !reFind( pattern, arguments.name ) ) {
+            throw( type = "InvalidTransactionControl", message = "Expected a simple SQL identifier." );
+        }
+        // Quote even when ordinary query identifier wrapping has been disabled.
+        return arguments.name
+            .listToArray( "." )
+            .map( ( part ) => chr( 34 ) & part & chr( 34 ) )
+            .toList( "." );
+    }
+
     public boolean function supportsReturningRowsOnInsert() {
         return true;
     }

@@ -3958,6 +3958,88 @@ component displayname="QueryBuilder" accessors="true" extends="qb.models.Query.J
         return getCollaborator( "QueryExecutor" ).run( this, arguments.sql, arguments.options );
     }
 
+
+    /** Create a named savepoint in the caller's current transaction. */
+    public any function createSavepoint( required string name, struct options = {}, boolean toSql = false ) {
+        var sql = getGrammar().compileSavepoint( arguments.name, "create" );
+        if ( arguments.toSql ) {
+            return sql;
+        }
+        return runQuery(
+            sql = sql,
+            options = arguments.options,
+            returnObject = "result",
+            bindings = []
+        );
+    }
+
+    /** Roll back to a named savepoint without ending the caller's transaction. */
+    public any function rollbackToSavepoint( required string name, struct options = {}, boolean toSql = false ) {
+        var sql = getGrammar().compileSavepoint( arguments.name, "rollback" );
+        if ( arguments.toSql ) {
+            return sql;
+        }
+        return runQuery(
+            sql = sql,
+            options = arguments.options,
+            returnObject = "result",
+            bindings = []
+        );
+    }
+
+    /** Release a savepoint without committing the caller's transaction. */
+    public any function releaseSavepoint( required string name, struct options = {}, boolean toSql = false ) {
+        var sql = getGrammar().compileSavepoint( arguments.name, "release" );
+        if ( arguments.toSql ) {
+            return sql;
+        }
+        return runQuery(
+            sql = sql,
+            options = arguments.options,
+            returnObject = "result",
+            bindings = []
+        );
+    }
+
+    /** Set constraint timing. An empty constraint list means ALL constraints. */
+    public any function setConstraints(
+        required string mode,
+        array constraints = [],
+        struct options = {},
+        boolean toSql = false
+    ) {
+        var sql = getGrammar().compileSetConstraints( arguments.mode, arguments.constraints );
+        if ( arguments.toSql ) {
+            return sql;
+        }
+        return runQuery(
+            sql = sql,
+            options = arguments.options,
+            returnObject = "result",
+            bindings = []
+        );
+    }
+
+    /** Acquire table locks until the caller's transaction ends. */
+    public any function lockTables(
+        required array tables,
+        string mode = "SHARE",
+        boolean nowait = false,
+        struct options = {},
+        boolean toSql = false
+    ) {
+        var sql = getGrammar().compileLockTables( arguments.tables, arguments.mode, arguments.nowait );
+        if ( arguments.toSql ) {
+            return sql;
+        }
+        return runQuery(
+            sql = sql,
+            options = arguments.options,
+            returnObject = "result",
+            bindings = []
+        );
+    }
+
     /**
      * Delegates grammar execution while preserving the builder's established
      * test seam and supporting collaborators operating on subclasses.

@@ -1,10 +1,24 @@
 /**
+
  * Grammar represents a platform to run sql on.
  *
  * This is the Base Grammar that other grammars can extend to modify
  * the generated sql for their specific platforms.
  */
 component displayname="Grammar" accessors="true" singleton {
+
+    public string function compileSavepoint( required string name, required string action ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support savepoint controls." );
+    }
+
+    public string function compileSetConstraints( required string mode, required array constraints ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support constraint timing controls." );
+    }
+
+    public string function compileLockTables( required array tables, required string mode, required boolean nowait ) {
+        throw( type = "UnsupportedOperation", message = "This grammar does not support explicit table locks." );
+    }
+
 
     /**
      * ColdBox Interceptor Service to announce pre- and post- interception points

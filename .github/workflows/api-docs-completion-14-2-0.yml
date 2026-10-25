@@ -1,0 +1,57 @@
+name: Complete qb 14.2.0 API Docs
+
+on:
+  push:
+    branches:
+      - release/qb-14-2-api-docs-completion
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qb-14-2-api-docs-completion
+  cancel-in-progress: false
+
+jobs:
+  api-docs:
+    name: Generate and Upload API Docs
+    if: github.repository == 'coldbox-modules/qb'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Tested Source
+        uses: actions/checkout@v7
+        with:
+          ref: 7a94191fa876788f9631672dd4662b5c71033ee5
+          persist-credentials: false
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+
+      - name: Setup CommandBox CLI
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+
+      - name: Set API Docs Version
+        run: box package set version=14.2.0
+
+      - name: Install Runtime Dependencies
+        run: box install --production
+
+      - name: Generate API Docs
+        run: |
+          box install commandbox-docbox
+          box run-script generateAPIDocs
+          test -s .tmp/apidocs/index.html
+
+      - name: Upload API Docs to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read
+        env:
+          AWS_S3_BUCKET: "apidocs.ortussolutions.com"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_SECRET }}
+          SOURCE_DIR: ".tmp/apidocs"
+          DEST_DIR: "coldbox-modules/qb/14.2.0"

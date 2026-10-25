@@ -103,7 +103,7 @@ component accessors="true" {
         boolean execute = true
     ) {
         arguments.options = mergeOptions( arguments.options );
-        var query = new models.Query.QueryBuilder( getGrammar() );
+        var query = new qb.models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
         var blueprint = new Blueprint(
@@ -130,7 +130,7 @@ component accessors="true" {
         boolean execute = true
     ) {
         arguments.options = mergeOptions( arguments.options );
-        var query = new models.Query.QueryBuilder( getGrammar() );
+        var query = new qb.models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
         var blueprint = new Blueprint(
@@ -157,7 +157,7 @@ component accessors="true" {
         boolean execute = true
     ) {
         arguments.options = mergeOptions( arguments.options );
-        var query = new models.Query.QueryBuilder( getGrammar() );
+        var query = new qb.models.Query.QueryBuilder( getGrammar() );
         arguments.callback( query );
 
         var blueprint = new Blueprint(

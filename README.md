@@ -37,6 +37,10 @@ The setting defaults to `false`. When enabled, unsafe numeric array inference th
 
 An explicit `cfsqltype` or `sqltype` on the outer binding always takes precedence; this setting does not validate caller-selected conversions or database column precision and scale.
 
+## Optional query telemetry
+
+Applications can explicitly select `QueryTelemetryAdapter@qb` to observe qb executions through a compatible telemetry client. The adapter owns its query listeners and shutdown cleanup; qb does not require Sentry or install a telemetry client. See [the configuration and adapter contract](docs/query-telemetry.md).
+
 ## Code Samples
 
 Compare these two examples:

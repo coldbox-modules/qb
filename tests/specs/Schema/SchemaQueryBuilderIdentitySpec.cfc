@@ -36,7 +36,7 @@ component extends="testbox.system.BaseSpec" {
                 query
                     .select( "id" )
                     .from( "users" )
-                    .where( "active", true );
+                    .where( "active", 1 );
                 // Exercise the original nominal checks before metadata calls can warm Adobe's type cache.
                 received.wrapper = new tests.resources.querybuilder.RetrievableQueryBuilder( query );
             },
@@ -51,7 +51,7 @@ component extends="testbox.system.BaseSpec" {
             "SELECT * FROM `posts` WHERE `userId` IN (SELECT `id` FROM `users` WHERE `active` = ?)"
         );
         expect( query.getBindings() ).toHaveLength( 1 );
-        expect( query.getBindings()[ 1 ].value ).toBe( true );
+        expect( query.getBindings()[ 1 ].value ).toBe( 1 );
         expect( getMetadata( received.wrapper.retrieveQuery() ).name ).toBe( "qb.models.Query.QueryBuilder" );
     }
 

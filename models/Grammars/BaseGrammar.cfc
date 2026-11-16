@@ -2639,7 +2639,7 @@ component displayname="Grammar" accessors="true" singleton {
 
     function getShouldWrapValues() {
         var context = variables.shouldWrapValuesContext.get();
-        if ( !isNull( context ) && !context.isEmpty() ) {
+        if ( !isNull( local.context ) && !context.isEmpty() ) {
             return context.last();
         }
         if ( isNull( variables.shouldWrapValues ) ) {
@@ -2653,7 +2653,7 @@ component displayname="Grammar" accessors="true" singleton {
             throw( type = "InvalidState", message = "The shouldWrapValues property has not been set." );
         }
         var context = variables.shouldWrapValuesContext.get();
-        if ( !isNull( context ) && !context.isEmpty() ) {
+        if ( !isNull( local.context ) && !context.isEmpty() ) {
             context[ context.len() ] = arguments.shouldWrap;
         } else {
             variables.shouldWrapValues = arguments.shouldWrap;
@@ -2669,7 +2669,7 @@ component displayname="Grammar" accessors="true" singleton {
      */
     public void function pushShouldWrapValuesContext( any shouldWrap ) {
         var context = variables.shouldWrapValuesContext.get();
-        if ( isNull( context ) ) {
+        if ( isNull( local.context ) ) {
             context = [];
             variables.shouldWrapValuesContext.set( context );
         }
@@ -2683,7 +2683,7 @@ component displayname="Grammar" accessors="true" singleton {
      */
     public void function popShouldWrapValuesContext() {
         var context = variables.shouldWrapValuesContext.get();
-        if ( isNull( context ) || context.isEmpty() ) {
+        if ( isNull( local.context ) || context.isEmpty() ) {
             throw( type = "InvalidState", message = "There is no shouldWrapValues context to remove." );
         }
 
